@@ -1,11 +1,16 @@
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 export class TdnetDataCollectorStack extends cdk.Stack {
   // Public properties for cross-stack references
   public readonly disclosuresTable: dynamodb.Table;
   public readonly executionsTable: dynamodb.Table;
+  public readonly pdfsBucket: s3.Bucket;
+  public readonly exportsBucket: s3.Bucket;
+  public readonly dashboardBucket: s3.Bucket;
+  public readonly cloudtrailLogsBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -96,8 +101,114 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       exportName: 'TdnetExecutionsTableName',
     });
 
+    // ========================================
+    // Phase 1: S3 Buckets
+    // ========================================
+
+    // 1. PDFバケット - TDnetからダウンロードしたPDFファイルの長期保存
+    this.pdfsBucket = new s3.Bucket(this, 'PdfsBucket', {
+      bucketName: `tdnet-data-collector-pdfs-${this.account}`,
+      encryption: s3.BucketEncryption.S3_MANAGED, // S3マネージドキーで暗号化
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, // パブリックアクセスブロック
+      versioned: true, // バージョニング有効化
+      removalPolicy: cdk.RemovalPolicy.RETAIN, // 本番環境では削除保護
+      autoDeleteObjects: false, // 自動削除無効
+      lifecycleRules: [
+        {
+          id: 'TransitionToStandardIA',
+          enabled: true,
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
+              transitionAfter: cdk.Duration.days(90), // 90日後にStandard-IAに移行
+            },
+            {
+              storageClass: s3.StorageClass.GLACIER,
+              transitionAfter: cdk.Duration.days(365), // 365日後にGlacierに移行
+            },
+          ],
+        },
+      ],
+    });
+
+    // 2. エクスポートバケット - ユーザーがエクスポートしたCSV/JSONファイルの一時保存
+    this.exportsBucket = new s3.Bucket(this, 'ExportsBucket', {
+      bucketName: `tdnet-data-collector-exports-${this.account}`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: false,
+      lifecycleRules: [
+        {
+          id: 'DeleteAfter7Days',
+          enabled: true,
+          expiration: cdk.Duration.days(7), // 7日後に自動削除
+        },
+      ],
+    });
+
+    // 3. ダッシュボードバケット - Webダッシュボードの静的ファイルホスティング
+    this.dashboardBucket = new s3.Bucket(this, 'DashboardBucket', {
+      bucketName: `tdnet-dashboard-${this.account}`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, // CloudFront OAI経由でのみアクセス
+      versioned: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: false,
+      // ライフサイクルポリシーなし（静的ファイルは永続保存）
+    });
+
+    // 4. CloudTrailログバケット - 監査ログの長期保存
+    this.cloudtrailLogsBucket = new s3.Bucket(this, 'CloudTrailLogsBucket', {
+      bucketName: `tdnet-cloudtrail-logs-${this.account}`,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: false,
+      lifecycleRules: [
+        {
+          id: 'ArchiveAndDelete',
+          enabled: true,
+          transitions: [
+            {
+              storageClass: s3.StorageClass.GLACIER,
+              transitionAfter: cdk.Duration.days(90), // 90日後にGlacierに移行
+            },
+          ],
+          expiration: cdk.Duration.days(2555), // 7年後に自動削除（コンプライアンス要件）
+        },
+      ],
+    });
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'PdfsBucketName', {
+      value: this.pdfsBucket.bucketName,
+      description: 'S3 bucket name for PDF files',
+      exportName: 'TdnetPdfsBucketName',
+    });
+
+    new cdk.CfnOutput(this, 'ExportsBucketName', {
+      value: this.exportsBucket.bucketName,
+      description: 'S3 bucket name for export files',
+      exportName: 'TdnetExportsBucketName',
+    });
+
+    new cdk.CfnOutput(this, 'DashboardBucketName', {
+      value: this.dashboardBucket.bucketName,
+      description: 'S3 bucket name for dashboard',
+      exportName: 'TdnetDashboardBucketName',
+    });
+
+    new cdk.CfnOutput(this, 'CloudTrailLogsBucketName', {
+      value: this.cloudtrailLogsBucket.bucketName,
+      description: 'S3 bucket name for CloudTrail logs',
+      exportName: 'TdnetCloudTrailLogsBucketName',
+    });
+
     // Stack resources will be added here in subsequent tasks
-    // Phase 1: S3 buckets, Lambda functions
+    // Phase 1: Lambda functions
     // Phase 2: API Gateway, Lambda Query/Export functions
     // Phase 3: EventBridge rules, SNS topics, CloudWatch monitoring
     // Phase 4: CloudTrail, WAF, security configurations

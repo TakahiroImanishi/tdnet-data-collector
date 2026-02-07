@@ -72,7 +72,7 @@
   - オンデマンドモード、暗号化有効化
   - _Requirements: 要件2.5, 13.3（データベース、暗号化）_
 
-- [ ]* 3.2 DynamoDBテーブル構造の検証テスト
+- [ ] 3.2 DynamoDBテーブル構造の検証テスト
   - テーブルが正しく作成されていることを確認
   - GSIが正しく設定されていることを確認
   - TTLが有効化されていることを確認
@@ -80,7 +80,7 @@
 
 ### 4. S3インフラ構築
 
-- [ ] 4.1 S3バケットをCDKで定義
+- [x] 4.1 S3バケットをCDKで定義
   - tdnet-data-collector-pdfs-{account-id}（PDFファイル）
   - tdnet-data-collector-exports-{account-id}（エクスポートファイル）
   - tdnet-dashboard-{account-id}（Webダッシュボード）
