@@ -839,15 +839,15 @@ export class TDnetBucketConstruct extends Construct {
         super(scope, id);
         
         // S3バケットの作成
-        // ⚠️ 重要: Object Lockはバケット全体ではなく、オブジェクトごとに設定
+        // ✅ Object Lockを有効化するが、デフォルト保持期間は設定しない
         this.bucket = new s3.Bucket(this, 'TDnetBucket', {
             bucketName: `tdnet-data-${cdk.Stack.of(this).account}`,
             
-            // ❌ objectLockEnabled: true を削除
-            // バケット全体にObject Lockを有効化すると、一時ファイル（temp/）の
-            // ライフサイクルポリシーによる自動削除が失敗する
+            // Object Lockを有効化（バケット作成時のみ設定可能）
+            // デフォルト保持期間は設定せず、オブジェクトごとに設定
+            objectLockEnabled: true,
             
-            // バージョニングを有効化（Object Lock使用時の前提条件）
+            // バージョニングを有効化（Object Lockの前提条件）
             versioned: true,
             
             // 暗号化設定
@@ -881,27 +881,35 @@ export class TDnetBucketConstruct extends Construct {
             removalPolicy: cdk.RemovalPolicy.RETAIN,
             autoDeleteObjects: false,
         });
+        
+        // ⚠️ 重要: デフォルト保持期間は設定しない
+        // cfnBucket.objectLockConfiguration は設定しない
+        // オブジェクトごとに ObjectLockMode を指定する
     }
 }
 ```
 
 **実装場所:** `cdk/lib/constructs/tdnet-bucket-construct.ts`
 
-**⚠️ 重要な注意事項:**
+**⚠️ 重要な設計決定:**
 
-1. **Object Lockはオブジェクトごとに設定**
-   - バケット全体に`objectLockEnabled: true`を設定すると、すべてのオブジェクトにデフォルト保持期間が適用される
-   - 一時ファイル（`temp/`）やエクスポートファイル（`exports/`）は自動削除が必要なため、Object Lockを適用しない
-   - 開示情報PDF（`pdfs/`）のみにObject Lockを適用する
+1. **Object Lockはバケット全体で有効化**
+   - `objectLockEnabled: true`を設定（バケット作成時のみ可能）
+   - これにより、オブジェクトごとに`ObjectLockMode`を設定できるようになる
 
-2. **ライフサイクルポリシーとの競合**
-   - Object Lockが有効なオブジェクトは、保持期間中は削除できない
-   - ライフサイクルポリシーによる自動削除も失敗する
-   - そのため、一時ファイルにはObject Lockを適用しない
+2. **デフォルト保持期間は設定しない**
+   - `cfnBucket.objectLockConfiguration`は設定しない
+   - すべてのオブジェクトに自動的に保持期間が適用されることを防ぐ
+   - オブジェクトごとに明示的に`ObjectLockMode`を指定する
 
-3. **バージョニングは維持**
-   - Object Lockを使用する場合、バージョニングは必須
-   - オブジェクトごとにObject Lockを設定する場合も、バージョニングは有効にする必要がある
+3. **プレフィックスごとの適用制御**
+   - `pdfs/`: アップロード時に`ObjectLockMode: 'GOVERNANCE'`を指定
+   - `temp/`: `ObjectLockMode`を指定しない → ライフサイクルポリシーで1日後に削除可能
+   - `exports/`: `ObjectLockMode`を指定しない → ライフサイクルポリシーで7日後に削除可能
+
+4. **ライフサイクルポリシーとの共存**
+   - Object Lockが設定されていないオブジェクトは、ライフサイクルポリシーで削除可能
+   - Object Lockが設定されたオブジェクトは、保持期間経過後に削除可能
 
 ### Governance ModeとCompliance Modeの比較
 
