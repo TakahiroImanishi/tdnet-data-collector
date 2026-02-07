@@ -1,11 +1,15 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/index.ts|**/lambda/**/handler.ts'
+fileMatchPattern: '**/lambda/**/*.ts'
 ---
 
 # Lambda実装ガイド
 
 このファイルは、TDnet Data CollectorプロジェクトにおけるLambda関数の実装ガイドラインをまとめたものです。
+
+**適用範囲:** `**/lambda/**/*.ts` - Lambda関数フォルダ内のすべてのTypeScriptファイル
+
+**統合方針:** このsteeringファイルは、Lambda関数に関するすべての実装ガイドラインを統合しています。エラーハンドリング、パフォーマンス最適化、環境変数の使用など、Lambda関数開発に必要なすべての情報を提供します。
 
 ## 目次
 

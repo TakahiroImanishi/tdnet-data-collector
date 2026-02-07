@@ -71,7 +71,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
 | `**/scraper/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md` | スクレイピング |
-| `**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md` | コレクター |
+| `**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md` | コレクター |
 | `**/utils/error*.ts` | `development/error-handling-implementation.md` | エラーユーティリティ |
 | `**/utils/retry*.ts` | `development/error-handling-implementation.md` | リトライユーティリティ |
 
@@ -119,6 +119,12 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 |----------------|---------------------|------|
 | `**/src/**/index.ts` | `development/tdnet-file-naming.md` | エントリーポイント |
 | `**/utils/**/index.ts` | `development/tdnet-file-naming.md` | ユーティリティ |
+
+### テスト・パターンマッチング関連
+
+| ファイルパターン | トリガーされるsteering | 説明 |
+|----------------|---------------------|------|
+| `**/.kiro/steering/**/*.md` | `tests/pattern-matching-tests.md` | steeringファイル自体の編集 |
 
 ## ファイル間の参照関係
 

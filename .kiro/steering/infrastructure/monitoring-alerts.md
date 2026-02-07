@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/cdk/lib/*-monitoring-stack.ts|**/cdk/lib/constructs/*-alarm*.ts|**/cdk/lib/constructs/*-dashboard*.ts|**/monitoring/**/*'
+fileMatchPattern: '**/monitoring/**/*|**/.github/workflows/**/*'
 ---
 
 # 監視とアラート
