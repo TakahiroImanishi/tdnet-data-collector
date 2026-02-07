@@ -36,3 +36,43 @@ fileMatchPattern: '**/lambda/**/*.ts|**/cdk/lib/**/*-stack.ts|**/cdk/lib/constru
 
 **すべての非同期Lambda関数にDead Letter Queue (DLQ)を設定すること。**
 
+
+#### 対象Lambda関数
+
+| トリガー | DLQ必須 | 理由 |
+|---------|---------|------|
+| EventBridge (スケジュール) | ✅ 必須 | 非同期実行、失敗時の再実行が必要 |
+| SQS | ✅ 必須 | メッセージ処理失敗時の追跡が必要 |
+| SNS | ✅ 必須 | 非同期実行、失敗通知が必要 |
+| S3イベント | ✅ 必須 | イベント処理失敗時の追跡が必要 |
+| DynamoDB Streams | ✅ 必須 | ストリーム処理失敗時の追跡が必要 |
+| API Gateway (同期) | ❌ 不要 | 同期実行、エラーは即座に返却 |
+| Lambda直接呼び出し (同期) | ❌ 不要 | 同期実行、エラーは呼び出し元で処理 |
+
+#### DLQ設定の標準仕様
+
+```typescript
+// すべての非同期Lambda関数に適用する標準設定
+const dlqConfig = {
+    retentionPeriod: cdk.Duration.days(14),  // 14日間保持
+    visibilityTimeout: cdk.Duration.minutes(5),  // 5分
+};
+
+const lambdaConfig = {
+    deadLetterQueueEnabled: true,  // DLQ有効化
+    retryAttempts: 2,  // 2回再試行（合計3回実行）
+};
+```
+
+#### DLQプロセッサーの必須実装
+
+DLQを設定したすべてのLambda関数に対して、DLQプロセッサーを実装すること。
+
+**DLQプロセッサーの責務:**
+1. DLQメッセージを受信
+2. エラー内容をログに記録
+3. アラート通知を送信（SNS経由）
+4. 必要に応じて手動対応のためのメタデータを保存
+
+**実装例:** `.kiro/specs/tdnet-data-collector/templates/lambda-dlq-example.ts` を参照
+

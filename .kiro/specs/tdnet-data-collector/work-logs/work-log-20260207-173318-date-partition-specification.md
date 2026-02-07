@@ -163,9 +163,32 @@
 
 ## 次回への申し送り
 
-### 未完了の作業
-- なし（タスク進行中）
+### 完了した作業
+✅ date_partition 実装の詳細化が完了しました。
 
-### 注意点
-- タイムゾーン処理は TDnet の実際の開示時刻フォーマットに合わせる必要がある
-- エッジケースのテストケースは実際の運用で発生しうるケースを想定する
+### 実装時の注意点
+
+1. **タイムゾーン処理**
+   - 必ずJST基準で date_partition を生成すること
+   - UTC→JST変換は `new Date(utcDate.getTime() + 9 * 60 * 60 * 1000)` を使用
+   - 月またぎのエッジケースに注意（特に月末深夜）
+
+2. **バリデーション**
+   - すべての disclosed_at は `validateDisclosedAt()` でバリデーション
+   - ValidationError は Non-Retryable Error として扱う
+   - 構造化ログで詳細を記録
+
+3. **エラーハンドリング**
+   - バッチ処理では部分的失敗を許容
+   - 成功数・失敗数・エラー詳細を返却
+   - CloudWatch Logs で追跡可能にする
+
+4. **テスト**
+   - エッジケースのテストを必ず実装
+   - 月またぎ、うるう年、年またぎをカバー
+   - タイムゾーン変換の正確性を検証
+
+### 関連ドキュメント
+- `.kiro/steering/core/tdnet-implementation-rules.md` - 更新済み
+- `.kiro/steering/core/error-handling-patterns.md` - エラーハンドリングの基本原則
+- `.kiro/steering/development/data-validation.md` - データバリデーションルール
