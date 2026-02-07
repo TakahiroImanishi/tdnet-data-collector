@@ -28,14 +28,14 @@
   - .gitignore、.eslintrc、tsconfig.jsonを設定
   - _Requirements: 要件8（設定管理）_
 
-- [ ] 1.2 プロジェクト構造の検証テスト
+- [-] 1.2 プロジェクト構造の検証テスト
   - プロジェクト構造が正しく作成されていることを確認
   - 必要な依存関係がインストールされていることを確認
   - _Requirements: 要件14.1（テスト）_
 
 ### 2. データモデルとユーティリティ実装
 
-- [ ] 2.1 TypeScript型定義とインターフェース作成
+- [~] 2.1 TypeScript型定義とインターフェース作成
   - Disclosure、CollectionResult、ExecutionStatus、QueryFilter型を定義
   - DynamoDBアイテム変換関数（toDynamoDBItem、fromDynamoDBItem）を実装
   - date_partition生成関数（generateDatePartition）を実装（JST基準、バリデーション含む）
