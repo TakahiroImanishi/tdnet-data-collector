@@ -411,3 +411,16 @@ jest.mock('./businessLogic'); // これではテストにならない
 - **実装ルール**: `../core/tdnet-implementation-rules.md` - プロパティテストの例
 - **データバリデーション**: `data-validation.md` - バリデーションテストの対象
 - **エラーハンドリング**: `../core/error-handling-patterns.md` - エラーケースのテスト
+
+
+---
+
+## 関連ドキュメント
+
+### 参照元（このファイルを参照しているファイル）
+
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - プロジェクトの基本実装原則とプロパティテストの例
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

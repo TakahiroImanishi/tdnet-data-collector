@@ -721,9 +721,15 @@ describe('validateCompanyCode', () => {
 - すべてのバリデーションルールにテストを作成
 - カスタムValidationErrorクラスでエラーを明確にする
 
+---
+
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装パターン
-- **エラーハンドリング**: `../core/error-handling-patterns.md` - バリデーションエラーの処理
-- **テスト戦略**: `testing-strategy.md` - バリデーションのテスト方法
-- **API設計**: `../api/api-design-guidelines.md` - APIバリデーションのベストプラクティス
+### 参照元（このファイルを参照しているファイル）
+
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - プロジェクトの基本実装原則とdate_partition設計
+- **API設計ガイドライン**: `../api/api-design-guidelines.md` - RESTful API設計とバリデーション
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

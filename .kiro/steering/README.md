@@ -50,8 +50,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/lambda/**/index.ts` | `development/lambda-implementation.md` | Lambda関数エントリーポイント |
-| `**/lambda/**/handler.ts` | `development/lambda-implementation.md` | Lambda関数ハンドラー |
+| `**/lambda/**/*.ts` | `development/lambda-implementation.md` | Lambda関数全般（すべてのTypeScriptファイル） |
 
 ### テスト関連
 
