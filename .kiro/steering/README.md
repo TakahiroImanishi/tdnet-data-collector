@@ -31,6 +31,9 @@
 - **api-design-guidelines.md** - RESTful API設計ガイドライン
 - **error-codes.md** - APIエラーコード標準
 
+### 📁 meta/ - メタ情報
+- **pattern-matching-tests.md** - fileMatchPatternのテストケースと検証方法
+
 ## 読み込みタイミングの制御
 
 - **常時読み込み**: `core/` フォルダ内のファイル（front-matter不要）
@@ -119,11 +122,11 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | `**/src/**/index.ts` | `development/tdnet-file-naming.md` | エントリーポイント |
 | `**/utils/**/index.ts` | `development/tdnet-file-naming.md` | ユーティリティ |
 
-### テスト・パターンマッチング関連
+### メタ情報・テスト関連
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/.kiro/steering/**/*.md` | `tests/pattern-matching-tests.md` | steeringファイル自体の編集 |
+| `**/.kiro/steering/**/*.md` | `meta/pattern-matching-tests.md` | steeringファイル自体の編集 |
 
 ## ファイル間の参照関係
 

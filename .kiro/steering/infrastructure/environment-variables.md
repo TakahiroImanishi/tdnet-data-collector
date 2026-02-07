@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/.env*'
+fileMatchPattern: '**/cdk/**/*.ts|**/lambda/**/*.ts|**/.env*'
 ---
 
 # 環境変数一覧
