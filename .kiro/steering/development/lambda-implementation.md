@@ -217,6 +217,15 @@ const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
 
 ## エラーハンドリング
 
+**このセクションでは、Lambda関数特有の基本的なエラーハンドリングパターンを説明します。**
+
+**詳細な実装については以下を参照してください:**
+- **再試行戦略**: `error-handling-implementation.md` - `retryWithBackoff`の完全実装
+- **AWS SDK設定**: `error-handling-implementation.md` - DynamoDB/S3クライアントの再試行設定
+- **サーキットブレーカー**: `error-handling-implementation.md` - `CircuitBreaker`クラスの実装
+- **エラーログ構造**: `error-handling-implementation.md` - 標準ログフォーマット
+- **カスタムエラークラス**: `../core/error-handling-patterns.md` - エラー分類と定義
+
 ### 基本パターン
 
 ```typescript

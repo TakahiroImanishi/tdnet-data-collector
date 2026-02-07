@@ -289,10 +289,4 @@ fileMatchPattern: '**/.kiro/specs/**/*.md|**/work-logs/**/*.md|**/improvements/*
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
-
 - **タスク実行ルール**: `../core/tdnet-data-collector.md` - サブエージェント活用の基本方針
-
-### 参照先（このファイルが参照しているファイル）
-
-このファイルは他のsteeringファイルを参照していません。
