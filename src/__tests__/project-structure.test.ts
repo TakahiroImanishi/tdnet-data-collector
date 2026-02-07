@@ -1,15 +1,15 @@
 /**
  * プロジェクト構造の検証テスト
- * 
+ *
  * このテストは、TDnet Data Collectorプロジェクトの初期セットアップが
  * 正しく完了していることを検証します。
- * 
+ *
  * 検証項目:
  * - 必須ディレクトリの存在
  * - 必須ファイルの存在
  * - package.jsonの依存関係
  * - 設定ファイルの妥当性
- * 
+ *
  * Requirements: 要件14.1（テスト）
  */
 
@@ -94,12 +94,9 @@ describe('プロジェクト構造の検証', () => {
         '@aws-sdk/client-sns',
       ];
 
-      test.each(requiredDependencies)(
-        '依存関係 "%s" が存在すること',
-        (dependency) => {
-          expect(packageJson.dependencies).toHaveProperty(dependency);
-        }
-      );
+      test.each(requiredDependencies)('依存関係 "%s" が存在すること', (dependency) => {
+        expect(packageJson.dependencies).toHaveProperty(dependency);
+      });
     });
 
     describe('必須のdevDependenciesがインストールされていること', () => {
@@ -119,12 +116,9 @@ describe('プロジェクト構造の検証', () => {
         'aws-cdk',
       ];
 
-      test.each(requiredDevDependencies)(
-        'devDependency "%s" が存在すること',
-        (dependency) => {
-          expect(packageJson.devDependencies).toHaveProperty(dependency);
-        }
-      );
+      test.each(requiredDevDependencies)('devDependency "%s" が存在すること', (dependency) => {
+        expect(packageJson.devDependencies).toHaveProperty(dependency);
+      });
     });
 
     describe('必須のスクリプトが定義されていること', () => {
@@ -313,7 +307,7 @@ describe('プロジェクト構造の検証', () => {
     test('CDK binファイルが有効なTypeScriptファイルであること', () => {
       const binFilePath = path.join(rootDir, 'cdk/bin/tdnet-data-collector.ts');
       const content = fs.readFileSync(binFilePath, 'utf-8');
-      
+
       // 基本的な構文チェック
       expect(content).toContain('#!/usr/bin/env node');
       expect(content).toContain('import');
@@ -323,7 +317,7 @@ describe('プロジェクト構造の検証', () => {
     test('CDK stackファイルが有効なTypeScriptファイルであること', () => {
       const stackFilePath = path.join(rootDir, 'cdk/lib/tdnet-data-collector-stack.ts');
       const content = fs.readFileSync(stackFilePath, 'utf-8');
-      
+
       // 基本的な構文チェック
       expect(content).toContain('import');
       expect(content).toContain('Stack');

@@ -28,34 +28,34 @@
   - .gitignore、.eslintrc、tsconfig.jsonを設定
   - _Requirements: 要件8（設定管理）_
 
-- [-] 1.2 プロジェクト構造の検証テスト
+- [x] 1.2 プロジェクト構造の検証テスト
   - プロジェクト構造が正しく作成されていることを確認
   - 必要な依存関係がインストールされていることを確認
   - _Requirements: 要件14.1（テスト）_
 
 ### 2. データモデルとユーティリティ実装
 
-- [~] 2.1 TypeScript型定義とインターフェース作成
+- [-] 2.1 TypeScript型定義とインターフェース作成
   - Disclosure、CollectionResult、ExecutionStatus、QueryFilter型を定義
   - DynamoDBアイテム変換関数（toDynamoDBItem、fromDynamoDBItem）を実装
   - date_partition生成関数（generateDatePartition）を実装（JST基準、バリデーション含む）
   - _Requirements: 要件2.1, 2.2, 2.3（メタデータ管理）_
 
 
-- [ ]* 2.2 データモデルのプロパティテスト
+- [ ] 2.2 データモデルのプロパティテスト
   - **Property 3: メタデータの必須フィールド**
   - **Validates: Requirements 2.1, 2.2**
   - 任意の開示情報に対して、toDynamoDBItemが必須フィールドをすべて含むことを検証
   - _Requirements: 要件14.2（プロパティテスト）_
 
-- [ ]* 2.3 date_partition生成のプロパティテスト
+- [ ] 2.3 date_partition生成のプロパティテスト
   - **Property: date_partition生成の正確性**
   - **Validates: Requirements 2.1**
   - 任意のISO8601日時に対して、generateDatePartitionがYYYY-MM形式（JST基準）を返すことを検証
   - 月またぎのエッジケース（UTC 2024-01-31T15:30:00Z → JST 2024-02-01T00:30:00 → "2024-02"）を検証
   - _Requirements: 要件14.2（プロパティテスト）_
 
-- [ ]* 2.4 date_partitionバリデーションのユニットテスト
+- [ ] 2.4 date_partitionバリデーションのユニットテスト
   - 不正なフォーマット（ISO8601以外）でValidationErrorをスローすることを確認
   - 存在しない日付（2024-02-30）でValidationErrorをスローすることを確認
   - 範囲外の日付（1970年以前、現在+1日以降）でValidationErrorをスローすることを確認

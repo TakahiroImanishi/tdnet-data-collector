@@ -1,0 +1,9 @@
+# Build output
+dist/
+**/*.d.ts
+
+# Dependencies
+node_modules/
+
+# CDK output
+cdk.out/

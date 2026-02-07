@@ -9,7 +9,8 @@ new TdnetDataCollectorStack(app, 'TdnetDataCollectorStack', {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'ap-northeast-1',
   },
-  description: 'TDnet Data Collector - Serverless application for collecting disclosure information',
+  description:
+    'TDnet Data Collector - Serverless application for collecting disclosure information',
   tags: {
     Project: 'TdnetDataCollector',
     Environment: process.env.ENVIRONMENT || 'dev',
