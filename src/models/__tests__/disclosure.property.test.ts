@@ -219,7 +219,7 @@ describe('Disclosure Property Tests', () => {
           fc.constantFrom('決算短信', '有価証券報告書', '適時開示', 'その他'),
           fc.string({ minLength: 1, maxLength: 200 }),
           fc
-            .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+            .date({ min: new Date('2020-01-01'), max: new Date(Date.now()) })
             .map((d) => d.toISOString()),
           fc.webUrl().map((url) => `${url}/disclosure.pdf`),
           fc.string({ minLength: 1, maxLength: 200 }),
@@ -272,7 +272,7 @@ describe('Disclosure Property Tests', () => {
           fc.array(
             fc.tuple(
               fc
-                .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+                .date({ min: new Date('2020-01-01'), max: new Date(Date.now()) })
                 .map((d) => d.toISOString()),
               fc.integer({ min: 1000, max: 9999 }).map(String),
               fc.integer({ min: 0, max: 999 })
@@ -313,7 +313,7 @@ describe('Disclosure Property Tests', () => {
       fc.assert(
         fc.property(
           fc
-            .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+            .date({ min: new Date('2020-01-01'), max: new Date(Date.now()) })
             .map((d) => d.toISOString()),
           fc.integer({ min: 1000, max: 9999 }).map(String),
           fc.integer({ min: 0, max: 999 }),
