@@ -509,10 +509,821 @@ successRateAlarm.addAlarmAction(new SnsAction(alertTopic));
 
 ---
 
+## CloudWatchメトリクス設定例（CDK）
+
+### 基本的なメトリクス定義
+
+```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+
+export class TdnetMonitoringStack extends cdk.Stack {
+    constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+        super(scope, id, props);
+
+        // Lambda関数の参照（既存のスタックから取得）
+        const collectorFn = lambda.Function.fromFunctionName(
+            this,
+            'CollectorFunction',
+            'tdnet-collector-function'
+        );
+
+        // DynamoDBテーブルの参照
+        const table = dynamodb.Table.fromTableName(
+            this,
+            'DisclosuresTable',
+            'tdnet-disclosures'
+        );
+
+        // Lambda標準メトリクス
+        const invocationsMetric = collectorFn.metricInvocations({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+        });
+
+        const errorsMetric = collectorFn.metricErrors({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+        });
+
+        const durationMetric = collectorFn.metricDuration({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Average',
+        });
+
+        const throttlesMetric = collectorFn.metricThrottles({
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+        });
+    }
+}
+```
+
+### カスタムメトリクスの作成
+
+```typescript
+// カスタムメトリクスの定義
+const collectionSuccessRateMetric = new cloudwatch.Metric({
+    namespace: 'TDnetDataCollector',
+    metricName: 'CollectionSuccessRate',
+    dimensionsMap: {
+        Environment: 'production',
+    },
+    statistic: 'Average',
+    period: cdk.Duration.minutes(5),
+});
+
+const collectedDisclosuresMetric = new cloudwatch.Metric({
+    namespace: 'TDnetDataCollector',
+    metricName: 'CollectedDisclosuresCount',
+    dimensionsMap: {
+        Environment: 'production',
+        DisclosureType: 'ALL',
+    },
+    statistic: 'Sum',
+    period: cdk.Duration.hours(1),
+});
+
+const dataIntegrityErrorsMetric = new cloudwatch.Metric({
+    namespace: 'TDnetDataCollector',
+    metricName: 'DataIntegrityErrors',
+    dimensionsMap: {
+        Environment: 'production',
+    },
+    statistic: 'Sum',
+    period: cdk.Duration.hours(1),
+});
+
+const throughputMetric = new cloudwatch.Metric({
+    namespace: 'TDnetDataCollector',
+    metricName: 'Throughput',
+    dimensionsMap: {
+        Environment: 'production',
+    },
+    statistic: 'Average',
+    period: cdk.Duration.minutes(5),
+    unit: cloudwatch.Unit.COUNT_PER_SECOND,
+});
+```
+
+### メトリクスフィルターの設定
+
+```typescript
+import * as logs from 'aws-cdk-lib/aws-logs';
+
+// Lambda関数のロググループ
+const logGroup = logs.LogGroup.fromLogGroupName(
+    this,
+    'CollectorLogGroup',
+    `/aws/lambda/${collectorFn.functionName}`
+);
+
+// エラーメトリクスフィルター
+const errorMetricFilter = new logs.MetricFilter(this, 'ErrorMetricFilter', {
+    logGroup,
+    metricNamespace: 'TDnetDataCollector',
+    metricName: 'ApplicationErrors',
+    filterPattern: logs.FilterPattern.literal('[timestamp, request_id, level = "ERROR", ...]'),
+    metricValue: '1',
+    defaultValue: 0,
+    dimensions: {
+        Environment: 'production',
+    },
+});
+
+// 収集成功メトリクスフィルター
+const successMetricFilter = new logs.MetricFilter(this, 'SuccessMetricFilter', {
+    logGroup,
+    metricNamespace: 'TDnetDataCollector',
+    metricName: 'CollectionSuccess',
+    filterPattern: logs.FilterPattern.literal('[..., msg = "Successfully collected disclosure", ...]'),
+    metricValue: '1',
+    defaultValue: 0,
+});
+
+// 収集失敗メトリクスフィルター
+const failureMetricFilter = new logs.MetricFilter(this, 'FailureMetricFilter', {
+    logGroup,
+    metricNamespace: 'TDnetDataCollector',
+    metricName: 'CollectionFailure',
+    filterPattern: logs.FilterPattern.literal('[..., msg = "Failed to collect disclosure", ...]'),
+    metricValue: '1',
+    defaultValue: 0,
+});
+
+// データ整合性エラーフィルター
+const integrityErrorFilter = new logs.MetricFilter(this, 'IntegrityErrorFilter', {
+    logGroup,
+    metricNamespace: 'TDnetDataCollector',
+    metricName: 'DataIntegrityErrors',
+    filterPattern: logs.FilterPattern.literal('[..., error_type = "DataIntegrityError", ...]'),
+    metricValue: '1',
+    defaultValue: 0,
+});
+```
+
+---
+
+## アラート設定例（CDK）
+
+### SNSトピックの作成
+
+```typescript
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+
+// アラート通知用SNSトピック
+const alertTopic = new sns.Topic(this, 'AlertTopic', {
+    topicName: 'tdnet-alerts',
+    displayName: 'TDnet Data Collector Alerts',
+});
+
+// メール通知の追加
+alertTopic.addSubscription(
+    new subscriptions.EmailSubscription('alerts@example.com')
+);
+
+// 複数の宛先を追加
+const emails = ['admin@example.com', 'ops@example.com'];
+emails.forEach(email => {
+    alertTopic.addSubscription(
+        new subscriptions.EmailSubscription(email)
+    );
+});
+```
+
+### Lambda関数のアラーム
+
+```typescript
+import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
+
+// エラー率アラーム（5分間で10件以上のエラー）
+const highErrorRateAlarm = new cloudwatch.Alarm(this, 'HighErrorRateAlarm', {
+    alarmName: 'tdnet-high-error-rate',
+    alarmDescription: 'Lambda関数のエラーが5分間で10件を超えました',
+    metric: errorsMetric,
+    threshold: 10,
+    evaluationPeriods: 2,
+    datapointsToAlarm: 2,
+    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+});
+
+highErrorRateAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+highErrorRateAlarm.addOkAction(new actions.SnsAction(alertTopic));
+
+// 実行時間アラーム（平均10分超過）
+const longDurationAlarm = new cloudwatch.Alarm(this, 'LongDurationAlarm', {
+    alarmName: 'tdnet-long-duration',
+    alarmDescription: 'Lambda実行時間が平均10分を超えました',
+    metric: durationMetric,
+    threshold: 600000, // 10分（ミリ秒）
+    evaluationPeriods: 2,
+    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+});
+
+longDurationAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+
+// スロットリングアラーム（即座に通知）
+const throttleAlarm = new cloudwatch.Alarm(this, 'ThrottleAlarm', {
+    alarmName: 'tdnet-throttle',
+    alarmDescription: 'Lambdaスロットリングが発生しました',
+    metric: throttlesMetric,
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+});
+
+throttleAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+```
+
+### ビジネスメトリクスのアラーム
+
+```typescript
+// 収集成功率アラーム（95%未満）
+const lowSuccessRateAlarm = new cloudwatch.Alarm(this, 'LowSuccessRateAlarm', {
+    alarmName: 'tdnet-low-success-rate',
+    alarmDescription: '収集成功率が95%を下回りました',
+    metric: collectionSuccessRateMetric,
+    threshold: 95,
+    evaluationPeriods: 2,
+    comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+});
+
+lowSuccessRateAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+
+// データ収集停止アラーム（24時間データなし）
+const noDataAlarm = new cloudwatch.Alarm(this, 'NoDataAlarm', {
+    alarmName: 'tdnet-no-data-collected',
+    alarmDescription: '24時間データ収集がありません',
+    metric: collectedDisclosuresMetric.with({
+        period: cdk.Duration.hours(24),
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+    treatMissingData: cloudwatch.TreatMissingData.BREACHING,
+});
+
+noDataAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+
+// データ整合性エラーアラーム（1時間で5件以上）
+const integrityErrorAlarm = new cloudwatch.Alarm(this, 'IntegrityErrorAlarm', {
+    alarmName: 'tdnet-integrity-errors',
+    alarmDescription: 'データ整合性エラーが1時間で5件を超えました',
+    metric: dataIntegrityErrorsMetric,
+    threshold: 5,
+    evaluationPeriods: 1,
+    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+});
+
+integrityErrorAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+```
+
+### DynamoDBのアラーム
+
+```typescript
+// DynamoDBユーザーエラーアラーム
+const dynamoUserErrorsMetric = new cloudwatch.Metric({
+    namespace: 'AWS/DynamoDB',
+    metricName: 'UserErrors',
+    dimensionsMap: {
+        TableName: table.tableName,
+    },
+    statistic: 'Sum',
+    period: cdk.Duration.minutes(5),
+});
+
+const dynamoUserErrorAlarm = new cloudwatch.Alarm(this, 'DynamoUserErrorAlarm', {
+    alarmName: 'tdnet-dynamodb-user-errors',
+    alarmDescription: 'DynamoDBユーザーエラーが5分間で5件を超えました',
+    metric: dynamoUserErrorsMetric,
+    threshold: 5,
+    evaluationPeriods: 1,
+    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+});
+
+dynamoUserErrorAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+
+// DynamoDBスロットリングアラーム
+const dynamoThrottleMetric = new cloudwatch.Metric({
+    namespace: 'AWS/DynamoDB',
+    metricName: 'ThrottledRequests',
+    dimensionsMap: {
+        TableName: table.tableName,
+    },
+    statistic: 'Sum',
+    period: cdk.Duration.minutes(5),
+});
+
+const dynamoThrottleAlarm = new cloudwatch.Alarm(this, 'DynamoThrottleAlarm', {
+    alarmName: 'tdnet-dynamodb-throttles',
+    alarmDescription: 'DynamoDBスロットリングが発生しました',
+    metric: dynamoThrottleMetric,
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+});
+
+dynamoThrottleAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
+```
+
+### アラート閾値の設定根拠
+
+| アラーム | 閾値 | 根拠 |
+|---------|------|------|
+| **エラー率** | 10件/5分 | 通常は0-2件。10件超過は異常な状態 |
+| **実行時間** | 10分 | 目標5分の2倍。タイムアウト（15分）前に検知 |
+| **スロットリング** | 1件 | 即座に対応が必要な重大な問題 |
+| **収集成功率** | 95% | Phase 1-2の目標値。これを下回ると品質低下 |
+| **データ収集停止** | 24時間 | 平日は必ず開示情報があるため、24時間なしは異常 |
+| **整合性エラー** | 5件/時間 | 目標0.1%。1時間で5件は許容範囲を超える |
+| **DynamoDBエラー** | 5件/5分 | 通常は0件。5件超過は設定ミスやバグの可能性 |
+
+---
+
+## ダッシュボード作成例（CDK）
+
+### 総合ダッシュボード
+
+```typescript
+// メインダッシュボードの作成
+const dashboard = new cloudwatch.Dashboard(this, 'TdnetDashboard', {
+    dashboardName: 'tdnet-collector-overview',
+    periodOverride: cloudwatch.PeriodOverride.AUTO,
+});
+
+// 1行目: KPI概要
+dashboard.addWidgets(
+    new cloudwatch.SingleValueWidget({
+        title: '収集成功率（24時間）',
+        metrics: [collectionSuccessRateMetric.with({
+            period: cdk.Duration.hours(24),
+        })],
+        width: 6,
+        height: 4,
+        setPeriodToTimeRange: true,
+    }),
+    new cloudwatch.SingleValueWidget({
+        title: '収集件数（24時間）',
+        metrics: [collectedDisclosuresMetric.with({
+            period: cdk.Duration.hours(24),
+        })],
+        width: 6,
+        height: 4,
+    }),
+    new cloudwatch.SingleValueWidget({
+        title: '平均実行時間',
+        metrics: [durationMetric],
+        width: 6,
+        height: 4,
+    }),
+    new cloudwatch.SingleValueWidget({
+        title: 'エラー数（24時間）',
+        metrics: [errorsMetric.with({
+            period: cdk.Duration.hours(24),
+        })],
+        width: 6,
+        height: 4,
+    })
+);
+
+// 2行目: Lambda実行状況
+dashboard.addWidgets(
+    new cloudwatch.GraphWidget({
+        title: 'Lambda実行回数',
+        left: [invocationsMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: {
+            label: '実行回数',
+            showUnits: false,
+        },
+    }),
+    new cloudwatch.GraphWidget({
+        title: 'Lambdaエラー数',
+        left: [errorsMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: {
+            label: 'エラー数',
+            showUnits: false,
+        },
+    })
+);
+
+// 3行目: パフォーマンス
+dashboard.addWidgets(
+    new cloudwatch.GraphWidget({
+        title: 'Lambda実行時間',
+        left: [
+            durationMetric,
+            collectorFn.metricDuration({
+                statistic: 'Maximum',
+                period: cdk.Duration.minutes(5),
+                label: '最大実行時間',
+            }),
+        ],
+        width: 12,
+        height: 6,
+        leftYAxis: {
+            label: '実行時間（ミリ秒）',
+            showUnits: false,
+        },
+    }),
+    new cloudwatch.GraphWidget({
+        title: 'スループット',
+        left: [throughputMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: {
+            label: '件/秒',
+            showUnits: false,
+        },
+    })
+);
+
+// 4行目: ビジネスメトリクス
+dashboard.addWidgets(
+    new cloudwatch.GraphWidget({
+        title: '収集件数（時間別）',
+        left: [collectedDisclosuresMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: {
+            label: '収集件数',
+            showUnits: false,
+        },
+    }),
+    new cloudwatch.GraphWidget({
+        title: '収集成功率',
+        left: [collectionSuccessRateMetric],
+        width: 12,
+        height: 6,
+        leftYAxis: {
+            label: '成功率（%）',
+            min: 0,
+            max: 100,
+        },
+    })
+);
+
+// 5行目: DynamoDB
+dashboard.addWidgets(
+    new cloudwatch.GraphWidget({
+        title: 'DynamoDB読み書きキャパシティ',
+        left: [
+            new cloudwatch.Metric({
+                namespace: 'AWS/DynamoDB',
+                metricName: 'ConsumedReadCapacityUnits',
+                dimensionsMap: { TableName: table.tableName },
+                statistic: 'Sum',
+                label: '読み込み',
+            }),
+        ],
+        right: [
+            new cloudwatch.Metric({
+                namespace: 'AWS/DynamoDB',
+                metricName: 'ConsumedWriteCapacityUnits',
+                dimensionsMap: { TableName: table.tableName },
+                statistic: 'Sum',
+                label: '書き込み',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    }),
+    new cloudwatch.GraphWidget({
+        title: 'DynamoDBエラー',
+        left: [
+            dynamoUserErrorsMetric,
+            new cloudwatch.Metric({
+                namespace: 'AWS/DynamoDB',
+                metricName: 'SystemErrors',
+                dimensionsMap: { TableName: table.tableName },
+                statistic: 'Sum',
+                label: 'システムエラー',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    })
+);
+```
+
+### 詳細パフォーマンスダッシュボード
+
+```typescript
+const performanceDashboard = new cloudwatch.Dashboard(this, 'PerformanceDashboard', {
+    dashboardName: 'tdnet-collector-performance',
+});
+
+performanceDashboard.addWidgets(
+    // パーセンタイル分析
+    new cloudwatch.GraphWidget({
+        title: 'Lambda実行時間（パーセンタイル）',
+        left: [
+            collectorFn.metricDuration({
+                statistic: 'p50',
+                label: 'p50',
+            }),
+            collectorFn.metricDuration({
+                statistic: 'p90',
+                label: 'p90',
+            }),
+            collectorFn.metricDuration({
+                statistic: 'p99',
+                label: 'p99',
+            }),
+        ],
+        width: 24,
+        height: 6,
+    }),
+    
+    // 同時実行数
+    new cloudwatch.GraphWidget({
+        title: 'Lambda同時実行数',
+        left: [
+            collectorFn.metricInvocations({
+                statistic: 'Sum',
+                label: '実行回数',
+            }),
+        ],
+        right: [
+            new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'ConcurrentExecutions',
+                dimensionsMap: {
+                    FunctionName: collectorFn.functionName,
+                },
+                statistic: 'Maximum',
+                label: '同時実行数',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    }),
+    
+    // メモリ使用量
+    new cloudwatch.GraphWidget({
+        title: 'メモリ使用量',
+        left: [
+            new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'MemoryUtilization',
+                dimensionsMap: {
+                    FunctionName: collectorFn.functionName,
+                },
+                statistic: 'Average',
+                label: '平均使用率',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    })
+);
+```
+
+### コスト監視ダッシュボード
+
+```typescript
+const costDashboard = new cloudwatch.Dashboard(this, 'CostDashboard', {
+    dashboardName: 'tdnet-collector-cost',
+});
+
+costDashboard.addWidgets(
+    // Lambda実行コスト推定
+    new cloudwatch.GraphWidget({
+        title: 'Lambda実行回数（コスト推定用）',
+        left: [
+            invocationsMetric.with({
+                period: cdk.Duration.days(1),
+                statistic: 'Sum',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    }),
+    
+    // Lambda実行時間合計（コスト推定用）
+    new cloudwatch.GraphWidget({
+        title: 'Lambda実行時間合計（日次）',
+        left: [
+            durationMetric.with({
+                period: cdk.Duration.days(1),
+                statistic: 'Sum',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    }),
+    
+    // DynamoDBキャパシティ消費
+    new cloudwatch.GraphWidget({
+        title: 'DynamoDBキャパシティ消費（日次）',
+        left: [
+            new cloudwatch.Metric({
+                namespace: 'AWS/DynamoDB',
+                metricName: 'ConsumedReadCapacityUnits',
+                dimensionsMap: { TableName: table.tableName },
+                statistic: 'Sum',
+                period: cdk.Duration.days(1),
+                label: '読み込み',
+            }),
+            new cloudwatch.Metric({
+                namespace: 'AWS/DynamoDB',
+                metricName: 'ConsumedWriteCapacityUnits',
+                dimensionsMap: { TableName: table.tableName },
+                statistic: 'Sum',
+                period: cdk.Duration.days(1),
+                label: '書き込み',
+            }),
+        ],
+        width: 12,
+        height: 6,
+    }),
+    
+    // S3ストレージサイズ
+    new cloudwatch.GraphWidget({
+        title: 'S3ストレージサイズ',
+        left: [
+            new cloudwatch.Metric({
+                namespace: 'AWS/S3',
+                metricName: 'BucketSizeBytes',
+                dimensionsMap: {
+                    BucketName: 'tdnet-pdfs-prod',
+                    StorageType: 'StandardStorage',
+                },
+                statistic: 'Average',
+                period: cdk.Duration.days(1),
+            }),
+        ],
+        width: 12,
+        height: 6,
+    })
+);
+```
+
+### ウィジェット配置のベストプラクティス
+
+**ダッシュボードレイアウト原則:**
+
+1. **最重要KPIを最上部に配置**
+   - SingleValueWidgetで一目で状態を把握
+   - 幅6（4列配置）で主要指標を並べる
+
+2. **時系列グラフは中段に配置**
+   - GraphWidgetで傾向を可視化
+   - 幅12（2列配置）で詳細を表示
+
+3. **詳細メトリクスは下段に配置**
+   - 技術的な詳細情報
+   - トラブルシューティング用
+
+4. **色分けとラベル**
+   - 正常: 緑系
+   - 警告: 黄色系
+   - エラー: 赤系
+   - ラベルは日本語で明確に
+
+---
+
+## Lambda関数内でのメトリクス送信実装
+
+### カスタムメトリクスの送信
+
+```typescript
+import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
+
+// グローバルスコープで初期化（再利用）
+const cloudwatch = new CloudWatchClient({ region: 'ap-northeast-1' });
+
+/**
+ * カスタムメトリクスを送信
+ */
+async function putMetric(
+    metricName: string,
+    value: number,
+    unit: string = 'None',
+    dimensions: Record<string, string> = {}
+): Promise<void> {
+    try {
+        await cloudwatch.send(new PutMetricDataCommand({
+            Namespace: 'TDnetDataCollector',
+            MetricData: [{
+                MetricName: metricName,
+                Value: value,
+                Unit: unit,
+                Timestamp: new Date(),
+                Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({
+                    Name,
+                    Value,
+                })),
+            }],
+        }));
+    } catch (error) {
+        // メトリクス送信失敗はログのみ（処理は継続）
+        console.error('Failed to put metric', { metricName, error });
+    }
+}
+
+/**
+ * 収集成功率を計算して送信
+ */
+async function recordCollectionMetrics(
+    successCount: number,
+    failureCount: number
+): Promise<void> {
+    const totalCount = successCount + failureCount;
+    const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 0;
+    
+    await Promise.all([
+        putMetric('CollectionSuccessRate', successRate, 'Percent', {
+            Environment: process.env.ENVIRONMENT || 'dev',
+        }),
+        putMetric('CollectedDisclosuresCount', successCount, 'Count', {
+            Environment: process.env.ENVIRONMENT || 'dev',
+        }),
+        putMetric('CollectionFailureCount', failureCount, 'Count', {
+            Environment: process.env.ENVIRONMENT || 'dev',
+        }),
+    ]);
+}
+
+/**
+ * スループットを記録
+ */
+async function recordThroughput(
+    itemCount: number,
+    durationMs: number
+): Promise<void> {
+    const throughput = (itemCount / durationMs) * 1000; // 件/秒
+    
+    await putMetric('Throughput', throughput, 'Count/Second', {
+        Environment: process.env.ENVIRONMENT || 'dev',
+    });
+}
+
+/**
+ * データ整合性エラーを記録
+ */
+async function recordIntegrityError(errorType: string): Promise<void> {
+    await putMetric('DataIntegrityErrors', 1, 'Count', {
+        Environment: process.env.ENVIRONMENT || 'dev',
+        ErrorType: errorType,
+    });
+}
+
+// Lambda ハンドラーでの使用例
+export const handler = async (event: any): Promise<any> => {
+    const startTime = Date.now();
+    let successCount = 0;
+    let failureCount = 0;
+    
+    try {
+        // 収集処理
+        const disclosures = await scrapeDisclosureList(event.date);
+        
+        for (const disclosure of disclosures) {
+            try {
+                await processDisclosure(disclosure);
+                successCount++;
+            } catch (error) {
+                failureCount++;
+                console.error('Failed to process disclosure', { disclosure, error });
+            }
+        }
+        
+        // メトリクス送信
+        const duration = Date.now() - startTime;
+        await Promise.all([
+            recordCollectionMetrics(successCount, failureCount),
+            recordThroughput(successCount, duration),
+        ]);
+        
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                collected: successCount,
+                failed: failureCount,
+                duration,
+            }),
+        };
+    } catch (error) {
+        console.error('Collection failed', { error });
+        throw error;
+    }
+};
+```
+
+---
+
 ## 関連ドキュメント
 
-- **[監視とアラート](../../.kiro/steering/infrastructure/monitoring-alerts.md)** - CloudWatch設定の詳細
-- **[パフォーマンス最適化](../../.kiro/steering/infrastructure/performance-optimization.md)** - 最適化戦略
+- **[監視とアラート](../../.kiro/steering/infrastructure/monitoring-alerts.md)** - CloudWatch設定の詳細、ログ分析、X-Rayトレーシング
+- **[パフォーマンス最適化](../../.kiro/steering/infrastructure/performance-optimization.md)** - Lambda最適化、DynamoDB最適化、コスト削減戦略
 - **[設計書](./design.md)** - システム設計とパフォーマンス目標
 - **[Correctness Propertiesチェックリスト](./correctness-properties-checklist.md)** - 品質検証項目
 

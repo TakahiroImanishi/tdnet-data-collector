@@ -344,6 +344,180 @@ NoSuchKey: The specified key does not exist
 
 ## スクレイピング関連
 
+### シナリオ1: DynamoDB書き込みエラー
+
+**エラーログ:**
+```json
+{
+  "level": "ERROR",
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "message": "Failed to save metadata",
+  "error": {
+    "name": "ConditionalCheckFailedException",
+    "message": "The conditional request failed"
+  },
+  "context": {
+    "disclosure_id": "20240115_7203_001",
+    "company_code": "7203"
+  }
+}
+```
+
+**原因:**
+- 重複する disclosure_id での書き込み試行
+- 同じ開示情報が複数回収集された
+
+**解決手順:**
+
+1. **CloudWatch Logsで disclosure_id を確認**
+   ```bash
+   aws logs filter-log-events \
+       --log-group-name /aws/lambda/CollectorFunction \
+       --filter-pattern "20240115_7203_001"
+   ```
+
+2. **DynamoDBコンソールで既存レコードを確認**
+   ```bash
+   aws dynamodb get-item \
+       --table-name tdnet-disclosures-prod \
+       --key '{"disclosure_id": {"S": "20240115_7203_001"}}'
+   ```
+
+3. **重複チェックロジックを見直し**
+   - 既存コードが条件付き書き込みを使用しているか確認
+   - 重複時は警告ログのみ出力し、エラーとして扱わない
+
+**予防策:**
+- 収集前に GetItem で存在確認を追加
+- 実行状態テーブルで処理済みIDを管理
+
+---
+
+### シナリオ2: PDF ダウンロードタイムアウト
+
+**エラーログ:**
+```json
+{
+  "level": "ERROR",
+  "timestamp": "2024-01-15T10:35:20.456Z",
+  "message": "PDF download timed out",
+  "error": {
+    "code": "ETIMEDOUT",
+    "message": "timeout of 30000ms exceeded"
+  },
+  "context": {
+    "disclosure_id": "20240115_6758_002",
+    "pdf_url": "https://www.release.tdnet.info/inbs/140120240115456789.pdf",
+    "retry_count": 2
+  }
+}
+```
+
+**原因:**
+- TDnetサーバーの応答が遅い
+- ネットワーク接続が不安定
+- PDFファイルサイズが大きい（10MB以上）
+
+**解決手順:**
+
+1. **手動でPDFダウンロードを試行**
+   ```bash
+   curl -o test.pdf "https://www.release.tdnet.info/inbs/140120240115456789.pdf"
+   ```
+
+2. **タイムアウト時間を延長**
+   ```typescript
+   const response = await axios.get(url, {
+       timeout: 60000, // 30秒 → 60秒
+       responseType: 'arraybuffer',
+   });
+   ```
+
+3. **再試行回数を増やす**
+   ```typescript
+   await retryWithBackoff(
+       () => downloadPDF(url),
+       { maxRetries: 5, initialDelay: 3000 } // 3回 → 5回
+   );
+   ```
+
+**予防策:**
+- ファイルサイズを事前にチェック（HEAD リクエスト）
+- 大きなファイルはストリーミングダウンロード
+- CloudWatch アラームで頻繁なタイムアウトを検知
+
+---
+
+### シナリオ3: Lambda メモリ不足によるクラッシュ
+
+**エラーログ:**
+```json
+{
+  "level": "ERROR",
+  "timestamp": "2024-01-15T10:40:15.789Z",
+  "message": "Runtime exited with error: signal: killed",
+  "error": {
+    "errorType": "Runtime.ExitError"
+  },
+  "context": {
+    "memoryLimitInMB": "512",
+    "memoryUsedInMB": "510"
+  }
+}
+```
+
+**原因:**
+- 複数の大きなPDFファイルを同時にメモリに保持
+- メモリリーク
+- 不適切なバッファ管理
+
+**解決手順:**
+
+1. **CloudWatch Metricsでメモリ使用量を確認**
+   ```bash
+   aws cloudwatch get-metric-statistics \
+       --namespace AWS/Lambda \
+       --metric-name MemoryUtilization \
+       --dimensions Name=FunctionName,Value=CollectorFunction \
+       --start-time 2024-01-15T10:00:00Z \
+       --end-time 2024-01-15T11:00:00Z \
+       --period 300 \
+       --statistics Maximum
+   ```
+
+2. **メモリサイズを増やす**
+   ```typescript
+   // cdk/lib/stacks/tdnet-stack.ts
+   const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
+       memorySize: 1024, // 512MB → 1024MB
+   });
+   ```
+
+3. **並列処理数を制限**
+   ```typescript
+   import pMap from 'p-map';
+   
+   // 同時に3件まで処理
+   await pMap(disclosures, processDisclosure, { concurrency: 3 });
+   ```
+
+4. **ストリーミング処理に変更**
+   ```typescript
+   const stream = await axios.get(url, { responseType: 'stream' });
+   await s3.upload({
+       Bucket: bucketName,
+       Key: s3Key,
+       Body: stream.data,
+   }).promise();
+   ```
+
+**予防策:**
+- メモリ使用量のCloudWatchアラーム設定（80%超過で警告）
+- 定期的なメモリプロファイリング
+- 不要なオブジェクトの明示的な解放
+
+---
+
 ### 問題: TDnetからのレスポンスが403 Forbidden
 
 **症状:**

@@ -33,7 +33,7 @@ TDnet Data Collectorは、日本取引所グループが提供するTDnet（適�
 
 ## Architecture
 
-### システム構成図
+### システム構成図（全体アーキテクチャ）
 
 ```mermaid
 graph TB
@@ -109,7 +109,43 @@ graph TB
     style S3W fill:#569A31
 ```
 
-### データフロー
+### データフロー図
+
+```mermaid
+sequenceDiagram
+    participant EB as EventBridge
+    participant LC as Lambda Collector
+    participant TD as TDnet Website
+    participant DDB as DynamoDB
+    participant S3 as S3 Bucket
+    participant CW as CloudWatch
+    participant SNS as SNS Topic
+    
+    EB->>LC: 日次トリガー (9:00 JST)
+    LC->>TD: 開示情報リスト取得
+    TD-->>LC: HTML Response
+    LC->>LC: HTMLパース
+    
+    loop 各開示情報
+        LC->>DDB: 重複チェック
+        alt 新規データ
+            LC->>TD: PDF ダウンロード
+            TD-->>LC: PDF File
+            LC->>S3: PDF 保存
+            LC->>DDB: メタデータ保存
+            LC->>CW: 成功ログ記録
+        else 重複データ
+            LC->>CW: スキップログ記録
+        end
+    end
+    
+    alt エラー発生
+        LC->>SNS: エラー通知
+        LC->>CW: エラーログ記録
+    end
+    
+    LC-->>EB: 実行完了
+```
 
 **バッチ収集フロー:**
 1. EventBridgeが毎日指定時刻にLambda Collectorを起動
