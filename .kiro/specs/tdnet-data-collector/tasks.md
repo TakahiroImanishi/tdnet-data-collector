@@ -21,14 +21,14 @@
 
 ### 1. プロジェクトセットアップ
 
-- [-] 1.1 プロジェクト初期化とCDK環境構築
+- [x] 1.1 プロジェクト初期化とCDK環境構築
   - TypeScript/Node.js 20.xプロジェクトを初期化
   - AWS CDKをインストールし、CDKプロジェクトを初期化
   - ESLint、Prettier、Jest、fast-checkを設定
   - .gitignore、.eslintrc、tsconfig.jsonを設定
   - _Requirements: 要件8（設定管理）_
 
-- [ ]* 1.2 プロジェクト構造の検証テスト
+- [ ] 1.2 プロジェクト構造の検証テスト
   - プロジェクト構造が正しく作成されていることを確認
   - 必要な依存関係がインストールされていることを確認
   - _Requirements: 要件14.1（テスト）_
