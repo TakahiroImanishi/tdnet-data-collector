@@ -978,12 +978,7 @@ async function processDLQMessage(record: SQSRecord): Promise<void> {
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
+- `../core/error-handling-patterns.md` - エラーハンドリング基本原則（エラー分類とカスタムエラークラス）
+- `../api/error-codes.md` - エラーコード標準（APIエラーコードの詳細定義）
+- `lambda-implementation.md` - Lambda実装ガイド（Lambda関数特有のエラーハンドリング基本パターン）
 
-- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラー分類と再試行戦略の概要
-- **Lambda実装ガイド**: `lambda-implementation.md` - Lambda関数特有のエラーハンドリング基本パターン
-
-### 参照先（このファイルが参照しているファイル）
-
-- **基本原則**: `../core/error-handling-patterns.md` - エラー分類とカスタムエラークラス
-- **エラーコード標準**: `../api/error-codes.md` - APIエラーコードの詳細定義

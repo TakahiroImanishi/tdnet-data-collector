@@ -62,7 +62,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## development/tdnet-scraping-patterns.md
 
 ### fileMatchPattern
-```
+```text
 **/scraper/**/*.ts|**/collector/**/*.ts
 ```
 
@@ -85,7 +85,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## development/error-handling-implementation.md
 
 ### fileMatchPattern
-```
+```text
 **/utils/error*.ts|**/utils/retry*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/api/**/*.ts|**/lambda/**/*.ts
 ```
 
@@ -113,7 +113,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## api/api-design-guidelines.md
 
 ### fileMatchPattern
-```
+```text
 **/api/**/*.ts|**/routes/**/*.ts
 ```
 
@@ -136,7 +136,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## api/error-codes.md
 
 ### fileMatchPattern
-```
+```text
 **/api/**/*.ts|**/routes/**/*.ts
 ```
 
@@ -159,7 +159,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## security/security-best-practices.md
 
 ### fileMatchPattern
-```
+```text
 **/cdk/**/*.ts|**/iam/**/*.ts|**/security/**/*.ts
 ```
 
@@ -183,7 +183,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## infrastructure/deployment-checklist.md
 
 ### fileMatchPattern
-```
+```text
 **/cdk/**/*.ts
 ```
 
@@ -206,7 +206,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## infrastructure/environment-variables.md
 
 ### fileMatchPattern
-```
+```text
 **/cdk/**/*.ts|**/lambda/**/*.ts|**/.env*
 ```
 
@@ -235,7 +235,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## infrastructure/performance-optimization.md
 
 ### fileMatchPattern
-```
+```text
 **/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*function*.ts|**/dynamodb/**/*.ts|**/s3/**/*.ts|**/lambda/**/*.ts
 ```
 
@@ -262,7 +262,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## infrastructure/monitoring-alerts.md
 
 ### fileMatchPattern
-```
+```text
 **/monitoring/**/*.ts
 ```
 
@@ -284,7 +284,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## development/workflow-guidelines.md
 
 ### fileMatchPattern
-```
+```text
 **/.kiro/specs/**/*.md
 ```
 
@@ -306,7 +306,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## development/documentation-standards.md
 
 ### fileMatchPattern
-```
+```text
 **/*.md
 ```
 

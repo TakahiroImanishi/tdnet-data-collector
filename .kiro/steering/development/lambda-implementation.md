@@ -635,23 +635,11 @@ async function processWithTracing(disclosure: Disclosure): Promise<void> {
 
 ## 関連ドキュメント
 
-- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラー分類と基本原則
-- **エラーハンドリング詳細実装**: `error-handling-implementation.md` - 再試行戦略、AWS SDK設定、サーキットブレーカー、DLQ完全実装
-- **環境変数**: `../infrastructure/environment-variables.md` - 環境変数の詳細定義
-- **パフォーマンス最適化**: `../infrastructure/performance-optimization.md` - DynamoDB、S3の最適化
-- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - CloudWatch設定
-- **テスト戦略**: `testing-strategy.md` - Lambda関数のテスト方法
-- **ファイル命名規則**: `tdnet-file-naming.md` - Lambda関数のファイル構成
+- `../core/error-handling-patterns.md` - エラーハンドリング基本原則（エラー分類と基本原則）
+- `error-handling-implementation.md` - エラーハンドリング詳細実装（再試行戦略、AWS SDK設定、サーキットブレーカー、DLQ完全実装）
+- `../infrastructure/environment-variables.md` - 環境変数の詳細定義
+- `../infrastructure/performance-optimization.md` - パフォーマンス最適化（DynamoDB、S3の最適化）
+- `../infrastructure/monitoring-alerts.md` - 監視とアラート（CloudWatch設定）
+- `testing-strategy.md` - テスト戦略（Lambda関数のテスト方法）
+- `tdnet-file-naming.md` - ファイル命名規則（Lambda関数のファイル構成）
 
-
----
-
-## 関連ドキュメント
-
-### 参照元（このファイルを参照しているファイル）
-
-このファイルを参照しているファイルはありません。
-
-### 参照先（このファイルが参照しているファイル）
-
-このファイルは他のsteeringファイルを参照していません。

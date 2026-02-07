@@ -922,10 +922,5 @@ describe('Performance Tests', () => {
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
+- `../core/tdnet-implementation-rules.md` - 実装ルール（コスト最適化の基本方針）
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - コスト最適化の基本方針
-
-### 参照先（このファイルが参照しているファイル）
-
-このファイルは他のsteeringファイルを参照していません。

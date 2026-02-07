@@ -495,10 +495,4 @@ https://www.release.tdnet.info/robots.txt
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
-
-このファイルを参照しているファイルはありません。
-
-### 参照先（このファイルが参照しているファイル）
-
-- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - スクレイピングエラーの処理
+- `../core/error-handling-patterns.md` - エラーハンドリング基本原則（スクレイピングエラーの処理）
