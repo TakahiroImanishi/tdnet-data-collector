@@ -1364,7 +1364,11 @@ components:
 
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装パターン
-- **エラーハンドリング**: `error-handling-patterns.md` - APIエラーレスポンスの詳細
-- **データバリデーション**: `data-validation.md` - APIバリデーションのベストプラクティス
-- **環境変数**: `environment-variables.md` - APIキーの管理方法
+### 参照元（このファイルを参照しているファイル）
+
+このファイルを参照しているファイルはありません。
+
+### 参照先（このファイルが参照しているファイル）
+
+- **データバリデーション**: `../development/data-validation.md` - APIバリデーションルール
+- **エラーコード**: `error-codes.md` - APIエラーコード標準

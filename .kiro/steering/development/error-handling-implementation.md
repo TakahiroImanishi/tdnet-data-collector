@@ -977,11 +977,10 @@ async function processDLQMessage(record: SQSRecord): Promise<void> {
 
 ## 関連ドキュメント
 
-| ドキュメント | 役割 | 参照タイミング |
-|------------|------|--------------|
-| **../core/error-handling-patterns.md** | エラー分類とカスタムエラークラス | エラー処理の基本原則を理解する |
-| **../api/error-codes.md** | エラーコード標準化 | APIエラーレスポンスを実装する |
-| **../api/api-design-guidelines.md** | API設計ガイドライン | APIエラーレスポンスの詳細 |
-| **../core/tdnet-implementation-rules.md** | 実装ルール | エラーハンドリングの基本原則 |
-| **../infrastructure/monitoring-alerts.md** | 監視とアラート | エラーアラートの設定 |
-| **testing-strategy.md** | テスト戦略 | エラーケースのテスト |
+### 参照元（このファイルを参照しているファイル）
+
+- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラー分類と再試行戦略の概要
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

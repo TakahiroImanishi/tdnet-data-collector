@@ -309,6 +309,11 @@ aws iam get-role-policy \
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - 環境変数の使用方法
-- **デプロイチェックリスト**: `deployment-checklist.md` - 環境変数の確認手順
-- **セキュリティ**: `../security/security-best-practices.md` - 機密情報の管理方法
+### 参照元（このファイルを参照しているファイル）
+
+- **デプロイチェックリスト**: `deployment-checklist.md` - 環境変数の設定確認
+- **セキュリティベストプラクティス**: `../security/security-best-practices.md` - 機密情報の管理
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

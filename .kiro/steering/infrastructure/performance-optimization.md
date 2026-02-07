@@ -922,6 +922,10 @@ describe('Performance Tests', () => {
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装パターン
-- **監視とアラート**: `monitoring-alerts.md` - パフォーマンスメトリクスの監視
-- **データバリデーション**: `../development/data-validation.md` - date_partitionの使用方法
+### 参照元（このファイルを参照しているファイル）
+
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - コスト最適化の基本方針
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

@@ -648,6 +648,12 @@ new budgets.CfnBudget(this, 'MonthlyBudget', {
 
 ## 関連ドキュメント
 
+### 参照元（このファイルを参照しているファイル）
+
+- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラーアラート設定
 - **デプロイチェックリスト**: `deployment-checklist.md` - デプロイ後の監視手順
-- **エラーハンドリング**: `../core/error-handling-patterns.md` - エラーログの構造
-- **環境変数**: `environment-variables.md` - 監視関連の環境変数
+- **セキュリティベストプラクティス**: `../security/security-best-practices.md` - セキュリティ監視
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。
