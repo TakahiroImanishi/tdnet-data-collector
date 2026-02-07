@@ -48,7 +48,7 @@ inclusion: always
 
 ### ファイル命名規則
 
-```
+```text
 work-log-[YYYYMMDD-HHMMSS].md
 ```
 
@@ -97,7 +97,7 @@ PS> Get-Date -Format "yyyyMMdd-HHmmss"
 
 ### コミットメッセージ規則
 
-```
+```text
 [タスク種別] 簡潔な変更内容
 
 関連: work-log-[日時].md または task-[番号]-improvement-[連番]-[日時].md
@@ -113,7 +113,7 @@ PS> Get-Date -Format "yyyyMMdd-HHmmss"
 - `improve`: 改善実施
 
 **例:**
-```
+```text
 feat: TDnet開示情報収集Lambda関数を実装
 
 関連: work-log-20260207-143025.md
@@ -146,7 +146,7 @@ git push origin main
 ### 改善記録の作成
 
 **ファイル命名規則:**
-```
+```text
 task-[タスク番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md
 ```
 
@@ -256,7 +256,7 @@ Get-Date -Format "yyyyMMdd-HHmmss"
 **サブエージェントに作業を委譲する際は、以下を必ず指示に含めること:**
 
 1. **作業記録の作成を明示的に指示**
-   ```
+   ```text
    タスク開始時に work-log-[YYYYMMDD-HHMMSS].md を作成してください。
    ファイル名には、PowerShellの Get-Date -Format "yyyyMMdd-HHmmss" で取得した正確な時刻を使用してください。
    ```
@@ -268,7 +268,7 @@ Get-Date -Format "yyyyMMdd-HHmmss"
    - 次回への申し送り（未完了の作業、注意点）
 
 3. **保存先を明示**
-   ```
+   ```text
    保存先: .kiro/specs/tdnet-data-collector/work-logs/
    ```
 

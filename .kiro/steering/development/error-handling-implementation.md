@@ -931,10 +931,11 @@ async function processDLQMessage(record: SQSRecord): Promise<void> {
 
 ## 関連ドキュメント
 
-- **基本原則**: `error-handling-patterns.md` - エラー分類とカスタムエラークラス
-- **API設計**: `api-design-guidelines.md` - APIエラーレスポンスの詳細
-- **実装ルール**: `tdnet-implementation-rules.md` - エラーハンドリングの基本原則
-- **監視とアラート**: `monitoring-alerts.md` - エラーアラートの設定
+- **基本原則**: `../core/error-handling-patterns.md` - エラー分類とカスタムエラークラス
+- **Lambda実装ガイド**: `lambda-implementation.md` - Lambda関数特有のエラーハンドリング基本パターン
+- **API設計**: `../api/api-design-guidelines.md` - APIエラーレスポンスの詳細
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - エラーハンドリングの基本原則
+- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - エラーアラートの設定
 - **テスト戦略**: `testing-strategy.md` - エラーケースのテスト
 
 
@@ -980,7 +981,9 @@ async function processDLQMessage(record: SQSRecord): Promise<void> {
 ### 参照元（このファイルを参照しているファイル）
 
 - **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラー分類と再試行戦略の概要
+- **Lambda実装ガイド**: `lambda-implementation.md` - Lambda関数特有のエラーハンドリング基本パターン
 
 ### 参照先（このファイルが参照しているファイル）
 
-このファイルは他のsteeringファイルを参照していません。
+- **基本原則**: `../core/error-handling-patterns.md` - エラー分類とカスタムエラークラス
+- **エラーコード標準**: `../api/error-codes.md` - APIエラーコードの詳細定義
