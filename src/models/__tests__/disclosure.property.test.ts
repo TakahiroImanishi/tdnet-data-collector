@@ -163,10 +163,23 @@ describe('Disclosure Property Tests', () => {
     });
 
     it('validateDisclosureは必須フィールドが欠落している場合にValidationErrorをスローする', () => {
+      const requiredFields: Array<keyof Disclosure> = [
+        'disclosure_id',
+        'company_code',
+        'company_name',
+        'disclosure_type',
+        'title',
+        'disclosed_at',
+        'pdf_url',
+        's3_key',
+        'collected_at',
+        'date_partition',
+      ];
+
       fc.assert(
         fc.property(
           disclosureArbitrary(),
-          fc.constantFrom(...Object.keys({} as Disclosure)),
+          fc.constantFrom(...requiredFields),
           (disclosure, fieldToRemove) => {
             // 1つのフィールドを削除
             const incompleteDisclosure = { ...disclosure };

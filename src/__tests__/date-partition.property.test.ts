@@ -156,6 +156,8 @@ describe('generateDatePartition - Property Tests', () => {
           expect(resultYear).toBeLessThanOrEqual(2026);
           expect(resultMonth).toBeGreaterThanOrEqual(1);
           expect(resultMonth).toBeLessThanOrEqual(12);
+          
+          return true;
         }
       ),
       { numRuns: 1000 }
