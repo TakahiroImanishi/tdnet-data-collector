@@ -9,7 +9,7 @@
 
 import { Context } from 'aws-lambda';
 import { logger, createErrorContext } from '../../utils/logger';
-import { sendErrorMetric, sendSuccessMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
+import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
 import { ValidationError } from '../../errors';
 import { scrapeTdnetList } from './scrape-tdnet-list';
 
