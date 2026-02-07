@@ -76,6 +76,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | `**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md` | コレクター |
 | `**/utils/error*.ts` | `development/error-handling-implementation.md` | エラーユーティリティ |
 | `**/utils/retry*.ts` | `development/error-handling-implementation.md` | リトライユーティリティ |
+| `**/lambda/**/*.ts` | `development/error-handling-implementation.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md` | Lambda関数全般 |
 
 ### API関連
 
@@ -130,40 +131,124 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 ## ファイル間の参照関係
 
+### 参照関係の概要
+
+すべてのsteeringファイルは、DAG（有向非巡回グラフ）構造で参照関係を構築しています。循環参照は存在せず、参照の深さは最大3階層です。
+
+### 階層別の参照関係
+
+#### レベル3: 中心的なファイル（多数のファイルを参照）
+
+**core/tdnet-implementation-rules.md** - プロジェクトの実装原則の中心
 ```
-core/tdnet-implementation-rules.md (中心)
 ├─→ core/error-handling-patterns.md
+├─→ core/tdnet-data-collector.md
 ├─→ development/testing-strategy.md
 ├─→ development/data-validation.md
 ├─→ development/tdnet-file-naming.md
-└─→ infrastructure/performance-optimization.md
-
-core/tdnet-data-collector.md (タスク実行)
-├─→ development/workflow-guidelines.md (サブエージェント活用)
-└─→ development/documentation-standards.md (ドキュメント標準)
-
-core/error-handling-patterns.md
 ├─→ development/error-handling-implementation.md
-└─→ api/error-codes.md
+├─→ development/tdnet-scraping-patterns.md
+├─→ infrastructure/deployment-checklist.md
+├─→ infrastructure/environment-variables.md
+├─→ infrastructure/performance-optimization.md
+├─→ infrastructure/monitoring-alerts.md
+├─→ security/security-best-practices.md
+└─→ api/api-design-guidelines.md
+```
 
-api/api-design-guidelines.md
-├─→ development/data-validation.md
-└─→ api/error-codes.md
+#### レベル2: 統合ファイル（複数のファイルを参照）
 
-infrastructure/deployment-checklist.md
+**core/tdnet-data-collector.md** - タスク実行ルール
+```
+├─→ core/tdnet-implementation-rules.md
+├─→ core/error-handling-patterns.md
+├─→ development/workflow-guidelines.md
+├─→ development/documentation-standards.md
+├─→ ../../specs/tdnet-data-collector/work-logs/README.md
+└─→ ../../specs/tdnet-data-collector/improvements/README.md
+```
+
+**core/error-handling-patterns.md** - エラーハンドリングの基本原則
+```
+├─→ development/error-handling-implementation.md
+├─→ api/error-codes.md
+├─→ api/api-design-guidelines.md
+└─→ infrastructure/monitoring-alerts.md
+```
+
+**infrastructure/deployment-checklist.md** - デプロイチェックリスト
+```
 ├─→ security/security-best-practices.md
 ├─→ infrastructure/environment-variables.md
 └─→ infrastructure/monitoring-alerts.md
+```
 
-security/security-best-practices.md
+#### レベル1: 特化ファイル（少数のファイルを参照）
+
+**security/security-best-practices.md** - セキュリティベストプラクティス
+```
 ├─→ infrastructure/environment-variables.md
 └─→ infrastructure/monitoring-alerts.md
+```
 
-development/tdnet-scraping-patterns.md
+**development/tdnet-scraping-patterns.md** - スクレイピングパターン
+```
 └─→ core/error-handling-patterns.md
 ```
 
-**注意:** 参照関係は一方向（DAG: Directed Acyclic Graph）になっており、循環参照はありません。
+**development/lambda-implementation.md** - Lambda実装ガイドライン
+```
+├─→ core/error-handling-patterns.md
+├─→ development/error-handling-implementation.md
+├─→ infrastructure/performance-optimization.md
+└─→ infrastructure/environment-variables.md
+```
+
+**development/testing-strategy.md** - テスト戦略
+```
+└─→ core/tdnet-implementation-rules.md
+```
+
+**development/error-handling-implementation.md** - エラーハンドリング詳細実装
+```
+├─→ core/error-handling-patterns.md
+└─→ api/error-codes.md
+```
+
+**api/api-design-guidelines.md** - API設計ガイドライン
+```
+├─→ development/data-validation.md
+└─→ api/error-codes.md
+```
+
+#### レベル0: 基盤ファイル（参照されるのみ、参照先なし）
+
+以下のファイルは他のファイルから参照されますが、自身は他のファイルを参照しません：
+
+- **api/error-codes.md** - APIエラーコード標準
+- **development/workflow-guidelines.md** - ワークフローガイドライン
+- **development/documentation-standards.md** - ドキュメント標準
+- **development/data-validation.md** - データバリデーションルール
+- **development/tdnet-file-naming.md** - ファイル命名規則
+- **infrastructure/environment-variables.md** - 環境変数管理
+- **infrastructure/monitoring-alerts.md** - 監視とアラート
+- **infrastructure/performance-optimization.md** - パフォーマンス最適化
+
+### 参照関係の検証結果
+
+- ✅ **循環参照なし**: すべての参照は一方向（DAG構造）
+- ✅ **参照深度**: 最大3階層（適切な範囲内）
+- ✅ **参照の明確性**: 各ファイルの「関連ドキュメント」セクションで参照先を明記
+- ✅ **保守性**: 参照関係が明確で、変更の影響範囲を把握しやすい
+
+### 参照関係図の読み方
+
+- **レベル3**: プロジェクト全体の中心となるファイル。多数のファイルを参照し、実装の指針を提供
+- **レベル2**: 特定の領域（タスク実行、エラーハンドリング、デプロイ）を統合するファイル
+- **レベル1**: 特定の技術領域に特化したファイル。必要最小限の参照のみ
+- **レベル0**: 基盤となる詳細な実装ガイドライン。他のファイルから参照される
+
+**注意:** この参照関係は2026年2月7日時点のものです。steeringファイルの追加・変更時は、この図も更新してください。
 
 ## 関連リンク
 
