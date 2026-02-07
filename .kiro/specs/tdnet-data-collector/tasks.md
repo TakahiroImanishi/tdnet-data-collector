@@ -35,7 +35,7 @@
 
 ### 2. データモデルとユーティリティ実装
 
-- [-] 2.1 TypeScript型定義とインターフェース作成
+- [x] 2.1 TypeScript型定義とインターフェース作成
   - Disclosure、CollectionResult、ExecutionStatus、QueryFilter型を定義
   - DynamoDBアイテム変換関数（toDynamoDBItem、fromDynamoDBItem）を実装
   - date_partition生成関数（generateDatePartition）を実装（JST基準、バリデーション含む）
