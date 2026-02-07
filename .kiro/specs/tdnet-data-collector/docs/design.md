@@ -702,11 +702,13 @@ GET /disclosures/{disclosure_id}/pdf
 ディレクトリ構造:
 /pdfs/YYYY/MM/DD/{company_code}_{disclosure_type}_{timestamp}.pdf
 /temp/{disclosure_id}.pdf
+/exports/{export_id}.{format}
 
 例:
 /pdfs/2024/01/15/7203_決算短信_20240115093000.pdf
 /pdfs/2024/01/15/6758_業績予想修正_20240115140000.pdf
 /temp/20240115_7203_001.pdf
+/exports/export-20240115-xyz789.csv
 
 セキュリティ設定:
 - パブリックアクセスブロック: 有効
@@ -715,37 +717,21 @@ GET /disclosures/{disclosure_id}/pdf
 - アクセス: 署名付きURLのみ
 
 Object Lock設定:
-- 適用範囲: pdfs/プレフィックスのみ
-- モード: GOVERNANCE
-- 保持期間: 1年間
-- 適用除外: temp/プレフィックス（ライフサイクルポリシーで1日後に自動削除）
+- バケット全体で有効化（objectLockEnabled: true）
+- デフォルト保持期間: 設定なし（オブジェクトごとに指定）
+- pdfs/プレフィックス: GOVERNANCE mode、1年間保持
+- temp/プレフィックス: Object Lock非適用（ライフサイクルポリシーで1日後に自動削除）
+- exports/プレフィックス: Object Lock非適用（ライフサイクルポリシーで7日後に自動削除）
 
 ライフサイクルポリシー:
 - temp/: 1日経過後に自動削除
+- exports/: 7日経過後に自動削除
 - pdfs/: 90日経過後にS3 Standard-IA（低頻度アクセス）に移行
 - pdfs/: 365日経過後にS3 Glacier Flexible Retrievalに移行
+- 非現行バージョン: 30日経過後に自動削除
 ```
 
-**バケット2: tdnet-data-collector-exports-{account-id}（エクスポートファイル）**
-
-```
-ディレクトリ構造:
-/exports/{export_id}.{format}
-
-例:
-/exports/export-20240115-xyz789.csv
-/exports/export-20240115-abc123.json
-
-セキュリティ設定:
-- パブリックアクセスブロック: 有効
-- 暗号化: SSE-S3
-- アクセス: 署名付きURLのみ
-
-ライフサイクルポリシー:
-- 7日経過後: 自動削除（エクスポートファイルは一時的）
-```
-
-**バケット3: tdnet-dashboard-{account-id}（Webダッシュボード）**
+**バケット2: tdnet-dashboard-{account-id}（Webダッシュボード）**
 
 ```
 ディレクトリ構造:
