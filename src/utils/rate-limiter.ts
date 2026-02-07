@@ -4,6 +4,10 @@
  * TDnetへのリクエストを適切に制限し、過度な負荷をかけないようにする。
  * 連続リクエスト間で最小遅延時間を確保する。
  * 
+ * Steering準拠:
+ * - development/tdnet-scraping-patterns.md: レート制限実装パターン
+ * - core/error-handling-patterns.md: 構造化ログの記録
+ * 
  * @example
  * ```typescript
  * const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
@@ -14,6 +18,8 @@
  * }
  * ```
  */
+
+import { logger } from './logger';
 
 /**
  * RateLimiterのオプション
@@ -51,6 +57,8 @@ export class RateLimiter {
      * 最後のリクエストから最小遅延時間が経過していない場合、
      * 残り時間だけ待機する。
      * 
+     * Steering準拠: 構造化ログを記録（development/tdnet-scraping-patterns.md）
+     * 
      * @returns Promise<void>
      * 
      * @example
@@ -65,6 +73,7 @@ export class RateLimiter {
         if (this.lastRequestTime === null) {
             // 最初のリクエストは即座に実行
             this.lastRequestTime = Date.now();
+            logger.debug('Rate limiter: first request, no delay');
             return;
         }
 
@@ -73,6 +82,11 @@ export class RateLimiter {
 
         if (delay > 0) {
             // 最小遅延時間が経過していない場合、残り時間だけ待機
+            logger.debug('Rate limiting: waiting', {
+                waitTime: delay,
+                minDelayMs: this.minDelayMs,
+                elapsed,
+            });
             await new Promise(resolve => setTimeout(resolve, delay));
         }
 

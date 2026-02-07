@@ -12,6 +12,12 @@ import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
 import { ValidationError } from '../../errors';
 import { scrapeTdnetList } from './scrape-tdnet-list';
+import { downloadPdf } from './download-pdf';
+import { saveMetadata } from './save-metadata';
+import { updateExecutionStatus } from './update-execution-status';
+import { generateDisclosureId } from '../../utils/disclosure-id';
+import { Disclosure } from '../../types';
+import { DisclosureMetadata } from '../../scraper/html-parser';
 
 /**
  * Lambda Collectorイベント
@@ -316,29 +322,49 @@ async function collectDisclosuresForDateRange(
     total_days: dates.length,
   });
 
+  // 実行状態を初期化（pending）
+  await updateExecutionStatus(execution_id, 'pending', 0);
+
+  // 実行状態を更新（running）
+  await updateExecutionStatus(execution_id, 'running', 0);
+
   // 各日付のデータを順次収集
-  for (const date of dates) {
+  for (let i = 0; i < dates.length; i++) {
+    const date = dates[i];
     try {
       logger.info('Scraping TDnet list for date', {
         execution_id,
         date,
+        progress: `${i + 1}/${dates.length}`,
       });
 
-      const disclosures = await scrapeTdnetList(date);
+      const disclosureMetadata = await scrapeTdnetList(date);
 
       logger.info('TDnet list scraped successfully', {
         execution_id,
         date,
-        count: disclosures.length,
+        count: disclosureMetadata.length,
       });
 
-      // TODO: Task 8.3, 8.4, 8.6, 8.8で実装
-      // - 開示IDの生成
-      // - DynamoDBへの保存
-      // - PDFダウンロード
-      // - S3へのアップロード
+      // 並列処理（並列度5）
+      const results = await processDisclosuresInParallel(
+        disclosureMetadata,
+        execution_id,
+        5
+      );
 
-      collected_count += disclosures.length;
+      collected_count += results.success;
+      failed_count += results.failed;
+
+      // 進捗率を更新（日付単位）
+      const progress = Math.floor(((i + 1) / dates.length) * 100);
+      await updateExecutionStatus(
+        execution_id,
+        'running',
+        progress,
+        collected_count,
+        failed_count
+      );
     } catch (error) {
       logger.error(
         'Failed to collect disclosures for date',
@@ -361,10 +387,20 @@ async function collectDisclosuresForDateRange(
     status = 'failed';
   }
 
+  // 実行状態を更新（completed/failed）
+  await updateExecutionStatus(
+    execution_id,
+    status === 'failed' ? 'failed' : 'completed',
+    100,
+    collected_count,
+    failed_count,
+    status === 'failed' ? 'Collection failed' : undefined
+  );
+
   return {
     execution_id,
     status,
-    message: `Collected ${collected_count} disclosures, ${failed_count} days failed`,
+    message: `Collected ${collected_count} disclosures, ${failed_count} failed`,
     collected_count,
     failed_count,
   };
@@ -428,3 +464,119 @@ function generateDateRange(start_date: string, end_date: string): string[] {
 
   return dates;
 }
+
+/**
+ * 開示情報を並列処理
+ *
+ * Promise.allSettledを使用して、一部が失敗しても他の処理を継続します。
+ *
+ * @param disclosureMetadata 開示情報メタデータリスト
+ * @param execution_id 実行ID
+ * @param concurrency 並列度（デフォルト: 5）
+ * @returns 処理結果（成功件数、失敗件数）
+ */
+async function processDisclosuresInParallel(
+  disclosureMetadata: DisclosureMetadata[],
+  execution_id: string,
+  concurrency: number = 5
+): Promise<{ success: number; failed: number }> {
+  const results = { success: 0, failed: 0 };
+
+  // 並列度を制限して処理
+  for (let i = 0; i < disclosureMetadata.length; i += concurrency) {
+    const batch = disclosureMetadata.slice(i, i + concurrency);
+    const promises = batch.map((metadata, index) =>
+      processDisclosure(metadata, execution_id, i + index + 1)
+    );
+
+    const settled = await Promise.allSettled(promises);
+
+    for (const result of settled) {
+      if (result.status === 'fulfilled') {
+        results.success++;
+      } else {
+        results.failed++;
+        logger.error('Failed to process disclosure', {
+          execution_id,
+          error: result.reason,
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 単一の開示情報を処理
+ *
+ * 1. 開示IDを生成
+ * 2. PDFをダウンロードしてS3に保存
+ * 3. メタデータをDynamoDBに保存
+ *
+ * @param metadata 開示情報メタデータ
+ * @param execution_id 実行ID
+ * @param sequence 連番（同一日・同一企業の複数開示を区別）
+ */
+async function processDisclosure(
+  metadata: DisclosureMetadata,
+  execution_id: string,
+  sequence: number
+): Promise<void> {
+  try {
+    // 開示IDを生成
+    const disclosure_id = generateDisclosureId(
+      metadata.disclosed_at,
+      metadata.company_code,
+      sequence
+    );
+
+    logger.info('Processing disclosure', {
+      execution_id,
+      disclosure_id,
+      company_code: metadata.company_code,
+      title: metadata.title,
+    });
+
+    // PDFをダウンロードしてS3に保存
+    const s3_key = await downloadPdf(
+      disclosure_id,
+      metadata.pdf_url,
+      metadata.disclosed_at
+    );
+
+    // DisclosureMetadataからDisclosureに変換
+    const disclosure: Disclosure = {
+      disclosure_id,
+      company_code: metadata.company_code,
+      company_name: metadata.company_name,
+      disclosure_type: metadata.disclosure_type,
+      title: metadata.title,
+      disclosed_at: metadata.disclosed_at,
+      pdf_url: metadata.pdf_url,
+      s3_key,
+      collected_at: new Date().toISOString(),
+      date_partition: '', // saveMetadata内で自動生成
+    };
+
+    // メタデータをDynamoDBに保存
+    await saveMetadata(disclosure, s3_key);
+
+    logger.info('Successfully processed disclosure', {
+      execution_id,
+      disclosure_id,
+      s3_key,
+    });
+  } catch (error) {
+    logger.error(
+      'Failed to process disclosure',
+      createErrorContext(error as Error, {
+        execution_id,
+        company_code: metadata.company_code,
+        title: metadata.title,
+      })
+    );
+    throw error;
+  }
+}
+

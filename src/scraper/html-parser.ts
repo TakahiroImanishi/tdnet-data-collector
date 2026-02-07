@@ -4,6 +4,22 @@
  * TDnet開示情報リストページのHTMLをパースし、メタデータを抽出します。
  *
  * Requirements: 要件1.1, 1.2（データ収集、メタデータ抽出）
+ * 
+ * @example
+ * ```typescript
+ * import { RateLimiter } from '../utils/rate-limiter';
+ * import { parseDisclosureList } from './html-parser';
+ * import axios from 'axios';
+ * 
+ * // RateLimiterを使用してTDnetからHTMLを取得
+ * const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
+ * 
+ * async function fetchAndParseDisclosures(date: string) {
+ *   await rateLimiter.waitIfNeeded();
+ *   const response = await axios.get(`https://www.release.tdnet.info/inbs/I_list_001_${date}.html`);
+ *   return parseDisclosureList(response.data);
+ * }
+ * ```
  */
 
 import * as cheerio from 'cheerio';

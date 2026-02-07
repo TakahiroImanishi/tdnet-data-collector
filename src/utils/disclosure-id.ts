@@ -12,7 +12,13 @@ import { ValidationError } from '../errors';
 /**
  * 開示IDを生成（日付_企業コード_連番形式）
  *
- * @param disclosedAt ISO 8601形式の日時文字列
+ * TDnetは日本の開示情報サービスであり、開示日時はJST（日本標準時）基準で管理されます。
+ * UTC時刻をそのまま使用すると、月またぎのエッジケースで誤った日付になる可能性があります。
+ * 
+ * 例: UTC 2024-01-31T15:30:00Z → JST 2024-02-01T00:30:00+09:00
+ *     UTCのまま使用すると "20240131" になるが、正しくは "20240201" であるべき
+ *
+ * @param disclosedAt ISO 8601形式の日時文字列（UTC推奨）
  * @param companyCode 企業コード（4桁）
  * @param sequence 連番（同一日・同一企業の複数開示を区別）
  * @returns 開示ID（例: "20240115_1234_001"）
@@ -36,8 +42,16 @@ export function generateDisclosureId(
     throw new ValidationError(`Invalid sequence: ${sequence} (must be 1-999)`);
   }
 
-  // 日付部分を抽出（YYYYMMDD形式）
-  const date = disclosedAt.substring(0, 10).replace(/-/g, '');
+  // UTCからJSTに変換（UTC+9時間）してから日付を抽出
+  // これにより、月またぎのエッジケースを正しく処理できる
+  const utcDate = new Date(disclosedAt);
+  const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+  
+  // YYYYMMDD形式で日付を抽出
+  const year = jstDate.getUTCFullYear();
+  const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(jstDate.getUTCDate()).padStart(2, '0');
+  const date = `${year}${month}${day}`;
 
   // 連番を3桁にゼロパディング
   const seq = String(sequence).padStart(3, '0');
