@@ -1,0 +1,801 @@
+openapi: 3.0.0
+info:
+  title: TDnet Data Collector API
+  version: 1.0.0
+  description: |
+    API for collecting and querying TDnet disclosure information from Japanese stock exchanges.
+    
+    **バージョン:** 1.0.0  
+    **最終更新:** 2026-02-07
+    
+    ## Features
+    - Query disclosure information by company, date, type
+    - Download PDF files via signed URLs
+    - Trigger data collection jobs
+    - Export large datasets
+    - Health checks and statistics
+    
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://api-dev.example.com/v1
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Disclosures
+    description: Disclosure information operations
+  - name: Collection
+    description: Data collection operations
+  - name: Export
+    description: Data export operations
+  - name: System
+    description: System operations
+
+paths:
+  /disclosures:
+    get:
+      tags:
+        - Disclosures
+      summary: Get disclosure list
+      description: Retrieve a paginated list of disclosure information with optional filters
+      operationId: getDisclosures
+      parameters:
+        - name: company_code
+          in: query
+          description: Company code (4-digit)
+          schema:
+            type: string
+            pattern: '^\d{4}$'
+            example: '7203'
+        - name: start_date
+          in: query
+          description: Start date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2024-01-01'
+        - name: end_date
+          in: query
+          description: End date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: '2024-01-31'
+        - name: disclosure_type
+          in: query
+          description: Disclosure type
+          schema:
+            type: string
+            enum:
+              - 決算短信
+              - 業績予想修正
+              - 配当予想修正
+              - 自己株式取得
+              - その他
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: next_token
+          in: query
+          description: Pagination token for cursor-based pagination
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisclosureListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /disclosures/{id}:
+    get:
+      tags:
+        - Disclosures
+      summary: Get disclosure details
+      description: Retrieve detailed information about a specific disclosure
+      operationId: getDisclosureById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Disclosure ID
+          schema:
+            type: string
+            pattern: '^\d{8}_\d{4}_\d{3}$'
+            example: '20240115_7203_001'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisclosureDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /disclosures/{id}/pdf:
+    get:
+      tags:
+        - Disclosures
+      summary: Get PDF signed URL
+      description: Generate a signed URL for downloading the PDF file
+      operationId: getDisclosurePDF
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Disclosure ID
+          schema:
+            type: string
+            example: '20240115_7203_001'
+        - name: expiration
+          in: query
+          description: URL expiration time in seconds
+          schema:
+            type: integer
+            minimum: 60
+            maximum: 86400
+            default: 3600
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PDFUrlResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /collect:
+    post:
+      tags:
+        - Collection
+      summary: Start data collection
+      description: Trigger a data collection job for the specified date range
+      operationId: startCollection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionRequest'
+      responses:
+        '200':
+          description: Collection started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /collect/{execution_id}:
+    get:
+      tags:
+        - Collection
+      summary: Get collection status
+      description: Retrieve the status of a data collection job
+      operationId: getCollectionStatus
+      parameters:
+        - name: execution_id
+          in: path
+          required: true
+          description: Execution ID
+          schema:
+            type: string
+            example: 'exec-20240115-abc123'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /exports:
+    post:
+      tags:
+        - Export
+      summary: Start data export
+      description: Trigger a data export job for large datasets
+      operationId: startExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Export started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /exports/{export_id}:
+    get:
+      tags:
+        - Export
+      summary: Get export status
+      description: Retrieve the status of a data export job
+      operationId: getExportStatus
+      parameters:
+        - name: export_id
+          in: path
+          required: true
+          description: Export ID
+          schema:
+            type: string
+            example: 'export-20240115-xyz789'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check the health status of the API and its dependencies
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /stats:
+    get:
+      tags:
+        - System
+      summary: Get statistics
+      description: Retrieve system statistics and metrics
+      operationId: getStatistics
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    Disclosure:
+      type: object
+      required:
+        - disclosure_id
+        - company_code
+        - company_name
+        - disclosure_type
+        - title
+        - disclosed_at
+      properties:
+        disclosure_id:
+          type: string
+          description: Unique disclosure identifier
+          example: '20240115_7203_001'
+        company_code:
+          type: string
+          description: 4-digit company code
+          pattern: '^\d{4}$'
+          example: '7203'
+        company_name:
+          type: string
+          description: Company name
+          example: 'トヨタ自動車株式会社'
+        disclosure_type:
+          type: string
+          description: Type of disclosure
+          example: '決算短信'
+        title:
+          type: string
+          description: Disclosure title
+          example: '2024年3月期 第3四半期決算短信'
+        disclosed_at:
+          type: string
+          format: date-time
+          description: Disclosure date and time (ISO8601)
+          example: '2024-01-15T15:00:00+09:00'
+        pdf_url:
+          type: string
+          format: uri
+          nullable: true
+          description: PDF download URL (null in list view)
+
+    DisclosureDetail:
+      allOf:
+        - $ref: '#/components/schemas/Disclosure'
+        - type: object
+          properties:
+            downloaded_at:
+              type: string
+              format: date-time
+              description: Download timestamp
+            file_size:
+              type: integer
+              description: PDF file size in bytes
+            pdf_s3_key:
+              type: string
+              description: S3 object key
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of results
+        count:
+          type: integer
+          description: Number of results in current page
+        page:
+          type: integer
+          description: Current page number
+        per_page:
+          type: integer
+          description: Results per page
+        has_next:
+          type: boolean
+          description: Whether there are more results
+        next_token:
+          type: string
+          nullable: true
+          description: Token for next page (cursor-based)
+
+    DisclosureListResponse:
+      type: object
+      required:
+        - status
+        - data
+        - meta
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Disclosure'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    DisclosureDetailResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          $ref: '#/components/schemas/DisclosureDetail'
+
+    PDFUrlResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required:
+            - pdf_url
+            - expires_at
+          properties:
+            pdf_url:
+              type: string
+              format: uri
+              description: Signed URL for PDF download
+            expires_at:
+              type: string
+              format: date-time
+              description: URL expiration time
+
+    CollectionRequest:
+      type: object
+      required:
+        - start_date
+        - end_date
+      properties:
+        start_date:
+          type: string
+          format: date
+          example: '2024-01-01'
+        end_date:
+          type: string
+          format: date
+          example: '2024-01-31'
+
+    CollectionResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required:
+            - execution_id
+            - status
+            - started_at
+          properties:
+            execution_id:
+              type: string
+            status:
+              type: string
+              enum: [running, pending]
+            started_at:
+              type: string
+              format: date-time
+
+    CollectionStatusResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required:
+            - execution_id
+            - status
+            - started_at
+          properties:
+            execution_id:
+              type: string
+            status:
+              type: string
+              enum: [pending, running, completed, failed]
+            progress:
+              type: integer
+              minimum: 0
+              maximum: 100
+            collected_count:
+              type: integer
+            failed_count:
+              type: integer
+            skipped_count:
+              type: integer
+            started_at:
+              type: string
+              format: date-time
+            completed_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    ExportRequest:
+      type: object
+      required:
+        - format
+      properties:
+        company_code:
+          type: string
+          pattern: '^\d{4}$'
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        format:
+          type: string
+          enum: [csv, json]
+          default: csv
+
+    ExportResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required:
+            - export_id
+            - status
+          properties:
+            export_id:
+              type: string
+            status:
+              type: string
+              enum: [pending]
+
+    ExportStatusResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          required:
+            - export_id
+            - status
+          properties:
+            export_id:
+              type: string
+            status:
+              type: string
+              enum: [pending, processing, completed, failed]
+            export_count:
+              type: integer
+              nullable: true
+            file_size:
+              type: integer
+              nullable: true
+            download_url:
+              type: string
+              format: uri
+              nullable: true
+            expires_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          properties:
+            dynamodb:
+              type: string
+              enum: [healthy, unhealthy]
+            s3:
+              type: string
+              enum: [healthy, unhealthy]
+
+    StatsResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          properties:
+            total_disclosures:
+              type: integer
+            total_companies:
+              type: integer
+            latest_disclosure_date:
+              type: string
+              format: date
+            storage_size_bytes:
+              type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error
+      properties:
+        status:
+          type: string
+          enum: [error]
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+                - RATE_LIMIT_EXCEEDED
+                - INTERNAL_ERROR
+                - SERVICE_UNAVAILABLE
+                - GATEWAY_TIMEOUT
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+        request_id:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: VALIDATION_ERROR
+              message: Invalid date format
+              details:
+                field: start_date
+                value: '2024/01/15'
+                expected: 'YYYY-MM-DD'
+            request_id: req-abc123
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: UNAUTHORIZED
+              message: API key is required
+            request_id: req-abc123
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: NOT_FOUND
+              message: Disclosure not found
+            request_id: req-abc123
+
+    TooManyRequests:
+      description: Too Many Requests
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per minute
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when limit resets
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate limit exceeded. Please try again later.
+              details:
+                limit: 100
+                reset_at: '2024-01-15T10:00:00Z'
+            request_id: req-abc123
+
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            error:
+              code: INTERNAL_ERROR
+              message: An unexpected error occurred
+            request_id: req-abc123

@@ -1,0 +1,142 @@
+{
+  "comment": "CDK Context設定テンプレート - 環境別の設定を定義",
+  
+  "environments": {
+    "development": {
+      "account": "123456789012",
+      "region": "ap-northeast-1",
+      "stackName": "TDnetDataCollectorStack-dev",
+      "tags": {
+        "Environment": "development",
+        "Project": "TDnetDataCollector",
+        "ManagedBy": "CDK"
+      },
+      "lambda": {
+        "timeout": 900,
+        "memorySize": 512,
+        "logRetentionDays": 7
+      },
+      "dynamodb": {
+        "billingMode": "PAY_PER_REQUEST",
+        "pointInTimeRecovery": false
+      },
+      "s3": {
+        "versioning": false,
+        "lifecycleRules": {
+          "pdfTransitionDays": 90,
+          "exportExpirationDays": 7
+        }
+      },
+      "monitoring": {
+        "enableDetailedMetrics": true,
+        "alarmEmail": "dev@example.com"
+      },
+      "api": {
+        "throttle": {
+          "rateLimit": 100,
+          "burstLimit": 200
+        }
+      }
+    },
+    
+    "staging": {
+      "account": "123456789012",
+      "region": "ap-northeast-1",
+      "stackName": "TDnetDataCollectorStack-staging",
+      "tags": {
+        "Environment": "staging",
+        "Project": "TDnetDataCollector",
+        "ManagedBy": "CDK"
+      },
+      "lambda": {
+        "timeout": 900,
+        "memorySize": 512,
+        "logRetentionDays": 14
+      },
+      "dynamodb": {
+        "billingMode": "PAY_PER_REQUEST",
+        "pointInTimeRecovery": false
+      },
+      "s3": {
+        "versioning": false,
+        "lifecycleRules": {
+          "pdfTransitionDays": 90,
+          "exportExpirationDays": 7
+        }
+      },
+      "monitoring": {
+        "enableDetailedMetrics": true,
+        "alarmEmail": "staging@example.com"
+      },
+      "api": {
+        "throttle": {
+          "rateLimit": 100,
+          "burstLimit": 200
+        }
+      }
+    },
+    
+    "production": {
+      "account": "987654321098",
+      "region": "ap-northeast-1",
+      "stackName": "TDnetDataCollectorStack-prod",
+      "tags": {
+        "Environment": "production",
+        "Project": "TDnetDataCollector",
+        "ManagedBy": "CDK",
+        "CostCenter": "Investment"
+      },
+      "lambda": {
+        "timeout": 900,
+        "memorySize": 1024,
+        "logRetentionDays": 30
+      },
+      "dynamodb": {
+        "billingMode": "PAY_PER_REQUEST",
+        "pointInTimeRecovery": false,
+        "comment": "個人利用のためPITRは無効（コスト削減）"
+      },
+      "s3": {
+        "versioning": false,
+        "lifecycleRules": {
+          "pdfTransitionDays": 90,
+          "pdfGlacierTransitionDays": 365,
+          "exportExpirationDays": 7
+        },
+        "comment": "90日後にStandard-IA、365日後にGlacierに移行"
+      },
+      "monitoring": {
+        "enableDetailedMetrics": true,
+        "alarmEmail": "alerts@example.com",
+        "slackWebhook": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+      },
+      "api": {
+        "throttle": {
+          "rateLimit": 1000,
+          "burstLimit": 2000
+        }
+      },
+      "security": {
+        "enableWaf": true,
+        "enableCloudTrail": true
+      }
+    }
+  },
+  
+  "featureFlags": {
+    "@aws-cdk/core:enableStackNameDuplicates": false,
+    "@aws-cdk/core:stackRelativeExports": true,
+    "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true
+  },
+  
+  "notes": {
+    "usage": "CDKデプロイ時に環境を指定: cdk deploy --context environment=development",
+    "accountIds": "account IDは実際のAWSアカウントIDに置き換えてください",
+    "security": "本番環境では必ずWAFとCloudTrailを有効にしてください",
+    "cost": "個人利用のため、PITRとバージョニングは無効にしてコストを削減しています"
+  }
+}

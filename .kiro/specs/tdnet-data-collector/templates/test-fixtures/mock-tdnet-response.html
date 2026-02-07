@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>適時開示情報閲覧サービス - モックレスポンス</title>
+</head>
+<body>
+    <!-- モックTDnetレスポンス - テスト用 -->
+    
+    <div class="main-list">
+        <table class="kjlist">
+            <thead>
+                <tr>
+                    <th>時刻</th>
+                    <th>コード</th>
+                    <th>会社名</th>
+                    <th>表題</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 正常なデータ -->
+                <tr>
+                    <td class="kjTime">15:00</td>
+                    <td class="kjCode">7203</td>
+                    <td class="kjName">トヨタ自動車株式会社</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115123456">
+                            2024年3月期 第3四半期決算短信〔日本基準〕（連結）
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <a href="/inbs/140120240115123456.pdf" target="_blank">PDF</a>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="kjTime">16:30</td>
+                    <td class="kjCode">9984</td>
+                    <td class="kjName">ソフトバンクグループ株式会社</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115234567">
+                            2024年3月期 業績予想の修正に関するお知らせ
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <a href="/inbs/140120240115234567.pdf" target="_blank">PDF</a>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="kjTime">17:00</td>
+                    <td class="kjCode">6758</td>
+                    <td class="kjName">ソニーグループ株式会社</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115345678">
+                            配当予想の修正（増配）に関するお知らせ
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <a href="/inbs/140120240115345678.pdf" target="_blank">PDF</a>
+                    </td>
+                </tr>
+                
+                <!-- エッジケース: 特殊文字を含む会社名 -->
+                <tr>
+                    <td class="kjTime">18:00</td>
+                    <td class="kjCode">9999</td>
+                    <td class="kjName">特殊文字テスト株式会社（旧：テスト＆サンプル）</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115456789">
+                            特殊文字を含むタイトル：「」『』【】〔〕（）＆＜＞
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <a href="/inbs/140120240115456789.pdf" target="_blank">PDF</a>
+                    </td>
+                </tr>
+                
+                <!-- エッジケース: 非常に長いタイトル -->
+                <tr>
+                    <td class="kjTime">19:00</td>
+                    <td class="kjCode">5678</td>
+                    <td class="kjName">ロングタイトル株式会社</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115567890">
+                            これは非常に長いタイトルのテストデータです。実際の開示情報では、タイトルが200文字を超えることもあります。このようなケースでも正しく処理できることを確認するためのテストデータです。
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <a href="/inbs/140120240115567890.pdf" target="_blank">PDF</a>
+                    </td>
+                </tr>
+                
+                <!-- エッジケース: PDFリンクなし -->
+                <tr>
+                    <td class="kjTime">20:00</td>
+                    <td class="kjCode">1234</td>
+                    <td class="kjName">PDFなし株式会社</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115678901">
+                            PDFリンクが存在しないケース
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <!-- PDFリンクなし -->
+                    </td>
+                </tr>
+                
+                <!-- エッジケース: 不完全なデータ（時刻なし） -->
+                <tr>
+                    <td class="kjTime"></td>
+                    <td class="kjCode">4321</td>
+                    <td class="kjName">不完全データ株式会社</td>
+                    <td class="kjTitle">
+                        <a href="/inbs/I_detail_main_00.html?id=140120240115789012">
+                            時刻情報が欠落しているケース
+                        </a>
+                    </td>
+                    <td class="kjPdf">
+                        <a href="/inbs/140120240115789012.pdf" target="_blank">PDF</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- ページネーション（複数ページのテスト用） -->
+    <div class="pager">
+        <a href="?page=1">1</a>
+        <span class="current">2</span>
+        <a href="?page=3">3</a>
+        <a href="?page=4">4</a>
+        <a href="?page=5">5</a>
+    </div>
+    
+</body>
+</html>

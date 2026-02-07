@@ -1,0 +1,127 @@
+{
+  "comment": "サンプル開示情報データ - テストで使用",
+  "disclosures": [
+    {
+      "disclosure_id": "20240115_7203_001",
+      "company_code": "7203",
+      "company_name": "トヨタ自動車株式会社",
+      "disclosure_date": "2024-01-15",
+      "disclosure_time": "15:00:00",
+      "disclosure_type": "決算短信",
+      "title": "2024年3月期 第3四半期決算短信〔日本基準〕（連結）",
+      "pdf_url": "https://www.release.tdnet.info/inbs/140120240115123456.pdf",
+      "pdf_s3_key": "2024/01/15/7203_決算短信_20240115150000.pdf",
+      "downloaded_at": "2024-01-15T15:05:30.123Z",
+      "file_size": 1234567,
+      "checksum": "abc123def456"
+    },
+    {
+      "disclosure_id": "20240115_9984_001",
+      "company_code": "9984",
+      "company_name": "ソフトバンクグループ株式会社",
+      "disclosure_date": "2024-01-15",
+      "disclosure_time": "16:30:00",
+      "disclosure_type": "業績予想修正",
+      "title": "2024年3月期 業績予想の修正に関するお知らせ",
+      "pdf_url": "https://www.release.tdnet.info/inbs/140120240115234567.pdf",
+      "pdf_s3_key": "2024/01/15/9984_業績予想修正_20240115163000.pdf",
+      "downloaded_at": "2024-01-15T16:35:45.678Z",
+      "file_size": 987654,
+      "checksum": "def789ghi012"
+    },
+    {
+      "disclosure_id": "20240116_6758_001",
+      "company_code": "6758",
+      "company_name": "ソニーグループ株式会社",
+      "disclosure_date": "2024-01-16",
+      "disclosure_time": "09:00:00",
+      "disclosure_type": "配当予想修正",
+      "title": "配当予想の修正（増配）に関するお知らせ",
+      "pdf_url": "https://www.release.tdnet.info/inbs/140120240116345678.pdf",
+      "pdf_s3_key": "2024/01/16/6758_配当予想修正_20240116090000.pdf",
+      "downloaded_at": "2024-01-16T09:05:12.345Z",
+      "file_size": 654321,
+      "checksum": "ghi345jkl678"
+    }
+  ],
+  
+  "edge_cases": {
+    "comment": "エッジケースのテストデータ",
+    "empty_title": {
+      "disclosure_id": "20240117_1234_001",
+      "company_code": "1234",
+      "company_name": "テスト株式会社",
+      "disclosure_date": "2024-01-17",
+      "disclosure_time": "10:00:00",
+      "disclosure_type": "その他",
+      "title": "",
+      "pdf_url": "https://www.release.tdnet.info/inbs/test.pdf",
+      "pdf_s3_key": "2024/01/17/1234_その他_20240117100000.pdf",
+      "downloaded_at": "2024-01-17T10:05:00.000Z"
+    },
+    "long_title": {
+      "disclosure_id": "20240117_5678_001",
+      "company_code": "5678",
+      "company_name": "ロングタイトル株式会社",
+      "disclosure_date": "2024-01-17",
+      "disclosure_time": "11:00:00",
+      "disclosure_type": "決算短信",
+      "title": "これは非常に長いタイトルのテストデータです。実際の開示情報では、タイトルが200文字を超えることもあります。このようなケースでも正しく処理できることを確認するためのテストデータです。タイトルの長さによってデータベースのカラム幅やUI表示が適切に設定されているかを検証します。",
+      "pdf_url": "https://www.release.tdnet.info/inbs/long.pdf",
+      "pdf_s3_key": "2024/01/17/5678_決算短信_20240117110000.pdf",
+      "downloaded_at": "2024-01-17T11:05:00.000Z"
+    },
+    "special_characters": {
+      "disclosure_id": "20240117_9999_001",
+      "company_code": "9999",
+      "company_name": "特殊文字テスト株式会社（旧：テスト＆サンプル）",
+      "disclosure_date": "2024-01-17",
+      "disclosure_time": "12:00:00",
+      "disclosure_type": "その他",
+      "title": "特殊文字を含むタイトル：「」『』【】〔〕（）＆＜＞",
+      "pdf_url": "https://www.release.tdnet.info/inbs/special.pdf",
+      "pdf_s3_key": "2024/01/17/9999_その他_20240117120000.pdf",
+      "downloaded_at": "2024-01-17T12:05:00.000Z"
+    }
+  },
+  
+  "invalid_data": {
+    "comment": "バリデーションエラーのテストデータ",
+    "invalid_company_code": {
+      "disclosure_id": "20240118_ABC_001",
+      "company_code": "ABC",
+      "company_name": "無効企業コード株式会社",
+      "disclosure_date": "2024-01-18",
+      "disclosure_time": "10:00:00",
+      "disclosure_type": "決算短信",
+      "title": "無効な企業コードのテスト",
+      "pdf_url": "https://www.release.tdnet.info/inbs/invalid.pdf",
+      "pdf_s3_key": "2024/01/18/ABC_決算短信_20240118100000.pdf",
+      "downloaded_at": "2024-01-18T10:05:00.000Z"
+    },
+    "invalid_date_format": {
+      "disclosure_id": "20240118_1234_002",
+      "company_code": "1234",
+      "company_name": "テスト株式会社",
+      "disclosure_date": "2024/01/18",
+      "disclosure_time": "10:00:00",
+      "disclosure_type": "決算短信",
+      "title": "無効な日付形式のテスト",
+      "pdf_url": "https://www.release.tdnet.info/inbs/invalid2.pdf",
+      "pdf_s3_key": "2024/01/18/1234_決算短信_20240118100000.pdf",
+      "downloaded_at": "2024-01-18T10:05:00.000Z"
+    },
+    "missing_required_field": {
+      "disclosure_id": "20240118_5678_002",
+      "company_code": "5678",
+      "disclosure_date": "2024-01-18",
+      "disclosure_time": "10:00:00",
+      "disclosure_type": "決算短信",
+      "title": "必須フィールド欠落のテスト",
+      "pdf_url": "https://www.release.tdnet.info/inbs/missing.pdf",
+      "pdf_s3_key": "2024/01/18/5678_決算短信_20240118100000.pdf",
+      "downloaded_at": "2024-01-18T10:05:00.000Z",
+      "comment": "company_name フィールドが欠落"
+    }
+  }
+}

@@ -1,0 +1,70 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run type check
+        run: npm run type-check
+      
+      - name: Run unit tests
+        run: npm run test
+      
+      - name: Run property-based tests
+        run: npm run test:property
+      
+      - name: Generate coverage report
+        run: npm run test:coverage
+      
+      - name: Check coverage threshold (80%)
+        run: |
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below 80% threshold"
+            exit 1
+          fi
+          echo "✅ Coverage $COVERAGE% meets 80% threshold"
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+      
+      - name: Security audit (High/Critical only)
+        run: npm audit --audit-level=high
+        # 本番環境ではcontinue-on-errorを削除すること
+        # 開発中は警告のみ
+        continue-on-error: ${{ github.ref != 'refs/heads/main' }}
+      
+      - name: Check for outdated dependencies
+        run: npm outdated || true

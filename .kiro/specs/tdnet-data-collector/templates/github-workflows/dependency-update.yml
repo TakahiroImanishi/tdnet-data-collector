@@ -1,0 +1,56 @@
+name: Dependency Update
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # 毎週月曜日 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Update dependencies
+        run: |
+          npm update
+          npm audit fix --audit-level=moderate
+      
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: 'chore: update dependencies'
+          title: 'chore: weekly dependency update'
+          body: |
+            ## Automated Dependency Update
+            
+            This PR updates npm dependencies to their latest versions.
+            
+            ### Changes
+            - Updated npm packages
+            - Applied security fixes
+            
+            ### Testing
+            - [ ] All tests pass
+            - [ ] No breaking changes detected
+            
+            Please review the changes and merge if everything looks good.
+          branch: dependency-update-${{ github.run_number }}
+          labels: |
+            dependencies
+            automated
+          reviewers: |
+            # Add reviewer usernames here
+          assignees: |
+            # Add assignee usernames here

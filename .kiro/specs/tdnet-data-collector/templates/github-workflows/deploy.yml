@@ -1,0 +1,131 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm run test
+      
+      - name: Check coverage threshold
+        run: |
+          npm run test:coverage
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "❌ Cannot deploy: Coverage $COVERAGE% is below 80%"
+            exit 1
+          fi
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+      
+      - name: CDK Synth
+        run: npx cdk synth
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+      
+      - name: CDK Diff
+        run: npx cdk diff
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+      
+      - name: CDK Deploy
+        run: npx cdk deploy --require-approval never
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+      
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+      
+      - name: Run smoke tests
+        run: npm run test:smoke
+        env:
+          API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
+          API_KEY: ${{ secrets.API_KEY }}
+      
+      - name: Notify deployment success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: '✅ Deployment to ${{ github.event.inputs.environment || "dev" }} succeeded',
+              attachments: [{
+                color: 'good',
+                fields: [{
+                  title: 'Environment',
+                  value: '${{ github.event.inputs.environment || "dev" }}',
+                  short: true
+                }, {
+                  title: 'Commit',
+                  value: '${{ github.sha }}',
+                  short: true
+                }]
+              }]
+            }
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+      
+      - name: Notify deployment failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: '❌ Deployment to ${{ github.event.inputs.environment || "dev" }} failed',
+              attachments: [{
+                color: 'danger',
+                fields: [{
+                  title: 'Environment',
+                  value: '${{ github.event.inputs.environment || "dev" }}',
+                  short: true
+                }, {
+                  title: 'Commit',
+                  value: '${{ github.sha }}',
+                  short: true
+                }]
+              }]
+            }
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
