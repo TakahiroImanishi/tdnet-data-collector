@@ -306,6 +306,50 @@
   - _Critical改善: 日付バリデーション強化（即座に実施予定）_
   - _High改善: DI導入、AWS SDKモック改善（Phase 2で実施予定）_
 
+- [ ] 9.2 Phase 1 Critical改善の実施
+  - 日付バリデーションの強化（scrape-tdnet-list.ts）
+  - ファイル名の不一致を解消（cloudwatch-metrics.ts → metrics.ts）
+  - CloudWatchメトリクス機能のドキュメント化
+  - _Requirements: 要件6.1, 6.2（データ整合性、エラーハンドリング）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 4-6時間_
+
+- [ ] 9.3 Phase 2開始前の環境準備
+  - 環境変数ファイルの作成（.env.development）
+  - CDK Bootstrap実行
+  - .gitignore更新（.env.*を追加）
+  - _Requirements: 要件8.1（設定管理）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 1-2時間_
+
+- [ ] 9.4 テスト環境の整備（Phase 2並行作業）
+  - 依存関係の注入（DI）の導入
+  - AWS SDKモックの改善（aws-sdk-client-mock導入検討）
+  - Jest設定の見直し（ESモジュール対応）
+  - _Requirements: 要件14.1（テスト）_
+  - _優先度: 🟠 High_
+  - _推定工数: 10-15時間_
+  - _注意: Phase 2開始後に並行して実施_
+
+- [ ] 9.5 ドキュメント化（Phase 2並行作業）
+  - Lambda専用ログヘルパーのドキュメント化
+  - 複数メトリクス一括送信機能のドキュメント化
+  - Lambda Collectorアーキテクチャドキュメントの作成
+  - README.mdの拡充
+  - _Requirements: 要件13.1（ドキュメント）_
+  - _優先度: 🟠 High (Lambda専用ログヘルパー、一括送信), 🟡 Medium (アーキテクチャ、README)_
+  - _推定工数: 7-10時間_
+  - _注意: Phase 2開始後に並行して実施_
+
+- [ ] 9.6 統合テストの完成（Phase 2並行作業）
+  - Property 1-2の統合テスト実装（handler.integration.test.ts）
+  - LocalStack環境構築の検討
+  - 開発環境へのデプロイとスモークテスト実行
+  - _Requirements: 要件14.3（統合テスト）_
+  - _優先度: 🟠 High_
+  - _推定工数: 8-12時間_
+  - _注意: Phase 2開始後、デプロイ前に実施_
+
 
 ## Phase 2: API実装（Query、Export、認証）
 
