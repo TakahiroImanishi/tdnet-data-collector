@@ -495,7 +495,10 @@ https://www.release.tdnet.info/robots.txt
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - スクレイピングの基本ルール
-- **エラーハンドリング**: `../core/error-handling-patterns.md` - スクレイピングエラーの処理
-- **パフォーマンス最適化**: `../infrastructure/performance-optimization.md` - スクレイピングの最適化
-- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - HTML構造変更の検知
+### 参照元（このファイルを参照しているファイル）
+
+このファイルを参照しているファイルはありません。
+
+### 参照先（このファイルが参照しているファイル）
+
+- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - スクレイピングエラーの処理

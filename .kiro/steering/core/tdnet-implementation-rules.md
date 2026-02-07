@@ -52,6 +52,106 @@ DynamoDBのクエリ効率を最大化するため、`date_partition`（YYYY-MM�
 - 月単位のクエリを高速化
 - 日付範囲クエリは複数の月を並行クエリ
 
+**実装例:**
+
+```typescript
+// disclosed_atからdate_partitionを生成
+function generateDatePartition(disclosedAt: string): string {
+    // disclosedAt: "2024-01-15T10:30:00Z" (ISO 8601形式)
+    const date = new Date(disclosedAt);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`; // "2024-01"
+}
+
+// DynamoDB保存時の使用例
+interface DisclosureItem {
+    disclosure_id: string;
+    disclosed_at: string;
+    date_partition: string;
+    company_code: string;
+    title: string;
+    // ...
+}
+
+async function saveDisclosure(disclosure: Omit<DisclosureItem, 'date_partition'>) {
+    const item: DisclosureItem = {
+        ...disclosure,
+        date_partition: generateDatePartition(disclosure.disclosed_at),
+    };
+    
+    await dynamodb.putItem({
+        TableName: 'Disclosures',
+        Item: item,
+    });
+}
+
+// GSIを使用した月単位クエリ
+async function queryByMonth(yearMonth: string): Promise<DisclosureItem[]> {
+    const result = await dynamodb.query({
+        TableName: 'Disclosures',
+        IndexName: 'DatePartitionIndex', // GSI名
+        KeyConditionExpression: 'date_partition = :partition',
+        ExpressionAttributeValues: {
+            ':partition': yearMonth, // "2024-01"
+        },
+    });
+    
+    return result.Items as DisclosureItem[];
+}
+
+// 日付範囲クエリ（複数月を並行クエリ）
+async function queryByDateRange(startDate: string, endDate: string): Promise<DisclosureItem[]> {
+    // 開始月と終了月を生成
+    const startPartition = generateDatePartition(startDate);
+    const endPartition = generateDatePartition(endDate);
+    
+    // 月のリストを生成（例: ["2024-01", "2024-02", "2024-03"]）
+    const partitions = generateMonthRange(startPartition, endPartition);
+    
+    // 並行クエリ
+    const results = await Promise.all(
+        partitions.map(partition => queryByMonth(partition))
+    );
+    
+    // 結果を統合してフィルタリング
+    return results
+        .flat()
+        .filter(item => {
+            const disclosedAt = new Date(item.disclosed_at);
+            return disclosedAt >= new Date(startDate) && disclosedAt <= new Date(endDate);
+        })
+        .sort((a, b) => new Date(b.disclosed_at).getTime() - new Date(a.disclosed_at).getTime());
+}
+
+// 月範囲を生成するヘルパー関数
+function generateMonthRange(start: string, end: string): string[] {
+    const [startYear, startMonth] = start.split('-').map(Number);
+    const [endYear, endMonth] = end.split('-').map(Number);
+    
+    const months: string[] = [];
+    let year = startYear;
+    let month = startMonth;
+    
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+        months.push(`${year}-${String(month).padStart(2, '0')}`);
+        month++;
+        if (month > 12) {
+            month = 1;
+            year++;
+        }
+    }
+    
+    return months;
+}
+```
+
+**パフォーマンス考慮事項:**
+- 単一月のクエリは高速（GSIのパーティションキーで直接アクセス）
+- 複数月のクエリは並行実行で効率化
+- 1年以上の範囲クエリは、月数が多い場合にコストが増加する可能性あり
+- 必要に応じて、結果のページネーションを実装
+
 **詳細**: `../development/data-validation.md` の date_partition セクションを参照
 
 ## 関連ドキュメント

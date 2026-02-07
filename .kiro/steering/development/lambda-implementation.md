@@ -693,3 +693,16 @@ async function processWithTracing(disclosure: Disclosure): Promise<void> {
 - **監視とアラート**: `../infrastructure/monitoring-alerts.md` - CloudWatch設定
 - **テスト戦略**: `testing-strategy.md` - Lambda関数のテスト方法
 - **ファイル命名規則**: `tdnet-file-naming.md` - Lambda関数のファイル構成
+
+
+---
+
+## 関連ドキュメント
+
+### 参照元（このファイルを参照しているファイル）
+
+このファイルを参照しているファイルはありません。
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

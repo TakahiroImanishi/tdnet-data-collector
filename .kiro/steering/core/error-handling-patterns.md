@@ -113,6 +113,154 @@ for (const item of items) {
 }
 ```
 
+## エラーハンドリングの実装チェックリスト
+
+### Lambda関数での必須実装
+
+すべてのLambda関数は、以下の項目を実装する必要があります：
+
+- [ ] **try-catchブロック**: すべての非同期処理をtry-catchで囲む
+- [ ] **再試行ロジック**: Retryable Errorsに対して`retryWithBackoff`を使用
+- [ ] **構造化ログ**: `error_type`, `error_message`, `context`, `stack_trace`を含む
+- [ ] **カスタムエラークラス**: プロジェクト標準のエラークラスを使用
+- [ ] **エラーメトリクス**: CloudWatchにカスタムメトリクスを送信
+- [ ] **部分的失敗の処理**: バッチ処理では個別の失敗を記録して継続
+
+**実装例:**
+```typescript
+import { retryWithBackoff } from './utils/retry';
+import { logger } from './utils/logger';
+import { RetryableError } from './errors';
+
+export async function handler(event: any, context: any) {
+    try {
+        // メイン処理
+        const results = await retryWithBackoff(
+            async () => await fetchData(),
+            {
+                maxRetries: 3,
+                initialDelay: 2000,
+                backoffMultiplier: 2,
+                jitter: true,
+            }
+        );
+        
+        return { statusCode: 200, body: JSON.stringify(results) };
+    } catch (error) {
+        logger.error('Lambda execution failed', {
+            error_type: error.constructor.name,
+            error_message: error.message,
+            context: {
+                request_id: context.requestId,
+                function_name: context.functionName,
+            },
+            stack_trace: error.stack,
+        });
+        
+        // CloudWatchメトリクス送信
+        await sendMetric('LambdaError', 1, { ErrorType: error.constructor.name });
+        
+        throw error;
+    }
+}
+```
+
+### API Gatewayでの必須実装
+
+すべてのAPIエンドポイントは、以下の項目を実装する必要があります：
+
+- [ ] **適切なHTTPステータスコード**: エラー種別に応じた正しいステータスコード
+- [ ] **標準エラーレスポンス**: プロジェクト標準のエラーレスポンス形式
+- [ ] **センシティブ情報の除外**: スタックトレース、内部パスを含めない
+- [ ] **エラーコードの使用**: `../api/error-codes.md`で定義されたエラーコード
+- [ ] **CORS対応**: エラーレスポンスにもCORSヘッダーを含める
+
+**実装例:**
+```typescript
+import { APIGatewayProxyResult } from 'aws-lambda';
+import { ValidationError, NotFoundError } from './errors';
+
+function handleError(error: Error): APIGatewayProxyResult {
+    if (error instanceof ValidationError) {
+        return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                error_code: 'VALIDATION_ERROR',
+                message: error.message,
+                details: error.details,
+            }),
+        };
+    }
+    
+    if (error instanceof NotFoundError) {
+        return {
+            statusCode: 404,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                error_code: 'NOT_FOUND',
+                message: error.message,
+            }),
+        };
+    }
+    
+    // デフォルト: 500 Internal Server Error
+    logger.error('Unhandled error', { error });
+    return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            error_code: 'INTERNAL_ERROR',
+            message: 'An unexpected error occurred',
+        }),
+    };
+}
+```
+
+### DynamoDB操作での必須実装
+
+DynamoDBとのやり取りでは、以下の項目を実装する必要があります：
+
+- [ ] **条件付き書き込み**: 重複防止のため`ConditionExpression`を使用
+- [ ] **トランザクション**: 複数項目の整合性が必要な場合は`TransactWriteItems`を使用
+- [ ] **エラー分類**: `ConditionalCheckFailedException`などを適切に処理
+- [ ] **再試行ロジック**: `ProvisionedThroughputExceededException`に対して再試行
+
+**実装例:**
+```typescript
+import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { retryWithBackoff } from './utils/retry';
+
+async function saveToDynamoDB(item: any) {
+    const client = new DynamoDBClient({});
+    
+    try {
+        await retryWithBackoff(
+            async () => {
+                await client.send(new PutItemCommand({
+                    TableName: 'Disclosures',
+                    Item: item,
+                    ConditionExpression: 'attribute_not_exists(disclosure_id)',
+                }));
+            },
+            {
+                maxRetries: 3,
+                initialDelay: 1000,
+                shouldRetry: (error) => {
+                    return error.name === 'ProvisionedThroughputExceededException';
+                },
+            }
+        );
+    } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            logger.warn('Duplicate item detected', { item });
+            return; // 重複は無視
+        }
+        throw error;
+    }
+}
+```
+
 ## エラーコード標準
 
 エラーコードの詳細な定義と使用ガイドラインは、以下のドキュメントを参照してください：
