@@ -205,6 +205,12 @@ describe('Correctness Properties', () => {
 2. **mock-tdnet-response.html**: 新しいHTMLパターンを追加
 3. **arbitraries.ts**: 新しいArbitraryを定義
 
+## 詳細な使用例
+
+より詳細な使用例とベストプラクティスについては、以下のドキュメントを参照してください：
+
+- **[usage-examples.md](./usage-examples.md)** - テストフィクスチャの実践的な使用方法
+
 ## 関連ドキュメント
 
 - **[テスト戦略](../../../.kiro/steering/development/testing-strategy.md)** - テスト実装のベストプラクティス
