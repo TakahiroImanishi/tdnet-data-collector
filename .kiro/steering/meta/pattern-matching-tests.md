@@ -236,11 +236,14 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```
-**/cdk/**/*.ts|**/lambda/**/*.ts
+**/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*function*.ts|**/dynamodb/**/*.ts|**/s3/**/*.ts|**/lambda/**/*.ts
 ```
 
 ### マッチすべきファイル ✅
-- `cdk/lib/tdnet-stack.ts`
+- `cdk/lib/constructs/lambda-construct.ts`
+- `cdk/lib/constructs/function-construct.ts`
+- `src/dynamodb/client.ts`
+- `src/s3/uploader.ts`
 - `lambda/collector/handler.ts`
 - `lambda/collector/index.ts`
 - `lambda/collector/utils.ts`
@@ -248,8 +251,9 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 - `src/lambda/export/handler.ts`
 
 ### マッチすべきでないファイル ❌
-- `src/api/disclosures.ts` (lambdaフォルダ外)
-- `src/utils/performance.ts` (lambdaフォルダ外)
+- `cdk/lib/tdnet-stack.ts` (constructs/*lambda*.ts|*function*.tsパターンに非該当)
+- `src/api/disclosures.ts` (対象フォルダ外)
+- `src/utils/performance.ts` (対象フォルダ外)
 - `README.md`
 - `package.json`
 
@@ -589,3 +593,7 @@ Test-MultiPattern "**/*.test.ts|**/*.spec.ts" "src/validators/disclosure.ts"
 - 2026-02-07: 初版作成 - 全steeringファイルのパターンマッチングテストケースを追加
 - 2026-02-07: テスト実行方法を大幅に拡充 - 手動テスト手順、検証スクリプト、クイックテストコマンドを追加
 - 2026-02-07: tests/フォルダからmeta/フォルダに移動 - steeringファイルのメタ情報として適切に配置
+- 2026-02-07: Issue 5対応 - Lambda関連パターンを統合（`**/lambda/**/*.ts`に拡大）
+  - `error-handling-implementation.md`: `**/lambda/**/*.ts`を追加
+  - `environment-variables.md`: `**/cdk/**/*.ts|**/lambda/**/*.ts|**/.env*`に変更
+  - `performance-optimization.md`: `**/lambda/**/*.ts`を追加
