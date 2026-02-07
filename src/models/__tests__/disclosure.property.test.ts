@@ -45,7 +45,7 @@ const disclosureArbitrary = (): fc.Arbitrary<Disclosure> => {
     disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示', 'その他'),
     title: fc.string({ minLength: 1, maxLength: 200 }),
     disclosed_at: fc
-      .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+      .date({ min: new Date('2020-01-01'), max: new Date(Date.now()) })
       .map((date) => date.toISOString()),
     pdf_url: fc
       .webUrl()
@@ -67,7 +67,7 @@ const disclosureArbitrary = (): fc.Arbitrary<Disclosure> => {
         return `pdfs/${year}/${month}/${dateStr}_${companyCodeStr}_${seqStr}.pdf`;
       }),
     collected_at: fc
-      .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+      .date({ min: new Date('2020-01-01'), max: new Date(Date.now()) })
       .map((date) => date.toISOString()),
     date_partition: fc
       .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
