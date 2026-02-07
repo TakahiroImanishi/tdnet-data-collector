@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/cdk/**/*.ts|**/iam/**/*.ts|**/security/**/*.ts'
+fileMatchPattern: '**/cdk/lib/**/*-stack.ts|**/iam/**/*.ts|**/security/**/*.ts'
 ---
 
 # セキュリティベストプラクティス
@@ -654,6 +654,5 @@ aws iam delete-access-key --user-name tdnet-user --access-key-id OLD_KEY_ID
 
 ## 関連ドキュメント
 
-- **環境変数**: `environment-variables.md` - 機密情報の管理方法
-- **デプロイチェックリスト**: `deployment-checklist.md` - セキュリティチェック項目
-- **監視とアラート**: `monitoring-alerts.md` - セキュリティアラートの設定
+- **環境変数**: `../infrastructure/environment-variables.md` - 機密情報の管理方法
+- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - セキュリティアラートの設定

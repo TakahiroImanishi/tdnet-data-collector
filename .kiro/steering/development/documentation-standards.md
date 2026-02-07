@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/*.md|**/README.md'
+fileMatchPattern: '**/docs/**/*.md|**/README.md|**/.kiro/specs/**/*.md'
 ---
 
 # TDnet Data Collector - ドキュメント標準

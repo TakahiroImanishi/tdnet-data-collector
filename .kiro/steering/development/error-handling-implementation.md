@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/index.ts|**/lambda/**/handler.ts|**/scraper/**/*.ts|**/api/**/*.ts|**/utils/error*.ts|**/utils/retry*.ts'
+fileMatchPattern: '**/scraper/**/*.ts|**/api/**/*.ts|**/utils/error*.ts|**/utils/retry*.ts'
 ---
 
 # Error Handling Implementation - 詳細実装ガイド

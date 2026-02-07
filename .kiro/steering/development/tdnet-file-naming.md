@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/index.ts|**/cdk/lib/**/*-stack.ts|**/cdk/lib/constructs/**/*.ts|**/src/**/index.ts|**/utils/**/index.ts'
+fileMatchPattern: '**/cdk/lib/**/*-stack.ts|**/cdk/lib/constructs/**/*.ts|**/src/**/index.ts|**/utils/**/index.ts'
 ---
 
 # TDnet Data Collector - ファイル・フォルダ命名規則
