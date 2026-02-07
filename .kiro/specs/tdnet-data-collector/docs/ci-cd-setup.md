@@ -135,30 +135,165 @@ GitHub ActionsからAWSリソースにアクセスするため、OIDC認証を�
 }
 ```
 
-#### 必要な権限ポリシー
+#### 必要な権限ポリシー（最小権限の原則）
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "CloudFormationAccess",
       "Effect": "Allow",
       "Action": [
-        "cloudformation:*",
-        "lambda:*",
-        "dynamodb:*",
-        "s3:*",
-        "apigateway:*",
-        "iam:PassRole",
-        "iam:GetRole",
-        "logs:*",
-        "events:*"
+        "cloudformation:DescribeStacks",
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
+        "cloudformation:DeleteStack",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStackResources",
+        "cloudformation:GetTemplate"
       ],
-      "Resource": "*"
+      "Resource": [
+        "arn:aws:cloudformation:ap-northeast-1:123456789012:stack/TdnetStack/*",
+        "arn:aws:cloudformation:ap-northeast-1:123456789012:stack/CDKToolkit/*"
+      ]
+    },
+    {
+      "Sid": "LambdaAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunction",
+        "lambda:DeleteFunction",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:AddPermission",
+        "lambda:RemovePermission"
+      ],
+      "Resource": "arn:aws:lambda:ap-northeast-1:123456789012:function:tdnet-*"
+    },
+    {
+      "Sid": "DynamoDBAccess",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:CreateTable",
+        "dynamodb:UpdateTable",
+        "dynamodb:DescribeTable",
+        "dynamodb:DeleteTable",
+        "dynamodb:TagResource",
+        "dynamodb:UntagResource",
+        "dynamodb:UpdateTimeToLive"
+      ],
+      "Resource": "arn:aws:dynamodb:ap-northeast-1:123456789012:table/tdnet-*"
+    },
+    {
+      "Sid": "S3Access",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:PutBucketPolicy",
+        "s3:GetBucketLocation",
+        "s3:PutBucketVersioning",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutEncryptionConfiguration",
+        "s3:DeleteBucket"
+      ],
+      "Resource": "arn:aws:s3:::tdnet-*"
+    },
+    {
+      "Sid": "S3ObjectAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::tdnet-*/*"
+    },
+    {
+      "Sid": "APIGatewayAccess",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:POST",
+        "apigateway:PUT",
+        "apigateway:PATCH",
+        "apigateway:DELETE",
+        "apigateway:GET"
+      ],
+      "Resource": "arn:aws:apigateway:ap-northeast-1::/restapis/*"
+    },
+    {
+      "Sid": "IAMPassRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::123456789012:role/tdnet-*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "lambda.amazonaws.com",
+            "apigateway.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "IAMRoleRead",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::123456789012:role/tdnet-*"
+    },
+    {
+      "Sid": "CloudWatchLogsAccess",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "arn:aws:logs:ap-northeast-1:123456789012:log-group:/aws/lambda/tdnet-*"
+    },
+    {
+      "Sid": "EventBridgeAccess",
+      "Effect": "Allow",
+      "Action": [
+        "events:PutRule",
+        "events:DeleteRule",
+        "events:DescribeRule",
+        "events:PutTargets",
+        "events:RemoveTargets"
+      ],
+      "Resource": "arn:aws:events:ap-northeast-1:123456789012:rule/tdnet-*"
+    },
+    {
+      "Sid": "SSMParameterAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:PutParameter"
+      ],
+      "Resource": "arn:aws:ssm:ap-northeast-1:123456789012:parameter/cdk-bootstrap/*"
     }
   ]
 }
 ```
+
+**重要な変更点:**
+- ✅ すべてのリソースARNを具体的に指定（`*` を削除）
+- ✅ 各サービスごとに必要最小限のアクションのみ許可
+- ✅ IAM PassRoleに条件を追加（特定のサービスのみ）
+- ✅ リソース名に `tdnet-` プレフィックスを強制
+
+**セキュリティ強化のポイント:**
+1. リソースARNを具体的に指定することで、意図しないリソースへのアクセスを防止
+2. IAM PassRoleに条件を追加し、Lambda/API Gatewayのみにロールを渡せるよう制限
+3. CloudWatch Logsのアクセスを `/aws/lambda/tdnet-*` に限定
 
 ### セキュリティベストプラクティス
 
@@ -179,6 +314,45 @@ GitHub ActionsからAWSリソースにアクセスするため、OIDC認証を�
 ---
 
 ## 環境変数管理
+
+### 環境変数の管理方針
+
+**管理場所の使い分け:**
+
+| 環境 | 管理場所 | 用途 | 例 |
+|------|---------|------|-----|
+| **ローカル開発** | `.env` ファイル | 開発者のローカル環境 | `DYNAMODB_ENDPOINT=http://localhost:8000` |
+| **CI/CD** | GitHub Secrets | GitHub Actionsでのビルド・デプロイ | `AWS_ROLE_ARN`, `API_KEY` |
+| **Lambda実行時** | CDKで定義 | Lambda関数の環境変数 | `DYNAMODB_TABLE`, `S3_BUCKET` |
+| **機密情報** | AWS Secrets Manager | APIキー、データベース認証情報 | `TDNET_API_KEY` |
+
+**重要な原則:**
+
+1. **機密情報はコードに含めない**
+   - ❌ ハードコード
+   - ❌ `.env` ファイルをGitにコミット
+   - ✅ GitHub Secrets または AWS Secrets Manager
+
+2. **環境ごとに異なる値を使用**
+   - dev: 開発用のリソース
+   - staging: 本番に近い環境
+   - prod: 本番環境
+
+3. **デフォルト値を設定**
+   - ローカル開発時に環境変数が未設定でもエラーにならないよう、適切なデフォルト値を設定
+   - 例: `process.env.LOG_LEVEL || 'DEBUG'`
+
+4. **環境変数の検証**
+   - Lambda起動時に必須の環境変数が設定されているか確認
+   - 不正な値の場合はエラーを投げる
+
+**環境変数の優先順位:**
+```
+1. Lambda環境変数（CDKで定義） - 最優先
+2. GitHub Secrets（CI/CD時）
+3. .env ファイル（ローカル開発時）
+4. デフォルト値（コード内）
+```
 
 ### 環境ごとの変数の違い
 
@@ -306,19 +480,29 @@ const collectorFn = new lambda.Function(this, 'CollectorFunction', {
 8. **Security Audit**: npm auditで脆弱性チェック
 9. **Outdated Check**: 古い依存関係の確認
 
-**カバレッジチェックの詳細:**
+**カバレッジチェックの詳細（クロスプラットフォーム対応）:**
 
 ```yaml
 - name: Check coverage threshold (80%)
   run: |
-    COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
-    echo "Coverage: $COVERAGE%"
-    if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-      echo "❌ Coverage $COVERAGE% is below 80% threshold"
-      exit 1
-    fi
-    echo "✅ Coverage $COVERAGE% meets 80% threshold"
+    node -e "
+      const fs = require('fs');
+      const coverage = JSON.parse(fs.readFileSync('./coverage/coverage-summary.json', 'utf8'));
+      const lineCoverage = coverage.total.lines.pct;
+      console.log(\`Coverage: \${lineCoverage}%\`);
+      if (lineCoverage < 80) {
+        console.error(\`❌ Coverage \${lineCoverage}% is below 80% threshold\`);
+        process.exit(1);
+      }
+      console.log(\`✅ Coverage \${lineCoverage}% meets 80% threshold\`);
+    "
 ```
+
+**変更理由:**
+- ✅ `bc` コマンドに依存しない（GitHub Actions Runnerに標準インストール）
+- ✅ Windows環境でも動作
+- ✅ Node.jsは既にインストール済み（npm実行のため）
+- ✅ エラーメッセージが明確
 
 ### deploy.yml の詳細
 
@@ -413,33 +597,161 @@ GitHub Actions → Deploy → Run workflow → staging
    - Slack通知確認
    - スモークテスト結果確認
 
-### ロールバック手順
+### ロールバック手順（推奨順序）
 
-#### 方法1: 前のコミットにロールバック
+#### 優先度1: CloudFormationからロールバック（最速・最安全）
 
+**適用条件:**
+- ✅ Lambda関数のコード変更のみ
+- ✅ 環境変数の変更のみ
+- ✅ DynamoDBテーブルのスキーマ変更なし
+- ✅ S3バケットの削除なし
+
+**手順:**
+```
+AWS Console → CloudFormation → TdnetStack → Stack actions → Roll back
+```
+
+**所要時間:** 5-10分
+
+**メリット:**
+- 最も安全（AWSが自動的に前の状態に戻す）
+- 最も速い
+- 手動操作が最小限
+
+---
+
+#### 優先度2: 前のコミットにロールバック
+
+**適用条件:**
+- ✅ コード変更のみ
+- ✅ DynamoDBテーブルのスキーマ変更なし
+- ✅ S3バケットの削除なし
+- ⚠️ 新しいリソースの追加なし
+
+**手順:**
 ```bash
-# 前のコミットを確認
-git log --oneline -n 5
+# 1. 前のコミットを確認
+git log --oneline -n 10
 
-# ロールバック
+# 2. ロールバック対象のコミットを特定
+# 例: abc1234 が正常動作していたコミット
+
+# 3. revertコミットを作成
 git revert <commit-hash>
+
+# 4. mainブランチにpush（自動デプロイ）
 git push origin main
 ```
 
-#### 方法2: 手動で前のバージョンをデプロイ
+**所要時間:** 10-15分
 
+**メリット:**
+- Git履歴が保持される
+- 自動デプロイが実行される
+- 監査ログが残る
+
+---
+
+#### 優先度3: 手動デプロイ（最終手段）
+
+**適用条件:**
+- ⚠️ DynamoDBテーブルのスキーマ変更あり
+- ⚠️ S3バケットの削除あり
+- ⚠️ 複雑な変更
+- ⚠️ 優先度1-2が使えない場合
+
+**手順:**
 ```bash
-# 前のタグをチェックアウト
+# 1. 正常動作していたタグをチェックアウト
 git checkout v1.0.0
 
-# 手動デプロイ
-npm run cdk:deploy
+# 2. 依存関係をインストール
+npm ci
+
+# 3. CDK Diffで変更内容を確認
+npx cdk diff
+
+# 4. 手動デプロイ
+npx cdk deploy --require-approval never
+
+# 5. スモークテスト
+npm run test:smoke
 ```
 
-#### 方法3: CloudFormationから直接ロールバック
+**所要時間:** 20-30分
+
+**メリット:**
+- 完全な制御が可能
+- 複雑な変更に対応
+
+---
+
+### ⚠️ データベーススキーマ変更時の特別な注意事項
+
+#### DynamoDBテーブルの変更
+
+**削除不可能な操作（ロールバック不可）:**
+- ❌ テーブルの削除
+- ❌ GSI（Global Secondary Index）の削除
+- ❌ データの削除
+
+**ロールバック可能な操作:**
+- ✅ GSIの追加（削除すればロールバック）
+- ✅ TTLの有効化/無効化
+- ✅ ストリームの有効化/無効化
+
+**推奨手順:**
+1. **事前バックアップ**: AWS Backup または On-Demand Backup
+2. **段階的変更**: 一度に複数の変更を行わない
+3. **テスト環境で検証**: dev環境で十分にテスト
+4. **ロールバックプランの準備**: 事前にロールバック手順を文書化
+
+#### S3バケットの変更
+
+**削除不可能な操作（ロールバック不可）:**
+- ❌ バケットの削除（オブジェクトが存在する場合）
+- ❌ バージョニング無効化後のオブジェクト削除
+
+**推奨手順:**
+1. **バージョニング有効化**: 誤削除からの復旧を可能にする
+2. **ライフサイクルポリシー**: 古いバージョンを自動削除
+3. **クロスリージョンレプリケーション**: 重要データのバックアップ
+
+---
+
+### ロールバック判断フローチャート
 
 ```
-AWS Console → CloudFormation → Stack → Actions → Roll back
+デプロイ失敗/問題発生
+    ↓
+DynamoDBスキーマ変更あり？
+    ├─ Yes → 優先度3: 手動デプロイ + データ復旧
+    └─ No → 新しいリソース追加あり？
+              ├─ Yes → 優先度2: 前のコミットにロールバック
+              └─ No → 優先度1: CloudFormationからロールバック
+```
+
+---
+
+### ロールバック後の確認事項
+
+**必須チェック:**
+- ✅ Lambda関数が正常に動作しているか
+- ✅ DynamoDBテーブルにアクセスできるか
+- ✅ S3バケットにアクセスできるか
+- ✅ API Gatewayが正常にレスポンスを返すか
+- ✅ CloudWatch Logsにエラーがないか
+
+**スモークテストの実行:**
+```bash
+# APIエンドポイントのテスト
+curl -X GET https://api.example.com/health
+
+# 収集機能のテスト
+curl -X POST https://api.example.com/collect \
+  -H "x-api-key: $API_KEY" \
+  -d '{"date": "2024-01-15"}'
 ```
 
 ---

@@ -832,19 +832,64 @@ dynamoThrottleAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
 
 ### アラート閾値の設定根拠
 
-| アラーム | 閾値 | 根拠 |
-|---------|------|------|
-| **エラー率** | 10件/5分 | 通常は0-2件。10件超過は異常な状態 |
-| **実行時間** | 10分 | 目標5分の2倍。タイムアウト（15分）前に検知 |
-| **スロットリング** | 1件 | 即座に対応が必要な重大な問題 |
-| **収集成功率** | 95% | Phase 1-2の目標値。これを下回ると品質低下 |
-| **データ収集停止** | 24時間 | 平日は必ず開示情報があるため、24時間なしは異常 |
-| **整合性エラー** | 5件/時間 | 目標0.1%。1時間で5件は許容範囲を超える |
-| **DynamoDBエラー** | 5件/5分 | 通常は0件。5件超過は設定ミスやバグの可能性 |
+| アラーム | 閾値 | 根拠 | Phase 1-2での調整 |
+|---------|------|------|------------------|
+| **エラー率** | 10件/5分 | Phase 1-2の実測データに基づく想定値。通常は0-2件のため、10件超過は異常 | 実測後に5-15件の範囲で調整 |
+| **実行時間** | 10分 | 目標5分の2倍。タイムアウト（15分）前に検知 | 実測後に7-12分の範囲で調整 |
+| **スロットリング** | 1件 | 即座に対応が必要な重大な問題。発生すべきでない | 調整不要 |
+| **収集成功率** | 95% | Phase 1-2の目標値。これを下回ると品質低下 | Phase 3で97%、Phase 4で99%に引き上げ |
+| **データ収集停止** | 24時間 | 平日は必ず開示情報があるため、24時間なしは異常 | 実測後に12-36時間の範囲で調整 |
+| **整合性エラー** | 5件/時間 | 目標0.1%に基づく想定値。1時間で5件は許容範囲を超える | 実測後に3-10件の範囲で調整 |
+| **DynamoDBエラー** | 5件/5分 | 通常は0件。5件超過は設定ミスやバグの可能性 | 実測後に3-10件の範囲で調整 |
+
+**閾値調整のプロセス:**
+
+1. **Phase 1-2: 初期値で運用開始**
+   - 上記の閾値で運用開始
+   - 実測データを2週間収集
+   - 誤検知率を記録
+
+2. **Phase 3: 実測データに基づく調整**
+   - p95値を基準に閾値を再設定
+   - 誤検知率を5%以下に抑える
+   - 見逃し率を1%以下に抑える
+
+3. **Phase 4: 本番運用レベルに引き上げ**
+   - より厳格な閾値に変更
+   - 収集成功率を99%に引き上げ
+   - エラー率を5件/5分に引き下げ
+
+**注意事項:**
+- 閾値は定期的に見直す（月次）
+- 季節変動を考慮（決算期は開示情報が増加）
+- アラート疲れを避けるため、誤検知を最小化
 
 ---
 
 ## ダッシュボード作成例（CDK）
+
+### Phase別ダッシュボード推奨
+
+| Phase | 推奨ダッシュボード | 理由 |
+|-------|------------------|------|
+| **Phase 1-2** | 総合ダッシュボードのみ | 基本的なKPIと動作確認に集中 |
+| **Phase 3** | 総合 + 詳細パフォーマンス | パフォーマンス最適化のため詳細分析が必要 |
+| **Phase 4** | 総合 + 詳細パフォーマンス + コスト監視 | 本番運用でコスト管理が重要 |
+
+**初期段階（Phase 1-2）の推奨:**
+- 総合ダッシュボードのみを作成
+- ウィジェット数を最小限に抑える（10-15個）
+- 最重要KPIに集中（収集成功率、エラー数、実行時間）
+
+**最適化段階（Phase 3）の推奨:**
+- 詳細パフォーマンスダッシュボードを追加
+- パーセンタイル分析でボトルネックを特定
+- メモリ使用量を監視して最適化
+
+**本番運用段階（Phase 4）の推奨:**
+- コスト監視ダッシュボードを追加
+- 月間コスト推移を可視化
+- コスト異常を早期検知
 
 ### 総合ダッシュボード
 
@@ -1239,17 +1284,22 @@ async function recordCollectionMetrics(
     const totalCount = successCount + failureCount;
     const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 0;
     
-    await Promise.all([
-        putMetric('CollectionSuccessRate', successRate, 'Percent', {
-            Environment: process.env.ENVIRONMENT || 'dev',
-        }),
-        putMetric('CollectedDisclosuresCount', successCount, 'Count', {
-            Environment: process.env.ENVIRONMENT || 'dev',
-        }),
-        putMetric('CollectionFailureCount', failureCount, 'Count', {
-            Environment: process.env.ENVIRONMENT || 'dev',
-        }),
-    ]);
+    try {
+        await Promise.all([
+            putMetric('CollectionSuccessRate', successRate, 'Percent', {
+                Environment: process.env.ENVIRONMENT || 'dev',
+            }),
+            putMetric('CollectedDisclosuresCount', successCount, 'Count', {
+                Environment: process.env.ENVIRONMENT || 'dev',
+            }),
+            putMetric('CollectionFailureCount', failureCount, 'Count', {
+                Environment: process.env.ENVIRONMENT || 'dev',
+            }),
+        ]);
+    } catch (error) {
+        // メトリクス送信失敗はログのみ（処理は継続）
+        console.error('Failed to record collection metrics', { error });
+    }
 }
 
 /**
@@ -1317,6 +1367,33 @@ export const handler = async (event: any): Promise<any> => {
     }
 };
 ```
+
+### メトリクスコストの試算
+
+**カスタムメトリクスの料金:**
+- 最初の10,000メトリクス: $0.30/メトリクス/月
+- 次の240,000メトリクス: $0.10/メトリクス/月
+- 次の750,000メトリクス: $0.05/メトリクス/月
+
+**本プロジェクトの想定コスト:**
+
+| メトリクス | 送信頻度 | 月間送信回数 | コスト |
+|-----------|---------|-------------|--------|
+| CollectionSuccessRate | 1回/実行 | 60回 | $0.30 |
+| CollectedDisclosuresCount | 1回/実行 | 60回 | $0.30 |
+| CollectionFailureCount | 1回/実行 | 60回 | $0.30 |
+| Throughput | 1回/実行 | 60回 | $0.30 |
+| DataIntegrityErrors | 随時 | 10回 | $0.30 |
+| **合計** | - | **約250回** | **$1.50/月** |
+
+**コスト最適化のポイント:**
+- メトリクス送信頻度を調整（実行ごと → 5分ごと）
+- 不要なDimensionsを削減
+- メトリクスフィルターを活用（ログベースのメトリクスは無料）
+
+**無料枠:**
+- カスタムメトリクス: 最初の10メトリクスは無料
+- 標準メトリクス（Lambda、DynamoDB、S3）: 完全無料
 
 ---
 
