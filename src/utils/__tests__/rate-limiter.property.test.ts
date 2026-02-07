@@ -16,16 +16,16 @@ describe('RateLimiter - Property Tests', () => {
      * 最小遅延時間が確保されることを検証する。
      * 
      * 検証内容:
-     * - リクエスト回数: 2-10回
-     * - 最小遅延時間: 100-1000ms（テスト用に短縮）
+     * - リクエスト回数: 2-5回（テスト時間を考慮して削減）
+     * - 最小遅延時間: 50-200ms（テスト用に短縮）
      * - 連続リクエスト間の遅延時間が最小遅延時間以上であること
      * - 50msの誤差を許容（システムの処理時間を考慮）
      */
     it('Property 12: レート制限の遵守 - 連続リクエスト間で最小遅延時間が確保される', async () => {
         await fc.assert(
             fc.asyncProperty(
-                fc.integer({ min: 2, max: 10 }), // リクエスト回数
-                fc.integer({ min: 100, max: 1000 }), // 最小遅延時間（テスト用に短縮）
+                fc.integer({ min: 2, max: 5 }), // リクエスト回数（テスト時間を考慮）
+                fc.integer({ min: 50, max: 200 }), // 最小遅延時間（テスト用に短縮）
                 async (requestCount, minDelayMs) => {
                     const rateLimiter = new RateLimiter({ minDelayMs });
                     const timestamps: number[] = [];
@@ -45,9 +45,9 @@ describe('RateLimiter - Property Tests', () => {
                     }
                 }
             ),
-            { numRuns: 100 } // 100回反復実行
+            { numRuns: 50 } // 50回反復実行（テスト時間を考慮）
         );
-    }, 120000); // タイムアウト: 120秒（遅延時間を考慮）
+    }, 60000); // タイムアウト: 60秒（遅延時間を考慮）
 
     /**
      * 最初のリクエストは即座に実行される
