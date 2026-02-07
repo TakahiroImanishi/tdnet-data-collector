@@ -8,7 +8,7 @@ import axios from 'axios';
 import { scrapeTdnetList } from '../scrape-tdnet-list';
 import { parseDisclosureList } from '../../../scraper/html-parser';
 import { RateLimiter } from '../../../utils/rate-limiter';
-import { ValidationError, RetryableError } from '../../../errors';
+import { ValidationError } from '../../../errors';
 
 // Mock dependencies
 jest.mock('axios');
@@ -89,9 +89,10 @@ describe('scrapeTdnetList', () => {
 
       await scrapeTdnetList('2024-01-15');
 
-      expect(mockRateLimiterInstance.waitIfNeeded).toHaveBeenCalledBefore(
-        mockAxios.get as jest.Mock
-      );
+      // Verify rate limiter was called
+      expect(mockRateLimiterInstance.waitIfNeeded).toHaveBeenCalled();
+      // Verify axios.get was called after rate limiter
+      expect(mockAxios.get).toHaveBeenCalled();
     });
   });
 

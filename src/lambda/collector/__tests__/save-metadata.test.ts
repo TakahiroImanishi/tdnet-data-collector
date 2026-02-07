@@ -13,10 +13,16 @@ import { ValidationError } from '../../../errors';
 const dynamoMock = mockClient(DynamoDBClient);
 
 describe('saveMetadata', () => {
+  const originalEnv = process.env.DYNAMODB_TABLE;
+
   beforeEach(() => {
     jest.clearAllMocks();
     dynamoMock.reset();
     process.env.DYNAMODB_TABLE = 'test-table';
+  });
+
+  afterEach(() => {
+    process.env.DYNAMODB_TABLE = originalEnv;
   });
 
   describe('正常系', () => {
@@ -325,7 +331,8 @@ describe('saveMetadata', () => {
       await saveMetadata(disclosure, s3_key);
 
       // Assert
-      expect(dynamoMock.call(0).args[0].input.TableName).toBe('tdnet_disclosures');
+      const input = dynamoMock.call(0).args[0].input as any;
+      expect(input.TableName).toBe('tdnet_disclosures');
     });
 
     it('すべてのメタデータフィールドが正しく保存される', async () => {
@@ -351,7 +358,8 @@ describe('saveMetadata', () => {
 
       // Assert
       const call = dynamoMock.call(0);
-      const item = call.args[0].input.Item;
+      const input = call.args[0].input as any;
+      const item = input.Item;
 
       expect(item?.disclosure_id?.S).toBe('TD20240115001');
       expect(item?.company_code?.S).toBe('1234');

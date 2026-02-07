@@ -185,7 +185,7 @@ function convertAxiosError(error: AxiosError, url: string): Error {
   }
 
   // タイムアウトエラー
-  if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+  if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
     return new RetryableError(
       `Request timeout: ${error.message}`,
       error

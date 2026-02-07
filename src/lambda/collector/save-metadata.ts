@@ -13,8 +13,13 @@ import { generateDatePartition } from '../../utils/date-partition';
 import { logger } from '../../utils/logger';
 import { Disclosure } from '../../types';
 
+// DynamoDBクライアントはグローバルスコープで初期化（再利用される）
 const dynamoClient = new DynamoDBClient({});
-const DYNAMODB_TABLE = process.env.DYNAMODB_TABLE || 'tdnet_disclosures';
+
+// 環境変数は関数内で取得（テスト時の柔軟性のため）
+function getDynamoTable(): string {
+  return process.env.DYNAMODB_TABLE || 'tdnet_disclosures';
+}
 
 /**
  * メタデータをDynamoDBに保存
@@ -71,7 +76,7 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
     // DynamoDBに保存（重複チェック付き）
     await dynamoClient.send(
       new PutItemCommand({
-        TableName: DYNAMODB_TABLE,
+        TableName: getDynamoTable(),
         Item: marshall(item),
         ConditionExpression: 'attribute_not_exists(disclosure_id)',
       })

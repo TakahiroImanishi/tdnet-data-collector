@@ -12,10 +12,15 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { validatePdfFile } from '../../scraper/pdf-downloader';
 import { retryWithBackoff } from '../../utils/retry';
 import { logger } from '../../utils/logger';
-import { RetryableError, ValidationError } from '../../errors';
+import { RetryableError } from '../../errors';
 
+// S3クライアントはグローバルスコープで初期化（再利用される）
 const s3Client = new S3Client({});
-const S3_BUCKET = process.env.S3_BUCKET || 'tdnet-data-collector-pdfs';
+
+// 環境変数は関数内で取得（テスト時の柔軟性のため）
+function getS3Bucket(): string {
+  return process.env.S3_BUCKET || 'tdnet-data-collector-pdfs';
+}
 
 /**
  * PDFファイルをダウンロードしてS3に保存
@@ -96,7 +101,7 @@ export async function downloadPdf(
     // S3にアップロード
     await s3Client.send(
       new PutObjectCommand({
-        Bucket: S3_BUCKET,
+        Bucket: getS3Bucket(),
         Key: s3Key,
         Body: pdfBuffer,
         ContentType: 'application/pdf',

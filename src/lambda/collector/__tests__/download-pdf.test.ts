@@ -20,10 +20,16 @@ const s3Mock = mockClient(S3Client);
 jest.spyOn(pdfDownloader, 'validatePdfFile').mockImplementation(() => {});
 
 describe('downloadPdf', () => {
+  const originalEnv = process.env.S3_BUCKET;
+
   beforeEach(() => {
     jest.clearAllMocks();
     s3Mock.reset();
     process.env.S3_BUCKET = 'test-bucket';
+  });
+
+  afterEach(() => {
+    process.env.S3_BUCKET = originalEnv;
   });
 
   describe('正常系', () => {
@@ -269,7 +275,8 @@ describe('downloadPdf', () => {
       await downloadPdf(disclosure_id, pdf_url, disclosed_at);
 
       // Assert
-      expect(s3Mock.call(0).args[0].input.Bucket).toBe('tdnet-data-collector-pdfs');
+      const input = s3Mock.call(0).args[0].input as any;
+      expect(input.Bucket).toBe('tdnet-data-collector-pdfs');
     });
   });
 });
