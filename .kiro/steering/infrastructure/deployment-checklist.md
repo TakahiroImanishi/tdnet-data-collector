@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/cdk/bin/**/*.ts|**/cdk/lib/*-stack.ts|**/.github/workflows/*.yml|**/.github/workflows/*.yaml'
+fileMatchPattern: '**/cdk/**/*.ts'
 ---
 
 # Deployment Checklist

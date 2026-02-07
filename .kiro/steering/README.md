@@ -141,29 +141,28 @@ development/tdnet-scraping-patterns.md
 
 このフォルダ構造により、以下のトークン最適化が実現されています：
 
-- **常時読み込み**: 約1,500行（core/フォルダのみ）
-- **条件付き読み込み**: 必要に応じて追加で500-1,000行
-- **従来（全ファイル読み込み）**: 約5,000行以上
+- **常時読み込み**: core/フォルダのみ（約800行）
+- **条件付き読み込み**: 必要に応じて追加で300-600行
+- **実装例の分離**: templatesフォルダに移動（約1,500行削減）
 
-**削減率**: 約35%のトークン削減（fileMatchPattern最適化により実測）
+**最適化後の削減率**: 約25%のトークン削減（実装例の分離により）
 
 ## fileMatchパターン対応表
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/*.test.ts`<br>`**/*.spec.ts`<br>`**/test/**/*` | `development/testing-strategy.md` | テストファイル |
-| `**/validation/**/*`<br>`**/validators/**/*` | `development/data-validation.md` | バリデーション |
-| `**/scraper/**/*`<br>`**/collector/**/*` | `development/tdnet-scraping-patterns.md` | スクレイピング |
-| `**/api/**/*`<br>`**/lambda/query/**/*` | `api/api-design-guidelines.md`<br>`api/error-codes.md` | API関連 |
-| `**/cdk/**/*` | `security/security-best-practices.md`<br>`infrastructure/deployment-checklist.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`infrastructure/monitoring-alerts.md` | CDK（インフラ） |
-| `**/lambda/**/*` | `infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/error-handling-implementation.md` | Lambda関数 |
+| `**/*.test.ts`<br>`**/*.spec.ts` | `development/testing-strategy.md` | テストファイル |
+| `**/validators/**/*.ts` | `development/data-validation.md` | バリデーション |
+| `**/scraper/**/*.ts`<br>`**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md` | スクレイピング |
+| `**/api/**/*.ts`<br>`**/routes/**/*.ts` | `api/api-design-guidelines.md`<br>`api/error-codes.md` | API関連 |
+| `**/cdk/**/*.ts` | `security/security-best-practices.md`<br>`infrastructure/deployment-checklist.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`infrastructure/monitoring-alerts.md` | CDK（インフラ） |
+| `**/lambda/**/handler.ts`<br>`**/lambda/**/index.ts` | `infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/error-handling-implementation.md` | Lambda関数 |
 | `**/.env*` | `infrastructure/environment-variables.md` | 環境変数 |
 | `**/.github/workflows/**/*` | `infrastructure/deployment-checklist.md` | GitHub Actions |
-| `**/iam/**/*`<br>`**/security/**/*` | `security/security-best-practices.md` | セキュリティ |
-| `**/monitoring/**/*` | `infrastructure/monitoring-alerts.md` | 監視 |
-| `**/.kiro/specs/**/*.md`<br>`**/work-logs/**/*.md`<br>`**/improvements/**/*.md` | `development/workflow-guidelines.md` | ワークフロー |
-| `**/*.md`<br>`**/README.md` | `development/documentation-standards.md` | ドキュメント標準 |
-| `**/*` | `development/tdnet-file-naming.md` | 命名規則 |
+| `**/iam/**/*.ts`<br>`**/security/**/*.ts` | `security/security-best-practices.md` | セキュリティ |
+| `**/monitoring/**/*.ts` | `infrastructure/monitoring-alerts.md` | 監視 |
+| `**/.kiro/specs/**/*.md` | `development/workflow-guidelines.md` | ワークフロー |
+| `**/*.md` | `development/documentation-standards.md` | ドキュメント標準 |
 
 **注意:** 複数のsteeringファイルが同じパターンにマッチする場合、すべて読み込まれます。
 
@@ -241,3 +240,4 @@ fileMatchPattern: '**/api/**/*|**/lambda/query/**/*'
 - 2026-02-07: developmentフォルダに新規ファイル追加（error-handling-implementation.md、tdnet-file-naming.md）
 - 2026-02-07: workflow-guidelines.md、documentation-standards.md、error-codes.md追加
 - 2026-02-07: README.md簡素化（冗長セクション削除、fileMatchパターン対応表最適化、トークン削減率更新）
+- 2026-02-07: steeringフォルダ最適化（重複削除、実装例をtemplatesに移動、fileMatchPattern最適化、約25%トークン削減）

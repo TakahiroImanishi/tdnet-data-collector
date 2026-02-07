@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/api/**/*.ts|**/lambda/query/**/index.ts|**/lambda/query/**/handler.ts|**/routes/**/*.ts|**/controllers/**/*.ts'
+fileMatchPattern: '**/api/**/*.ts|**/routes/**/*.ts'
 ---
 
 # API Design Guidelines

@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/scraper/**/*.ts|**/collector/**/*.ts|**/lambda/collector/**/index.ts|**/lambda/collector/**/handler.ts'
+fileMatchPattern: '**/scraper/**/*.ts|**/collector/**/*.ts'
 ---
 
 # TDnet Scraping Patterns

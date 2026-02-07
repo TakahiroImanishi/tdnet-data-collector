@@ -42,6 +42,18 @@ TDnetへのリクエスト間隔を適切に制御し、過度な負荷をかけ
 
 **詳細**: `../development/data-validation.md` を参照
 
+### 5. date_partition による効率的なクエリ
+
+DynamoDBのクエリ効率を最大化するため、`date_partition`（YYYY-MM形式）を使用します。
+
+**設計原則:**
+- `date_partition`は`disclosed_at`から自動生成（YYYY-MM形式）
+- GSI（Global Secondary Index）のパーティションキーとして使用
+- 月単位のクエリを高速化
+- 日付範囲クエリは複数の月を並行クエリ
+
+**詳細**: `../development/data-validation.md` の date_partition セクションを参照
+
 ## 関連ドキュメント
 
 ### 開発ガイドライン

@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/*.test.ts|**/*.spec.ts|**/test/**/*.ts|**/tests/**/*.ts'
+fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 ---
 
 # テスト戦略
@@ -39,417 +39,41 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts|**/test/**/*.ts|**/tests/**/*.ts'
 - **モックライブラリ**: jest.mock()
 - **プロパティテスト**: fast-check
 
-### 例: バリデーション関数のテスト
+### テストパターン
+
+**詳細な実装例は以下を参照:**
+- バリデーションテスト: `../../specs/tdnet-data-collector/templates/test-examples/validation-tests.ts`
+- スクレイピングテスト: `../../specs/tdnet-data-collector/templates/test-examples/scraper-tests.ts`
+
+**基本パターン:**
 
 ```typescript
-// validateCompanyCode.test.ts
-import { validateCompanyCode } from './validation';
-import { ValidationError } from './errors';
-
 describe('validateCompanyCode', () => {
-    describe('正常系', () => {
-        it('有効な4桁コードを受け入れる', () => {
-            expect(() => validateCompanyCode('7203')).not.toThrow();
-            expect(() => validateCompanyCode('1000')).not.toThrow();
-            expect(() => validateCompanyCode('9999')).not.toThrow();
-        });
+    it('有効な4桁コードを受け入れる', () => {
+        expect(() => validateCompanyCode('7203')).not.toThrow();
     });
     
-    describe('異常系', () => {
-        it('空文字列を拒否する', () => {
-            expect(() => validateCompanyCode('')).toThrow(ValidationError);
-        });
-        
-        it('3桁以下を拒否する', () => {
-            expect(() => validateCompanyCode('999')).toThrow(ValidationError);
-        });
-        
-        it('5桁以上を拒否する', () => {
-            expect(() => validateCompanyCode('10000')).toThrow(ValidationError);
-        });
-        
-        it('数字以外を拒否する', () => {
-            expect(() => validateCompanyCode('ABC1')).toThrow(ValidationError);
-        });
-        
-        it('範囲外（< 1000）を拒否する', () => {
-            expect(() => validateCompanyCode('0999')).toThrow(ValidationError);
-        });
+    it('不正なコードを拒否する', () => {
+        expect(() => validateCompanyCode('ABC1')).toThrow(ValidationError);
     });
 });
 ```
 
-### 例: プロパティベーステスト
+**プロパティベーステスト:**
 
 ```typescript
-// validateCompanyCode.property.test.ts
 import fc from 'fast-check';
-import { validateCompanyCode } from './validation';
-import { ValidationError } from './errors';
 
-describe('validateCompanyCode - Property Tests', () => {
-    it('Property: 有効な企業コード（1000-9999）は常に受け入れられる', () => {
-        fc.assert(
-            fc.property(
-                fc.integer({ min: 1000, max: 9999 }),
-                (code) => {
-                    const codeStr = code.toString().padStart(4, '0');
-                    expect(() => validateCompanyCode(codeStr)).not.toThrow();
-                }
-            ),
-            { numRuns: 100 }
-        );
-    });
-    
-    it('Property: 範囲外の数値は常に拒否される', () => {
-        fc.assert(
-            fc.property(
-                fc.oneof(
-                    fc.integer({ min: 0, max: 999 }),
-                    fc.integer({ min: 10000, max: 99999 })
-                ),
-                (code) => {
-                    const codeStr = code.toString();
-                    expect(() => validateCompanyCode(codeStr)).toThrow(ValidationError);
-                }
-            ),
-            { numRuns: 100 }
-        );
-    });
-});
-```
-
-### 例: ビジネスロジックのテスト
-
-```typescript
-// scraper.test.ts
-import { scrapeDisclosureList } from './scraper';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
-describe('scrapeDisclosureList', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-    
-    it('HTMLから開示情報を正しく抽出する', async () => {
-        const mockHTML = `
-            <table class="kjTable">
-                <tr>
-                    <td class="kjTime">15:00</td>
-                    <td class="kjCode">7203</td>
-                    <td class="kjName">トヨタ自動車株式会社</td>
-                    <td class="kjPlace">東証プライム</td>
-                    <td class="kjType">決算短信</td>
-                    <td class="kjTitle">
-                        <a href="/inbs/140120240115123456.pdf">
-                            2024年3月期 第3四半期決算短信
-                        </a>
-                    </td>
-                </tr>
-            </table>
-        `;
-        
-        mockedAxios.get.mockResolvedValue({
-            data: Buffer.from(mockHTML, 'utf-8'),
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-        });
-        
-        const result = await scrapeDisclosureList('20240115');
-        
-        expect(result).toHaveLength(1);
-        expect(result[0]).toMatchObject({
-            time: '15:00',
-            company_code: '7203',
-            company_name: 'トヨタ自動車株式会社',
-            disclosure_type: '決算短信',
-        });
-        expect(result[0].pdf_url).toContain('/inbs/140120240115123456.pdf');
-    });
-    
-    it('空のテーブルの場合は空配列を返す', async () => {
-        const mockHTML = '<table class="kjTable"></table>';
-        
-        mockedAxios.get.mockResolvedValue({
-            data: Buffer.from(mockHTML, 'utf-8'),
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-        });
-        
-        const result = await scrapeDisclosureList('20240115');
-        
-        expect(result).toEqual([]);
-    });
-    
-    it('複数の開示情報を正しく抽出する', async () => {
-        const mockHTML = `
-            <table class="kjTable">
-                <tr>
-                    <td class="kjTime">15:00</td>
-                    <td class="kjCode">7203</td>
-                    <td class="kjName">トヨタ自動車株式会社</td>
-                    <td class="kjPlace">東証プライム</td>
-                    <td class="kjType">決算短信</td>
-                    <td class="kjTitle">
-                        <a href="/inbs/test1.pdf">決算短信</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="kjTime">14:30</td>
-                    <td class="kjCode">6758</td>
-                    <td class="kjName">ソニーグループ株式会社</td>
-                    <td class="kjPlace">東証プライム</td>
-                    <td class="kjType">業績予想修正</td>
-                    <td class="kjTitle">
-                        <a href="/inbs/test2.pdf">業績予想修正</a>
-                    </td>
-                </tr>
-            </table>
-        `;
-        
-        mockedAxios.get.mockResolvedValue({
-            data: Buffer.from(mockHTML, 'utf-8'),
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-        });
-        
-        const result = await scrapeDisclosureList('20240115');
-        
-        expect(result).toHaveLength(2);
-        expect(result[0].company_code).toBe('7203');
-        expect(result[1].company_code).toBe('6758');
-    });
-    
-    it('不完全なデータ行はスキップする', async () => {
-        const mockHTML = `
-            <table class="kjTable">
-                <tr>
-                    <td class="kjTime">15:00</td>
-                    <td class="kjCode">7203</td>
-                    <td class="kjName">トヨタ自動車株式会社</td>
-                    <td class="kjTitle">
-                        <a href="/inbs/test1.pdf">決算短信</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="kjTime"></td>
-                    <td class="kjCode"></td>
-                    <td class="kjName"></td>
-                    <td class="kjTitle"></td>
-                </tr>
-                <tr>
-                    <td class="kjTime">14:30</td>
-                    <td class="kjCode">6758</td>
-                    <td class="kjName">ソニーグループ株式会社</td>
-                    <td class="kjTitle">
-                        <a href="/inbs/test2.pdf">業績予想修正</a>
-                    </td>
-                </tr>
-            </table>
-        `;
-        
-        mockedAxios.get.mockResolvedValue({
-            data: Buffer.from(mockHTML, 'utf-8'),
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-        });
-        
-        const result = await scrapeDisclosureList('20240115');
-        
-        // 不完全な行（2行目）はスキップされる
-        expect(result).toHaveLength(2);
-    });
-    
-    it('ネットワークエラー時は適切にエラーをスローする', async () => {
-        mockedAxios.get.mockRejectedValue(new Error('Network error'));
-        
-        await expect(scrapeDisclosureList('20240115')).rejects.toThrow('Network error');
-    });
-    
-    it('404エラー時は空配列を返す', async () => {
-        mockedAxios.get.mockRejectedValue({
-            isAxiosError: true,
-            response: { status: 404 },
-        });
-        
-        const result = await scrapeDisclosureList('20240115');
-        
-        expect(result).toEqual([]);
-    });
-    
-    it('500エラー時はRetryableErrorをスローする', async () => {
-        mockedAxios.get.mockRejectedValue({
-            isAxiosError: true,
-            response: { status: 500 },
-        });
-        
-        await expect(scrapeDisclosureList('20240115')).rejects.toThrow('RetryableError');
-    });
-});
-
-describe('extractDisclosureType', () => {
-    it('タイトルから開示種類を正しく抽出する', () => {
-        expect(extractDisclosureType('2024年3月期 第3四半期決算短信')).toBe('決算短信');
-        expect(extractDisclosureType('業績予想の修正に関するお知らせ')).toBe('業績予想修正');
-        expect(extractDisclosureType('配当予想の修正に関するお知らせ')).toBe('配当予想修正');
-        expect(extractDisclosureType('自己株式の取得に関するお知らせ')).toBe('自己株式取得');
-        expect(extractDisclosureType('株式分割に関するお知らせ')).toBe('株式分割');
-    });
-    
-    it('該当しない場合は「その他」を返す', () => {
-        expect(extractDisclosureType('特別なお知らせ')).toBe('その他');
-        expect(extractDisclosureType('')).toBe('その他');
-    });
-});
-
-describe('generateDisclosureId', () => {
-    it('正しいフォーマットのIDを生成する', () => {
-        const id = generateDisclosureId('2024-01-15', '7203', 1);
-        expect(id).toBe('20240115_7203_001');
-    });
-    
-    it('連番を3桁でゼロパディングする', () => {
-        expect(generateDisclosureId('2024-01-15', '7203', 1)).toBe('20240115_7203_001');
-        expect(generateDisclosureId('2024-01-15', '7203', 10)).toBe('20240115_7203_010');
-        expect(generateDisclosureId('2024-01-15', '7203', 100)).toBe('20240115_7203_100');
-    });
-});
-```
-
-### 例: PDFダウンロードのテスト
-
-```typescript
-// pdf-downloader.test.ts
-import { downloadPDF } from './pdf-downloader';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import axios from 'axios';
-
-jest.mock('axios');
-jest.mock('@aws-sdk/client-s3');
-
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-const mockedS3Client = S3Client as jest.MockedClass<typeof S3Client>;
-
-describe('downloadPDF', () => {
-    let s3Client: jest.Mocked<S3Client>;
-    
-    beforeEach(() => {
-        jest.clearAllMocks();
-        s3Client = new mockedS3Client({}) as jest.Mocked<S3Client>;
-    });
-    
-    it('PDFを正常にダウンロードしてS3にアップロードする', async () => {
-        const mockPDFBuffer = Buffer.from('%PDF-1.4\ntest content\n%%EOF');
-        
-        mockedAxios.get.mockResolvedValue({
-            data: mockPDFBuffer,
-            status: 200,
-            statusText: 'OK',
-            headers: { 'content-type': 'application/pdf' },
-            config: {} as any,
-        });
-        
-        s3Client.send = jest.fn().mockResolvedValue({});
-        
-        const result = await downloadPDF(
-            'https://example.com/test.pdf',
-            '2024/01/15/test.pdf',
-            s3Client,
-            'test-bucket'
-        );
-        
-        expect(result.success).toBe(true);
-        expect(result.fileSize).toBe(mockPDFBuffer.length);
-        expect(s3Client.send).toHaveBeenCalledWith(
-            expect.any(PutObjectCommand)
-        );
-    });
-    
-    it('PDFヘッダーが不正な場合はエラーをスローする', async () => {
-        const invalidBuffer = Buffer.from('Not a PDF file');
-        
-        mockedAxios.get.mockResolvedValue({
-            data: invalidBuffer,
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-        });
-        
-        await expect(
-            downloadPDF(
-                'https://example.com/test.pdf',
-                '2024/01/15/test.pdf',
-                s3Client,
-                'test-bucket'
-            )
-        ).rejects.toThrow('Invalid PDF header');
-    });
-    
-    it('ファイルサイズが小さすぎる場合はエラーをスローする', async () => {
-        const tooSmallBuffer = Buffer.from('%PDF-');
-        
-        mockedAxios.get.mockResolvedValue({
-            data: tooSmallBuffer,
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any,
-        });
-        
-        await expect(
-            downloadPDF(
-                'https://example.com/test.pdf',
-                '2024/01/15/test.pdf',
-                s3Client,
-                'test-bucket'
-            )
-        ).rejects.toThrow('PDF file too small');
-    });
-    
-    it('タイムアウト時はRetryableErrorをスローする', async () => {
-        mockedAxios.get.mockRejectedValue({
-            code: 'ECONNABORTED',
-            isAxiosError: true,
-        });
-        
-        await expect(
-            downloadPDF(
-                'https://example.com/test.pdf',
-                '2024/01/15/test.pdf',
-                s3Client,
-                'test-bucket'
-            )
-        ).rejects.toThrow('RetryableError');
-    });
-    
-    it('404エラー時は非再試行エラーをスローする', async () => {
-        mockedAxios.get.mockRejectedValue({
-            isAxiosError: true,
-            response: { status: 404 },
-        });
-        
-        await expect(
-            downloadPDF(
-                'https://example.com/test.pdf',
-                '2024/01/15/test.pdf',
-                s3Client,
-                'test-bucket'
-            )
-        ).rejects.toThrow('PDF not found');
-    });
+it('Property: 有効な企業コード（1000-9999）は常に受け入れられる', () => {
+    fc.assert(
+        fc.property(
+            fc.integer({ min: 1000, max: 9999 }),
+            (code) => {
+                const codeStr = code.toString().padStart(4, '0');
+                expect(() => validateCompanyCode(codeStr)).not.toThrow();
+            }
+        )
+    );
 });
 ```
 
@@ -468,14 +92,9 @@ describe('downloadPDF', () => {
 - **AWSモック**: aws-sdk-mock または LocalStack
 - **テストコンテナ**: DynamoDB Local, LocalStack
 
-### 例: DynamoDB統合テスト
+### テストパターン
 
 ```typescript
-// dynamodb.integration.test.ts
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { saveDisclosure, getDisclosure } from './dynamodb';
-
 describe('DynamoDB Integration Tests', () => {
     let client: DynamoDBDocumentClient;
     const tableName = 'tdnet-disclosures-test';
@@ -485,101 +104,16 @@ describe('DynamoDB Integration Tests', () => {
         const dynamoClient = new DynamoDBClient({
             endpoint: 'http://localhost:8000',
             region: 'ap-northeast-1',
-            credentials: {
-                accessKeyId: 'dummy',
-                secretAccessKey: 'dummy',
-            },
         });
-        
         client = DynamoDBDocumentClient.from(dynamoClient);
-        
-        // テストテーブルを作成
-        // （実際にはsetup scriptで作成）
-    });
-    
-    afterEach(async () => {
-        // テストデータをクリーンアップ
     });
     
     it('開示情報を保存して取得できる', async () => {
-        const disclosure = {
-            disclosure_id: '20240115_7203_001',
-            company_code: '7203',
-            company_name: 'トヨタ自動車株式会社',
-            disclosure_type: '決算短信',
-            title: '2024年3月期 第3四半期決算短信',
-            disclosed_at: '2024-01-15T15:00:00+09:00',
-            pdf_s3_key: '2024/01/15/7203_決算短信_20240115150000.pdf',
-            downloaded_at: new Date().toISOString(),
-        };
-        
-        // 保存
+        const disclosure = createDisclosure();
         await saveDisclosure(client, tableName, disclosure);
         
-        // 取得
         const retrieved = await getDisclosure(client, tableName, disclosure.disclosure_id);
-        
         expect(retrieved).toMatchObject(disclosure);
-    });
-    
-    it('重複する開示情報は拒否される', async () => {
-        const disclosure = {
-            disclosure_id: '20240115_7203_002',
-            company_code: '7203',
-            company_name: 'トヨタ自動車株式会社',
-            disclosure_type: '決算短信',
-            title: 'テスト',
-            disclosed_at: '2024-01-15T15:00:00+09:00',
-            pdf_s3_key: '2024/01/15/test.pdf',
-            downloaded_at: new Date().toISOString(),
-        };
-        
-        // 1回目は成功
-        await saveDisclosure(client, tableName, disclosure);
-        
-        // 2回目は失敗
-        await expect(
-            saveDisclosure(client, tableName, disclosure)
-        ).rejects.toThrow('ConditionalCheckFailedException');
-    });
-});
-```
-
-### 例: S3統合テスト
-
-```typescript
-// s3.integration.test.ts
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { uploadPDF, downloadPDF } from './s3';
-
-describe('S3 Integration Tests', () => {
-    let client: S3Client;
-    const bucketName = 'tdnet-pdfs-test';
-    
-    beforeAll(() => {
-        // LocalStackに接続
-        client = new S3Client({
-            endpoint: 'http://localhost:4566',
-            region: 'ap-northeast-1',
-            credentials: {
-                accessKeyId: 'test',
-                secretAccessKey: 'test',
-            },
-            forcePathStyle: true,
-        });
-    });
-    
-    it('PDFファイルをアップロードしてダウンロードできる', async () => {
-        const pdfBuffer = Buffer.from('%PDF-1.4\ntest content\n%%EOF');
-        const s3Key = '2024/01/15/test.pdf';
-        
-        // アップロード
-        await uploadPDF(client, bucketName, s3Key, pdfBuffer);
-        
-        // ダウンロード
-        const downloaded = await downloadPDF(client, bucketName, s3Key);
-        
-        expect(downloaded).toEqual(pdfBuffer);
     });
 });
 ```
@@ -598,106 +132,27 @@ describe('S3 Integration Tests', () => {
 - **HTTPクライアント**: axios
 - **環境**: 専用のテスト環境（AWS）
 
-### 例: API E2Eテスト
+### テストパターン
 
 ```typescript
-// api.e2e.test.ts
-import axios from 'axios';
-
 describe('API E2E Tests', () => {
-    const apiUrl = process.env.API_URL || 'https://api-test.example.com';
-    const apiKey = process.env.API_KEY || 'test-api-key';
+    const apiUrl = process.env.API_URL;
+    const apiKey = process.env.API_KEY;
     
     const client = axios.create({
         baseURL: apiUrl,
-        headers: {
-            'X-API-Key': apiKey,
-        },
+        headers: { 'X-API-Key': apiKey },
     });
     
-    describe('GET /disclosures', () => {
-        it('開示情報一覧を取得できる', async () => {
-            const response = await client.get('/disclosures', {
-                params: {
-                    limit: 10,
-                },
-            });
-            
-            expect(response.status).toBe(200);
-            expect(response.data).toHaveProperty('status', 'success');
-            expect(response.data).toHaveProperty('data');
-            expect(Array.isArray(response.data.data)).toBe(true);
-            expect(response.data).toHaveProperty('meta');
+    it('開示情報一覧を取得できる', async () => {
+        const response = await client.get('/disclosures', {
+            params: { limit: 10 },
         });
         
-        it('企業コードでフィルタリングできる', async () => {
-            const response = await client.get('/disclosures', {
-                params: {
-                    company_code: '7203',
-                    limit: 10,
-                },
-            });
-            
-            expect(response.status).toBe(200);
-            response.data.data.forEach((item: any) => {
-                expect(item.company_code).toBe('7203');
-            });
-        });
+        expect(response.status).toBe(200);
+        expect(response.data).toHaveProperty('status', 'success');
+        expect(Array.isArray(response.data.data)).toBe(true);
     });
-    
-    describe('POST /collect', () => {
-        it('データ収集を開始できる', async () => {
-            const response = await client.post('/collect', {
-                start_date: '2024-01-15',
-                end_date: '2024-01-15',
-            });
-            
-            expect(response.status).toBe(200);
-            expect(response.data).toHaveProperty('status', 'success');
-            expect(response.data.data).toHaveProperty('execution_id');
-        });
-    });
-});
-```
-
-### 例: Lambda E2Eテスト
-
-```typescript
-// lambda.e2e.test.ts
-import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
-
-describe('Lambda E2E Tests', () => {
-    let client: LambdaClient;
-    const functionName = 'tdnet-collector-test';
-    
-    beforeAll(() => {
-        client = new LambdaClient({
-            region: 'ap-northeast-1',
-        });
-    });
-    
-    it('バッチ収集が正常に実行される', async () => {
-        const payload = {
-            mode: 'batch',
-            date: '2024-01-15',
-        };
-        
-        const command = new InvokeCommand({
-            FunctionName: functionName,
-            Payload: Buffer.from(JSON.stringify(payload)),
-        });
-        
-        const response = await client.send(command);
-        
-        expect(response.StatusCode).toBe(200);
-        
-        const result = JSON.parse(
-            Buffer.from(response.Payload!).toString()
-        );
-        
-        expect(result).toHaveProperty('collected_count');
-        expect(result).toHaveProperty('failed_count');
-    }, 60000); // 60秒タイムアウト
 });
 ```
 

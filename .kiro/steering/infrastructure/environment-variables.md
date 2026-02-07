@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/cdk/lib/**/*-stack.ts|**/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*function*.ts|**/lambda/**/index.ts|**/lambda/**/handler.ts|**/.env*|**/config/**/*.ts'
+fileMatchPattern: '**/cdk/**/*.ts|**/lambda/**/handler.ts|**/lambda/**/index.ts|**/.env*'
 ---
 
 # 環境変数一覧
