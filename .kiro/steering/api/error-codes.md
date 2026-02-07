@@ -113,6 +113,8 @@ if (apiKey !== process.env.API_KEY) {
 
 **実装例:**
 ```typescript
+import { NotFoundError } from './errors';
+
 class NotFoundError extends Error {
     constructor(
         message: string,
@@ -143,6 +145,9 @@ if (!disclosure) {
 
 **実装例:**
 ```typescript
+import { ConflictError } from './errors';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+
 class ConflictError extends Error {
     constructor(
         message: string,
@@ -181,6 +186,8 @@ try {
 
 **実装例:**
 ```typescript
+import { RateLimitError } from './errors';
+
 class RateLimitError extends Error {
     constructor(
         message: string,
@@ -211,6 +218,9 @@ if (requestCount > RATE_LIMIT) {
 
 **実装例:**
 ```typescript
+import { InternalError } from './errors';
+import { logger } from './logger';
+
 class InternalError extends Error {
     constructor(message: string, public readonly cause?: Error) {
         super(message);
@@ -239,6 +249,9 @@ try {
 
 **実装例:**
 ```typescript
+import { ServiceUnavailableError } from './errors';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+
 class ServiceUnavailableError extends Error {
     constructor(
         message: string,
@@ -273,6 +286,9 @@ try {
 
 **実装例:**
 ```typescript
+import { GatewayTimeoutError } from './errors';
+import { withTimeout } from './timeout';
+
 class GatewayTimeoutError extends Error {
     constructor(
         message: string,
@@ -308,6 +324,8 @@ try {
 Lambda関数内でカスタムエラーをHTTPステータスコードに変換する際の参照表：
 
 ```typescript
+import { APIGatewayProxyResult } from 'aws-lambda';
+
 const ERROR_CODE_MAP: Record<string, { statusCode: number; code: string }> = {
     'ValidationError': { statusCode: 400, code: 'VALIDATION_ERROR' },
     'UnauthorizedError': { statusCode: 401, code: 'UNAUTHORIZED' },

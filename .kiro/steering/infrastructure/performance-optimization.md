@@ -28,6 +28,10 @@ fileMatchPattern: '**/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*func
 **CDK実装例:**
 
 ```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+
 // Collector関数
 const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
     entry: 'lambda/collector/index.ts',
@@ -64,6 +68,8 @@ Node.jsでは未対応のため、以下の戦略を採用：
 
 **2. Provisioned Concurrency**
 ```typescript
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+
 // 本番環境のみ
 if (props.environment === 'prod') {
     const version = collectorFn.currentVersion;
@@ -89,6 +95,10 @@ import pick from 'lodash/pick'; // 個別関数のみ
 
 **4. 初期化の最適化**
 ```typescript
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { S3Client } from '@aws-sdk/client-s3';
+
 // グローバルスコープで初期化（再利用される）
 const dynamoClient = new DynamoDBClient({ region: 'ap-northeast-1' });
 const docClient = DynamoDBDocumentClient.from(dynamoClient, {
@@ -166,6 +176,9 @@ const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
 - 本番環境: オンデマンド（初期）→ プロビジョニング（負荷が安定したら）
 
 ```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+
 const table = new dynamodb.Table(this, 'DisclosuresTable', {
     tableName: 'tdnet-disclosures',
     partitionKey: {
@@ -202,6 +215,8 @@ if (props.environment === 'prod') {
 **1. GSI（Global Secondary Index）の設計**
 
 ```typescript
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+
 // date_partitionでのクエリを最適化
 table.addGlobalSecondaryIndex({
     indexName: 'GSI_DatePartition',
@@ -234,6 +249,8 @@ table.addGlobalSecondaryIndex({
 **2. 効率的なクエリパターン**
 
 ```typescript
+import { DynamoDBDocumentClient, ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+
 // ❌ 悪い例: Scan（全テーブルスキャン）
 const badResult = await docClient.send(new ScanCommand({
     TableName: tableName,
@@ -316,6 +333,8 @@ function generateMonthRange(start: string, end: string): string[] {
 **4. バッチ操作**
 
 ```typescript
+import { DynamoDBDocumentClient, BatchGetCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
+
 // BatchGetItem（最大100件）
 async function batchGetDisclosures(ids: string[]): Promise<Disclosure[]> {
     const chunks = chunkArray(ids, 100); // 100件ずつ分割
@@ -366,6 +385,11 @@ function chunkArray<T>(array: T[], size: number): T[][] {
 ### DynamoDB Streams の活用
 
 ```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+
 // Streamsを有効化
 const table = new dynamodb.Table(this, 'DisclosuresTable', {
     // ...
@@ -397,7 +421,9 @@ streamProcessorFn.addEventSource(
 **大きなPDFファイル（> 5MB）の場合:**
 
 ```typescript
+import { S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { logger } from './utils/logger';
 
 async function uploadLargePDF(
     buffer: Buffer,
@@ -433,6 +459,10 @@ async function uploadLargePDF(
 ### S3 Transfer Acceleration
 
 ```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { S3Client } from '@aws-sdk/client-s3';
+
 // CDKでTransfer Accelerationを有効化
 const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
     bucketName: 'tdnet-pdfs-prod',
@@ -449,6 +479,8 @@ const s3Client = new S3Client({
 ### S3 Select（大きなファイルの部分取得）
 
 ```typescript
+import { S3Client, SelectObjectContentCommand } from '@aws-sdk/client-s3';
+
 // CSV/JSONファイルから特定データのみ取得
 async function selectFromS3(
     s3Key: string,
@@ -506,9 +538,9 @@ logger.info('Batch processing completed', {
 ### 並行度の制御
 
 ```typescript
-// p-limitを使用した並行度制御
 import pLimit from 'p-limit';
 
+// p-limitを使用した並行度制御
 async function processDisclosuresWithLimit(
     disclosures: Disclosure[],
     concurrency: number = 5
@@ -529,6 +561,10 @@ await processDisclosuresWithLimit(disclosures, 5); // 最大5並行
 ### バッチ処理の最適化
 
 ```typescript
+import pLimit from 'p-limit';
+import { Disclosure } from './types';
+import { scrapeDisclosureList, processDisclosure } from './scraper';
+
 async function batchCollect(
     startDate: string,
     endDate: string
@@ -572,6 +608,8 @@ async function batchCollect(
 ### Lambda内メモリキャッシュ
 
 ```typescript
+import { Disclosure } from './types';
+
 // グローバルスコープでキャッシュ（Lambda実行間で共有）
 const cache = new Map<string, { data: any; expires: number }>();
 
@@ -614,9 +652,10 @@ export const handler = async (event: any): Promise<any> => {
 ### ElastiCache（オプション）
 
 ```typescript
-// Redis クライアント
 import { createClient } from 'redis';
+import { Disclosure } from './types';
 
+// Redis クライアント
 const redisClient = createClient({
     url: `redis://${process.env.REDIS_ENDPOINT}:6379`,
 });
@@ -673,6 +712,8 @@ const client = axios.create({
 ### 圧縮の有効化
 
 ```typescript
+import axios from 'axios';
+
 const client = axios.create({
     headers: {
         'Accept-Encoding': 'gzip, deflate, br',
@@ -687,6 +728,8 @@ const client = axios.create({
 
 ```typescript
 import AWSXRay from 'aws-xray-sdk-core';
+import { Disclosure } from './types';
+import { scrapeDisclosureList, downloadPDF, saveDisclosure } from './services';
 
 // AWS SDKをラップ
 const AWS = AWSXRay.captureAWS(require('aws-sdk'));
@@ -759,6 +802,9 @@ try {
 ### Lambda実行時間の削減
 
 ```typescript
+import { Disclosure } from './types';
+import { processDisclosure } from './services';
+
 // ❌ 悪い例: 逐次処理
 for (const disclosure of disclosures) {
     await processDisclosure(disclosure);
@@ -773,6 +819,8 @@ await Promise.allSettled(
 ### DynamoDBのコスト削減
 
 ```typescript
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+
 // Projection Expressionで必要な属性のみ取得
 const result = await docClient.send(new GetCommand({
     TableName: tableName,
@@ -784,6 +832,9 @@ const result = await docClient.send(new GetCommand({
 ### S3のライフサイクル管理
 
 ```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+
 const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
     lifecycleRules: [
         {
@@ -813,6 +864,8 @@ const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
 
 ```typescript
 import { performance } from 'perf_hooks';
+import { processDisclosuresWithLimit } from './services';
+import { generateTestDisclosures, getDisclosure } from './test-helpers';
 
 describe('Performance Tests', () => {
     it('should process 100 disclosures within 30 seconds', async () => {
@@ -869,6 +922,6 @@ describe('Performance Tests', () => {
 
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装パターン
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装パターン
 - **監視とアラート**: `monitoring-alerts.md` - パフォーマンスメトリクスの監視
-- **データバリデーション**: `data-validation.md` - date_partitionの使用方法
+- **データバリデーション**: `../development/data-validation.md` - date_partitionの使用方法

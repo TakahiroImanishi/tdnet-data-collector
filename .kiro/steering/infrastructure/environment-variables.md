@@ -309,6 +309,6 @@ aws iam get-role-policy \
 
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - 環境変数の使用方法
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - 環境変数の使用方法
 - **デプロイチェックリスト**: `deployment-checklist.md` - 環境変数の確認手順
-- **セキュリティ**: `security-best-practices.md` - 機密情報の管理方法
+- **セキュリティ**: `../security/security-best-practices.md` - 機密情報の管理方法

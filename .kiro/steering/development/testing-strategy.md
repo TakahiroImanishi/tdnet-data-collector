@@ -48,6 +48,9 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 **基本パターン:**
 
 ```typescript
+import { validateCompanyCode } from './validators';
+import { ValidationError } from './errors';
+
 describe('validateCompanyCode', () => {
     it('有効な4桁コードを受け入れる', () => {
         expect(() => validateCompanyCode('7203')).not.toThrow();
@@ -63,6 +66,7 @@ describe('validateCompanyCode', () => {
 
 ```typescript
 import fc from 'fast-check';
+import { validateCompanyCode } from './validators';
 
 it('Property: 有効な企業コード（1000-9999）は常に受け入れられる', () => {
     fc.assert(
@@ -95,6 +99,11 @@ it('Property: 有効な企業コード（1000-9999）は常に受け入れられ
 ### テストパターン
 
 ```typescript
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { saveDisclosure, getDisclosure } from './disclosure-service';
+import { createDisclosure } from './test-helpers';
+
 describe('DynamoDB Integration Tests', () => {
     let client: DynamoDBDocumentClient;
     const tableName = 'tdnet-disclosures-test';
@@ -135,6 +144,8 @@ describe('DynamoDB Integration Tests', () => {
 ### テストパターン
 
 ```typescript
+import axios from 'axios';
+
 describe('API E2E Tests', () => {
     const apiUrl = process.env.API_URL;
     const apiKey = process.env.API_KEY;
@@ -263,6 +274,8 @@ jobs:
 ### フィクスチャ
 
 ```typescript
+import { Disclosure } from './types';
+
 // fixtures/disclosures.ts
 export const validDisclosure = {
     disclosure_id: '20240115_7203_001',
@@ -294,9 +307,10 @@ export const invalidDisclosures = {
 ### モックデータ生成
 
 ```typescript
-// factories/disclosure.factory.ts
 import { faker } from '@faker-js/faker';
+import { Disclosure } from './types';
 
+// factories/disclosure.factory.ts
 export function createDisclosure(overrides?: Partial<Disclosure>): Disclosure {
     const date = faker.date.past();
     const companyCode = faker.number.int({ min: 1000, max: 9999 }).toString();
@@ -394,6 +408,6 @@ jest.mock('./businessLogic'); // これではテストにならない
 
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - プロパティテストの例
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - プロパティテストの例
 - **データバリデーション**: `data-validation.md` - バリデーションテストの対象
-- **エラーハンドリング**: `error-handling-patterns.md` - エラーケースのテスト
+- **エラーハンドリング**: `../core/error-handling-patterns.md` - エラーケースのテスト

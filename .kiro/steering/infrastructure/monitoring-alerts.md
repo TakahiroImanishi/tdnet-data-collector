@@ -649,5 +649,5 @@ new budgets.CfnBudget(this, 'MonthlyBudget', {
 ## 関連ドキュメント
 
 - **デプロイチェックリスト**: `deployment-checklist.md` - デプロイ後の監視手順
-- **エラーハンドリング**: `error-handling-patterns.md` - エラーログの構造
+- **エラーハンドリング**: `../core/error-handling-patterns.md` - エラーログの構造
 - **環境変数**: `environment-variables.md` - 監視関連の環境変数

@@ -417,7 +417,7 @@ aws cloudwatch get-metric-statistics \
 
 ## 関連ドキュメント
 
-- **セキュリティ**: `security-best-practices.md` - セキュリティチェック項目
+- **セキュリティ**: `../security/security-best-practices.md` - セキュリティチェック項目
 - **環境変数**: `environment-variables.md` - 環境変数の設定確認
 - **監視とアラート**: `monitoring-alerts.md` - デプロイ後の監視手順
 - **パフォーマンス最適化**: `performance-optimization.md` - デプロイ後のパフォーマンス確認
