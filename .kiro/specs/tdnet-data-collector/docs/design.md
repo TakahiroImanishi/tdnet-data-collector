@@ -225,19 +225,23 @@ async function downloadPdf(url: string, s3Key: string): Promise<boolean> {
 async function saveMetadata(disclosure: Disclosure): Promise<boolean> {
     /**
      * メタデータをDynamoDBに保存
-     * date_partitionが未設定の場合は自動生成
      * 
-     * @param disclosure - 開示情報
+     * @param disclosure - 開示情報（date_partitionは呼び出し元で設定済みであること）
      * @returns 成功: true, 失敗: false
      * 
-     * @note date_partition生成ロジックの詳細は「Data Models」セクションの
-     *       generateDatePartition() 関数を参照
+     * @throws {Error} date_partitionが未設定の場合
+     * 
+     * @note Two-Phase Commitの原則に従い、date_partitionは呼び出し元で事前に生成すること。
+     *       Prepare PhaseとCommit Phaseの間でdate_partitionが変更されることを防ぐため、
+     *       この関数内では自動生成を行わない。
+     *       date_partition生成ロジックの詳細は「Data Models」セクションの
+     *       generateDatePartition() 関数を参照。
      */
     try {
-        // date_partitionが未設定の場合は自動生成
-        // 実装詳細は「Data Models」セクションを参照
+        // date_partitionは呼び出し元で設定済みであることを前提とする
+        // Two-Phase Commitの整合性を保証するため、ここでは自動生成しない
         if (!disclosure.date_partition) {
-            disclosure.date_partition = generateDatePartition(disclosure.disclosed_at);
+            throw new Error('date_partition is required and must be set by the caller');
         }
         
         // DynamoDBアイテムに変換
@@ -656,10 +660,10 @@ GET /disclosures/{disclosure_id}/pdf
    - 用途: 企業コードと日付範囲での検索
 
 2. GSI_DateRange
-   - パーティションキー: date_partition (String) # YYYY-MM形式
+   - パーティションキー: date_partition (String) # YYYY-MM-DD形式
    - ソートキー: disclosed_at
    - 用途: 日付範囲での効率的な検索
-   - 備考: 年月でパーティション分割してホットパーティションを回避
+   - 備考: 日単位でパーティション分割し、日付範囲クエリを最適化
 ```
 
 **テーブル2: tdnet_executions（実行状態）**
@@ -1430,7 +1434,7 @@ export interface Disclosure {
     pdf_url?: string;              // TDnetのPDF URL
     downloaded_at: string;         // ダウンロード日時（ISO8601形式）
     file_size: number;             // ファイルサイズ（bytes）
-    date_partition: string;        // 年月パーティション（YYYY-MM形式）
+    date_partition: string;        // 日付パーティション（YYYY-MM-DD形式）
 }
 
 export function toDynamoDBItem(disclosure: Disclosure): Record<string, any> {
@@ -1465,27 +1469,27 @@ export function fromDynamoDBItem(item: Record<string, any>): Disclosure {
 
 export function generateDatePartition(disclosedAt: string): string {
     /**
-     * disclosed_atから年月パーティションを生成
+     * disclosed_atから日付パーティションを生成
      * 
      * @param disclosedAt - ISO8601形式の開示日時（例: "2024-01-15T15:00:00+09:00"）
-     * @returns YYYY-MM形式の年月パーティション（例: "2024-01"）
+     * @returns YYYY-MM-DD形式の日付パーティション（例: "2024-01-15"）
      * 
      * @example
-     * generateDatePartition('2024-01-15T15:00:00+09:00') // => '2024-01'
-     * generateDatePartition('2024-12-31T23:59:59+09:00') // => '2024-12'
+     * generateDatePartition('2024-01-15T15:00:00+09:00') // => '2024-01-15'
+     * generateDatePartition('2024-12-31T23:59:59+09:00') // => '2024-12-31'
      * 
      * @throws {Error} disclosed_atが不正な形式の場合
      */
-    if (!disclosedAt || disclosedAt.length < 7) {
+    if (!disclosedAt || disclosedAt.length < 10) {
         throw new Error('Invalid disclosed_at format for partition generation');
     }
     
-    // ISO8601形式から年月部分を抽出（YYYY-MM）
-    const partition = disclosedAt.substring(0, 7);
+    // ISO8601形式から日付部分を抽出（YYYY-MM-DD）
+    const partition = disclosedAt.substring(0, 10);
     
-    // 年月の妥当性を簡易チェック
-    const [year, month] = partition.split('-').map(Number);
-    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+    // 日付の妥当性を簡易チェック
+    const date = new Date(partition);
+    if (isNaN(date.getTime())) {
         throw new Error(`Invalid date partition: ${partition}`);
     }
     

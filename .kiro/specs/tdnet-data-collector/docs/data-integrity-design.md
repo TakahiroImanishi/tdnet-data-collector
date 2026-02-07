@@ -832,14 +832,16 @@ export class TDnetBucketConstruct extends Construct {
     constructor(scope: Construct, id: string) {
         super(scope, id);
         
-        // S3バケットの作成（Object Lock有効化）
+        // S3バケットの作成
+        // ⚠️ 重要: Object Lockはバケット全体ではなく、オブジェクトごとに設定
         this.bucket = new s3.Bucket(this, 'TDnetBucket', {
             bucketName: `tdnet-data-${cdk.Stack.of(this).account}`,
             
-            // Object Lockを有効化（バケット作成時のみ設定可能）
-            objectLockEnabled: true,
+            // ❌ objectLockEnabled: true を削除
+            // バケット全体にObject Lockを有効化すると、一時ファイル（temp/）の
+            // ライフサイクルポリシーによる自動削除が失敗する
             
-            // バージョニングを有効化（Object Lockの前提条件）
+            // バージョニングを有効化（Object Lock使用時の前提条件）
             versioned: true,
             
             // 暗号化設定
@@ -857,6 +859,12 @@ export class TDnetBucketConstruct extends Construct {
                     enabled: true,
                 },
                 {
+                    id: 'DeleteExportFiles',
+                    prefix: 'exports/',
+                    expiration: cdk.Duration.days(7),
+                    enabled: true,
+                },
+                {
                     id: 'TransitionOldVersions',
                     noncurrentVersionExpiration: cdk.Duration.days(30),
                     enabled: true,
@@ -867,24 +875,27 @@ export class TDnetBucketConstruct extends Construct {
             removalPolicy: cdk.RemovalPolicy.RETAIN,
             autoDeleteObjects: false,
         });
-        
-        // Object Lockのデフォルト保持設定
-        // 注意: L1コンストラクトを使用する必要がある
-        const cfnBucket = this.bucket.node.defaultChild as s3.CfnBucket;
-        cfnBucket.objectLockConfiguration = {
-            objectLockEnabled: 'Enabled',
-            rule: {
-                defaultRetention: {
-                    mode: 'GOVERNANCE',  // または 'COMPLIANCE'
-                    days: 365,  // 1年間保持
-                },
-            },
-        };
     }
 }
 ```
 
 **実装場所:** `cdk/lib/constructs/tdnet-bucket-construct.ts`
+
+**⚠️ 重要な注意事項:**
+
+1. **Object Lockはオブジェクトごとに設定**
+   - バケット全体に`objectLockEnabled: true`を設定すると、すべてのオブジェクトにデフォルト保持期間が適用される
+   - 一時ファイル（`temp/`）やエクスポートファイル（`exports/`）は自動削除が必要なため、Object Lockを適用しない
+   - 開示情報PDF（`pdfs/`）のみにObject Lockを適用する
+
+2. **ライフサイクルポリシーとの競合**
+   - Object Lockが有効なオブジェクトは、保持期間中は削除できない
+   - ライフサイクルポリシーによる自動削除も失敗する
+   - そのため、一時ファイルにはObject Lockを適用しない
+
+3. **バージョニングは維持**
+   - Object Lockを使用する場合、バージョニングは必須
+   - オブジェクトごとにObject Lockを設定する場合も、バージョニングは有効にする必要がある
 
 ### Governance ModeとCompliance Modeの比較
 

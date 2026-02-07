@@ -11,10 +11,9 @@
 1. [概要](#概要)
 2. [Token Bucketアルゴリズムの実装](#token-bucketアルゴリズムの実装)
 3. [Lambda Reserved Concurrency設定](#lambda-reserved-concurrency設定)
-4. [DynamoDB分散ロックの実装](#dynamodb分散ロックの実装)
-5. [テスト戦略](#テスト戦略)
-6. [監視とアラート](#監視とアラート)
-7. [関連ドキュメント](#関連ドキュメント)
+4. [テスト戦略](#テスト戦略)
+5. [監視とアラート](#監視とアラート)
+6. [関連ドキュメント](#関連ドキュメント)
 
 ---
 
@@ -39,26 +38,25 @@ TDnet Data Collectorは、日本取引所グループのTDnetウェブサイト�
 - **User-Agent**: 適切な識別情報を含む
 - **エラー時の対応**: 即座に再試行せず、指数バックオフを使用
 
-### レート制限の3層アーキテクチャ
+### レート制限の2層アーキテクチャ
 
-本設計では、3つの独立したレート制限メカニズムを組み合わせて、確実な制御を実現します：
+本設計では、2つの独立したレート制限メカニズムを組み合わせて、確実な制御を実現します：
 
 | レイヤー | メカニズム | 目的 | 実装場所 |
 |---------|-----------|------|---------|
 | **Layer 1** | Token Bucket | リクエスト間隔の制御 | Lambda関数内 |
 | **Layer 2** | Reserved Concurrency | 同時実行数の制限 | Lambda設定 |
-| **Layer 3** | 分散ロック | 複数トリガーの排他制御 | DynamoDB |
 
-**なぜ3層が必要か？**
+**なぜ2層で十分か？**
 
-1. **Token Bucket単体では不十分**: Lambda関数が複数同時実行されると、各インスタンスが独立してToken Bucketを持つため、全体のレート制限が効かない
-2. **Reserved Concurrency単体では不十分**: EventBridgeとAPI Gatewayからの同時トリガーを防げない
-3. **分散ロック単体では不十分**: リクエスト間隔の細かい制御ができない
+1. **Reserved Concurrency = 1**: Lambda関数の同時実行を1インスタンスに制限することで、複数のToken Bucketインスタンスが同時に動作することを防止
+2. **Token Bucket**: 単一インスタンス内でリクエスト間隔を確実に2秒に制御
+3. **シンプルな設計**: 分散ロックを使用しないことで、実装とインフラの複雑性を削減
 
-**3層を組み合わせることで:**
+**2層を組み合わせることで:**
 - ✅ 確実に2秒間隔を維持
-- ✅ 同時実行を完全に防止
-- ✅ 複数トリガーソースからの競合を回避
+- ✅ 同時実行を完全に防止（Reserved Concurrency = 1）
+- ✅ シンプルで保守しやすい設計
 
 ---
 
@@ -335,7 +333,6 @@ export class TdnetStack extends cdk.Stack {
             environment: {
                 DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'tdnet-disclosures',
                 S3_BUCKET: process.env.S3_BUCKET || 'tdnet-pdfs',
-                LOCK_TABLE: process.env.LOCK_TABLE || 'tdnet-locks',
             },
         });
         

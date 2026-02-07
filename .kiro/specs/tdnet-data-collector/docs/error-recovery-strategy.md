@@ -432,6 +432,63 @@ function sleep(ms: number): Promise<void> {
 | **設定エラー** | 環境変数未設定、不正な設定値 | 設定の確認・修正 |
 | **データ整合性エラー** | 重複キー、外部キー制約違反 | データの確認・修正 |
 
+### 拡張されたエラー分類
+
+`analyzeError()`関数で追加された新しいエラータイプ：
+
+| エラータイプ | 説明 | 再試行 | 対応方法 |
+|-------------|------|--------|---------|
+| **HTMLParseError** | TDnetのHTML構造が変更され、スクレイピングが失敗 | ❌ | スクレイピングロジックを修正 |
+| **CorruptedPDFError** | PDFファイルがダウンロードされたが、内容が破損 | ❌ | TDnetに問い合わせ、または再ダウンロード |
+| **SchemaValidationError** | データがスキーマ検証に失敗 | ❌ | データ形式を確認・修正 |
+| **NetworkError** | 一時的なネットワークエラー | ✅ | 自動再試行（指数バックオフ） |
+| **ThrottlingException** | AWS APIのスロットリング | ✅ | 自動再試行（指数バックオフ + ジッター） |
+
+**エラーメッセージパターンによる判定:**
+
+`analyzeError()`関数は、エラータイプだけでなく、エラーメッセージの内容も確認します：
+
+| パターン | 説明 | 再試行 | 対応方法 |
+|---------|------|--------|---------|
+| `HTML structure changed` | TDnetのHTML構造変更を検出 | ❌ | スクレイピングロジックを修正 |
+| `PDF header not found` | PDFファイルのヘッダーが見つからない | ❌ | PDFパーサーを修正、またはTDnetに問い合わせ |
+| `Invalid schema` | データスキーマが不正 | ❌ | スキーマ定義を確認・修正 |
+| `Duplicate key` | DynamoDBの重複キーエラー | ❌ | データの重複を確認（通常は無視） |
+
+**実装例:**
+
+```typescript
+// エラータイプによる判定
+const nonRetryableErrors = [
+  'ValidationError',
+  'AuthenticationError',
+  'AuthorizationError',
+  'NotFoundError',
+  'ConfigurationError',
+  'HTMLParseError',        // ✅ 追加
+  'CorruptedPDFError',     // ✅ 追加
+  'SchemaValidationError', // ✅ 追加
+];
+
+// エラーメッセージパターンによる判定
+const nonRetryablePatterns = [
+  'HTML structure changed',
+  'PDF header not found',
+  'Invalid schema',
+  'Duplicate key',
+];
+
+for (const pattern of nonRetryablePatterns) {
+  if (errorMessage.includes(pattern)) {
+    logger.info('Non-retryable error pattern detected', { 
+      errorType, 
+      pattern 
+    });
+    return false;
+  }
+}
+```
+
 ### 手動介入フロー図
 
 ```
@@ -868,20 +925,42 @@ async function receiveMessages(queueUrl: string, maxMessages: number) {
 
 async function analyzeError(messageBody: any): Promise<boolean> {
   const errorType = messageBody.errorType;
+  const errorMessage = messageBody.errorMessage || '';
   const retryCount = messageBody.retryCount || 0;
 
-  // 再試行不可能なエラーはスキップ
+  // 再試行不可能なエラー（拡張版）
   const nonRetryableErrors = [
     'ValidationError',
     'AuthenticationError',
     'AuthorizationError',
     'NotFoundError',
     'ConfigurationError',
+    'HTMLParseError',        // TDnetのHTML構造変更
+    'CorruptedPDFError',     // PDFファイルの破損
+    'SchemaValidationError', // データスキーマ検証エラー
   ];
 
   if (nonRetryableErrors.includes(errorType)) {
     logger.info('Non-retryable error detected', { errorType });
     return false;
+  }
+
+  // エラーメッセージの内容も確認
+  const nonRetryablePatterns = [
+    'HTML structure changed',
+    'PDF header not found',
+    'Invalid schema',
+    'Duplicate key',
+  ];
+
+  for (const pattern of nonRetryablePatterns) {
+    if (errorMessage.includes(pattern)) {
+      logger.info('Non-retryable error pattern detected', { 
+        errorType, 
+        pattern 
+      });
+      return false;
+    }
   }
 
   // リトライ回数が多すぎる場合はスキップ
