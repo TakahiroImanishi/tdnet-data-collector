@@ -13,35 +13,114 @@ fileMatchPattern: '**/docs/**/*.md|**/README.md|**/.kiro/specs/**/*.md'
 
 ### 基本方針
 
-**すべてのドキュメント、コメント、ログメッセージは日本語で記述すること。**
+**説明文、コメント、ログメッセージは日本語で記述し、コード、ファイル名、技術用語は英語を使用すること。**
 
 ### 日本語で記述するもの
 
-| 対象 | 言語 | 備考 |
+| 対象 | 例 | 備考 |
 |------|------|------|
-| 要件定義書（requirements.md） | 日本語 | - |
-| 設計書（design.md） | 日本語 | - |
-| steeringファイル | 日本語 | - |
-| 改善記録（improvements/） | 日本語 | - |
-| 作業記録（work-logs/） | 日本語 | - |
-| READMEファイル | 日本語 | - |
-| コード内コメント | 日本語 | - |
-| ログメッセージ | 日本語 | - |
-| エラーメッセージ | 日本語 | ユーザー向け |
+| ドキュメントの説明文 | 「この関数は開示情報を取得します」 | Markdown本文 |
+| 要件定義書（requirements.md） | 「システムは日次で開示情報を収集する」 | - |
+| 設計書（design.md） | 「DynamoDBのパーティションキーは...」 | - |
+| steeringファイル | 「エラーハンドリングの基本原則」 | - |
+| 改善記録（improvements/） | 「パフォーマンスの問題を改善」 | - |
+| 作業記録（work-logs/） | 「Lambda関数を実装しました」 | - |
+| READMEファイル | 「このプロジェクトは...」 | - |
+| コード内コメント | `// 開示情報を取得` | コードブロック内 |
+| ログメッセージ | `logger.info('データ取得開始')` | 実行時ログ |
+| エラーメッセージ | `throw new Error('データが見つかりません')` | ユーザー向け |
+| 一般的な日本語訳がある技術用語 | エラー、テスト、データベース | 文脈に応じて |
 
-### 例外（英語のまま使用）
+### 英語で記述するもの
 
-| 対象 | 理由 |
-|------|------|
-| コード自体（変数名、関数名、クラス名） | TypeScript/JavaScriptの慣習に従う |
-| 技術用語（Lambda, DynamoDB, API等） | 業界標準の用語 |
-| 外部APIのレスポンス | 元の言語のまま |
+| 対象 | 例 | 備考 |
+|------|------|------|
+| コード（変数名、関数名、クラス名） | `fetchDisclosureData()` | TypeScript/JavaScript慣習 |
+| ファイル名 | `disclosure-collector.ts` | kebab-case推奨 |
+| フォルダ名 | `lambda/collector/` | kebab-case推奨 |
+| AWSサービス名 | Lambda, DynamoDB, S3, CloudWatch | 固有名詞 |
+| 技術用語（一般） | API, JSON, HTTP, REST, CDK | 業界標準 |
+| npm パッケージ名 | `aws-sdk`, `axios`, `jest` | 固有名詞 |
+| 環境変数名 | `TDNET_API_URL` | UPPER_SNAKE_CASE |
+| Git ブランチ名 | `feature/add-collector` | kebab-case推奨 |
+| 外部APIのレスポンス | `{ "status": "success" }` | 元の言語のまま |
+
+### コード例の扱い
+
+**コードブロック内:**
+
+```typescript
+// ✅ 良い例: コメントは日本語、コードは英語
+/**
+ * 開示情報を取得する関数
+ * @param disclosureId 開示情報ID
+ * @returns 開示情報データ
+ */
+async function fetchDisclosureData(disclosureId: string): Promise<DisclosureData> {
+    // データベースから取得
+    const data = await dynamodb.get({ Key: { id: disclosureId } });
+    
+    if (!data) {
+        // データが見つからない場合はエラー
+        throw new Error('開示情報が見つかりません');
+    }
+    
+    return data;
+}
+```
+
+```typescript
+// ❌ 悪い例: コメントが英語、または変数名が日本語
+// Fetch disclosure data
+async function 開示情報取得(kaiji_id: string) {
+    // ...
+}
+```
+
+**コードブロック外の説明:**
+
+```markdown
+✅ 良い例:
+
+この関数は、DynamoDBから開示情報を取得します。`disclosureId`を指定して呼び出してください。
+
+❌ 悪い例:
+
+This function fetches disclosure data from DynamoDB.
+```
+
+### 技術用語の使い分け
+
+| 日本語 | 英語 | 使用ルール |
+|--------|------|-----------|
+| エラー | Error | 説明文では「エラー」、コードでは`Error` |
+| テスト | Test | 説明文では「テスト」、ファイル名では`*.test.ts` |
+| データベース | Database | 説明文では「データベース」、コードでは`database` |
+| 関数 | Function | 説明文では「関数」、コードでは`function` |
+| 設定 | Config | 説明文では「設定」、コードでは`config` |
+| Lambda | Lambda | 常に「Lambda」（AWSサービス名） |
+| DynamoDB | DynamoDB | 常に「DynamoDB」（AWSサービス名） |
+| API | API | 常に「API」（一般的な略語） |
+| JSON | JSON | 常に「JSON」（一般的な略語） |
+
+### 混在する場合の例
+
+```markdown
+✅ 良い例:
+
+Lambda関数の`handler.ts`では、DynamoDBから開示情報を取得します。
+エラーが発生した場合は、CloudWatch Logsに記録されます。
+
+❌ 悪い例:
+
+Lambdaファンクションのhandler.tsでは、DynamoDBからdisclosure dataをfetchします。
+```
 
 ### 理由
 
-- プロジェクトの主要な利用者が日本語話者
-- TDnetは日本の開示情報サービス
-- 日本語での記述により、理解と保守が容易
+- **日本語**: プロジェクトの主要な利用者が日本語話者であり、TDnetは日本の開示情報サービスのため
+- **英語**: コードの可読性、国際的な開発慣習への準拠、ツールとの互換性のため
+- **明確な区分**: 混乱を避け、一貫性のあるドキュメントとコードを維持するため
 
 ---
 
