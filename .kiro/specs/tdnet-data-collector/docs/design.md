@@ -1640,6 +1640,102 @@ import fc from 'fast-check';
 import { describe, test, expect } from '@jest/globals';
 
 describe('Correctness Properties', () => {
+    // Property 1: 日付範囲収集の完全性
+    test('Property 1: 正常系 - 指定期間内のすべての開示情報を収集する', async () => {
+        const startDate = '2024-01-15';
+        const endDate = '2024-01-17';
+        const expectedDisclosures = mockTdnetServer.getDisclosuresInRange(startDate, endDate);
+        
+        const result = await collectDisclosures({ startDate, endDate });
+        
+        expect(result.collected_count).toBe(expectedDisclosures.length);
+        expect(result.failed_count).toBe(0);
+    });
+    
+    test('Property 1: 任意の日付範囲で完全性が保証される', () => {
+        fc.assert(
+            fc.property(
+                fc.date({ min: new Date('2020-01-01'), max: new Date() }),
+                fc.date({ min: new Date('2020-01-01'), max: new Date() }),
+                async (date1, date2) => {
+                    const [startDate, endDate] = [date1, date2].sort();
+                    const start = startDate.toISOString().split('T')[0];
+                    const end = endDate.toISOString().split('T')[0];
+                    
+                    const expected = mockTdnetServer.getDisclosuresInRange(start, end);
+                    const result = await collectDisclosures({ startDate: start, endDate: end });
+                    
+                    expect(result.collected_count).toBe(expected.length);
+                }
+            ),
+            { numRuns: 1000 }
+        );
+    });
+    
+    // Property 2: メタデータとPDFの同時取得
+    test('Property 2: 正常系 - メタデータとPDFが両方保存される', async () => {
+        const disclosure = createTestDisclosure();
+        
+        await collectDisclosure(disclosure);
+        
+        // メタデータがDynamoDBに保存されている
+        const metadata = await dynamodb.getItem({
+            TableName: 'tdnet_disclosures',
+            Key: { disclosure_id: disclosure.disclosure_id },
+        });
+        expect(metadata.Item).toBeDefined();
+        
+        // PDFがS3に保存されている
+        const pdfExists = await s3.headObject({
+            Bucket: 'tdnet-pdfs',
+            Key: metadata.Item.pdf_s3_key,
+        });
+        expect(pdfExists).toBeDefined();
+    });
+    
+    // Property 4: 開示IDの一意性
+    test('Property 4: 異なる入力から生成されたIDは一意である', () => {
+        fc.assert(
+            fc.property(
+                fc.array(
+                    fc.record({
+                        date: fc.date({ min: new Date('2020-01-01'), max: new Date() }),
+                        companyCode: fc.integer({ min: 1000, max: 9999 }),
+                        index: fc.integer({ min: 0, max: 999 }),
+                    }),
+                    { minLength: 10, maxLength: 100 }
+                ),
+                (inputs) => {
+                    const ids = inputs.map(input => 
+                        generateDisclosureId(
+                            input.date.toISOString().split('T')[0],
+                            input.companyCode.toString(),
+                            input.index
+                        )
+                    );
+                    
+                    const uniqueIds = new Set(ids);
+                    expect(uniqueIds.size).toBe(ids.length);
+                }
+            ),
+            { numRuns: 1000 }
+        );
+    });
+    
+    // Property 5: 重複収集の冪等性
+    test('Property 5: 正常系 - 同じ開示情報を2回保存しても1件のみ保存される', async () => {
+        const disclosure = createTestDisclosure();
+        
+        const result1 = await saveDisclosure(docClient, disclosure);
+        const result2 = await saveDisclosure(docClient, disclosure);
+        
+        expect(result1).toBe(true);  // 1回目は成功
+        expect(result2).toBe(false); // 2回目はスキップ
+        
+        const items = await queryAllDisclosures(docClient);
+        expect(items.length).toBe(1);
+    });
+    
     // Property 8: 日付範囲の順序性
     test('Property 8: Date range validation', () => {
         fc.assert(
@@ -1659,7 +1755,7 @@ describe('Correctness Properties', () => {
                     }
                 }
             ),
-            { numRuns: 100 }
+            { numRuns: 1000 }
         );
     });
     
@@ -1677,7 +1773,7 @@ describe('Correctness Properties', () => {
                     }
                 }
             ),
-            { numRuns: 100 }
+            { numRuns: 1000 }
         );
     });
     

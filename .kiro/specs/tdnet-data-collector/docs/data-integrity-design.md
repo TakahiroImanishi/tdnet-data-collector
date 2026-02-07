@@ -53,7 +53,7 @@ interface Disclosure {
     disclosure_type: string;         // 開示種類
     title: string;                   // タイトル
     disclosed_at: string;            // 開示日時（ISO8601）
-    date_partition: string;          // 年月パーティション（YYYY-MM）
+    date_partition: string;          // 日付パーティション（YYYY-MM-DD）
     
     // PDFファイル参照
     pdf_s3_key: string;              // S3オブジェクトキー
@@ -923,23 +923,60 @@ export class TDnetBucketConstruct extends Construct {
 | **監査ログ** | 1年間 | セキュリティ監査要件 |
 | **一時ファイル** | 1日間 | コスト削減 |
 
-**カスタム保持期間の設定:**
+**オブジェクトごとのObject Lock設定:**
 
 ```typescript
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 
-// オブジェクトごとに保持期間を設定
+// ✅ 開示情報PDF（pdfs/）にはObject Lockを設定
 await s3Client.send(new PutObjectCommand({
     Bucket: process.env.S3_BUCKET!,
     Key: `pdfs/${disclosure_id}.pdf`,
     Body: pdfBuffer,
     ContentType: 'application/pdf',
     
-    // Object Lock設定
+    // Object Lock設定（pdfs/プレフィックスのみ）
     ObjectLockMode: 'GOVERNANCE',
     ObjectLockRetainUntilDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1年後
 }));
+
+// ✅ 一時ファイル（temp/）にはObject Lockを設定しない
+await s3Client.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET!,
+    Key: `temp/${disclosure_id}.pdf`,
+    Body: pdfBuffer,
+    ContentType: 'application/pdf',
+    
+    // Object Lockを設定しない（ライフサイクルポリシーで1日後に自動削除）
+    // ObjectLockMode を指定しない
+}));
+
+// ✅ エクスポートファイル（exports/）にもObject Lockを設定しない
+await s3Client.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET!,
+    Key: `exports/${export_id}.csv`,
+    Body: csvBuffer,
+    ContentType: 'text/csv',
+    
+    // Object Lockを設定しない（ライフサイクルポリシーで7日後に自動削除）
+    // ObjectLockMode を指定しない
+}));
 ```
+
+### Object Lockの適用範囲まとめ
+
+| プレフィックス | Object Lock | 保持期間 | 理由 |
+|--------------|------------|---------|------|
+| **pdfs/** | ✅ 適用 | 1年間 | 監査要件、法的要件、誤削除防止 |
+| **temp/** | ❌ 適用除外 | 1日後に自動削除 | 一時ファイル、コスト削減 |
+| **exports/** | ❌ 適用除外 | 7日後に自動削除 | エクスポートファイル、一時的 |
+| **audit-logs/** | ✅ 適用（将来） | 1年間 | セキュリティ監査要件 |
+
+**設計の利点:**
+- 一時ファイルとエクスポートファイルは自動削除が正常に動作
+- 開示情報PDFは誤削除・改ざんから保護
+- ライフサイクルポリシーとObject Lockが競合しない
+- プレフィックスごとに柔軟な保持ポリシーを設定可能
 
 ---
 
