@@ -289,7 +289,10 @@ fileMatchPattern: '**/.kiro/specs/**/*.md|**/work-logs/**/*.md|**/improvements/*
 
 ## 関連ドキュメント
 
-- **タスク実行ルール**: `tdnet-data-collector.md` - 基本的なタスク実行フロー
-- **ドキュメント標準**: `documentation-standards.md` - ドキュメント作成の標準規則
-- **作業記録**: `../../specs/tdnet-data-collector/work-logs/README.md` - 作業記録の作成方法
-- **改善記録**: `../../specs/tdnet-data-collector/improvements/README.md` - 改善記録の作成方法
+### 参照元（このファイルを参照しているファイル）
+
+- **タスク実行ルール**: `../core/tdnet-data-collector.md` - サブエージェント活用の基本方針
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。

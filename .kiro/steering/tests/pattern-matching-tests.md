@@ -82,6 +82,33 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ---
 
+## development/lambda-implementation.md
+
+### fileMatchPattern
+```
+**/lambda/**/*.ts
+```
+
+### マッチすべきファイル ✅
+- `lambda/collector/handler.ts`
+- `lambda/collector/index.ts`
+- `lambda/collector/utils.ts`
+- `lambda/collector/types.ts`
+- `lambda/query/handler.ts`
+- `lambda/query/index.ts`
+- `src/lambda/export/handler.ts`
+- `src/lambda/export/config.ts`
+- `lambda/utils/error-handler/index.ts`
+- `lambda/utils/logger.ts`
+
+### マッチすべきでないファイル ❌
+- `src/utils/lambda-helper.ts` (lambdaフォルダ外)
+- `cdk/lib/lambda-stack.ts` (cdkフォルダ、Lambda構成だがLambda関数コードではない)
+- `src/api/handler.ts` (lambdaフォルダ外)
+- `README.md`
+
+---
+
 ## development/error-handling-implementation.md
 
 ### fileMatchPattern

@@ -531,16 +531,17 @@ LICENSE
 - フォルダの役割表を確認
 - 既存のファイル配置を参考にする
 
+---
+
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装原則
-- **テスト戦略**: `testing-strategy.md` - テストファイルの命名とテスト戦略
-- **データバリデーション**: `data-validation.md` - バリデーションファイルの命名
-- **スクレイピングパターン**: `tdnet-scraping-patterns.md` - スクレイピングファイルの命名
-- **API設計**: `api-design-guidelines.md` - APIファイルの命名
-- **デプロイチェックリスト**: `deployment-checklist.md` - デプロイ関連ファイルの命名
-- **環境変数**: `environment-variables.md` - 環境変数ファイルの命名
-- **セキュリティ**: `security-best-practices.md` - セキュリティ関連ファイルの命名
+### 参照元（このファイルを参照しているファイル）
+
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - プロジェクトの基本実装原則とファイル構造
+
+### 参照先（このファイルが参照しているファイル）
+
+このファイルは他のsteeringファイルを参照していません。
 
 ## まとめ
 
