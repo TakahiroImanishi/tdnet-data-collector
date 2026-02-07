@@ -296,20 +296,34 @@ export function toErrorResponse(error: Error, requestId: string): APIGatewayProx
 }
 ```
 
-### Dead Letter Queue（DLQ）の設定
+### Dead Letter Queue（DLQ）
 
-Lambda関数の失敗時にメッセージを保存するDLQを設定します。
+Lambda関数の非同期呼び出しで失敗したメッセージをDLQに送信し、別のLambda関数で処理します。
 
-**設定方針:**
-- すべての非同期Lambda関数にDLQを設定
-- DLQ保持期間: 14日間
-- 再試行回数: 2回
-- DLQプロセッサーでアラート送信
+**CDKでの基本設定:**
 
-**実装例:**
+```typescript
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 
-詳細な実装例は以下を参照してください：
-- CDK設定とDLQプロセッサー実装: `../../specs/tdnet-data-collector/templates/lambda-dlq-example.ts`
+// DLQの作成
+const dlq = new sqs.Queue(this, 'CollectorDLQ', {
+    queueName: 'tdnet-collector-dlq',
+    retentionPeriod: cdk.Duration.days(14),
+});
+
+// Lambda関数にDLQを設定
+const collectorFn = new lambda.Function(this, 'CollectorFunction', {
+    // ...
+    deadLetterQueue: dlq,
+    deadLetterQueueEnabled: true,
+    retryAttempts: 2, // Lambda非同期呼び出しの再試行回数
+});
+```
+
+**詳細な実装については `error-handling-implementation.md` を参照してください:**
+- 完全なDLQ設定（CDK）
+- DLQプロセッサーLambdaの実装
+- アラート送信の実装
 
 ---
 

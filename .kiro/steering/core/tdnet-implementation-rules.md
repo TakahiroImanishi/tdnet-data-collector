@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # TDnet Data Collector - 実装ルール
 
 このファイルは、TDnet Data Collectorプロジェクトの基本的な実装原則をまとめたものです。詳細な実装ガイドラインは各専門ファイルを参照してください。

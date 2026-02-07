@@ -1159,7 +1159,8 @@ DynamoDB Transactionsは、以下のケースでのみ使用すべきです：
 以下は、DynamoDB Transactionsを適切に使用する例です：
 
 ```typescript
- * 楽観的ロックを使用した更新
+/**
+ * ✅ 適切な使用例: 楽観的ロックを使用した更新
  * バージョン番号を使用して競合を検出
  */
 async function updateDisclosureWithOptimisticLock(

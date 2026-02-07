@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # Error Handling Patterns
 
 このファイルは、TDnet Data Collectorプロジェクトにおけるエラーハンドリングの基本原則をまとめたものです。

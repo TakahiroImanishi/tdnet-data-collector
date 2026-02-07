@@ -1,3 +1,7 @@
+---
+inclusion: always
+---
+
 # TDnet Data Collector - タスク実行ルール
 
 このファイルは、TDnet Data Collectorプロジェクトのタスク実行時に従うべき基本ルールをまとめたものです。
