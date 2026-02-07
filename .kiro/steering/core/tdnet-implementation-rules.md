@@ -56,19 +56,198 @@ DynamoDBのクエリ効率を最大化するため、`date_partition`（YYYY-MM�
 - 月単位のクエリを高速化
 - 日付範囲クエリは複数の月を並行クエリ
 
-**実装例:**
+#### タイムゾーン処理
+
+**基本方針: JST（日本標準時）を基準とする**
+
+TDnetは日本の開示情報サービスであり、開示時刻は日本時間（JST, UTC+9）で管理されます。
+
+**disclosed_at のフォーマット:**
+- **推奨形式**: ISO 8601形式（UTC）: `"2024-01-15T01:30:00Z"`
+- **内部処理**: JSTに変換してから date_partition を生成
+- **理由**: 23:30 JST（2024-01-15）と 00:30 JST（2024-01-16）が異なる月になる可能性を考慮
+
+**タイムゾーン変換の注意点:**
+```typescript
+// ❌ 悪い例: UTCのまま月を抽出（月またぎで誤った partition になる可能性）
+const date = new Date("2024-01-31T15:30:00Z"); // JST: 2024-02-01 00:30
+const month = date.getUTCMonth() + 1; // 1 (誤り: 実際はJSTで2月)
+
+// ✅ 良い例: JSTに変換してから月を抽出
+const date = new Date("2024-01-31T15:30:00Z");
+const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+const month = jstDate.getUTCMonth() + 1; // 2 (正しい)
+```
+
+#### disclosed_at フォーマット検証ルール
+
+**必須要件:**
+1. **ISO 8601形式**: `YYYY-MM-DDTHH:mm:ssZ` または `YYYY-MM-DDTHH:mm:ss.sssZ`
+2. **有効な日付**: 実在する日付であること（例: 2024-02-30 は無効）
+3. **範囲チェック**: 1970-01-01 以降、現在時刻+1日以内
+4. **タイムゾーン**: UTC（Z）またはオフセット形式（+09:00）
+
+**バリデーション実装:**
+```typescript
+function validateDisclosedAt(disclosedAt: string): void {
+    // 1. ISO 8601形式チェック
+    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?([Z]|[+-]\d{2}:\d{2})$/;
+    if (!iso8601Regex.test(disclosedAt)) {
+        throw new ValidationError(
+            `Invalid disclosed_at format: ${disclosedAt}. Expected ISO 8601 format (e.g., "2024-01-15T10:30:00Z")`
+        );
+    }
+
+    // 2. 有効な日付チェック
+    const date = new Date(disclosedAt);
+    if (isNaN(date.getTime())) {
+        throw new ValidationError(
+            `Invalid date: ${disclosedAt}. Date does not exist.`
+        );
+    }
+
+    // 3. 範囲チェック（1970-01-01 以降、現在時刻+1日以内）
+    const minDate = new Date('1970-01-01T00:00:00Z');
+    const maxDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 現在時刻+1日
+    if (date < minDate || date > maxDate) {
+        throw new ValidationError(
+            `Date out of range: ${disclosedAt}. Must be between 1970-01-01 and ${maxDate.toISOString()}`
+        );
+    }
+}
+```
+
+#### 不正な日付の処理方法
+
+**エラーハンドリング戦略:**
+
+1. **バリデーションエラー**: 即座に失敗（Non-Retryable Error）
+   - 不正なフォーマット
+   - 存在しない日付（例: 2024-02-30）
+   - 範囲外の日付
+
+2. **ログ記録**: エラー詳細を構造化ログに記録
+   ```typescript
+   logger.error('Invalid disclosed_at detected', {
+       error_type: 'ValidationError',
+       disclosed_at: disclosedAt,
+       disclosure_id: disclosureId,
+       context: { source: 'generateDatePartition' },
+   });
+   ```
+
+3. **部分的失敗の許容**: バッチ処理では個別の失敗を記録して継続
+   ```typescript
+   for (const disclosure of disclosures) {
+       try {
+           validateDisclosedAt(disclosure.disclosed_at);
+           const partition = generateDatePartition(disclosure.disclosed_at);
+           await saveDisclosure({ ...disclosure, date_partition: partition });
+           results.success++;
+       } catch (error) {
+           logger.error('Failed to process disclosure', { disclosure, error });
+           results.failed++;
+       }
+   }
+   ```
+
+#### 月またぎのエッジケース処理
+
+**エッジケース一覧:**
+
+| ケース | UTC時刻 | JST時刻 | date_partition | 注意点 |
+|--------|---------|---------|----------------|--------|
+| 月末深夜（UTC） | 2024-01-31T15:30:00Z | 2024-02-01T00:30:00+09:00 | `2024-02` | JSTで翌月 |
+| 月初深夜（UTC） | 2024-02-01T14:59:59Z | 2024-01-31T23:59:59+09:00 | `2024-01` | JSTで前月 |
+| うるう年2月末 | 2024-02-29T15:00:00Z | 2024-03-01T00:00:00+09:00 | `2024-03` | JSTで翌月 |
+| 年またぎ | 2023-12-31T15:30:00Z | 2024-01-01T00:30:00+09:00 | `2024-01` | JSTで翌年 |
+
+**テストケース例:**
+```typescript
+describe('generateDatePartition - Edge Cases', () => {
+    it('should handle month boundary (UTC to JST)', () => {
+        // UTC: 2024-01-31 15:30 → JST: 2024-02-01 00:30
+        const partition = generateDatePartition('2024-01-31T15:30:00Z');
+        expect(partition).toBe('2024-02');
+    });
+
+    it('should handle leap year February', () => {
+        // UTC: 2024-02-29 15:00 → JST: 2024-03-01 00:00
+        const partition = generateDatePartition('2024-02-29T15:00:00Z');
+        expect(partition).toBe('2024-03');
+    });
+
+    it('should handle year boundary', () => {
+        // UTC: 2023-12-31 15:30 → JST: 2024-01-01 00:30
+        const partition = generateDatePartition('2023-12-31T15:30:00Z');
+        expect(partition).toBe('2024-01');
+    });
+
+    it('should handle non-leap year February 28', () => {
+        // UTC: 2023-02-28 15:00 → JST: 2023-03-01 00:00
+        const partition = generateDatePartition('2023-02-28T15:00:00Z');
+        expect(partition).toBe('2023-03');
+    });
+});
+```
+
+#### 改善された実装例
 
 ```typescript
-// disclosed_atからdate_partitionを生成
-function generateDatePartition(disclosedAt: string): string {
-    // disclosedAt: "2024-01-15T10:30:00Z" (ISO 8601形式)
+import { ValidationError } from './errors';
+import { logger } from './utils/logger';
+
+/**
+ * disclosed_at のバリデーション
+ * @throws {ValidationError} フォーマットまたは範囲が不正な場合
+ */
+function validateDisclosedAt(disclosedAt: string): void {
+    // ISO 8601形式チェック
+    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?([Z]|[+-]\d{2}:\d{2})$/;
+    if (!iso8601Regex.test(disclosedAt)) {
+        throw new ValidationError(
+            `Invalid disclosed_at format: ${disclosedAt}. Expected ISO 8601 format.`
+        );
+    }
+
+    // 有効な日付チェック
     const date = new Date(disclosedAt);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`; // "2024-01"
+    if (isNaN(date.getTime())) {
+        throw new ValidationError(`Invalid date: ${disclosedAt}`);
+    }
+
+    // 範囲チェック
+    const minDate = new Date('1970-01-01T00:00:00Z');
+    const maxDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    if (date < minDate || date > maxDate) {
+        throw new ValidationError(`Date out of range: ${disclosedAt}`);
+    }
 }
 
-// DynamoDB保存時の使用例
+/**
+ * disclosed_at から date_partition を生成（JST基準）
+ * @param disclosedAt ISO 8601形式の日時文字列（UTC推奨）
+ * @returns YYYY-MM形式の date_partition
+ * @throws {ValidationError} 不正なフォーマットまたは日付の場合
+ */
+function generateDatePartition(disclosedAt: string): string {
+    // バリデーション
+    validateDisclosedAt(disclosedAt);
+
+    // UTCからJSTに変換（UTC+9時間）
+    const utcDate = new Date(disclosedAt);
+    const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
+
+    // YYYY-MM形式で返却
+    const year = jstDate.getUTCFullYear();
+    const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
+    
+    return `${year}-${month}`;
+}
+
+/**
+ * DynamoDB保存時の使用例
+ */
 interface DisclosureItem {
     disclosure_id: string;
     disclosed_at: string;
@@ -79,19 +258,47 @@ interface DisclosureItem {
 }
 
 async function saveDisclosure(disclosure: Omit<DisclosureItem, 'date_partition'>) {
-    const item: DisclosureItem = {
-        ...disclosure,
-        date_partition: generateDatePartition(disclosure.disclosed_at),
-    };
-    
-    await dynamodb.putItem({
-        TableName: 'Disclosures',
-        Item: item,
-    });
+    try {
+        // date_partition を自動生成（バリデーション含む）
+        const item: DisclosureItem = {
+            ...disclosure,
+            date_partition: generateDatePartition(disclosure.disclosed_at),
+        };
+        
+        await dynamodb.putItem({
+            TableName: 'Disclosures',
+            Item: item,
+        });
+        
+        logger.info('Disclosure saved successfully', {
+            disclosure_id: item.disclosure_id,
+            date_partition: item.date_partition,
+        });
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            logger.error('Validation failed for disclosure', {
+                error_type: 'ValidationError',
+                disclosure_id: disclosure.disclosure_id,
+                disclosed_at: disclosure.disclosed_at,
+                error_message: error.message,
+            });
+            throw error; // Non-Retryable Error
+        }
+        throw error;
+    }
 }
 
-// GSIを使用した月単位クエリ
+/**
+ * GSIを使用した月単位クエリ
+ */
 async function queryByMonth(yearMonth: string): Promise<DisclosureItem[]> {
+    // yearMonth フォーマット検証
+    if (!/^\d{4}-\d{2}$/.test(yearMonth)) {
+        throw new ValidationError(
+            `Invalid yearMonth format: ${yearMonth}. Expected YYYY-MM format.`
+        );
+    }
+    
     const result = await dynamodb.query({
         TableName: 'Disclosures',
         IndexName: 'DatePartitionIndex', // GSI名
@@ -104,8 +311,14 @@ async function queryByMonth(yearMonth: string): Promise<DisclosureItem[]> {
     return result.Items as DisclosureItem[];
 }
 
-// 日付範囲クエリ（複数月を並行クエリ）
+/**
+ * 日付範囲クエリ（複数月を並行クエリ）
+ */
 async function queryByDateRange(startDate: string, endDate: string): Promise<DisclosureItem[]> {
+    // 日付フォーマット検証
+    validateDisclosedAt(startDate);
+    validateDisclosedAt(endDate);
+    
     // 開始月と終了月を生成
     const startPartition = generateDatePartition(startDate);
     const endPartition = generateDatePartition(endDate);
@@ -128,10 +341,26 @@ async function queryByDateRange(startDate: string, endDate: string): Promise<Dis
         .sort((a, b) => new Date(b.disclosed_at).getTime() - new Date(a.disclosed_at).getTime());
 }
 
-// 月範囲を生成するヘルパー関数
+/**
+ * 月範囲を生成するヘルパー関数
+ */
 function generateMonthRange(start: string, end: string): string[] {
+    // フォーマット検証
+    if (!/^\d{4}-\d{2}$/.test(start) || !/^\d{4}-\d{2}$/.test(end)) {
+        throw new ValidationError(
+            `Invalid month format. Expected YYYY-MM format. Got: start=${start}, end=${end}`
+        );
+    }
+    
     const [startYear, startMonth] = start.split('-').map(Number);
     const [endYear, endMonth] = end.split('-').map(Number);
+    
+    // 範囲チェック（開始月 <= 終了月）
+    if (startYear > endYear || (startYear === endYear && startMonth > endMonth)) {
+        throw new ValidationError(
+            `Invalid month range: start (${start}) must be before or equal to end (${end})`
+        );
+    }
     
     const months: string[] = [];
     let year = startYear;
@@ -147,6 +376,52 @@ function generateMonthRange(start: string, end: string): string[] {
     }
     
     return months;
+}
+```
+
+**バッチ処理での部分的失敗の処理:**
+
+```typescript
+/**
+ * 複数の開示情報を一括保存（部分的失敗を許容）
+ */
+async function saveDisclosuresBatch(disclosures: Omit<DisclosureItem, 'date_partition'>[]): Promise<{
+    success: number;
+    failed: number;
+    errors: Array<{ disclosure_id: string; error: string }>;
+}> {
+    const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as Array<{ disclosure_id: string; error: string }>,
+    };
+    
+    for (const disclosure of disclosures) {
+        try {
+            await saveDisclosure(disclosure);
+            results.success++;
+        } catch (error) {
+            results.failed++;
+            results.errors.push({
+                disclosure_id: disclosure.disclosure_id,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            
+            logger.error('Failed to save disclosure in batch', {
+                disclosure_id: disclosure.disclosure_id,
+                error_type: error instanceof Error ? error.constructor.name : 'Unknown',
+                error_message: error instanceof Error ? error.message : String(error),
+            });
+        }
+    }
+    
+    logger.info('Batch save completed', {
+        total: disclosures.length,
+        success: results.success,
+        failed: results.failed,
+    });
+    
+    return results;
 }
 ```
 

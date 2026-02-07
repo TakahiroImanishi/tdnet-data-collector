@@ -56,18 +56,31 @@ paths:
             example: '7203'
         - name: start_date
           in: query
-          description: Start date (YYYY-MM-DD)
+          description: |
+            Start date in YYYY-MM-DD format (JST timezone assumed).
+            Interpreted as 00:00:00 JST on the specified date.
+            Ignored if month parameter is specified.
           schema:
             type: string
             format: date
             example: '2024-01-01'
         - name: end_date
           in: query
-          description: End date (YYYY-MM-DD)
+          description: |
+            End date in YYYY-MM-DD format (JST timezone assumed).
+            Interpreted as 23:59:59 JST on the specified date.
+            Ignored if month parameter is specified.
           schema:
             type: string
             format: date
             example: '2024-01-31'
+        - name: month
+          in: query
+          description: 'Query by month (YYYY-MM format, uses date_partition index for efficient querying)'
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: '2024-01'
         - name: disclosure_type
           in: query
           description: Disclosure type
@@ -77,8 +90,8 @@ paths:
               - 決算短信
               - 業績予想修正
               - 配当予想修正
-              - 自己株式取得
-              - その他
+              - 自己株式取征E
+              - そ�E仁E
         - name: limit
           in: query
           description: Number of results per page
@@ -87,21 +100,28 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-        - name: offset
-          in: query
-          description: Pagination offset
-          schema:
-            type: integer
-            minimum: 0
-            default: 0
         - name: next_token
           in: query
-          description: Pagination token for cursor-based pagination
+          description: 'Pagination token from previous response (cursor-based pagination, recommended for DynamoDB)'
           schema:
             type: string
       responses:
         '200':
           description: Success
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -134,6 +154,20 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -159,6 +193,7 @@ paths:
           description: Disclosure ID
           schema:
             type: string
+            pattern: '^\d{8}_\d{4}_\d{3}$'
             example: '20240115_7203_001'
         - name: expiration
           in: query
@@ -171,6 +206,20 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -198,6 +247,20 @@ paths:
       responses:
         '200':
           description: Collection started
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -227,6 +290,20 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -254,6 +331,20 @@ paths:
       responses:
         '200':
           description: Export started
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -283,6 +374,20 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -326,6 +431,20 @@ paths:
       responses:
         '200':
           description: Success
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: 'Request limit per second (API Gateway throttle limit)'
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current second
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+                format: int64
+              description: 'Unix timestamp in seconds when the rate limit resets'
           content:
             application/json:
               schema:
@@ -353,10 +472,12 @@ components:
         - disclosure_type
         - title
         - disclosed_at
+        - date_partition
       properties:
         disclosure_id:
           type: string
-          description: Unique disclosure identifier
+          description: 'Unique disclosure identifier (format: YYYYMMDD_CCCC_NNN)'
+          pattern: '^\d{8}_\d{4}_\d{3}$'
           example: '20240115_7203_001'
         company_code:
           type: string
@@ -378,8 +499,16 @@ components:
         disclosed_at:
           type: string
           format: date-time
-          description: Disclosure date and time (ISO8601)
+          description: |
+            Disclosure date and time in ISO8601 format with timezone.
+            Server always returns JST (UTC+09:00).
+            Example: 2024-01-15T15:00:00+09:00
           example: '2024-01-15T15:00:00+09:00'
+        date_partition:
+          type: string
+          description: 'Date partition for efficient querying (YYYY-MM format, derived from disclosed_at)'
+          pattern: '^\d{4}-\d{2}$'
+          example: '2024-01'
         pdf_url:
           type: string
           format: uri
@@ -397,7 +526,12 @@ components:
               description: Download timestamp
             file_size:
               type: integer
-              description: PDF file size in bytes
+              description: |
+                PDF file size in bytes.
+                Maximum 10MB (10485760 bytes) based on TDnet typical file sizes.
+                Larger files may be rejected during collection.
+              minimum: 0
+              maximum: 10485760
             pdf_s3_key:
               type: string
               description: S3 object key
@@ -405,25 +539,13 @@ components:
     PaginationMeta:
       type: object
       properties:
-        total:
-          type: integer
-          description: Total number of results
-        count:
-          type: integer
-          description: Number of results in current page
-        page:
-          type: integer
-          description: Current page number
-        per_page:
-          type: integer
-          description: Results per page
         has_next:
           type: boolean
           description: Whether there are more results
         next_token:
           type: string
           nullable: true
-          description: Token for next page (cursor-based)
+          description: 'Token for next page (cursor-based pagination, use this for subsequent requests)'
 
     DisclosureListResponse:
       type: object
@@ -539,10 +661,16 @@ components:
             status:
               type: string
               enum: [pending, running, completed, failed]
+            total_count:
+              type: integer
+              description: 'Total number of disclosures to collect'
             progress:
               type: integer
               minimum: 0
               maximum: 100
+              description: |
+                Progress percentage (0-100).
+                Calculated as: (collected_count + failed_count + skipped_count) / total_count * 100
             collected_count:
               type: integer
             failed_count:
@@ -568,13 +696,25 @@ components:
         start_date:
           type: string
           format: date
+          description: 'Start date in YYYY-MM-DD format (JST timezone assumed)'
         end_date:
           type: string
           format: date
+          description: 'End date in YYYY-MM-DD format (JST timezone assumed)'
+        disclosure_type:
+          type: string
+          description: 'Filter by disclosure type'
+          enum:
+            - 決算短信
+            - 業績予想修正
+            - 配当予想修正
+            - 自己株式取征E
+            - そ�E仁E
         format:
           type: string
           enum: [csv, json]
           default: csv
+          description: 'Export file format'
 
     ExportResponse:
       type: object
@@ -620,9 +760,11 @@ components:
             export_count:
               type: integer
               nullable: true
+              description: 'Number of records exported'
             file_size:
               type: integer
               nullable: true
+              description: 'Export file size in bytes (max 100MB per file, larger exports are split)'
             download_url:
               type: string
               format: uri
@@ -693,14 +835,27 @@ components:
           properties:
             code:
               type: string
+              description: |
+                Error code with corresponding HTTP status:
+                - VALIDATION_ERROR (400): Invalid request parameters
+                - UNAUTHORIZED (401): Missing or invalid API key
+                - FORBIDDEN (403): Access denied
+                - NOT_FOUND (404): Resource not found
+                - CONFLICT (409): Resource conflict (e.g., duplicate)
+                - RATE_LIMIT_EXCEEDED (429): Too many requests
+                - INTERNAL_ERROR (500): Internal server error
+                - SERVICE_UNAVAILABLE (503): Service temporarily unavailable
+                - GATEWAY_TIMEOUT (504): Gateway timeout
               enum:
                 - VALIDATION_ERROR
                 - UNAUTHORIZED
                 - FORBIDDEN
                 - NOT_FOUND
+                - CONFLICT
                 - RATE_LIMIT_EXCEEDED
                 - INTERNAL_ERROR
                 - SERVICE_UNAVAILABLE
+                - GATEWAY_TIMEOUT
             message:
               type: string
             details:
@@ -759,15 +914,17 @@ components:
         X-RateLimit-Limit:
           schema:
             type: integer
-          description: Request limit per minute
+          description: 'Request limit per second (API Gateway throttle limit)'
         X-RateLimit-Remaining:
           schema:
             type: integer
-          description: Remaining requests
+          description: Remaining requests in current second
         X-RateLimit-Reset:
           schema:
             type: integer
-          description: Unix timestamp when limit resets
+                format: int64
+            format: int64
+          description: 'Unix timestamp in seconds when the rate limit resets'
       content:
         application/json:
           schema:
