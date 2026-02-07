@@ -725,11 +725,5 @@ describe('validateCompanyCode', () => {
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
-
 - **実装ルール**: `../core/tdnet-implementation-rules.md` - プロジェクトの基本実装原則とdate_partition設計
 - **API設計ガイドライン**: `../api/api-design-guidelines.md` - RESTful API設計とバリデーション
-
-### 参照先（このファイルが参照しているファイル）
-
-このファイルは他のsteeringファイルを参照していません。
