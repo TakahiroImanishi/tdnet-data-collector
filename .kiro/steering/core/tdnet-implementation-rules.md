@@ -156,30 +156,16 @@ function generateMonthRange(start: string, end: string): string[] {
 
 ## 関連ドキュメント
 
-### 開発ガイドライン
-
+- **タスク実行ルール**: `tdnet-data-collector.md` - タスク実行とフィードバックループ
+- **エラーハンドリング基本原則**: `error-handling-patterns.md` - エラー分類と再試行戦略
 - **ファイル命名規則**: `../development/tdnet-file-naming.md` - プロジェクト構造と命名規則
 - **エラーハンドリング実装**: `../development/error-handling-implementation.md` - 詳細な実装パターン
 - **テスト戦略**: `../development/testing-strategy.md` - ユニット、統合、プロパティテスト
 - **データバリデーション**: `../development/data-validation.md` - バリデーションルール
 - **スクレイピングパターン**: `../development/tdnet-scraping-patterns.md` - TDnetスクレイピングの詳細
-
-### インフラストラクチャ
-
 - **デプロイメント**: `../infrastructure/deployment-checklist.md` - デプロイ手順とチェックリスト
 - **環境変数**: `../infrastructure/environment-variables.md` - 環境変数の管理方法
 - **パフォーマンス最適化**: `../infrastructure/performance-optimization.md` - コスト削減とパフォーマンス
 - **監視とアラート**: `../infrastructure/monitoring-alerts.md` - CloudWatch設定
-
-### セキュリティ
-
 - **セキュリティベストプラクティス**: `../security/security-best-practices.md` - IAM、暗号化、監査
-
-### API設計
-
 - **API設計ガイドライン**: `../api/api-design-guidelines.md` - RESTful API設計
-
-### タスク実行
-
-- **タスク実行ルール**: `tdnet-data-collector.md` - タスク実行とフィードバックループ
-- **エラーハンドリング基本原則**: `error-handling-patterns.md` - エラー分類と再試行戦略

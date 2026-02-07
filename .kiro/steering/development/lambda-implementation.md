@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/*.ts'
+fileMatchPattern: '**/lambda/**/!(*.test|*.spec).ts'
 ---
 
 # Lambda実装ガイド
@@ -298,99 +298,18 @@ export function toErrorResponse(error: Error, requestId: string): APIGatewayProx
 
 ### Dead Letter Queue（DLQ）の設定
 
-#### CDKでのDLQ設定
+Lambda関数の失敗時にメッセージを保存するDLQを設定します。
 
-```typescript
-import * as sqs from 'aws-cdk-lib/aws-sqs';
-import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+**設定方針:**
+- すべての非同期Lambda関数にDLQを設定
+- DLQ保持期間: 14日間
+- 再試行回数: 2回
+- DLQプロセッサーでアラート送信
 
-// DLQの作成
-const dlq = new sqs.Queue(this, 'CollectorDLQ', {
-    queueName: 'tdnet-collector-dlq',
-    retentionPeriod: cdk.Duration.days(14),
-    visibilityTimeout: cdk.Duration.minutes(5),
-});
+**実装例:**
 
-// Lambda関数にDLQを設定
-const collectorFn = new lambda.Function(this, 'CollectorFunction', {
-    runtime: lambda.Runtime.NODEJS_20_X,
-    handler: 'index.handler',
-    code: lambda.Code.fromAsset('lambda/collector'),
-    timeout: cdk.Duration.minutes(15),
-    deadLetterQueue: dlq,
-    deadLetterQueueEnabled: true,
-    retryAttempts: 2, // Lambda非同期呼び出しの再試行回数
-});
-
-// DLQプロセッサーLambda
-const dlqProcessorFn = new lambda.Function(this, 'DLQProcessor', {
-    runtime: lambda.Runtime.NODEJS_20_X,
-    handler: 'index.handler',
-    code: lambda.Code.fromAsset('lambda/dlq-processor'),
-    environment: {
-        ALERT_TOPIC_ARN: alertTopic.topicArn,
-    },
-});
-
-// DLQをイベントソースとして設定
-dlqProcessorFn.addEventSource(new lambdaEventSources.SqsEventSource(dlq, {
-    batchSize: 10,
-}));
-
-dlq.grantConsumeMessages(dlqProcessorFn);
-alertTopic.grantPublish(dlqProcessorFn);
-```
-
-#### DLQプロセッサーの実装
-
-**ファイル配置:** `src/lambda/dlq-processor/index.ts`
-
-```typescript
-import { SQSEvent, SQSRecord } from 'aws-lambda';
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
-
-const snsClient = new SNSClient({ region: process.env.AWS_REGION });
-
-export const handler = async (event: SQSEvent): Promise<void> => {
-    for (const record of event.Records) {
-        await processDLQMessage(record);
-    }
-};
-
-async function processDLQMessage(record: SQSRecord): Promise<void> {
-    try {
-        const failedMessage = JSON.parse(record.body);
-        
-        logger.error('Processing DLQ message', {
-            messageId: record.messageId,
-            failedMessage,
-            attributes: record.attributes,
-        });
-        
-        // アラート送信
-        await snsClient.send(new PublishCommand({
-            TopicArn: process.env.ALERT_TOPIC_ARN,
-            Subject: 'Lambda execution failed - DLQ message',
-            Message: JSON.stringify({
-                messageId: record.messageId,
-                failedMessage,
-                sentTimestamp: record.attributes.SentTimestamp,
-                approximateReceiveCount: record.attributes.ApproximateReceiveCount,
-                timestamp: new Date().toISOString(),
-            }, null, 2),
-        }));
-        
-        logger.info('DLQ alert sent', { messageId: record.messageId });
-    } catch (error) {
-        logger.error('Failed to process DLQ message', {
-            messageId: record.messageId,
-            error,
-        });
-        // DLQプロセッサー自体の失敗は再スローしない
-        // （無限ループを避けるため）
-    }
-}
-```
+詳細な実装例は以下を参照してください：
+- CDK設定とDLQプロセッサー実装: `../../specs/tdnet-data-collector/templates/lambda-dlq-example.ts`
 
 ---
 

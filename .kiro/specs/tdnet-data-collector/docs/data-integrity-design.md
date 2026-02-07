@@ -1010,74 +1010,59 @@ TDnet Data Collectorでは、以下のシナリオで使用します：
 
 ```typescript
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 const dynamoClient = DynamoDBDocumentClient.from(
     new DynamoDBClient({ region: process.env.AWS_REGION })
 );
 
 /**
- * トランザクションを使用した開示情報の保存
- * 重複チェックと作成を同時に実行
+ * 開示情報の保存（統計情報の更新は分離）
+ * 
+ * ✅ 設計原則:
+ * - 開示情報の保存と統計情報の更新を分離
+ * - 統計情報の更新失敗時でも開示情報は保存される
+ * - 開示情報の保存が最優先
  */
-async function saveDisclosureWithTransaction(
+async function saveDisclosure(
     disclosure: Disclosure
 ): Promise<void> {
     const now = new Date().toISOString();
     
     try {
-        await dynamoClient.send(new TransactWriteCommand({
-            TransactItems: [
-                {
-                    // 1. 開示情報を作成（重複チェック付き）
-                    Put: {
-                        TableName: process.env.DYNAMODB_TABLE!,
-                        Item: {
-                            ...disclosure,
-                            created_at: now,
-                            updated_at: now,
-                        },
-                        ConditionExpression: 'attribute_not_exists(disclosure_id)',
-                    },
-                },
-                {
-                    // 2. 統計情報を更新
-                    Update: {
-                        TableName: process.env.STATS_TABLE!,
-                        Key: {
-                            stat_type: 'daily_count',
-                            date: disclosure.disclosed_at.substring(0, 10),
-                        },
-                        UpdateExpression: 'ADD #count :inc SET updated_at = :now',
-                        ExpressionAttributeNames: {
-                            '#count': 'count',
-                        },
-                        ExpressionAttributeValues: {
-                            ':inc': 1,
-                            ':now': now,
-                        },
-                    },
-                },
-            ],
+        // 1. 開示情報を保存（重複チェック付き）
+        await dynamoClient.send(new PutCommand({
+            TableName: process.env.DYNAMODB_TABLE!,
+            Item: {
+                ...disclosure,
+                created_at: now,
+                updated_at: now,
+            },
+            ConditionExpression: 'attribute_not_exists(disclosure_id)',
         }));
         
-        logger.info('Transaction completed successfully', {
+        logger.info('Disclosure saved successfully', {
             disclosure_id: disclosure.disclosure_id,
         });
         
-    } catch (error) {
-        if (error.name === 'TransactionCanceledException') {
-            // トランザクションがキャンセルされた場合
-            const reasons = error.CancellationReasons || [];
-            
-            for (const reason of reasons) {
-                if (reason.Code === 'ConditionalCheckFailed') {
-                    throw new Error(`Duplicate disclosure_id: ${disclosure.disclosure_id}`);
-                }
-            }
+        // 2. 統計情報を更新（失敗しても開示情報は保存済み）
+        try {
+            await updateStatistics(disclosure);
+        } catch (error) {
+            logger.warn('Failed to update statistics', {
+                disclosure_id: disclosure.disclosure_id,
+                error,
+            });
+            // 統計情報の更新失敗は無視（開示情報は保存済み）
+            // 統計情報は後で整合性チェックバッチで修復可能
         }
         
-        logger.error('Transaction failed', {
+    } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            throw new Error(`Duplicate disclosure_id: ${disclosure.disclosure_id}`);
+        }
+        
+        logger.error('Failed to save disclosure', {
             disclosure_id: disclosure.disclosure_id,
             error,
         });
@@ -1086,6 +1071,94 @@ async function saveDisclosureWithTransaction(
 }
 
 /**
+ * 統計情報の更新（開示情報の保存とは独立）
+ */
+async function updateStatistics(disclosure: Disclosure): Promise<void> {
+    const now = new Date().toISOString();
+    
+    await dynamoClient.send(new UpdateCommand({
+        TableName: process.env.STATS_TABLE!,
+        Key: {
+            stat_type: 'daily_count',
+            date: disclosure.disclosed_at.substring(0, 10),
+        },
+        UpdateExpression: 'ADD #count :inc SET updated_at = :now',
+        ExpressionAttributeNames: {
+            '#count': 'count',
+        },
+        ExpressionAttributeValues: {
+            ':inc': 1,
+            ':now': now,
+        },
+    }));
+    
+    logger.info('Statistics updated successfully', {
+        disclosure_id: disclosure.disclosure_id,
+        date: disclosure.disclosed_at.substring(0, 10),
+    });
+}
+```
+
+### 設計の利点
+
+**1. データ損失のリスク削減:**
+- 統計情報の更新失敗時でも、開示情報は保存される
+- 開示情報の保存が最優先（ビジネス上最も重要なデータ）
+- 統計情報は後で整合性チェックバッチで修復可能
+
+**2. エラーハンドリングの簡素化:**
+- 統計情報の更新失敗は警告レベルで記録
+- 開示情報の保存失敗のみがエラー
+- エラーの影響範囲が明確
+
+**3. パフォーマンス向上:**
+- トランザクションのオーバーヘッドを削減
+- DynamoDBの書き込みキャパシティを節約
+- 統計情報の更新失敗時のロールバックコストを削減
+
+**4. 保守性の向上:**
+- 開示情報と統計情報の責任が明確に分離
+- テストが容易（各機能を独立してテスト可能）
+- 統計情報の更新ロジックを変更しても開示情報の保存に影響しない
+
+**5. スケーラビリティ:**
+- 統計情報の更新を非同期化することも可能（将来の拡張）
+- 統計情報の更新失敗が開示情報の保存をブロックしない
+
+### トランザクションを使用すべきケース
+
+DynamoDB Transactionsは、以下のケースでのみ使用すべきです：
+
+**✅ 適切な使用例:**
+1. **複数レコードの整合性が必須の場合**
+   - 例: 在庫の減少と注文の作成を同時に実行
+   - 例: 口座間の送金（送金元の減額と送金先の増額）
+
+2. **楽観的ロックが必要な場合**
+   - 例: バージョン番号を使用した競合検出
+   - 例: 複数ユーザーによる同時編集の防止
+
+3. **複雑な条件付き更新**
+   - 例: 複数の条件を満たす場合のみ更新
+
+**❌ 不適切な使用例:**
+1. **独立した操作の結合**
+   - 例: 開示情報の保存と統計情報の更新（本ケース）
+   - 理由: 統計情報の更新失敗が開示情報の保存をブロックする
+
+2. **パフォーマンスが重要な場合**
+   - 理由: トランザクションはオーバーヘッドが大きい
+   - 代替案: 非同期処理、結果整合性
+
+3. **一方の失敗が他方に影響しない場合**
+   - 理由: 不要な結合により可用性が低下
+   - 代替案: 独立した操作として実行
+
+### 適切なトランザクション使用例
+
+以下は、DynamoDB Transactionsを適切に使用する例です：
+
+```typescript
  * 楽観的ロックを使用した更新
  * バージョン番号を使用して競合を検出
  */

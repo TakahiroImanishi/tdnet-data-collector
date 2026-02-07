@@ -994,16 +994,41 @@ trail.addEventSelector(cloudtrail.DataResourceType.DYNAMODB_TABLE, [
 - /aws/lambda/tdnet-query
 - /aws/lambda/tdnet-export
 
-カスタムメトリクス:
-- CollectedDisclosuresCount: 収集件数
-- FailedDisclosuresCount: 失敗件数
-- ScrapingDuration: スクレイピング時間
-- PDFDownloadDuration: PDFダウンロード時間
+カスタムメトリクス（3個のみ、コスト最適化）:
+- DisclosuresCollected: 日次収集件数
+- DisclosuresFailed: 失敗件数
+- CollectionSuccessRate: 成功率（%）
+
+Lambda標準メトリクス（自動記録、追加コストなし）:
+- Invocations: Lambda実行回数
+- Errors: エラー回数
+- Duration: 実行時間（スクレイピング、PDFダウンロード含む）
+- Throttles: スロットリング
+- ConcurrentExecutions: 同時実行数
+
+DynamoDB標準メトリクス（自動記録、追加コストなし）:
+- ConsumedReadCapacityUnits: 読み取りキャパシティ消費
+- ConsumedWriteCapacityUnits: 書き込みキャパシティ消費
+- UserErrors: ユーザーエラー（条件チェック失敗など）
+- SystemErrors: システムエラー
+
+S3標準メトリクス（自動記録、追加コストなし）:
+- AllRequests: すべてのリクエスト
+- PutRequests: PUT/POST/COPYリクエスト
+- GetRequests: GETリクエスト
+- BytesUploaded: アップロードバイト数
+- BytesDownloaded: ダウンロードバイト数
+
+コスト削減効果:
+- 削減前: 10個のカスタムメトリクス × $0.30/月 = $3.00/月
+- 削減後: 3個のカスタムメトリクス × $0.30/月 = $0.90/月
+- 削減額: $2.10/月（70%削減）
 
 アラーム:
 - Lambda Error Rate > 10%: Critical
 - Lambda Duration > 14分: Warning
 - DynamoDB Throttle > 0: Warning
+- CollectionSuccessRate < 95%: Warning
 ```
 
 **CloudWatch Dashboard（詳細設計）**
@@ -1227,7 +1252,7 @@ dashboard.addWidgets(
 
 **実装例:**
 ```typescript
-// Lambda関数内でカスタムメトリクスを送信
+// Lambda関数内でカスタムメトリクスを送信（3個のみ、コスト最適化）
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 
 const cloudwatch = new CloudWatchClient({ region: 'ap-northeast-1' });
@@ -1257,6 +1282,26 @@ async function publishBusinessMetrics(result: CollectionResult): Promise<void> {
         ],
     }));
 }
+
+// ✅ Lambda標準メトリクスを活用（追加コストなし）
+// - Invocations: Lambda実行回数（自動記録）
+// - Errors: エラー回数（自動記録）
+// - Duration: 実行時間（自動記録、ScrapingDuration/PDFDownloadDurationの代替）
+// - Throttles: スロットリング（自動記録）
+// - ConcurrentExecutions: 同時実行数（自動記録）
+
+// ✅ DynamoDB標準メトリクスを活用（追加コストなし）
+// - ConsumedReadCapacityUnits: 読み取りキャパシティ消費（自動記録）
+// - ConsumedWriteCapacityUnits: 書き込みキャパシティ消費（自動記録）
+// - UserErrors: ユーザーエラー（自動記録）
+// - SystemErrors: システムエラー（自動記録）
+
+// ✅ S3標準メトリクスを活用（追加コストなし）
+// - AllRequests: すべてのリクエスト（自動記録）
+// - PutRequests: PUT/POST/COPYリクエスト（自動記録）
+// - GetRequests: GETリクエスト（自動記録）
+// - BytesUploaded: アップロードバイト数（自動記録）
+// - BytesDownloaded: ダウンロードバイト数（自動記録）
 ```
 
 #### 2. システムヘルスメトリクス
@@ -2291,7 +2336,25 @@ export class TdnetStack extends cdk.Stack {
         
         // 環境ごとの設定を適用
         const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
-            timeout: config.lambdaTimeout,
+            timeout: config.collectorTimeout,
+            memorySize: config.lambdaMemory,
+            environment: {
+                ENVIRONMENT: props.environment,
+                LOG_LEVEL: config.logLevel,
+            },
+        });
+        
+        const queryFn = new NodejsFunction(this, 'QueryFunction', {
+            timeout: config.queryTimeout,
+            memorySize: config.lambdaMemory,
+            environment: {
+                ENVIRONMENT: props.environment,
+                LOG_LEVEL: config.logLevel,
+            },
+        });
+        
+        const exportFn = new NodejsFunction(this, 'ExportFunction', {
+            timeout: config.exportTimeout,
             memorySize: config.lambdaMemory,
             environment: {
                 ENVIRONMENT: props.environment,
@@ -2303,12 +2366,16 @@ export class TdnetStack extends cdk.Stack {
     private getConfig(env: 'dev' | 'prod') {
         const configs = {
             dev: {
-                lambdaTimeout: cdk.Duration.minutes(5),
+                collectorTimeout: cdk.Duration.minutes(5),
+                queryTimeout: cdk.Duration.seconds(30),
+                exportTimeout: cdk.Duration.minutes(5),
                 lambdaMemory: 256,
                 logLevel: 'DEBUG',
             },
             prod: {
-                lambdaTimeout: cdk.Duration.minutes(15),
+                collectorTimeout: cdk.Duration.minutes(15),
+                queryTimeout: cdk.Duration.seconds(30),
+                exportTimeout: cdk.Duration.minutes(5),
                 lambdaMemory: 512,
                 logLevel: 'INFO',
             },
