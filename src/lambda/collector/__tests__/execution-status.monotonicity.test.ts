@@ -10,64 +10,9 @@
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import * as fc from 'fast-check';
+import { updateExecutionStatus } from '../update-execution-status';
 
 const dynamoMock = mockClient(DynamoDBClient);
-
-// updateExecutionStatus関数のインターフェース定義（Task 8.6で実装予定）
-interface ExecutionStatus {
-  execution_id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  progress: number; // 0-100
-  collected_count: number;
-  failed_count: number;
-  started_at: string;
-  updated_at: string;
-  completed_at?: string;
-  error_message?: string;
-}
-
-// モック実装（Task 8.6で実際の実装に置き換え）
-async function updateExecutionStatus(
-  execution_id: string,
-  status: ExecutionStatus['status'],
-  progress: number,
-  collected_count: number = 0,
-  failed_count: number = 0,
-  error_message?: string
-): Promise<ExecutionStatus> {
-  const item: ExecutionStatus = {
-    execution_id,
-    status,
-    progress: Math.max(0, Math.min(100, progress)), // 0-100に制限
-    collected_count,
-    failed_count,
-    started_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    ...(status === 'completed' || status === 'failed' ? { completed_at: new Date().toISOString() } : {}),
-    ...(error_message ? { error_message } : {}),
-  };
-
-  // DynamoDBに保存（モック）
-  const client = new DynamoDBClient({});
-  const command = new PutItemCommand({
-    TableName: process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions',
-    Item: {
-      execution_id: { S: item.execution_id },
-      status: { S: item.status },
-      progress: { N: item.progress.toString() },
-      collected_count: { N: item.collected_count.toString() },
-      failed_count: { N: item.failed_count.toString() },
-      started_at: { S: item.started_at },
-      updated_at: { S: item.updated_at },
-      ...(item.completed_at ? { completed_at: { S: item.completed_at } } : {}),
-      ...(item.error_message ? { error_message: { S: item.error_message } } : {}),
-    },
-  });
-  
-  await client.send(command);
-  
-  return item;
-}
 
 describe('Property 11: 実行状態の進捗単調性', () => {
   beforeEach(() => {
