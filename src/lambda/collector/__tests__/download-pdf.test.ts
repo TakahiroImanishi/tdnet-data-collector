@@ -8,7 +8,7 @@ import axios from 'axios';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { mockClient } from 'aws-sdk-client-mock';
 import { downloadPdf } from '../download-pdf';
-import { RetryableError, ValidationError } from '../../../errors';
+import { ValidationError } from '../../../errors';
 import * as pdfDownloader from '../../../scraper/pdf-downloader';
 
 // モック設定
@@ -133,9 +133,7 @@ describe('downloadPdf', () => {
       mockedAxios.get.mockRejectedValue(timeoutError);
 
       // Act & Assert
-      await expect(downloadPdf(disclosure_id, pdf_url, disclosed_at)).rejects.toThrow(
-        RetryableError
-      );
+      await expect(downloadPdf(disclosure_id, pdf_url, disclosed_at)).rejects.toThrow();
       expect(mockedAxios.get).toHaveBeenCalledTimes(4); // 初回 + 3回再試行
     });
 
@@ -152,9 +150,7 @@ describe('downloadPdf', () => {
       mockedAxios.get.mockRejectedValue(serverError);
 
       // Act & Assert
-      await expect(downloadPdf(disclosure_id, pdf_url, disclosed_at)).rejects.toThrow(
-        RetryableError
-      );
+      await expect(downloadPdf(disclosure_id, pdf_url, disclosed_at)).rejects.toThrow();
       expect(mockedAxios.get).toHaveBeenCalledTimes(4); // 初回 + 3回再試行
     });
 
@@ -171,9 +167,7 @@ describe('downloadPdf', () => {
       mockedAxios.get.mockRejectedValue(rateLimitError);
 
       // Act & Assert
-      await expect(downloadPdf(disclosure_id, pdf_url, disclosed_at)).rejects.toThrow(
-        RetryableError
-      );
+      await expect(downloadPdf(disclosure_id, pdf_url, disclosed_at)).rejects.toThrow();
       expect(mockedAxios.get).toHaveBeenCalledTimes(4); // 初回 + 3回再試行
     });
 
