@@ -3,8 +3,8 @@
 このファイルは、TDnet Data Collectorプロジェクトにおけるエラーハンドリングの基本原則をまとめたものです。
 
 **詳細な実装については以下を参照:**
-- 再試行戦略・ログ構造: `error-handling-implementation.md`
-- APIエラーコード: `error-codes.md`
+- 再試行戦略・ログ構造: `../development/error-handling-implementation.md`
+- APIエラーコード: `../api/error-codes.md`
 
 ## エラー分類
 
@@ -56,7 +56,7 @@ await retryWithBackoff(
 );
 ```
 
-**詳細な実装は `error-handling-implementation.md` を参照。**
+**詳細な実装は `../development/error-handling-implementation.md` を参照。**
 
 ## エラーログ構造
 
@@ -96,7 +96,7 @@ try {
 - `RetryableError` - 再試行可能なエラー
 - `ValidationError` - バリデーションエラー
 - `NotFoundError` - リソース不存在
-- その他のエラークラスは `error-codes.md` を参照
+- その他のエラークラスは `../api/error-codes.md` を参照
 
 ### 3. Graceful Degradation（段階的機能低下）
 
@@ -113,9 +113,15 @@ for (const item of items) {
 }
 ```
 
+## エラーコード標準
+
+エラーコードの詳細な定義と使用ガイドラインは、以下のドキュメントを参照してください：
+
+- **エラーコード一覧**: `../api/error-codes.md` - すべてのエラーコードの定義と使用例
+
 ## 関連ドキュメント
 
-- **詳細実装**: `error-handling-implementation.md` - 再試行戦略、ログ構造、Lambda実装
-- **APIエラーコード**: `error-codes.md` - エラーコード標準化と実装例
-- **API設計**: `api-design-guidelines.md` - APIエラーレスポンス形式
-- **監視とアラート**: `monitoring-alerts.md` - エラーアラート設定
+- **詳細実装**: `../development/error-handling-implementation.md` - 再試行戦略、ログ構造、Lambda実装
+- **エラーコード標準**: `../api/error-codes.md` - APIエラーコードの詳細定義
+- **API設計**: `../api/api-design-guidelines.md` - APIエラーレスポンス形式
+- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - エラーアラート設定

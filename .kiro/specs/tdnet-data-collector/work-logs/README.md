@@ -11,18 +11,29 @@
 
 ## ファイル命名規則
 
+### 基本形式
+
 ```
-work-log-[YYYYMMDD-HHMMSS].md
+work-log-[YYYYMMDD-HHMMSS]-[task-summary].md
 ```
 
+- **YYYYMMDD-HHMMSS**: 作業開始日時（必須）
+- **task-summary**: タスク概要を表す短い説明（推奨）
+  - ケバブケース（kebab-case）を使用
+  - 3-5単語程度で簡潔に
+  - 日本語の場合はハイフン区切り
+
 **例:**
-- `work-log-20260207-143025.md`
-- `work-log-20260207-150530.md`
+- `work-log-20260207-143025-lambda-implementation.md` - Lambda関数実装
+- `work-log-20260207-150530-error-handling-improvement.md` - エラーハンドリング改善
+- `work-log-20260207-130337-steering-comprehensive-review.md` - steering包括的レビュー
 
 **日時の取得:**
 ```powershell
 Get-Date -Format "yyyyMMdd-HHmmss"
 ```
+
+**重要:** タスク概要を含めることで、ファイル一覧から作業内容を素早く把握できます。
 
 ## 作業記録フォーマット
 
@@ -89,29 +100,31 @@ Get-Date -Format "yyyyMMdd-HHmmss"
 
 **基本的な使用方法:**
 ```powershell
-# 最小限の使用（タイトルとタスク番号は後で記入）
-.\create-work-log.ps1
+# タスク概要を指定（推奨）
+.\create-work-log.ps1 -Title "Lambda関数の実装" -Summary "lambda-implementation"
 
-# タイトルを指定
-.\create-work-log.ps1 -Title "Lambda関数の実装"
-
-# タスク番号を指定
-.\create-work-log.ps1 -Task "タスク1.1"
+# タスク番号とタスク概要を指定
+.\create-work-log.ps1 -Task "タスク1.1" -Summary "collector-function"
 
 # 作成後にファイルを開く
-.\create-work-log.ps1 -Open
+.\create-work-log.ps1 -Summary "error-handling" -Open
 
 # すべてのオプションを指定
-.\create-work-log.ps1 -Title "Lambda関数の実装" -Task "タスク1.1" -Open
+.\create-work-log.ps1 -Title "Lambda関数の実装" -Task "タスク1.1" -Summary "lambda-implementation" -Open
 ```
 
 **スクリプトの機能:**
 - ✅ 現在時刻（JST）を自動取得
 - ✅ テンプレートから新しい作業記録ファイルを作成
-- ✅ ファイル名は `work-log-[YYYYMMDD-HHMMSS].md` 形式
-- ✅ タイトルとタスク番号を自動挿入（オプション）
+- ✅ ファイル名は `work-log-[YYYYMMDD-HHMMSS]-[summary].md` 形式
+- ✅ タイトル、タスク番号、タスク概要を自動挿入（オプション）
 - ✅ 作成後にエディタで開く（オプション）
 - ✅ UTF-8エンコーディング（BOMなし）で保存
+
+**-Summary パラメータについて:**
+- タスク概要を表す短い文字列（ケバブケース推奨）
+- 例: `lambda-implementation`, `error-handling`, `steering-review`
+- ファイル名に含まれ、作業内容を素早く把握できる
 
 **対応エディタ（-Openオプション使用時）:**
 1. VS Code（優先）
@@ -120,19 +133,19 @@ Get-Date -Format "yyyyMMdd-HHmmss"
 
 **実行例:**
 ```powershell
-# 例1: 基本的な使用
-PS> .\create-work-log.ps1
+# 例1: タスク概要を指定
+PS> .\create-work-log.ps1 -Summary "lambda-implementation"
 作業記録を作成します...
-ファイル名: work-log-20260207-143025.md
+ファイル名: work-log-20260207-143025-lambda-implementation.md
 作成日時: 2026-02-07 14:30:25 JST
 
 作業記録ファイルを作成しました！
-ファイルパス: C:\...\work-logs\work-log-20260207-143025.md
+ファイルパス: C:\...\work-logs\work-log-20260207-143025-lambda-implementation.md
 
-# 例2: タイトルとタスク番号を指定
-PS> .\create-work-log.ps1 -Title "エラーハンドリング改善" -Task "タスク2.3"
+# 例2: タイトル、タスク番号、タスク概要を指定
+PS> .\create-work-log.ps1 -Title "エラーハンドリング改善" -Task "タスク2.3" -Summary "error-handling"
 作業記録を作成します...
-ファイル名: work-log-20260207-143530.md
+ファイル名: work-log-20260207-143530-error-handling.md
 作成日時: 2026-02-07 14:35:30 JST
 タイトル: エラーハンドリング改善
 関連タスク: タスク2.3
@@ -148,10 +161,15 @@ PS> .\create-work-log.ps1 -Title "エラーハンドリング改善" -Task "タ�
 # 現在時刻を取得
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
+# タスク概要を設定（例: lambda-implementation）
+$summary = "task-summary"
+
 # テンプレートをコピーして新しいファイルを作成
 Copy-Item ".kiro/specs/tdnet-data-collector/work-logs/work-log-template.md" `
-          ".kiro/specs/tdnet-data-collector/work-logs/work-log-$timestamp.md"
+          ".kiro/specs/tdnet-data-collector/work-logs/work-log-$timestamp-$summary.md"
 ```
+
+**重要:** タスク概要（$summary）は、作業内容を表す短い文字列を使用してください。
 
 ## 作業記録作成のタイミング
 

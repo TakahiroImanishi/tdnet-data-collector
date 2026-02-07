@@ -360,43 +360,55 @@
 ### タスク関連の改善
 
 ```
-task-[タスク番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md
+task-[タスク番号]-improvement-[連番]-[YYYYMMDD-HHMMSS]-[topic].md
 ```
 
 - **タスク番号**: 実行したタスクの番号（例: 1.1, 2.3）
 - **連番**: 同じタスクで複数回改善分析を行う場合の連番（1, 2, 3...）
 - **日時**: 改善分析を実施した日時（YYYYMMdd-HHmmss形式）
+- **topic**: 改善のトピック（推奨、ケバブケース）
+  - 例: `error-handling`, `performance`, `security`, `validation`
 
 例：
-- `task-1.1-improvement-1-20260207-143025.md` - タスク1.1の1回目の改善分析
-- `task-1.1-improvement-2-20260207-150530.md` - タスク1.1の2回目の改善分析
-- `task-2.3-improvement-1-20260208-091530.md` - タスク2.3の1回目の改善分析
+- `task-1.1-improvement-1-20260207-143025-error-handling.md` - タスク1.1のエラーハンドリング改善
+- `task-1.1-improvement-2-20260207-150530-performance.md` - タスク1.1のパフォーマンス改善
+- `task-2.3-improvement-1-20260208-091530-dynamodb-optimization.md` - タスク2.3のDynamoDB最適化
 
 ### ドキュメント関連の改善
 
 ```
-docs-improvement-[連番]-[YYYYMMDD-HHMMSS].md
+docs-improvement-[連番]-[YYYYMMDD-HHMMSS]-[topic].md
 ```
 
 要件定義書、設計書、OpenAPI仕様などのドキュメント改善の記録。
 
+- **topic**: 改善のトピック（推奨）
+  - 例: `structure`, `consistency`, `openapi`, `requirements`
+
 例：
-- `docs-improvement-1-20260207-122500.md` - ドキュメント構造の改善
-- `docs-improvement-2-20260207-130000.md` - 整合性チェック結果
+- `docs-improvement-1-20260207-122500-structure.md` - ドキュメント構造の改善
+- `docs-improvement-2-20260207-130000-consistency-check.md` - 整合性チェック結果
 
 ### Steering関連の改善
 
 ```
-steering-improvement-[連番]-[YYYYMMDD-HHMMSS].md
+steering-improvement-[連番]-[YYYYMMDD-HHMMSS]-[topic].md
 ```
 
 steeringファイル（実装ガイドライン）の改善記録。
 
-例：
-- `steering-improvement-1-20260207-120500.md` - steeringファイルの整合性チェック
-- `steering-improvement-2-20260207-115718.md` - エラーハンドリングパターンの追加
+- **topic**: 改善のトピック（推奨）
+  - 例: `error-handling`, `work-log-rules`, `file-naming`, `consistency`
 
-**重要:** `general-improvement-*.md` のような汎用的な命名は使用しないでください。必ず上記のいずれかのカテゴリに分類してください。
+例：
+- `steering-improvement-1-20260207-120500-consistency-check.md` - steeringファイルの整合性チェック
+- `steering-improvement-2-20260207-115718-error-handling-patterns.md` - エラーハンドリングパターンの追加
+- `steering-improvement-9-20260207-135530.md` - 作業記録作成ルールの明確化（旧形式、非推奨）
+
+**重要:** 
+- ❌ `general-improvement-*.md` のような汎用的な命名は使用しないでください
+- ✅ 必ず上記のいずれかのカテゴリ（task, docs, steering）に分類してください
+- ✅ トピック名を含めることで、ファイル一覧から改善内容を素早く把握できます
 
 ## 自動ファイル作成スクリプト
 
@@ -405,26 +417,32 @@ steeringファイル（実装ガイドライン）の改善記録。
 ### create-improvement.ps1 - 改善記録作成
 
 ```powershell
-# タスク番号を指定して実行
-.\create-improvement.ps1 -TaskNumber "1.1"
+# タスク番号とトピックを指定して実行
+.\create-improvement.ps1 -TaskNumber "1.1" -Topic "error-handling"
 
 # ドキュメント改善記録を作成
-.\create-improvement.ps1 -Category "docs"
+.\create-improvement.ps1 -Category "docs" -Topic "structure"
 
 # Steering改善記録を作成
-.\create-improvement.ps1 -Category "steering"
+.\create-improvement.ps1 -Category "steering" -Topic "work-log-rules"
 
 # 作成後に自動的にindex.mdを更新
-.\create-improvement.ps1 -TaskNumber "1.1" -AutoUpdateIndex
+.\create-improvement.ps1 -TaskNumber "1.1" -Topic "performance" -AutoUpdateIndex
 ```
 
 スクリプトは以下を自動的に行います：
 1. 正確なJST時刻を取得
 2. 既存の改善ファイル数から連番を自動決定
-3. テンプレート付きのファイルを作成
-4. ファイルパスを表示
-5. オプションでファイルを開く
-6. オプションでindex.mdを自動更新
+3. トピック名をファイル名に含める
+4. テンプレート付きのファイルを作成
+5. ファイルパスを表示
+6. オプションでファイルを開く
+7. オプションでindex.mdを自動更新
+
+**-Topic パラメータについて:**
+- 改善のトピックを表す短い文字列（ケバブケース推奨）
+- 例: `error-handling`, `performance`, `security`, `validation`
+- ファイル名に含まれ、改善内容を素早く把握できる
 
 ### update-index.ps1 - インデックス更新
 
