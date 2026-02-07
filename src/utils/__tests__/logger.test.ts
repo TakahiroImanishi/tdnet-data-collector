@@ -326,3 +326,88 @@ describe('Structured Logging Format', () => {
     }
   });
 });
+
+describe('logLambdaError', () => {
+  it('should log Lambda error with standard format', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new ValidationError('Invalid input');
+    const lambdaContext = {
+      requestId: 'test-request-id',
+      functionName: 'TestFunction',
+    };
+
+    logLambdaError('Lambda execution failed', error, lambdaContext);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Lambda execution failed',
+      expect.objectContaining({
+        error_type: 'ValidationError',
+        error_message: 'Invalid input',
+        context: expect.objectContaining({
+          request_id: 'test-request-id',
+          function_name: 'TestFunction',
+        }),
+        stack_trace: expect.any(String),
+      })
+    );
+  });
+
+  it('should log Lambda error with additional context', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new RetryableError('Network error');
+    const lambdaContext = {
+      requestId: 'test-request-id',
+      functionName: 'TestFunction',
+    };
+    const additionalContext = {
+      disclosure_id: 'TD20240115001',
+      retry_count: 2,
+    };
+
+    logLambdaError('Lambda execution failed', error, lambdaContext, additionalContext);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Lambda execution failed',
+      expect.objectContaining({
+        error_type: 'RetryableError',
+        error_message: 'Network error',
+        context: expect.objectContaining({
+          request_id: 'test-request-id',
+          function_name: 'TestFunction',
+          disclosure_id: 'TD20240115001',
+          retry_count: 2,
+        }),
+        stack_trace: expect.any(String),
+      })
+    );
+  });
+
+  it('should handle missing Lambda context', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new Error('Test error');
+
+    logLambdaError('Lambda execution failed', error);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Lambda execution failed',
+      expect.objectContaining({
+        error_type: 'Error',
+        error_message: 'Test error',
+        context: expect.objectContaining({
+          request_id: undefined,
+          function_name: undefined,
+        }),
+        stack_trace: expect.any(String),
+      })
+    );
+  });
+});

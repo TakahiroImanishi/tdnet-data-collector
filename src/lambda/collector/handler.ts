@@ -9,6 +9,7 @@
 
 import { Context } from 'aws-lambda';
 import { logger, createErrorContext } from '../../utils/logger';
+import { sendErrorMetric, sendSuccessMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
 import { ValidationError } from '../../errors';
 import { scrapeTdnetList } from './scrape-tdnet-list';
 
@@ -71,6 +72,7 @@ export async function handler(
   context: Context
 ): Promise<CollectorResponse> {
   const execution_id = generateExecutionId(context);
+  const startTime = Date.now();
 
   try {
     logger.info('Lambda Collector started', {
@@ -95,21 +97,56 @@ export async function handler(
       );
     }
 
+    const duration = Date.now() - startTime;
+
     logger.info('Lambda Collector completed', {
       execution_id,
       status: response.status,
       collected_count: response.collected_count,
       failed_count: response.failed_count,
+      duration_ms: duration,
     });
+
+    // 成功メトリクス送信
+    await sendMetrics([
+      {
+        name: 'LambdaExecutionTime',
+        value: duration,
+        unit: 'Milliseconds',
+        dimensions: { FunctionName: 'Collector', Mode: event.mode },
+      },
+      {
+        name: 'DisclosuresCollected',
+        value: response.collected_count,
+        unit: 'Count',
+        dimensions: { Mode: event.mode },
+      },
+      {
+        name: 'DisclosuresFailed',
+        value: response.failed_count,
+        unit: 'Count',
+        dimensions: { Mode: event.mode },
+      },
+    ]);
 
     return response;
   } catch (error) {
+    const duration = Date.now() - startTime;
+
     logger.error(
       'Lambda Collector failed',
       createErrorContext(error as Error, {
         execution_id,
         request_id: context.awsRequestId,
+        duration_ms: duration,
       })
+    );
+
+    // エラーメトリクス送信
+    await sendErrorMetric(
+      error instanceof Error ? error.constructor.name : 'Unknown',
+      'Collector',
+      { Mode: event.mode }
     );
 
     return {

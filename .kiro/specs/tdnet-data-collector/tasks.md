@@ -40,13 +40,14 @@
   - DynamoDBアイテム変換関数（toDynamoDBItem、fromDynamoDBItem）を実装
   - date_partition生成関数（generateDatePartition）を実装（JST基準、バリデーション含む）
   - _Requirements: 要件2.1, 2.2, 2.3（メタデータ管理）_
-
+  - _完了: 2026-02-08, Steering準拠レビュー完了_
 
 - [x] 2.2 データモデルのプロパティテスト
   - **Property 3: メタデータの必須フィールド**
   - **Validates: Requirements 2.1, 2.2**
   - 任意の開示情報に対して、toDynamoDBItemが必須フィールドをすべて含むことを検証
   - _Requirements: 要件14.2（プロパティテスト）_
+  - _完了: 2026-02-08, 28テスト成功（disclosure.test.ts）_
 
 - [x] 2.3 date_partition生成のプロパティテスト
   - **Property: date_partition生成の正確性**
@@ -54,6 +55,7 @@
   - 任意のISO8601日時に対して、generateDatePartitionがYYYY-MM形式（JST基準）を返すことを検証
   - 月またぎのエッジケース（UTC 2024-01-31T15:30:00Z → JST 2024-02-01T00:30:00 → "2024-02"）を検証
   - _Requirements: 要件14.2（プロパティテスト）_
+  - _完了: 2026-02-08, 40テスト成功（date-partition.test.ts）_
 
 - [x] 2.4 date_partitionバリデーションのユニットテスト
   - 不正なフォーマット（ISO8601以外）でValidationErrorをスローすることを確認

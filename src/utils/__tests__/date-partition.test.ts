@@ -115,8 +115,8 @@ describe('generateDatePartition', () => {
       expect(generateDatePartition('2024-01-31T15:30:00Z')).toBe('2024-02');
     });
 
-    it('UTC: 2024-02-01T14:59:59Z → JST: 2024-01-31T23:59:59 → "2024-01"', () => {
-      expect(generateDatePartition('2024-02-01T14:59:59Z')).toBe('2024-01');
+    it('UTC: 2024-01-31T14:59:59Z → JST: 2024-01-31T23:59:59 → "2024-01"', () => {
+      expect(generateDatePartition('2024-01-31T14:59:59Z')).toBe('2024-01');
     });
 
     it('UTC: 2024-02-29T15:00:00Z → JST: 2024-03-01T00:00:00 → "2024-03"（うるう年）', () => {
@@ -131,8 +131,8 @@ describe('generateDatePartition', () => {
       expect(generateDatePartition('2023-12-31T15:30:00Z')).toBe('2024-01');
     });
 
-    it('UTC: 2024-01-01T14:59:59Z → JST: 2023-12-31T23:59:59 → "2023-12"（年またぎ逆）', () => {
-      expect(generateDatePartition('2024-01-01T14:59:59Z')).toBe('2023-12');
+    it('UTC: 2023-12-31T14:59:59Z → JST: 2023-12-31T23:59:59 → "2023-12"（年またぎ逆）', () => {
+      expect(generateDatePartition('2023-12-31T14:59:59Z')).toBe('2023-12');
     });
   });
 

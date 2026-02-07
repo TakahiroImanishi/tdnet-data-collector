@@ -8,7 +8,7 @@
  * Requirements: 要件1.2（メタデータ抽出）
  */
 
-import { parseDisclosureList, DisclosureMetadata } from '../html-parser';
+import { parseDisclosureList } from '../html-parser';
 import { ValidationError } from '../../errors';
 
 describe('HTML Parser', () => {

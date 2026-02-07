@@ -10,7 +10,6 @@
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import * as fc from 'fast-check';
-import 'aws-sdk-client-mock-jest';
 
 const dynamoMock = mockClient(DynamoDBClient);
 
@@ -166,10 +165,10 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       // Assert
       const call = dynamoMock.call(0);
       const input = call.args[0].input as any;
-      expect(input.Item.status).toBe('failed');
-      expect(input.Item.error_message).toBe(error_message);
-      expect(input.Item.collected_count).toBe(10);
-      expect(input.Item.failed_count).toBe(5);
+      expect(input.Item.status.S).toBe('failed');
+      expect(input.Item.error_message.S).toBe(error_message);
+      expect(parseInt(input.Item.collected_count.N)).toBe(10);
+      expect(parseInt(input.Item.failed_count.N)).toBe(5);
     });
   });
 
@@ -197,7 +196,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
             const calls = dynamoMock.calls();
             const progresses = calls.map(call => {
               const input = call.args[0].input as any;
-              return input.Item.progress;
+              return parseInt(input.Item.progress.N);
             });
 
             // 進捗率が単調増加（または同じ値）
@@ -226,7 +225,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
             // Assert
             const call = dynamoMock.call(0);
             const input = call.args[0].input as any;
-            const actualProgress = input.Item.progress;
+            const actualProgress = parseInt(input.Item.progress.N);
 
             // 進捗率が0-100の範囲内
             expect(actualProgress).toBeGreaterThanOrEqual(0);

@@ -284,7 +284,7 @@ describe('CloudWatch Metrics', () => {
       expect(calls.length).toBe(2);
       
       // 各呼び出しにFunctionNameディメンションが含まれる
-      calls.forEach((call) => {
+      calls.forEach((call: any) => {
         expect(call[0].MetricData[0].Dimensions).toContainEqual({
           Name: 'FunctionName',
           Value: 'CollectorFunction',
@@ -301,13 +301,13 @@ describe('CloudWatch Metrics', () => {
       
       // BatchSuccessメトリクス
       const successCall = calls.find(
-        (call) => call[0].MetricData[0].MetricName === 'BatchSuccess'
+        (call: any) => call[0].MetricData[0].MetricName === 'BatchSuccess'
       );
       expect(successCall[0].MetricData[0].Value).toBe(95);
       
       // BatchFailedメトリクス
       const failedCall = calls.find(
-        (call) => call[0].MetricData[0].MetricName === 'BatchFailed'
+        (call: any) => call[0].MetricData[0].MetricName === 'BatchFailed'
       );
       expect(failedCall[0].MetricData[0].Value).toBe(5);
     });
@@ -316,7 +316,7 @@ describe('CloudWatch Metrics', () => {
   describe('Lambda Integration Example', () => {
     it('should demonstrate complete Lambda error handling with metrics', async () => {
       // Lambda実装チェックリストに準拠した実装例
-      const mockHandler = async (event: any, context: any) => {
+      const mockHandler = async (_event: any, context: any) => {
         const startTime = Date.now();
         
         try {
@@ -357,7 +357,7 @@ describe('CloudWatch Metrics', () => {
       let success = 0;
       let failed = 0;
 
-      for (const item of items) {
+      for (const _item of items) {
         try {
           // 5%の確率で失敗
           if (Math.random() < 0.05) {

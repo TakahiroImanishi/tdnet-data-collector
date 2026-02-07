@@ -56,6 +56,9 @@ export async function downloadPdf(
   try {
     logger.info('Downloading PDF', { disclosure_id, pdf_url });
 
+    // レート制限を適用
+    await rateLimiter.waitIfNeeded();
+
     // PDFをダウンロード（再試行あり）
     const pdfBuffer = await retryWithBackoff(
       async () => {
@@ -124,6 +127,11 @@ export async function downloadPdf(
       size: pdfBuffer.length,
     });
 
+    // 成功メトリクス送信
+    await sendSuccessMetric(1, 'DownloadPdf', {
+      DisclosureId: disclosure_id,
+    });
+
     return s3Key;
   } catch (error) {
     logger.error('Failed to download PDF', {
@@ -132,6 +140,14 @@ export async function downloadPdf(
       error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
+
+    // エラーメトリクス送信
+    await sendErrorMetric(
+      error instanceof Error ? error.constructor.name : 'Unknown',
+      'DownloadPdf',
+      { DisclosureId: disclosure_id }
+    );
+
     throw error;
   }
 }
