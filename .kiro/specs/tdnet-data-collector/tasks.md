@@ -244,7 +244,7 @@
   - IAMロール設定（DynamoDB、S3、CloudWatch Logsへのアクセス）
   - _Requirements: 要件12.1, 12.3（コスト最適化、サーバーレス）_
 
-- [ ]* 8.11 Lambda Collector統合テスト
+- [ ] 8.11 Lambda Collector統合テスト
   - **Property 1: 日付範囲収集の完全性**
   - **Validates: Requirements 1.1, 5.1**
   - 指定期間内のすべての開示情報を収集することを検証

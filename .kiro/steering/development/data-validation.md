@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/validators/**/*.ts'
+fileMatchPattern: '**/validators/**/*.ts|**/models/**/*.ts|**/types/**/*.ts|**/utils/date-partition*.ts|**/utils/disclosure-id*.ts'
 ---
 
 # Data Validation Rules

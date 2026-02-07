@@ -63,11 +63,15 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | `**/*.test.ts` | `development/testing-strategy.md`<br>`development/mcp-server-guidelines.md` | テストファイル |
 | `**/*.spec.ts` | `development/testing-strategy.md`<br>`development/mcp-server-guidelines.md` | テストファイル（spec形式） |
 
-### バリデーション関連
+### バリデーション・データモデル関連
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
 | `**/validators/**/*.ts` | `development/data-validation.md` | バリデーション |
+| `**/models/**/*.ts` | `development/data-validation.md`<br>`development/error-handling-implementation.md` | データモデル定義 |
+| `**/types/**/*.ts` | `development/data-validation.md`<br>`development/error-handling-implementation.md` | 型定義 |
+| `**/utils/date-partition*.ts` | `development/data-validation.md` | 日付パーティション |
+| `**/utils/disclosure-id*.ts` | `development/data-validation.md`<br>`development/tdnet-scraping-patterns.md` | 開示ID生成 |
 
 ### スクレイピング・エラーハンドリング関連
 
@@ -77,7 +81,9 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | `**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md`<br>`development/mcp-server-guidelines.md` | コレクター |
 | `**/utils/error*.ts` | `development/error-handling-implementation.md` | エラーユーティリティ |
 | `**/utils/retry*.ts` | `development/error-handling-implementation.md` | リトライユーティリティ |
-| `**/lambda/**/*.ts` | `development/error-handling-implementation.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md` | Lambda関数全般 |
+| `**/utils/logger*.ts` | `development/error-handling-implementation.md` | ロガー |
+| `**/utils/rate-limiter*.ts` | `development/tdnet-scraping-patterns.md` | レート制限 |
+| `**/lambda/**/*.ts` | `development/error-handling-implementation.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md`<br>`development/tdnet-scraping-patterns.md` | Lambda関数全般 |
 
 ### API関連
 

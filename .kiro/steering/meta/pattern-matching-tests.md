@@ -41,18 +41,24 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```text
-**/validators/**/*.ts
+**/validators/**/*.ts|**/models/**/*.ts|**/types/**/*.ts|**/utils/date-partition*.ts|**/utils/disclosure-id*.ts
 ```
 
 ### マッチすべきファイル ✅
 - `src/validators/disclosure.ts`
 - `src/validators/company-code.ts`
+- `src/models/disclosure.ts` ← 追加
+- `src/models/execution.ts` ← 追加
+- `src/types/index.ts` ← 追加
+- `src/types/disclosure.ts` ← 追加
+- `src/utils/date-partition.ts` ← 追加
+- `src/utils/disclosure-id.ts` ← 追加
 - `lambda/validators/date-range.ts`
 - `src/validators/utils/sanitize.ts`
 - `validators/pdf-validator.ts`
 
 ### マッチすべきでないファイル ❌
-- `src/utils/validator-helper.ts` (validatorsフォルダ外)
+- `src/utils/validator-helper.ts` (validatorsフォルダ外、対象パターン外)
 - `src/validators/disclosure.test.ts` (テストファイル)
 - `src/scraper/tdnet-scraper.ts`
 - `README.md`
@@ -63,19 +69,25 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```text
-**/scraper/**/*.ts|**/collector/**/*.ts
+**/scraper/**/*.ts|**/collector/**/*.ts|**/utils/rate-limiter*.ts|**/utils/disclosure-id*.ts|**/lambda/collector/**/*.ts
 ```
 
 ### マッチすべきファイル ✅
 - `src/scraper/tdnet-scraper.ts`
 - `src/scraper/pdf-downloader.ts`
+- `src/scraper/html-parser.ts` ← 追加
 - `lambda/collector/handler.ts`
 - `lambda/collector/index.ts`
+- `src/lambda/collector/handler.ts` ← 追加
+- `src/lambda/collector/scrape-tdnet-list.ts` ← 追加
+- `src/lambda/collector/download-pdf.ts` ← 追加
 - `src/collector/batch-processor.ts`
+- `src/utils/rate-limiter.ts` ← 追加
+- `src/utils/disclosure-id.ts` ← 追加
 - `scraper/utils/rate-limiter.ts`
 
 ### マッチすべきでないファイル ❌
-- `src/utils/scraper-helper.ts` (scraperフォルダ外)
+- `src/utils/scraper-helper.ts` (scraperフォルダ外、対象パターン外)
 - `src/validators/disclosure.ts`
 - `src/api/routes.ts`
 - `README.md`
@@ -86,12 +98,16 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```text
-**/utils/error*.ts|**/utils/retry*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/api/**/*.ts|**/lambda/**/*.ts
+**/utils/error*.ts|**/utils/retry*.ts|**/utils/logger*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/api/**/*.ts|**/lambda/**/*.ts|**/models/**/*.ts|**/types/**/*.ts
 ```
 
 ### マッチすべきファイル ✅
 - `src/utils/error-handler.ts`
 - `src/utils/retry.ts`
+- `src/utils/logger.ts` ← 追加
+- `src/models/disclosure.ts` ← 追加
+- `src/models/execution.ts` ← 追加
+- `src/types/index.ts` ← 追加
 - `src/scraper/tdnet-scraper.ts`
 - `src/collector/batch-processor.ts`
 - `src/api/disclosures.ts`
@@ -100,6 +116,8 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 - `lambda/collector/utils.ts`
 - `lambda/query/handler.ts`
 - `src/lambda/export/handler.ts`
+- `src/lambda/collector/handler.ts` ← 追加
+- `src/lambda/collector/scrape-tdnet-list.ts` ← 追加
 - `lambda/utils/error-handler/index.ts`
 
 ### マッチすべきでないファイル ❌

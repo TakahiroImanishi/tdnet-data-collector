@@ -1,0 +1,232 @@
+/**
+ * TDnet List Scraper
+ *
+ * 指定日のTDnet開示情報リストを取得し、メタデータを抽出します。
+ * レート制限と再試行ロジックを適用して、TDnetサーバーへの負荷を最小化します。
+ *
+ * Requirements: 要件1.1, 9.1
+ */
+
+import axios, { AxiosError } from 'axios';
+import { parseDisclosureList, DisclosureMetadata } from '../../scraper/html-parser';
+import { RateLimiter } from '../../utils/rate-limiter';
+import { retryWithBackoff } from '../../utils/retry';
+import { logger, createErrorContext } from '../../utils/logger';
+import { RetryableError, ValidationError } from '../../errors';
+
+/**
+ * レート制限設定（2秒間隔）
+ * TDnetサーバーへの過度な負荷を防ぐため
+ */
+const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
+
+/**
+ * HTTPタイムアウト設定（30秒）
+ */
+const HTTP_TIMEOUT_MS = 30000;
+
+/**
+ * User-Agent設定
+ */
+const USER_AGENT = 'TDnet-Data-Collector/1.0 (https://github.com/your-org/tdnet-data-collector)';
+
+/**
+ * 指定日のTDnet開示情報リストを取得
+ *
+ * @param date 日付（YYYY-MM-DD形式）
+ * @returns 開示情報メタデータの配列
+ * @throws ValidationError 日付フォーマットが不正な場合
+ * @throws RetryableError ネットワークエラーまたはHTTPエラー
+ *
+ * @example
+ * ```typescript
+ * const disclosures = await scrapeTdnetList('2024-01-15');
+ * console.log(`Found ${disclosures.length} disclosures`);
+ * ```
+ */
+export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[]> {
+  // 日付フォーマットのバリデーション
+  validateDateFormat(date);
+
+  try {
+    logger.info('Scraping TDnet list', { date });
+
+    // レート制限を適用
+    await rateLimiter.waitIfNeeded();
+
+    // TDnetからHTMLを取得（再試行あり）
+    const html = await fetchTdnetHtml(date);
+
+    // HTMLをパース
+    const disclosures = parseDisclosureList(html);
+
+    logger.info('TDnet list scraped successfully', {
+      date,
+      count: disclosures.length,
+    });
+
+    return disclosures;
+  } catch (error) {
+    logger.error(
+      'Failed to scrape TDnet list',
+      createErrorContext(error as Error, { date })
+    );
+    throw error;
+  }
+}
+
+/**
+ * 日付フォーマットのバリデーション
+ *
+ * @param date 日付（YYYY-MM-DD形式）
+ * @throws ValidationError 日付フォーマットが不正な場合
+ */
+function validateDateFormat(date: string): void {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date)) {
+    throw new ValidationError(
+      `Invalid date format: ${date}. Expected YYYY-MM-DD format.`
+    );
+  }
+
+  // 日付の有効性チェック
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) {
+    throw new ValidationError(
+      `Invalid date: ${date}. Date does not exist.`
+    );
+  }
+}
+
+/**
+ * TDnetからHTMLを取得（再試行あり）
+ *
+ * @param date 日付（YYYY-MM-DD形式）
+ * @returns HTMLコンテンツ
+ * @throws RetryableError ネットワークエラーまたはHTTPエラー
+ */
+async function fetchTdnetHtml(date: string): Promise<string> {
+  const url = buildTdnetUrl(date);
+
+  return await retryWithBackoff(
+    async () => {
+      try {
+        logger.debug('Fetching TDnet HTML', { url, date });
+
+        const response = await axios.get(url, {
+          timeout: HTTP_TIMEOUT_MS,
+          headers: {
+            'User-Agent': USER_AGENT,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+          },
+          validateStatus: (status) => status >= 200 && status < 300,
+        });
+
+        logger.debug('TDnet HTML fetched successfully', {
+          url,
+          date,
+          status: response.status,
+          content_length: response.data.length,
+        });
+
+        return response.data;
+      } catch (error) {
+        // AxiosErrorを適切なエラーに変換
+        throw convertAxiosError(error as AxiosError, url);
+      }
+    },
+    {
+      maxRetries: 3,
+      initialDelay: 2000,
+      backoffMultiplier: 2,
+      jitter: true,
+      shouldRetry: (error) => {
+        // RetryableErrorのみ再試行
+        return error instanceof RetryableError;
+      },
+    }
+  );
+}
+
+/**
+ * TDnet URLを構築
+ *
+ * @param date 日付（YYYY-MM-DD形式）
+ * @returns TDnet URL
+ *
+ * @remarks
+ * 実際のTDnet URLに置き換える必要があります。
+ * 例: https://www.release.tdnet.info/inbs/I_list_001_YYYY-MM-DD.html
+ */
+function buildTdnetUrl(date: string): string {
+  // TODO: 実際のTDnet URLに置き換える
+  // 現在はプレースホルダーURL
+  const baseUrl = process.env.TDNET_BASE_URL || 'https://www.release.tdnet.info/inbs';
+  return `${baseUrl}/I_list_001_${date}.html`;
+}
+
+/**
+ * AxiosErrorを適切なエラーに変換
+ *
+ * @param error AxiosError
+ * @param url リクエストURL
+ * @returns 変換されたエラー
+ */
+function convertAxiosError(error: AxiosError, url: string): Error {
+  // ネットワークエラー
+  if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+    return new RetryableError(
+      `Network error: ${error.code} - ${error.message}`,
+      error
+    );
+  }
+
+  // タイムアウトエラー
+  if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+    return new RetryableError(
+      `Request timeout: ${error.message}`,
+      error
+    );
+  }
+
+  // HTTPエラー
+  if (error.response) {
+    const status = error.response.status;
+
+    // 5xxエラー（サーバーエラー）- 再試行可能
+    if (status >= 500) {
+      return new RetryableError(
+        `Server error: ${status} ${error.response.statusText}`,
+        error
+      );
+    }
+
+    // 429エラー（レート制限）- 再試行可能
+    if (status === 429) {
+      return new RetryableError(
+        `Rate limit exceeded: ${status} ${error.response.statusText}`,
+        error
+      );
+    }
+
+    // 404エラー（ページが存在しない）- 再試行不可
+    if (status === 404) {
+      return new ValidationError(
+        `TDnet page not found: ${url}. The specified date may not have any disclosures.`
+      );
+    }
+
+    // その他のHTTPエラー - 再試行不可
+    return new Error(
+      `HTTP error: ${status} ${error.response.statusText}`
+    );
+  }
+
+  // その他のエラー
+  return new Error(
+    `Failed to fetch TDnet HTML: ${error.message}`
+  );
+}
