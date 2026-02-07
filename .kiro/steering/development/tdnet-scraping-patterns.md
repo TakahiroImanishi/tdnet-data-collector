@@ -300,6 +300,8 @@ async function scrapeTdnetListWithFallback(date: string): Promise<Disclosure[]> 
 
 ### レート制限の実装
 
+#### 基本的なレート制限（固定間隔）
+
 ```typescript
 import { logger } from './utils/logger';
 
@@ -335,6 +337,461 @@ async function fetchWithRateLimit(url: string): Promise<any> {
     return await axios.get(url);
 }
 ```
+
+#### 動的レート制限（適応型）
+
+TDnetの応答時間や429エラーに応じて、自動的に遅延時間を調整します。
+
+```typescript
+import { logger } from './utils/logger';
+import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
+
+interface RateLimitMetrics {
+    currentDelay: number;
+    consecutiveSuccesses: number;
+    consecutiveFailures: number;
+    totalRequests: number;
+    rateLimitViolations: number;
+    averageResponseTime: number;
+}
+
+class AdaptiveRateLimiter {
+    private lastRequestTime: number = 0;
+    private currentDelay: number;
+    private readonly minDelay: number;
+    private readonly maxDelay: number;
+    private consecutiveSuccesses: number = 0;
+    private consecutiveFailures: number = 0;
+    private totalRequests: number = 0;
+    private rateLimitViolations: number = 0;
+    private responseTimes: number[] = [];
+    private cloudWatchClient: CloudWatchClient;
+    
+    constructor(options: {
+        minDelay?: number;
+        maxDelay?: number;
+        initialDelay?: number;
+        enableMetrics?: boolean;
+    } = {}) {
+        this.minDelay = options.minDelay ?? 2000; // 最小2秒
+        this.maxDelay = options.maxDelay ?? 60000; // 最大60秒
+        this.currentDelay = options.initialDelay ?? this.minDelay;
+        
+        if (options.enableMetrics !== false) {
+            this.cloudWatchClient = new CloudWatchClient({});
+        }
+    }
+    
+    /**
+     * 必要に応じて待機
+     */
+    async waitIfNeeded(): Promise<void> {
+        const now = Date.now();
+        const timeSinceLastRequest = now - this.lastRequestTime;
+        
+        if (timeSinceLastRequest < this.currentDelay) {
+            const waitTime = this.currentDelay - timeSinceLastRequest;
+            logger.debug('Adaptive rate limiting: waiting', {
+                waitTime,
+                currentDelay: this.currentDelay,
+                consecutiveSuccesses: this.consecutiveSuccesses,
+                consecutiveFailures: this.consecutiveFailures,
+            });
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+        
+        this.lastRequestTime = Date.now();
+        this.totalRequests++;
+    }
+    
+    /**
+     * リクエスト成功時の処理
+     * @param responseTime レスポンス時間（ミリ秒）
+     */
+    handleSuccess(responseTime: number): void {
+        this.consecutiveSuccesses++;
+        this.consecutiveFailures = 0;
+        this.responseTimes.push(responseTime);
+        
+        // 最新100件のレスポンス時間のみ保持
+        if (this.responseTimes.length > 100) {
+            this.responseTimes.shift();
+        }
+        
+        // 応答時間が3秒以上の場合、遅延時間を20%増加
+        if (responseTime > 3000) {
+            this.increaseDelay(1.2);
+            logger.info('Slow response detected, increasing delay', {
+                responseTime,
+                newDelay: this.currentDelay,
+            });
+        }
+        // 連続10回成功した場合、遅延時間を10%短縮
+        else if (this.consecutiveSuccesses >= 10) {
+            this.decreaseDelay(0.9);
+            this.consecutiveSuccesses = 0;
+            logger.info('Consecutive successes, decreasing delay', {
+                newDelay: this.currentDelay,
+            });
+        }
+        
+        // メトリクス送信
+        this.sendMetrics();
+    }
+    
+    /**
+     * 429エラー時の処理
+     * @param retryAfter Retry-Afterヘッダーの値（秒）
+     */
+    handleRateLimitError(retryAfter?: number): void {
+        this.consecutiveFailures++;
+        this.consecutiveSuccesses = 0;
+        this.rateLimitViolations++;
+        
+        if (retryAfter) {
+            // Retry-Afterヘッダーがある場合は優先的に使用
+            this.currentDelay = Math.min(retryAfter * 1000, this.maxDelay);
+            logger.warn('Rate limit exceeded, using Retry-After header', {
+                retryAfter,
+                newDelay: this.currentDelay,
+            });
+        } else {
+            // 指数バックオフ（2倍に増加）
+            this.increaseDelay(2.0);
+            logger.warn('Rate limit exceeded, applying exponential backoff', {
+                consecutiveFailures: this.consecutiveFailures,
+                newDelay: this.currentDelay,
+            });
+        }
+        
+        // メトリクス送信
+        this.sendMetrics();
+    }
+    
+    /**
+     * 遅延時間を増加
+     */
+    private increaseDelay(multiplier: number): void {
+        this.currentDelay = Math.min(
+            Math.ceil(this.currentDelay * multiplier),
+            this.maxDelay
+        );
+    }
+    
+    /**
+     * 遅延時間を短縮
+     */
+    private decreaseDelay(multiplier: number): void {
+        this.currentDelay = Math.max(
+            Math.floor(this.currentDelay * multiplier),
+            this.minDelay
+        );
+    }
+    
+    /**
+     * 現在の遅延時間を取得
+     */
+    getCurrentDelay(): number {
+        return this.currentDelay;
+    }
+    
+    /**
+     * メトリクスを取得
+     */
+    getMetrics(): RateLimitMetrics {
+        const avgResponseTime = this.responseTimes.length > 0
+            ? this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length
+            : 0;
+        
+        return {
+            currentDelay: this.currentDelay,
+            consecutiveSuccesses: this.consecutiveSuccesses,
+            consecutiveFailures: this.consecutiveFailures,
+            totalRequests: this.totalRequests,
+            rateLimitViolations: this.rateLimitViolations,
+            averageResponseTime: avgResponseTime,
+        };
+    }
+    
+    /**
+     * CloudWatchメトリクスを送信
+     */
+    private async sendMetrics(): Promise<void> {
+        if (!this.cloudWatchClient) return;
+        
+        const metrics = this.getMetrics();
+        
+        try {
+            await this.cloudWatchClient.send(new PutMetricDataCommand({
+                Namespace: 'TDnetDataCollector/RateLimit',
+                MetricData: [
+                    {
+                        MetricName: 'CurrentDelay',
+                        Value: metrics.currentDelay,
+                        Unit: 'Milliseconds',
+                        Timestamp: new Date(),
+                    },
+                    {
+                        MetricName: 'RateLimitViolations',
+                        Value: 1,
+                        Unit: 'Count',
+                        Timestamp: new Date(),
+                    },
+                    {
+                        MetricName: 'AverageResponseTime',
+                        Value: metrics.averageResponseTime,
+                        Unit: 'Milliseconds',
+                        Timestamp: new Date(),
+                    },
+                    {
+                        MetricName: 'RequestsPerMinute',
+                        Value: 1,
+                        Unit: 'Count',
+                        Timestamp: new Date(),
+                    },
+                ],
+            }));
+        } catch (error) {
+            // メトリクス送信失敗はログのみ（メイン処理に影響させない）
+            logger.error('Failed to send CloudWatch metrics', { error });
+        }
+    }
+}
+
+// 使用例: 429エラー時の自動バックオフ
+import axios, { AxiosError } from 'axios';
+
+const adaptiveRateLimiter = new AdaptiveRateLimiter({
+    minDelay: 2000,
+    maxDelay: 60000,
+    initialDelay: 2000,
+    enableMetrics: true,
+});
+
+async function fetchWithAdaptiveRateLimit(url: string): Promise<any> {
+    await adaptiveRateLimiter.waitIfNeeded();
+    
+    const startTime = Date.now();
+    
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'TDnet-Data-Collector/1.0 (contact@example.com)',
+            },
+            timeout: 30000,
+        });
+        
+        const responseTime = Date.now() - startTime;
+        adaptiveRateLimiter.handleSuccess(responseTime);
+        
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const axiosError = error as AxiosError;
+            
+            // 429エラーの場合
+            if (axiosError.response?.status === 429) {
+                const retryAfter = axiosError.response.headers['retry-after'];
+                const retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : undefined;
+                
+                adaptiveRateLimiter.handleRateLimitError(retryAfterSeconds);
+                
+                // 再試行
+                logger.info('Retrying after rate limit error', {
+                    url,
+                    retryAfter: retryAfterSeconds,
+                    currentDelay: adaptiveRateLimiter.getCurrentDelay(),
+                });
+                
+                // 調整された遅延時間で待機
+                await new Promise(resolve => setTimeout(resolve, adaptiveRateLimiter.getCurrentDelay()));
+                
+                // 再試行（最大3回）
+                return await fetchWithAdaptiveRateLimit(url);
+            }
+        }
+        
+        throw error;
+    }
+}
+
+// Lambda関数での使用例
+import { Context } from 'aws-lambda';
+
+// グローバルスコープで初期化（コールドスタート対策）
+const globalRateLimiter = new AdaptiveRateLimiter({
+    minDelay: parseInt(process.env.RATE_LIMIT_MIN_DELAY || '2000', 10),
+    maxDelay: parseInt(process.env.RATE_LIMIT_MAX_DELAY || '60000', 10),
+    enableMetrics: process.env.ENABLE_RATE_LIMIT_METRICS !== 'false',
+});
+
+export async function handler(event: any, context: Context) {
+    const urls = event.urls || [];
+    const results = [];
+    
+    for (const url of urls) {
+        try {
+            const data = await fetchWithAdaptiveRateLimit(url);
+            results.push({ url, success: true, data });
+        } catch (error) {
+            logger.error('Failed to fetch URL', { url, error });
+            results.push({ url, success: false, error: error.message });
+        }
+    }
+    
+    // 最終的なメトリクスをログ出力
+    const metrics = globalRateLimiter.getMetrics();
+    logger.info('Rate limiter metrics', metrics);
+    
+    return {
+        statusCode: 200,
+        body: JSON.stringify({
+            results,
+            rateLimitMetrics: metrics,
+        }),
+    };
+}
+```
+
+#### レート制限メトリクスの監視
+
+CloudWatchダッシュボードで以下のメトリクスを監視：
+
+**メトリクス一覧:**
+- `CurrentDelay`: 現在の遅延時間（ミリ秒）
+- `RateLimitViolations`: 429エラーの発生回数
+- `AverageResponseTime`: TDnetの平均応答時間（ミリ秒）
+- `RequestsPerMinute`: 1分あたりのリクエスト数
+
+**CloudWatchアラーム設定例:**
+
+```typescript
+import { Alarm, ComparisonOperator } from 'aws-cdk-lib/aws-cloudwatch';
+import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { Construct } from 'constructs';
+
+export class RateLimitAlarms extends Construct {
+    constructor(scope: Construct, id: string, props: { alarmTopic: Topic }) {
+        super(scope, id);
+        
+        // 429エラー頻発アラーム
+        const rateLimitViolationsAlarm = new Alarm(this, 'RateLimitViolationsAlarm', {
+            metric: {
+                namespace: 'TDnetDataCollector/RateLimit',
+                metricName: 'RateLimitViolations',
+                statistic: 'Sum',
+                period: Duration.minutes(5),
+            },
+            threshold: 10, // 5分間に10回以上
+            evaluationPeriods: 1,
+            comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+            alarmDescription: 'TDnet rate limit violations exceeded threshold',
+        });
+        rateLimitViolationsAlarm.addAlarmAction(new SnsAction(props.alarmTopic));
+        
+        // 遅延時間増加アラーム
+        const delayIncreaseAlarm = new Alarm(this, 'DelayIncreaseAlarm', {
+            metric: {
+                namespace: 'TDnetDataCollector/RateLimit',
+                metricName: 'CurrentDelay',
+                statistic: 'Average',
+                period: Duration.minutes(5),
+            },
+            threshold: 30000, // 30秒以上
+            evaluationPeriods: 2,
+            comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+            alarmDescription: 'Rate limit delay increased significantly',
+        });
+        delayIncreaseAlarm.addAlarmAction(new SnsAction(props.alarmTopic));
+        
+        // 応答時間悪化アラーム
+        const responseTimeAlarm = new Alarm(this, 'ResponseTimeAlarm', {
+            metric: {
+                namespace: 'TDnetDataCollector/RateLimit',
+                metricName: 'AverageResponseTime',
+                statistic: 'Average',
+                period: Duration.minutes(5),
+            },
+            threshold: 5000, // 5秒以上
+            evaluationPeriods: 2,
+            comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+            alarmDescription: 'TDnet response time degraded',
+        });
+        responseTimeAlarm.addAlarmAction(new SnsAction(props.alarmTopic));
+    }
+}
+```
+
+#### グローバルレート制限（将来の拡張）
+
+複数のLambda関数間でレート制限を共有する場合、DynamoDBまたはElastiCacheを使用：
+
+```typescript
+import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+
+class GlobalRateLimiter {
+    private dynamoClient: DynamoDBClient;
+    private tableName: string;
+    private lockKey: string;
+    
+    constructor(tableName: string, lockKey: string = 'tdnet-rate-limit') {
+        this.dynamoClient = new DynamoDBClient({});
+        this.tableName = tableName;
+        this.lockKey = lockKey;
+    }
+    
+    async acquireLock(ttlSeconds: number = 2): Promise<boolean> {
+        const now = Math.floor(Date.now() / 1000);
+        const expiresAt = now + ttlSeconds;
+        
+        try {
+            await this.dynamoClient.send(new UpdateItemCommand({
+                TableName: this.tableName,
+                Key: { lock_key: { S: this.lockKey } },
+                UpdateExpression: 'SET expires_at = :expires_at, last_request_at = :now',
+                ConditionExpression: 'attribute_not_exists(lock_key) OR expires_at < :now',
+                ExpressionAttributeValues: {
+                    ':expires_at': { N: String(expiresAt) },
+                    ':now': { N: String(now) },
+                },
+            }));
+            
+            return true;
+        } catch (error) {
+            if (error.name === 'ConditionalCheckFailedException') {
+                return false; // ロック取得失敗
+            }
+            throw error;
+        }
+    }
+    
+    async waitForLock(maxWaitMs: number = 10000): Promise<void> {
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxWaitMs) {
+            if (await this.acquireLock()) {
+                return;
+            }
+            
+            // 100ms待機してリトライ
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        throw new Error('Failed to acquire global rate limit lock');
+    }
+}
+
+// 使用例
+const globalLock = new GlobalRateLimiter('RateLimitLocks');
+
+async function fetchWithGlobalRateLimit(url: string): Promise<any> {
+    await globalLock.waitForLock();
+    return await axios.get(url);
+}
+```
+
+**注意:** グローバルレート制限は、複数のLambda関数が同時に実行される場合にのみ必要です。単一のLambda関数で順次処理する場合は、`AdaptiveRateLimiter`で十分です。
 
 ## Testing Patterns
 
