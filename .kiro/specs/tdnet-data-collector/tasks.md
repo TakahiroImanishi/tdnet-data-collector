@@ -129,6 +129,21 @@
 
 - [x] 5.5 ログレベルのユニットテスト
   - **Property 13: ログレベルの適切性**
+  - **Validates: Requirements 6.3, 6.5**
+  - エラーはERRORレベル、警告はWARNINGレベルで記録されることを確認
+  - _Requirements: 要件14.1（テスト）_
+  - _完了: 2026-02-08, 22テスト成功_
+  - _注意: logLambdaError()ヘルパー関数を追加（Lambda実装チェックリスト準拠）_
+
+- [x] 5.6 CloudWatchメトリクス送信ヘルパーの実装
+  - エラーメトリクス送信（sendErrorMetric）
+  - 成功メトリクス送信（sendSuccessMetric）
+  - 実行時間メトリクス送信（sendExecutionTimeMetric）
+  - バッチ処理結果メトリクス送信（sendBatchResultMetrics）
+  - _Requirements: 要件6.4（エラーメトリクス）_
+  - _完了: 2026-02-08, 17テスト成功_
+  - _注意: Lambda実装チェックリスト「エラーメトリクス送信」に対応_
+  - **Property 13: ログレベルの適切性**
   - **Validates: Requirements 6.5**
   - エラーはERRORレベル、警告はWARNINGレベルで記録されることを確認
   - _Requirements: 要件14.2（プロパティテスト）_
@@ -229,11 +244,12 @@
   - TTL設定（30日後に自動削除）
   - _Requirements: 要件5.4（進捗フィードバック）_
 
-- [ ] 8.7 実行状態の進捗単調性テスト
+- [x] 8.7 実行状態の進捗単調性テスト
   - **Property 11: 実行状態の進捗単調性**
   - **Validates: Requirements 5.4**
   - 進捗率が単調増加（0 → 100）し、減少しないことを検証
   - _Requirements: 要件14.2（プロパティテスト）_
+  - _完了: 2026-02-08, 7テスト成功（ユニット5件、プロパティベース2件、各100回反復）_
 
 - [ ] 8.8 並列処理の実装
   - Promise.allSettledを使用した並列ダウンロード（並列度5）
