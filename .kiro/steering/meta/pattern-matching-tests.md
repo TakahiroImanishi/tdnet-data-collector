@@ -86,22 +86,27 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```
-**/lambda/**/handler.ts|**/lambda/**/index.ts
+**/utils/error*.ts|**/utils/retry*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/api/**/*.ts|**/lambda/**/*.ts
 ```
 
 ### マッチすべきファイル ✅
+- `src/utils/error-handler.ts`
+- `src/utils/retry.ts`
+- `src/scraper/tdnet-scraper.ts`
+- `src/collector/batch-processor.ts`
+- `src/api/disclosures.ts`
 - `lambda/collector/handler.ts`
 - `lambda/collector/index.ts`
+- `lambda/collector/utils.ts`
 - `lambda/query/handler.ts`
-- `lambda/query/index.ts`
 - `src/lambda/export/handler.ts`
 - `lambda/utils/error-handler/index.ts`
 
 ### マッチすべきでないファイル ❌
-- `lambda/collector/utils.ts` (handler.ts/index.ts以外)
-- `src/utils/handler-helper.ts` (lambdaフォルダ外)
-- `cdk/lib/lambda-stack.ts`
+- `src/validators/disclosure.ts` (対象フォルダ外)
+- `cdk/lib/lambda-stack.ts` (CDKファイル、Lambda関数コードではない)
 - `README.md`
+- `package.json`
 
 ---
 
