@@ -5,6 +5,19 @@
 
 ---
 
+## 関連ドキュメント
+
+- **要件定義書**: `requirements.md` - 機能要件と非機能要件
+- **API仕様**: `openapi.yaml` - REST API仕様
+- **Correctness Properties**: `correctness-properties-checklist.md` - 設計検証項目
+- **実装チェックリスト**: `implementation-checklist.md` - 実装前の確認項目
+- **メトリクスとKPI**: `metrics-and-kpi.md` - 成功指標とパフォーマンス目標
+- **実装ルール**: `../../steering/core/tdnet-implementation-rules.md` - コーディング規約
+- **API設計ガイドライン**: `../../steering/api/api-design-guidelines.md` - API設計原則
+- **パフォーマンス最適化**: `../../steering/infrastructure/performance-optimization.md` - 最適化戦略
+
+---
+
 ## Overview
 
 TDnet Data Collectorは、日本取引所グループが提供するTDnet（適時開示情報閲覧サービス）から上場企業の開示情報を自動収集し、AWS上でコスト効率的に運用するサーバーレスシステムです。

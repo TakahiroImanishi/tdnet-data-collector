@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/*.ts|**/*.tsx|**/*.js|**/*.jsx|**/cdk/**/*'
+fileMatchPattern: '**/lambda/**/index.ts|**/cdk/lib/**/*-stack.ts|**/cdk/lib/constructs/**/*.ts|**/src/**/index.ts|**/utils/**/index.ts'
 ---
 
 # TDnet Data Collector - ファイル・フォルダ命名規則
@@ -533,14 +533,14 @@ LICENSE
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装原則
+- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装原則
 - **テスト戦略**: `testing-strategy.md` - テストファイルの命名とテスト戦略
 - **データバリデーション**: `data-validation.md` - バリデーションファイルの命名
 - **スクレイピングパターン**: `tdnet-scraping-patterns.md` - スクレイピングファイルの命名
-- **API設計**: `../api/api-design-guidelines.md` - APIファイルの命名
-- **デプロイチェックリスト**: `../infrastructure/deployment-checklist.md` - デプロイ関連ファイルの命名
-- **環境変数**: `../infrastructure/environment-variables.md` - 環境変数ファイルの命名
-- **セキュリティ**: `../security/security-best-practices.md` - セキュリティ関連ファイルの命名
+- **API設計**: `api-design-guidelines.md` - APIファイルの命名
+- **デプロイチェックリスト**: `deployment-checklist.md` - デプロイ関連ファイルの命名
+- **環境変数**: `environment-variables.md` - 環境変数ファイルの命名
+- **セキュリティ**: `security-best-practices.md` - セキュリティ関連ファイルの命名
 
 ## まとめ
 

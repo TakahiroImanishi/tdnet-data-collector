@@ -15,6 +15,36 @@
 
 ---
 
+## [1.0.2] - 2026-02-07
+
+### 追加
+- 作業記録テンプレート（`work-logs/work-log-template.md`）
+- 作業記録作成スクリプト（`work-logs/create-work-log.ps1`）
+- テンプレート使用ガイド（`templates/README.md`）の大幅拡充
+  - クイックスタートガイド
+  - 環境別セットアップガイド（local/development/staging/production）
+  - トラブルシューティングセクション
+  - よくある質問（FAQ）セクション
+
+### 変更
+- ドキュメント間の相互参照リンクを全面的に追加
+  - requirements.md、design.md、openapi.yaml、implementation-checklist.md、environment-setup.md、metrics-and-kpi.md、troubleshooting.md、correctness-properties-checklist.mdに「関連ドキュメント」セクションを追加
+- work-logsとimprovementsの使い分けガイドを強化
+  - work-logs/README.mdに比較表、フローチャート、具体例、判断基準を追加（約200行）
+  - improvements/README.mdに判断基準、具体例、ベストプラクティスを追加（約400行）
+- テンプレートファイルに詳細なコメントを追加
+  - .env.exampleに各環境変数の説明、推奨値、セキュリティ注意事項を追加
+  - cdk.context.json.exampleに各設定項目の説明、環境別推奨値を追加（JSONコメント形式）
+- 改善記録インデックスを作成
+  - improvements/index.mdを作成（カテゴリ別、優先度別、タグ別の一覧）
+  - improvements/update-index.ps1を作成（自動更新スクリプト）
+
+### 修正
+- ドキュメント間のナビゲーション改善（相互参照リンクの追加）
+- テンプレートファイルの使いやすさ向上（詳細なコメントと使用例）
+
+---
+
 ## [1.0.1] - 2026-02-07
 
 ### 追加
@@ -138,6 +168,7 @@ TDnet Data Collectorプロジェクトの仕様書初版をリリースしまし
 
 | バージョン | リリース日 | 主な変更内容 |
 |-----------|-----------|------------|
+| 1.0.2 | 2026-02-07 | ドキュメント相互参照、work-logs/improvements使い分けガイド強化、テンプレート拡充 |
 | 1.0.1 | 2026-02-07 | 改善記録管理の強化、相互参照リンク追加、テンプレート追加 |
 | 1.0.0 | 2026-02-07 | 初版リリース |
 

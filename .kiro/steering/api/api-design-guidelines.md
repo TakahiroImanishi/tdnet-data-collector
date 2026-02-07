@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/api/**/*|**/lambda/query/**/*'
+fileMatchPattern: '**/api/**/*.ts|**/lambda/query/**/index.ts|**/lambda/query/**/handler.ts|**/routes/**/*.ts|**/controllers/**/*.ts'
 ---
 
 # API Design Guidelines
@@ -1364,7 +1364,7 @@ components:
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装パターン
-- **エラーハンドリング**: `../core/error-handling-patterns.md` - APIエラーレスポンスの詳細
-- **データバリデーション**: `../development/data-validation.md` - APIバリデーションのベストプラクティス
-- **環境変数**: `../infrastructure/environment-variables.md` - APIキーの管理方法
+- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装パターン
+- **エラーハンドリング**: `error-handling-patterns.md` - APIエラーレスポンスの詳細
+- **データバリデーション**: `data-validation.md` - APIバリデーションのベストプラクティス
+- **環境変数**: `environment-variables.md` - APIキーの管理方法

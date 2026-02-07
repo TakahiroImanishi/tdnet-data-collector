@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/*|**/cdk/**/*'
+fileMatchPattern: '**/lambda/**/index.ts|**/lambda/**/handler.ts|**/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*function*.ts'
 ---
 
 # パフォーマンス最適化

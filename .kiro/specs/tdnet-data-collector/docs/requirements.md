@@ -5,6 +5,17 @@
 
 ---
 
+## 関連ドキュメント
+
+- **設計書**: `design.md` - システムアーキテクチャと詳細設計
+- **API仕様**: `openapi.yaml` - REST API仕様
+- **実装チェックリスト**: `implementation-checklist.md` - 実装前の確認項目
+- **環境セットアップ**: `environment-setup.md` - 開発環境構築手順
+- **実装ルール**: `../../steering/core/tdnet-implementation-rules.md` - コーディング規約
+- **テスト戦略**: `../../steering/development/testing-strategy.md` - テスト方針
+
+---
+
 ## Introduction
 
 TDnet Data Collectorは、日本取引所グループが提供するTDnet（適時開示情報閲覧サービス）から上場企業の開示情報を自動収集するシステムです。個人投資家がコストを抑えながら、投資判断とデータ分析のために開示情報を効率的に収集・管理できることを目的としています。

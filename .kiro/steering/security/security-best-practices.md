@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/cdk/**/*|**/iam/**/*|**/security/**/*'
+fileMatchPattern: '**/cdk/bin/**/*.ts|**/cdk/lib/*-stack.ts|**/cdk/lib/constructs/*-role*.ts|**/cdk/lib/constructs/*-policy*.ts|**/iam/**/*|**/security/**/*'
 ---
 
 # セキュリティベストプラクティス

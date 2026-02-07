@@ -7,6 +7,17 @@
 
 ---
 
+## 関連ドキュメント
+
+- **設計書**: `design.md` - システムアーキテクチャと詳細設計
+- **環境セットアップ**: `environment-setup.md` - 開発環境構築手順
+- **メトリクスとKPI**: `metrics-and-kpi.md` - パフォーマンス指標
+- **エラーハンドリング**: `../../steering/core/error-handling-patterns.md` - エラー処理パターン
+- **監視とアラート**: `../../steering/infrastructure/monitoring-alerts.md` - CloudWatch設定
+- **作業記録**: `../work-logs/README.md` - 過去の問題と解決策
+
+---
+
 ## 目次
 
 1. [Lambda関連](#lambda関連)

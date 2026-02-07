@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/*.test.ts|**/*.spec.ts|**/test/**/*'
+fileMatchPattern: '**/*.test.ts|**/*.spec.ts|**/test/**/*.ts|**/tests/**/*.ts'
 ---
 
 # テスト戦略

@@ -1,46 +1,77 @@
 {
-  "comment": "CDK Context設定テンプレート - 環境別の設定を定義",
+  "//": "==========================================",
+  "//comment": "CDK Context設定テンプレート - 環境別の設定を定義",
+  "//usage": "使用方法: cdk deploy --context environment=development",
+  "//": "==========================================",
   
   "environments": {
+    "//": "環境別の設定を定義。development, staging, production の3環境を用意",
+    
     "development": {
+      "//description": "開発環境 - 機能開発とテストに使用",
       "account": "123456789012",
+      "//account_note": "実際のAWSアカウントIDに置き換えてください。取得方法: aws sts get-caller-identity --query Account --output text",
       "region": "ap-northeast-1",
+      "//region_note": "TDnetは日本のサービスのため、東京リージョン（ap-northeast-1）を推奨",
       "stackName": "TDnetDataCollectorStack-dev",
+      "//stackName_note": "CloudFormationスタック名。環境ごとに異なる名前を使用",
       "tags": {
+        "//tags_description": "AWSリソースに付与するタグ。コスト管理と識別に使用",
         "Environment": "development",
         "Project": "TDnetDataCollector",
         "ManagedBy": "CDK"
       },
       "lambda": {
+        "//lambda_description": "Lambda関数の設定",
         "timeout": 900,
+        "//timeout_note": "タイムアウト（秒）。最大15分（900秒）。開発環境では短めに設定してコスト削減",
         "memorySize": 512,
-        "logRetentionDays": 7
+        "//memorySize_note": "メモリサイズ（MB）。512MBで十分。メモリを増やすとCPU性能も向上するが、コストも増加",
+        "logRetentionDays": 7,
+        "//logRetentionDays_note": "CloudWatch Logsの保持期間（日）。開発環境では7日で十分（コスト削減）"
       },
       "dynamodb": {
+        "//dynamodb_description": "DynamoDBテーブルの設定",
         "billingMode": "PAY_PER_REQUEST",
-        "pointInTimeRecovery": false
+        "//billingMode_note": "オンデマンドモード。個人利用に最適。プロビジョニングモードより柔軟でコスト効率が良い",
+        "pointInTimeRecovery": false,
+        "//pointInTimeRecovery_note": "ポイントインタイムリカバリ。個人利用では無効化してコスト削減。本番環境では有効化を検討"
       },
       "s3": {
+        "//s3_description": "S3バケットの設定",
         "versioning": false,
+        "//versioning_note": "バージョニング。個人利用では無効化してコスト削減。本番環境では有効化を検討",
         "lifecycleRules": {
+          "//lifecycleRules_description": "ライフサイクルポリシー。古いファイルを自動的に低コストストレージに移行",
           "pdfTransitionDays": 90,
-          "exportExpirationDays": 7
+          "//pdfTransitionDays_note": "90日後にStandard-IAに移行。アクセス頻度が低いファイルのコスト削減",
+          "exportExpirationDays": 7,
+          "//exportExpirationDays_note": "エクスポートファイルは7日後に自動削除。一時ファイルのため"
         }
       },
       "monitoring": {
+        "//monitoring_description": "監視とアラートの設定",
         "enableDetailedMetrics": true,
-        "alarmEmail": "dev@example.com"
+        "//enableDetailedMetrics_note": "詳細メトリクスを有効化。パフォーマンス分析に使用",
+        "alarmEmail": "dev@example.com",
+        "//alarmEmail_note": "アラート通知先のメールアドレス。実際のメールアドレスに置き換えてください"
       },
       "api": {
+        "//api_description": "API Gatewayの設定",
         "throttle": {
+          "//throttle_description": "スロットリング設定。過度なリクエストを制限",
           "rateLimit": 100,
-          "burstLimit": 200
+          "//rateLimit_note": "1秒あたりのリクエスト数。開発環境では100で十分",
+          "burstLimit": 200,
+          "//burstLimit_note": "バーストリクエスト数。短時間の急激なリクエストに対応"
         }
       }
     },
     
     "staging": {
+      "//description": "ステージング環境 - 本番環境と同等の環境で最終テスト",
       "account": "123456789012",
+      "//account_note": "開発環境と同じアカウントでも可。本番環境とは別アカウントを推奨",
       "region": "ap-northeast-1",
       "stackName": "TDnetDataCollectorStack-staging",
       "tags": {
@@ -51,7 +82,9 @@
       "lambda": {
         "timeout": 900,
         "memorySize": 512,
-        "logRetentionDays": 14
+        "//memorySize_note": "本番環境と同じ設定でテストする場合は1024に変更",
+        "logRetentionDays": 14,
+        "//logRetentionDays_note": "開発環境より長めに設定。問題調査のため"
       },
       "dynamodb": {
         "billingMode": "PAY_PER_REQUEST",
@@ -77,66 +110,119 @@
     },
     
     "production": {
+      "//description": "本番環境 - 実際のサービス提供環境",
       "account": "987654321098",
+      "//account_note": "本番環境は必ず別のAWSアカウントを使用してください。セキュリティと誤操作防止のため",
       "region": "ap-northeast-1",
       "stackName": "TDnetDataCollectorStack-prod",
       "tags": {
         "Environment": "production",
         "Project": "TDnetDataCollector",
         "ManagedBy": "CDK",
-        "CostCenter": "Investment"
+        "CostCenter": "Investment",
+        "//CostCenter_note": "コスト管理用のタグ。必要に応じて追加"
       },
       "lambda": {
         "timeout": 900,
         "memorySize": 1024,
-        "logRetentionDays": 30
+        "//memorySize_note": "本番環境はパフォーマンス優先で1024MBを推奨。コストとのバランスを考慮",
+        "logRetentionDays": 30,
+        "//logRetentionDays_note": "本番環境は30日以上を推奨。コンプライアンス要件に応じて調整"
       },
       "dynamodb": {
         "billingMode": "PAY_PER_REQUEST",
         "pointInTimeRecovery": false,
-        "comment": "個人利用のためPITRは無効（コスト削減）"
+        "//pointInTimeRecovery_note": "個人利用のためPITRは無効（コスト削減）。企業利用では有効化を推奨",
+        "//comment": "個人利用のためPITRは無効（コスト削減）"
       },
       "s3": {
         "versioning": false,
+        "//versioning_note": "個人利用ではバージョニング無効。企業利用では有効化を推奨",
         "lifecycleRules": {
           "pdfTransitionDays": 90,
+          "//pdfTransitionDays_note": "90日後にStandard-IAに移行してコスト削減",
           "pdfGlacierTransitionDays": 365,
-          "exportExpirationDays": 7
+          "//pdfGlacierTransitionDays_note": "365日後にGlacierに移行してさらにコスト削減。アクセス頻度が非常に低いファイル向け",
+          "exportExpirationDays": 7,
+          "//exportExpirationDays_note": "エクスポートファイルは7日後に自動削除"
         },
-        "comment": "90日後にStandard-IA、365日後にGlacierに移行"
+        "//comment": "90日後にStandard-IA、365日後にGlacierに移行"
       },
       "monitoring": {
         "enableDetailedMetrics": true,
         "alarmEmail": "alerts@example.com",
-        "slackWebhook": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+        "//alarmEmail_note": "本番環境のアラート通知先。24時間監視可能なメールアドレスを推奨",
+        "slackWebhook": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+        "//slackWebhook_note": "Slack通知を有効にする場合に設定。リアルタイム通知に便利"
       },
       "api": {
         "throttle": {
           "rateLimit": 1000,
-          "burstLimit": 2000
+          "//rateLimit_note": "本番環境は高めに設定。実際の使用状況に応じて調整",
+          "burstLimit": 2000,
+          "//burstLimit_note": "バーストリクエストにも対応"
         }
       },
       "security": {
+        "//security_description": "本番環境のセキュリティ設定",
         "enableWaf": true,
-        "enableCloudTrail": true
+        "//enableWaf_note": "AWS WAFを有効化。DDoS攻撃やSQLインジェクションから保護",
+        "enableCloudTrail": true,
+        "//enableCloudTrail_note": "CloudTrailを有効化。すべてのAPI呼び出しを記録。監査とコンプライアンスに必須"
       }
     }
   },
   
   "featureFlags": {
+    "//featureFlags_description": "CDK機能フラグ。CDKの動作を制御",
+    "//featureFlags_note": "これらの設定は変更しないでください。CDKのベストプラクティスに従った設定",
     "@aws-cdk/core:enableStackNameDuplicates": false,
+    "//@aws-cdk/core:enableStackNameDuplicates_note": "スタック名の重複を許可しない",
     "@aws-cdk/core:stackRelativeExports": true,
+    "//@aws-cdk/core:stackRelativeExports_note": "スタック相対エクスポートを有効化",
     "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+    "//@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId_note": "API Gateway使用量プランキーの順序を無視",
     "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "//@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021_note": "CloudFrontのデフォルトセキュリティポリシーをTLSv1.2に設定",
     "@aws-cdk/aws-rds:lowercaseDbIdentifier": true,
+    "//@aws-cdk/aws-rds:lowercaseDbIdentifier_note": "RDSデータベース識別子を小文字に変換",
     "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
-    "@aws-cdk/aws-iam:minimizePolicies": true
+    "//@aws-cdk/aws-ecs:arnFormatIncludesClusterName_note": "ECS ARN形式にクラスター名を含める",
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "//@aws-cdk/aws-iam:minimizePolicies_note": "IAMポリシーを最小化。セキュリティベストプラクティス"
   },
   
   "notes": {
+    "//notes_description": "設定に関する注意事項とヒント",
     "usage": "CDKデプロイ時に環境を指定: cdk deploy --context environment=development",
+    "//usage_examples": [
+      "開発環境: cdk deploy --context environment=development",
+      "本番環境: cdk deploy --context environment=production",
+      "差分確認: cdk diff --context environment=production"
+    ],
     "accountIds": "account IDは実際のAWSアカウントIDに置き換えてください",
+    "//accountIds_howto": "取得方法: aws sts get-caller-identity --query Account --output text",
     "security": "本番環境では必ずWAFとCloudTrailを有効にしてください",
-    "cost": "個人利用のため、PITRとバージョニングは無効にしてコストを削減しています"
+    "//security_note": "セキュリティは最優先事項。本番環境では追加のセキュリティ対策を検討してください",
+    "cost": "個人利用のため、PITRとバージョニングは無効にしてコストを削減しています",
+    "//cost_optimization": [
+      "DynamoDB: オンデマンドモード（PAY_PER_REQUEST）",
+      "S3: ライフサイクルポリシーで自動的に低コストストレージに移行",
+      "Lambda: メモリサイズを適切に設定（512MB-1024MB）",
+      "CloudWatch Logs: ログ保持期間を短く（7-30日）",
+      "Point-in-Time Recovery: 個人利用では無効化"
+    ],
+    "//performance_tuning": [
+      "Lambda メモリサイズ: 512MB（開発）、1024MB（本番）",
+      "Lambda タイムアウト: 900秒（15分）",
+      "API Gateway スロットリング: 環境に応じて調整",
+      "DynamoDB: オンデマンドモードで自動スケーリング"
+    ],
+    "//troubleshooting": [
+      "デプロイ失敗: アカウントIDとリージョンを確認",
+      "権限エラー: IAMロールの権限を確認",
+      "スタック名重複: 環境ごとに異なるスタック名を使用",
+      "リソース制限: AWSサービスクォータを確認"
+    ]
   }
 }

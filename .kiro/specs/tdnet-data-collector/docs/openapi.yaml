@@ -15,6 +15,12 @@ info:
     - Export large datasets
     - Health checks and statistics
     
+    ## 関連ドキュメント
+    - **要件定義書**: requirements.md - 機能要件と非機能要件
+    - **設計書**: design.md - システムアーキテクチャと詳細設計
+    - **API設計ガイドライン**: ../../steering/api/api-design-guidelines.md - API設計原則
+    - **エラーハンドリング**: ../../steering/core/error-handling-patterns.md - エラーコードとレスポンス形式
+    
   contact:
     name: API Support
     email: support@example.com

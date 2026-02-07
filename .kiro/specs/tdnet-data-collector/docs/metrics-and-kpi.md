@@ -7,6 +7,15 @@
 
 ---
 
+## 関連ドキュメント
+
+- **設計書**: `design.md` - パフォーマンスベンチマーク目標
+- **監視とアラート**: `../../steering/infrastructure/monitoring-alerts.md` - CloudWatch設定とアラート
+- **パフォーマンス最適化**: `../../steering/infrastructure/performance-optimization.md` - 最適化戦略
+- **トラブルシューティング**: `troubleshooting.md` - 問題解決ガイド
+
+---
+
 ## 目次
 
 1. [KPI概要](#kpi概要)

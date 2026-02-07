@@ -6,6 +6,15 @@
 
 ---
 
+## 関連ドキュメント
+
+- **設計書**: `design.md` - Correctness Propertiesの詳細定義
+- **要件定義書**: `requirements.md` - 各Propertyに対応する要件
+- **テスト戦略**: `../../steering/development/testing-strategy.md` - プロパティテストの実装方法
+- **データバリデーション**: `../../steering/development/data-validation.md` - バリデーションルール
+
+---
+
 ## 概要
 
 | 総数 | 実装済み | テスト済み | 未実装 |

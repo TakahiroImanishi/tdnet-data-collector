@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/validation/**/*|**/validators/**/*'
+fileMatchPattern: '**/validation/**/*.ts|**/validators/**/*.ts|**/utils/validate*.ts|**/schemas/**/*.ts'
 ---
 
 # Data Validation Rules
@@ -693,7 +693,7 @@ describe('validateCompanyCode', () => {
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装パターン
-- **エラーハンドリング**: `../core/error-handling-patterns.md` - バリデーションエラーの処理
+- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装パターン
+- **エラーハンドリング**: `error-handling-patterns.md` - バリデーションエラーの処理
 - **テスト戦略**: `testing-strategy.md` - バリデーションのテスト方法
-- **API設計**: `../api/api-design-guidelines.md` - APIバリデーションのベストプラクティス
+- **API設計**: `api-design-guidelines.md` - APIバリデーションのベストプラクティス
