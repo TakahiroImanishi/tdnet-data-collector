@@ -1953,7 +1953,7 @@ describe('Property 4: 開示IDの一意性', () => {
                     expect(uniqueIds.size).toBe(ids.length);
                 }
             ),
-            { numRuns: 100 }
+            { numRuns: 1000 }
         );
     });
     
