@@ -50,6 +50,32 @@ work-log-[YYYYMMDD-HHMMSS].md
 
 **例:** `work-log-20260207-143025.md`
 
+### 🔴 重要: 時間の正確な取得
+
+**作業記録のファイル名には、必ず現在時刻を正確に使用すること:**
+
+```powershell
+# Windows PowerShellで現在時刻を取得
+Get-Date -Format "yyyyMMdd-HHmmss"
+```
+
+**例:**
+```powershell
+# 2026年2月7日 14:30:25 の場合
+PS> Get-Date -Format "yyyyMMdd-HHmmss"
+20260207-143025
+```
+
+**禁止事項:**
+- ❌ 推測や概算の時間を使用しない（例: `160000`, `150000`）
+- ❌ 切りの良い時間を使用しない（例: `140000`, `150000`）
+- ✅ 必ず `Get-Date` コマンドで取得した正確な時間を使用する
+
+**理由:**
+- 作業記録の時系列を正確に追跡するため
+- 複数の作業記録が同じ時間になることを防ぐため
+- 作業時間の正確な記録のため
+
 ### 記録内容
 
 | セクション | 内容 |
@@ -121,6 +147,14 @@ task-[タスク番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md
 ```
 
 **例:** `task-1.1-improvement-1-20260207-143025.md`
+
+**時間の取得:**
+```powershell
+# Windows PowerShellで現在時刻を取得
+Get-Date -Format "yyyyMMdd-HHmmss"
+```
+
+**注意:** 作業記録と同様に、必ず `Get-Date` コマンドで正確な時間を取得すること。
 
 **保存先:** `.kiro/specs/tdnet-data-collector/improvements/`
 
