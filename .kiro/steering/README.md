@@ -17,6 +17,7 @@
 - **tdnet-file-naming.md** - ファイル・フォルダ命名規則
 - **workflow-guidelines.md** - ワークフローガイドライン
 - **documentation-standards.md** - ドキュメント標準
+- **mcp-server-guidelines.md** - MCP Server活用ガイドライン
 
 ### 📁 infrastructure/ - インフラ・デプロイ
 - **deployment-checklist.md** - デプロイ前後のチェックリスト
@@ -231,6 +232,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 - **development/documentation-standards.md** - ドキュメント標準
 - **development/data-validation.md** - データバリデーションルール
 - **development/tdnet-file-naming.md** - ファイル命名規則
+- **development/mcp-server-guidelines.md** - MCP Server活用ガイドライン
 - **infrastructure/environment-variables.md** - 環境変数管理
 - **infrastructure/monitoring-alerts.md** - 監視とアラート
 - **infrastructure/performance-optimization.md** - パフォーマンス最適化
