@@ -63,7 +63,7 @@
 
 ### 3. DynamoDBインフラ構築
 
-- [ ] 3.1 DynamoDBテーブルをCDKで定義
+- [x] 3.1 DynamoDBテーブルをCDKで定義
   - tdnet_disclosuresテーブル（パーティションキー: disclosure_id）
   - GSI_CompanyCode_DiscloseDate（パーティションキー: company_code、ソートキー: disclosed_at）
   - GSI_DatePartition（パーティションキー: date_partition、ソートキー: disclosed_at）
