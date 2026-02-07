@@ -391,7 +391,7 @@ README.md
 
 ## 関連ドキュメント
 
-- **タスク実行ルール**: `tdnet-data-collector.md` - 基本的なタスク実行フロー
+- **タスク実行ルール**: `../core/tdnet-data-collector.md` - 基本的なタスク実行フロー
 - **ワークフローガイドライン**: `workflow-guidelines.md` - サブエージェント活用と並列実行
 - **ファイル命名規則**: `tdnet-file-naming.md` - 詳細なファイル・フォルダ命名規則
 - **作業記録**: `../../specs/tdnet-data-collector/work-logs/README.md` - 作業記録の詳細

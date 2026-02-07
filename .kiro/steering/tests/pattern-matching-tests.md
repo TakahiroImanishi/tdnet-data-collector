@@ -1,3 +1,8 @@
+---
+inclusion: fileMatch
+fileMatchPattern: '**/.kiro/steering/**/*.md'
+---
+
 # fileMatchPattern テストケース
 
 このファイルは、各steeringファイルのfileMatchPatternが意図したファイルに正しくマッチするかを検証するためのテストケースをまとめたものです。

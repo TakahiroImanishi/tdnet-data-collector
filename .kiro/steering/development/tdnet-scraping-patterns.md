@@ -66,6 +66,9 @@ TDnetの開示情報は、HTMLテーブル形式で提供されています：
 ```typescript
 import * as cheerio from 'cheerio';
 import axios from 'axios';
+import { logger } from './utils/logger';
+import { RetryableError } from './utils/errors';
+import { Disclosure } from './types';
 
 async function scrapeTdnetList(date: string): Promise<Disclosure[]> {
     const url = `https://www.release.tdnet.info/inbs/I_list_001_${date.replace(/-/g, '')}.html`;
@@ -175,6 +178,9 @@ function generateDisclosureId(date: string, companyCode: string, index: number):
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import axios from 'axios';
 import * as crypto from 'crypto';
+import { logger } from './utils/logger';
+import { RetryableError } from './utils/errors';
+import { ValidationError } from './utils/errors';
 
 async function downloadPdf(
     pdfUrl: string,
@@ -261,6 +267,9 @@ function validatePdfIntegrity(buffer: Buffer): void {
 ### HTMLパース失敗時のフォールバック
 
 ```typescript
+import { logger } from './utils/logger';
+import { Disclosure } from './types';
+
 async function scrapeTdnetListWithFallback(date: string): Promise<Disclosure[]> {
     try {
         // 通常のスクレイピング
@@ -292,6 +301,8 @@ async function scrapeTdnetListWithFallback(date: string): Promise<Disclosure[]> 
 ### レート制限の実装
 
 ```typescript
+import { logger } from './utils/logger';
+
 class RateLimiter {
     private lastRequestTime: number = 0;
     private minDelay: number;
@@ -315,6 +326,8 @@ class RateLimiter {
 }
 
 // 使用例
+import axios from 'axios';
+
 const rateLimiter = new RateLimiter(2000); // 2秒間隔
 
 async function fetchWithRateLimit(url: string): Promise<any> {
@@ -329,6 +342,7 @@ async function fetchWithRateLimit(url: string): Promise<any> {
 
 ```typescript
 import nock from 'nock';
+import { scrapeTdnetList } from './scraper';
 
 describe('TDnet Scraping', () => {
     beforeEach(() => {
@@ -481,7 +495,7 @@ https://www.release.tdnet.info/robots.txt
 
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - スクレイピングの基本ルール
-- **エラーハンドリング**: `error-handling-patterns.md` - スクレイピングエラーの処理
-- **パフォーマンス最適化**: `performance-optimization.md` - スクレイピングの最適化
-- **監視とアラート**: `monitoring-alerts.md` - HTML構造変更の検知
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - スクレイピングの基本ルール
+- **エラーハンドリング**: `../core/error-handling-patterns.md` - スクレイピングエラーの処理
+- **パフォーマンス最適化**: `../infrastructure/performance-optimization.md` - スクレイピングの最適化
+- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - HTML構造変更の検知

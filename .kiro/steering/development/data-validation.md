@@ -20,6 +20,8 @@ fileMatchPattern: '**/validators/**/*.ts'
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateDisclosureId(id: string): void {
     if (!id || id.trim().length === 0) {
         throw new ValidationError('disclosure_id is required', 'disclosure_id');
@@ -49,6 +51,8 @@ function validateDisclosureId(id: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateCompanyCode(code: string): void {
     if (!code || code.trim().length === 0) {
         throw new ValidationError('company_code is required', 'company_code');
@@ -76,6 +80,8 @@ function validateCompanyCode(code: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateCompanyName(name: string): void {
     if (!name || name.trim().length === 0) {
         throw new ValidationError('company_name is required', 'company_name');
@@ -98,6 +104,8 @@ function validateCompanyName(name: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateDisclosedAt(dateStr: string): void {
     if (!dateStr || dateStr.trim().length === 0) {
         throw new ValidationError('disclosed_at is required', 'disclosed_at');
@@ -131,6 +139,8 @@ function validateDisclosedAt(dateStr: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateDatePartition(partition: string): void {
     if (!partition || partition.trim().length === 0) {
         throw new ValidationError('date_partition is required', 'date_partition');
@@ -201,6 +211,9 @@ function generateDatePartition(disclosedAt: string): string {
 }
 
 // DynamoDBクエリでの使用例
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { Disclosure } from './types';
+
 async function queryByDatePartition(
     yearMonth: string
 ): Promise<Disclosure[]> {
@@ -294,6 +307,8 @@ function generateMonthRange(start: string, end: string): string[] {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 const VALID_DISCLOSURE_TYPES = [
     '決算短信',
     '業績予想修正',
@@ -323,6 +338,8 @@ function validateDisclosureType(type: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateTitle(title: string): void {
     if (!title || title.trim().length === 0) {
         throw new ValidationError('title is required', 'title');
@@ -345,6 +362,8 @@ function validateTitle(title: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validatePDFContentType(contentType: string, filename: string): void {
     if (contentType !== 'application/pdf') {
         throw new ValidationError(
@@ -371,6 +390,8 @@ function validatePDFContentType(contentType: string, filename: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validatePDFFileSize(sizeInBytes: number): void {
     const MIN_SIZE = 10 * 1024; // 10KB
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB
@@ -400,6 +421,9 @@ function validatePDFFileSize(sizeInBytes: number): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+import { logger } from './logger';
+
 function validatePDFIntegrity(buffer: Buffer): void {
     // PDFヘッダーチェック
     const header = buffer.slice(0, 5).toString('ascii');
@@ -431,6 +455,8 @@ function validatePDFIntegrity(buffer: Buffer): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateDateRange(startDate: string, endDate: string): void {
     // 形式チェック
     const datePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -487,6 +513,8 @@ function validateDateRange(startDate: string, endDate: string): void {
 **バリデーション実装:**
 
 ```typescript
+import { ValidationError } from './errors';
+
 function validateS3Key(key: string): void {
     if (!key || key.trim().length === 0) {
         throw new ValidationError('s3_key is required', 's3_key');
@@ -518,6 +546,8 @@ function validateS3Key(key: string): void {
 ### Disclosure全体のバリデーション
 
 ```typescript
+import { ValidationError } from './errors';
+
 interface DisclosureInput {
     disclosure_id: string;
     company_code: string;
@@ -693,7 +723,7 @@ describe('validateCompanyCode', () => {
 
 ## 関連ドキュメント
 
-- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装パターン
-- **エラーハンドリング**: `error-handling-patterns.md` - バリデーションエラーの処理
+- **実装ルール**: `../core/tdnet-implementation-rules.md` - 基本的な実装パターン
+- **エラーハンドリング**: `../core/error-handling-patterns.md` - バリデーションエラーの処理
 - **テスト戦略**: `testing-strategy.md` - バリデーションのテスト方法
-- **API設計**: `api-design-guidelines.md` - APIバリデーションのベストプラクティス
+- **API設計**: `../api/api-design-guidelines.md` - APIバリデーションのベストプラクティス

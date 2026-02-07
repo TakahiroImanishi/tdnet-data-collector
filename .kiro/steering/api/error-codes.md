@@ -33,6 +33,8 @@ fileMatchPattern: '**/api/**/*.ts|**/routes/**/*.ts'
 
 **実装例:**
 ```typescript
+import { ValidationError } from './errors';
+
 class ValidationError extends Error {
     constructor(
         message: string,
@@ -82,6 +84,8 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
 
 **実装例:**
 ```typescript
+import { UnauthorizedError } from './errors';
+
 class UnauthorizedError extends Error {
     constructor(message: string, public readonly reason?: string) {
         super(message);

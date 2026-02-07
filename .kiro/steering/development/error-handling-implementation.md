@@ -38,6 +38,9 @@ fileMatchPattern: '**/scraper/**/*.ts|**/api/**/*.ts|**/utils/error*.ts|**/utils
 **ファイル配置:** `src/utils/retry.ts`
 
 ```typescript
+import { logger } from './logger';
+import { RetryableError } from './errors';
+
 interface RetryOptions {
     maxRetries?: number;
     initialDelay?: number;
@@ -113,6 +116,10 @@ function sleep(ms: number): Promise<void> {
 **使用例:**
 
 ```typescript
+import axios from 'axios';
+import { retryWithBackoff } from './utils/retry';
+import { RetryableError } from './utils/errors';
+
 async function downloadPDFWithRetry(url: string): Promise<Buffer> {
     return retryWithBackoff(
         async () => {
@@ -198,6 +205,9 @@ const dynamoClientWithCustomRetry = new DynamoDBClient({
 **ファイル配置:** `src/utils/error-classifier.ts`
 
 ```typescript
+import { RetryableError } from './errors';
+import { retryWithBackoff, RetryOptions } from './retry';
+
 /**
  * エラーが再試行可能かどうかを判定
  * 
@@ -338,6 +348,8 @@ const dynamoClientWithCustomRetry = new DynamoDBClient({
 ### 完全な実装
 
 ```typescript
+import { logger } from './logger';
+
 type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
 interface CircuitBreakerOptions {
@@ -521,6 +533,7 @@ logger.error('Failed to download PDF', {
 
 ```typescript
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { logger } from './logger';
 
 interface ErrorAggregatorOptions {
     threshold?: number;
@@ -738,6 +751,7 @@ const pdf = await withTimeout(
 ```typescript
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { toErrorResponse } from './utils/error-response';
+import { logger } from './utils/logger';
 
 export const handler = async (
     event: APIGatewayProxyEvent,
@@ -859,6 +873,7 @@ alertTopic.grantPublish(dlqProcessorFn);
 ```typescript
 import { SQSEvent, SQSRecord } from 'aws-lambda';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { logger } from './utils/logger';
 
 const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
