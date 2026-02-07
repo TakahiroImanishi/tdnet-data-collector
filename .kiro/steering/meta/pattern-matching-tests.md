@@ -207,22 +207,26 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```
-**/cdk/**/*.ts|**/lambda/**/handler.ts|**/lambda/**/index.ts|**/.env*
+**/cdk/**/*.ts|**/lambda/**/*.ts|**/.env*
 ```
 
 ### マッチすべきファイル ✅
 - `cdk/lib/tdnet-stack.ts`
+- `cdk/lib/lambda-stack.ts`
+- `cdk/bin/app.ts`
 - `lambda/collector/handler.ts`
 - `lambda/collector/index.ts`
+- `lambda/collector/utils.ts`
 - `lambda/query/handler.ts`
+- `src/lambda/export/handler.ts`
 - `.env`
 - `.env.local`
 - `.env.production`
 - `config/.env.dev`
 
 ### マッチすべきでないファイル ❌
-- `lambda/collector/utils.ts` (handler.ts/index.ts以外)
-- `src/utils/env-helper.ts`
+- `src/api/disclosures.ts` (cdk/lambdaフォルダ外)
+- `src/utils/env-helper.ts` (cdk/lambdaフォルダ外)
 - `README.md`
 - `package.json`
 
