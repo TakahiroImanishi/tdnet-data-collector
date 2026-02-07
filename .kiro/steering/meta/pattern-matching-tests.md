@@ -18,7 +18,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## development/testing-strategy.md
 
 ### fileMatchPattern
-```
+```text
 **/*.test.ts|**/*.spec.ts
 ```
 
@@ -40,7 +40,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 ## development/data-validation.md
 
 ### fileMatchPattern
-```
+```text
 **/validators/**/*.ts
 ```
 
