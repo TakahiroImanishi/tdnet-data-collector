@@ -95,6 +95,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | `**/cdk/lib/constructs/**/*.ts` | `development/tdnet-file-naming.md` | CDKコンストラクト |
 | `**/cdk/lib/constructs/*lambda*.ts` | `infrastructure/performance-optimization.md` | CDK Lambda構成 |
 | `**/cdk/lib/constructs/*function*.ts` | `infrastructure/performance-optimization.md` | CDK Function構成 |
+| `**/cdk/**/*.ts` | `infrastructure/environment-variables.md` | CDK全般（環境変数設定） |
 | `**/dynamodb/**/*.ts` | `infrastructure/performance-optimization.md` | DynamoDB関連 |
 | `**/s3/**/*.ts` | `infrastructure/performance-optimization.md` | S3関連 |
 | `**/iam/**/*.ts` | `security/security-best-practices.md` | IAM関連 |

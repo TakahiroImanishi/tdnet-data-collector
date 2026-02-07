@@ -163,6 +163,8 @@ async function preparePhase(
         });
         
         // 2. メタデータをstatus='pending'でDynamoDBに保存
+        // ✅ 修正: date_partitionをPrepare Phase開始時に生成
+        // Two-Phase Commitの原則: Prepare Phaseではすべてのデータが確定している必要がある
         const datePartition = generateDatePartition(disclosure.disclosed_at);
         const now = new Date().toISOString();
         
