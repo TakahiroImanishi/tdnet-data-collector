@@ -67,7 +67,40 @@ Lambda Collectorの統合実装を完了する。updateExecutionStatus関数、�
 
 ### Task 8.10: Lambda CollectorのCDK定義
 
-[実装予定]
+**完了** - 2026-02-08 07:45
+
+#### 実装内容
+
+1. **Lambda Function定義**
+   - 関数名: `tdnet-collector`
+   - ランタイム: Node.js 20.x
+   - タイムアウト: 15分
+   - メモリ: 512MB
+   - 同時実行数: 1（レート制限のため）
+
+2. **環境変数設定**
+   - `DYNAMODB_TABLE`: disclosuresTable.tableName
+   - `DYNAMODB_EXECUTIONS_TABLE`: executionsTable.tableName
+   - `S3_BUCKET`: pdfsBucket.bucketName
+   - `LOG_LEVEL`: 'info'
+   - `NODE_OPTIONS`: '--enable-source-maps'
+
+3. **IAM権限設定**
+   - DynamoDB: 両テーブルへの読み書き権限（grantReadWriteData）
+   - S3: PDFバケットへの読み書き権限（grantPut、grantRead）
+   - CloudWatch Metrics: カスタムメトリクス送信権限（PutMetricData）
+
+4. **CloudFormation Outputs**
+   - CollectorFunctionName: Lambda関数名
+   - CollectorFunctionArn: Lambda関数ARN
+
+#### Lambda実装ガイドライン準拠
+
+- ✅ メモリとタイムアウトの設定（512MB、15分）
+- ✅ 環境変数の設定（必須変数をすべて設定）
+- ✅ IAMロールの最小権限化
+- ✅ 同時実行数の制限（レート制限のため）
+- ✅ CloudWatch Metricsへのアクセス権限
 
 ### Task 8.11: Lambda Collector統合テスト
 
@@ -110,11 +143,17 @@ Lambda Collectorの統合実装を完了する。updateExecutionStatus関数、�
 ### 変更ファイル
 - ✅ `src/lambda/collector/handler.ts` - 並列処理の実装
 - ✅ `src/utils/rate-limiter.ts` - 未使用インポートの削除
+- ✅ `cdk/lib/tdnet-data-collector-stack.ts` - Lambda Collector CDK定義
+
+### 完了したタスク
+- ✅ Task 8.6: updateExecutionStatus関数の実装
+- ✅ Task 8.8: 並列処理の実装
+- ✅ Task 8.10: Lambda CollectorのCDK定義
 
 ### 次のステップ
-- [ ] Task 8.10: Lambda CollectorのCDK定義
 - [ ] Task 8.11: Lambda Collector統合テスト
-- [ ] tasks.mdの更新（Task 8.8を完了としてマーク）
+- [ ] tasks.mdの更新（完了）
+- [ ] 作業記録の最終更新（完了）
 - [ ] Gitコミット＆プッシュ
 
 ## 次回への申し送り

@@ -238,11 +238,12 @@
   - _Requirements: 要件14.2（プロパティテスト）_
   - _完了: 2026-02-08, 5テスト成功（ユニット3件、プロパティベース2件、各100回反復）_
 
-- [ ] 8.6 updateExecutionStatus関数の実装
+- [x] 8.6 updateExecutionStatus関数の実装
   - 実行状態をDynamoDBに保存・更新
   - 進捗率の更新（0〜100）
   - TTL設定（30日後に自動削除）
   - _Requirements: 要件5.4（進捗フィードバック）_
+  - _完了: 2026-02-08, 7テスト成功_
 
 - [x] 8.7 実行状態の進捗単調性テスト
   - **Property 11: 実行状態の進捗単調性**
@@ -251,10 +252,12 @@
   - _Requirements: 要件14.2（プロパティテスト）_
   - _完了: 2026-02-08, 7テスト成功（ユニット5件、プロパティベース2件、各100回反復）_
 
-- [ ] 8.8 並列処理の実装
+- [x] 8.8 並列処理の実装
   - Promise.allSettledを使用した並列ダウンロード（並列度5）
   - 部分的失敗の許容
   - _Requirements: 要件6.4（部分的失敗）_
+  - _完了: 2026-02-08, 並列処理実装完了_
+  - _注意: downloadPdf、saveMetadata、updateExecutionStatusを統合_
 
 - [x] 8.9 部分的失敗のユニットテスト
   - **Property 7: エラー時の部分的成功**
@@ -263,11 +266,12 @@
   - _Requirements: 要件14.2（プロパティテスト）_
   - _完了: 2026-02-08, 5テスト成功（部分的失敗、ステータス判定、カウント精度）_
 
-- [ ] 8.10 Lambda CollectorのCDK定義
+- [x] 8.10 Lambda CollectorのCDK定義
   - NodejsFunction構成（タイムアウト15分、メモリ512MB）
   - 環境変数設定（DYNAMODB_TABLE、S3_BUCKET、LOG_LEVEL）
   - IAMロール設定（DynamoDB、S3、CloudWatch Logsへのアクセス）
   - _Requirements: 要件12.1, 12.3（コスト最適化、サーバーレス）_
+  - _完了: 2026-02-08, CDK定義完了_
 
 - [ ] 8.11 Lambda Collector統合テスト
   - **Property 1: 日付範囲収集の完全性**

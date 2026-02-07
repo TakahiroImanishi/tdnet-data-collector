@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
 export class TdnetDataCollectorStack extends cdk.Stack {
@@ -207,8 +208,60 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       exportName: 'TdnetCloudTrailLogsBucketName',
     });
 
+    // ========================================
+    // Phase 1: Lambda Functions
+    // ========================================
+
+    // Lambda Collector Function
+    const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
+      functionName: 'tdnet-collector',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/lambda/collector'),
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 512,
+      environment: {
+        DYNAMODB_TABLE: this.disclosuresTable.tableName,
+        DYNAMODB_EXECUTIONS_TABLE: this.executionsTable.tableName,
+        S3_BUCKET: this.pdfsBucket.bucketName,
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+      reservedConcurrentExecutions: 1, // 同時実行数を1に制限（レート制限のため）
+    });
+
+    // IAM権限の付与
+    // DynamoDB: 両テーブルへの読み書き権限
+    this.disclosuresTable.grantReadWriteData(collectorFunction);
+    this.executionsTable.grantReadWriteData(collectorFunction);
+
+    // S3: PDFバケットへの書き込み権限
+    this.pdfsBucket.grantPut(collectorFunction);
+    this.pdfsBucket.grantRead(collectorFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    collectorFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'CollectorFunctionName', {
+      value: collectorFunction.functionName,
+      description: 'Lambda Collector function name',
+      exportName: 'TdnetCollectorFunctionName',
+    });
+
+    new cdk.CfnOutput(this, 'CollectorFunctionArn', {
+      value: collectorFunction.functionArn,
+      description: 'Lambda Collector function ARN',
+      exportName: 'TdnetCollectorFunctionArn',
+    });
+
     // Stack resources will be added here in subsequent tasks
-    // Phase 1: Lambda functions
     // Phase 2: API Gateway, Lambda Query/Export functions
     // Phase 3: EventBridge rules, SNS topics, CloudWatch monitoring
     // Phase 4: CloudTrail, WAF, security configurations
