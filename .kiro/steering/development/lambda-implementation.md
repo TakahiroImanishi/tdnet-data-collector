@@ -264,6 +264,8 @@ export const handler = async (
 
 ### エラーレスポンス変換
 
+カスタムエラーを適切なHTTPステータスコードとエラーコードに変換します。
+
 **ファイル配置:** `src/utils/error-response.ts`
 
 ```typescript
@@ -304,6 +306,11 @@ export function toErrorResponse(error: Error, requestId: string): APIGatewayProx
     };
 }
 ```
+
+**詳細については以下を参照してください:**
+- **エラーコードマップの完全な定義**: `../api/error-codes.md`
+- **カスタムエラークラスの使用方法**: `../core/error-handling-patterns.md`
+- **エラーログの構造化**: `error-handling-implementation.md`
 
 ### Dead Letter Queue（DLQ）
 
@@ -628,8 +635,8 @@ async function processWithTracing(disclosure: Disclosure): Promise<void> {
 
 ## 関連ドキュメント
 
-- **エラーハンドリング**: `../core/error-handling-patterns.md` - エラー分類と基本原則
-- **エラーハンドリング実装**: `error-handling-implementation.md` - 詳細な実装パターン
+- **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラー分類と基本原則
+- **エラーハンドリング詳細実装**: `error-handling-implementation.md` - 再試行戦略、AWS SDK設定、サーキットブレーカー、DLQ完全実装
 - **環境変数**: `../infrastructure/environment-variables.md` - 環境変数の詳細定義
 - **パフォーマンス最適化**: `../infrastructure/performance-optimization.md` - DynamoDB、S3の最適化
 - **監視とアラート**: `../infrastructure/monitoring-alerts.md` - CloudWatch設定
