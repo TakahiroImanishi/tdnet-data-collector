@@ -700,11 +700,13 @@ GET /disclosures/{disclosure_id}/pdf
 
 ```
 ディレクトリ構造:
-/YYYY/MM/DD/{company_code}_{disclosure_type}_{timestamp}.pdf
+/pdfs/YYYY/MM/DD/{company_code}_{disclosure_type}_{timestamp}.pdf
+/temp/{disclosure_id}.pdf
 
 例:
-/2024/01/15/7203_決算短信_20240115093000.pdf
-/2024/01/15/6758_業績予想修正_20240115140000.pdf
+/pdfs/2024/01/15/7203_決算短信_20240115093000.pdf
+/pdfs/2024/01/15/6758_業績予想修正_20240115140000.pdf
+/temp/20240115_7203_001.pdf
 
 セキュリティ設定:
 - パブリックアクセスブロック: 有効
@@ -712,9 +714,16 @@ GET /disclosures/{disclosure_id}/pdf
 - バージョニング: 有効
 - アクセス: 署名付きURLのみ
 
+Object Lock設定:
+- 適用範囲: pdfs/プレフィックスのみ
+- モード: GOVERNANCE
+- 保持期間: 1年間
+- 適用除外: temp/プレフィックス（ライフサイクルポリシーで1日後に自動削除）
+
 ライフサイクルポリシー:
-- 90日経過後: S3 Standard-IA（低頻度アクセス）に移行
-- 365日経過後: S3 Glacier Flexible Retrievalに移行
+- temp/: 1日経過後に自動削除
+- pdfs/: 90日経過後にS3 Standard-IA（低頻度アクセス）に移行
+- pdfs/: 365日経過後にS3 Glacier Flexible Retrievalに移行
 ```
 
 **バケット2: tdnet-data-collector-exports-{account-id}（エクスポートファイル）**
@@ -2058,7 +2067,7 @@ describe('Property 12: レート制限の遵守', () => {
                     }
                 }
             ),
-            { numRuns: 20 }
+            { numRuns: 1000 }
         );
     });
 });

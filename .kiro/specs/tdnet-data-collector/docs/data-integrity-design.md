@@ -228,6 +228,7 @@ async function commitPhase(
     
     try {
         // 1. S3オブジェクトを一時キーから正式キーにコピー
+        // ✅ pdfs/プレフィックスにはObject Lockを設定
         await s3Client.send(new CopyObjectCommand({
             Bucket: process.env.S3_BUCKET!,
             CopySource: `${process.env.S3_BUCKET}/${tempS3Key}`,
@@ -238,11 +239,16 @@ async function commitPhase(
                 phase: 'committed',
             },
             MetadataDirective: 'REPLACE',
+            // Object Lock設定（pdfs/プレフィックスのみ）
+            ObjectLockMode: 'GOVERNANCE',
+            ObjectLockRetainUntilDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1年後
         }));
         
-        logger.info('PDF copied to final location', {
+        logger.info('PDF copied to final location with Object Lock', {
             disclosure_id: disclosureId,
             final_s3_key: finalS3Key,
+            object_lock_mode: 'GOVERNANCE',
+            retain_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         });
         
         // 2. 一時ファイルを削除
