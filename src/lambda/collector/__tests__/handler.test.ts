@@ -280,4 +280,49 @@ describe('Lambda Collector Handler', () => {
       expect(response2.execution_id).toMatch(/^exec_\d+_[a-z0-9]+_test-req/);
     });
   });
+
+  describe('Integration Tests - Property 1 & 2', () => {
+    describe('Property 1: Date Range Collection Completeness', () => {
+      it('should collect all disclosures within specified date range', async () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+        const event: CollectorEvent = {
+          mode: 'on-demand',
+          start_date: threeDaysAgo.toISOString().substring(0, 10),
+          end_date: yesterday.toISOString().substring(0, 10),
+        };
+
+        const mockDisclosures = [
+          {
+            company_code: '1234',
+            company_name: 'Test Company 1',
+            disclosure_type: '決算短信',
+            title: 'Test Disclosure 1',
+            disclosed_at: '2024-01-15T01:30:00Z',
+            pdf_url: 'https://example.com/test1.pdf',
+          },
+          {
+            company_code: '5678',
+            company_name: 'Test Company 2',
+            disclosure_type: '有価証券報告書',
+            title: 'Test Disclosure 2',
+            disclosed_at: '2024-01-15T02:00:00Z',
+            pdf_url: 'https://example.com/test2.pdf',
+          },
+        ];
+
+        mockScrapeTdnetList.mockResolvedValue(mockDisclosures);
+
+        const response = await handler(event, mockContext);
+
+        expect(mockScrapeTdnetList).toHaveBeenCalledTimes(3);
+        expect(response.status).toBe('success');
+        expect(response.collected_count).toBe(6);
+        expect(response.failed_count).toBe(0);
+      });
+    });
+  });
 });
