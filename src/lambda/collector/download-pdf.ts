@@ -10,12 +10,17 @@
 import axios from 'axios';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { validatePdfFile } from '../../scraper/pdf-downloader';
+import { RateLimiter } from '../../utils/rate-limiter';
 import { retryWithBackoff } from '../../utils/retry';
 import { logger } from '../../utils/logger';
+import { sendErrorMetric, sendSuccessMetric } from '../../utils/cloudwatch-metrics';
 import { RetryableError } from '../../errors';
 
 // S3クライアントはグローバルスコープで初期化（再利用される）
 const s3Client = new S3Client({});
+
+// レート制限設定（PDFダウンロードも2秒間隔）
+const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
 
 // 環境変数は関数内で取得（テスト時の柔軟性のため）
 function getS3Bucket(): string {

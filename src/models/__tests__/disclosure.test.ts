@@ -1,0 +1,343 @@
+/**
+ * disclosure.test.ts
+ *
+ * Disclosureモデルと変換関数のテスト
+ *
+ * Steering準拠チェック:
+ * - 必須フィールドの検証
+ * - disclosed_atフォーマット検証
+ * - date_partition自動生成
+ * - ValidationErrorのスロー
+ * - 構造化ログの記録
+ */
+
+import {
+  validateDisclosure,
+  toDynamoDBItem,
+  fromDynamoDBItem,
+  createDisclosure,
+  generateDisclosureId,
+} from '../disclosure';
+import { Disclosure, DynamoDBItem } from '../../types';
+import { ValidationError } from '../../errors';
+
+describe('validateDisclosure', () => {
+  const validDisclosure: Disclosure = {
+    disclosure_id: '20240115_1234_001',
+    company_code: '1234',
+    company_name: 'テスト株式会社',
+    disclosure_type: '決算短信',
+    title: '2024年3月期 第3四半期決算短信',
+    disclosed_at: '2024-01-15T10:30:00Z',
+    pdf_url: 'https://www.release.tdnet.info/inbs/example.pdf',
+    s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+    collected_at: '2024-01-15T10:35:00Z',
+    date_partition: '2024-01',
+  };
+
+  describe('正常系: 有効なDisclosure', () => {
+    it('すべての必須フィールドが存在する場合は成功', () => {
+      expect(() => validateDisclosure(validDisclosure)).not.toThrow();
+    });
+  });
+
+  describe('異常系: 必須フィールドの欠落', () => {
+    it('disclosure_idが欠落している場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, disclosure_id: undefined };
+      expect(() => validateDisclosure(invalid as any)).toThrow(ValidationError);
+      expect(() => validateDisclosure(invalid as any)).toThrow(/Missing required fields/);
+    });
+
+    it('company_codeが欠落している場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, company_code: undefined };
+      expect(() => validateDisclosure(invalid as any)).toThrow(ValidationError);
+    });
+
+    it('disclosed_atが欠落している場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, disclosed_at: undefined };
+      expect(() => validateDisclosure(invalid as any)).toThrow(ValidationError);
+    });
+
+    it('date_partitionが欠落している場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, date_partition: undefined };
+      expect(() => validateDisclosure(invalid as any)).toThrow(ValidationError);
+    });
+
+    it('複数のフィールドが欠落している場合はすべてのフィールド名を含むエラーをスロー', () => {
+      const invalid = {
+        ...validDisclosure,
+        disclosure_id: undefined,
+        company_code: undefined,
+      };
+      expect(() => validateDisclosure(invalid as any)).toThrow(/disclosure_id/);
+      expect(() => validateDisclosure(invalid as any)).toThrow(/company_code/);
+    });
+  });
+
+  describe('異常系: フォーマット検証', () => {
+    it('disclosed_atが不正なフォーマットの場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, disclosed_at: '2024-01-15' };
+      expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
+      expect(() => validateDisclosure(invalid)).toThrow(/Invalid disclosed_at format/);
+    });
+
+    it('collected_atが不正なフォーマットの場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, collected_at: '2024/01/15 10:35:00' };
+      expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
+    });
+
+    it('company_codeが4桁の数字でない場合はValidationErrorをスロー', () => {
+      const invalid1 = { ...validDisclosure, company_code: '123' }; // 3桁
+      expect(() => validateDisclosure(invalid1)).toThrow(ValidationError);
+      expect(() => validateDisclosure(invalid1)).toThrow(/Invalid company_code format/);
+
+      const invalid2 = { ...validDisclosure, company_code: '12345' }; // 5桁
+      expect(() => validateDisclosure(invalid2)).toThrow(ValidationError);
+
+      const invalid3 = { ...validDisclosure, company_code: 'ABCD' }; // 英字
+      expect(() => validateDisclosure(invalid3)).toThrow(ValidationError);
+    });
+
+    it('date_partitionがYYYY-MM形式でない場合はValidationErrorをスロー', () => {
+      const invalid1 = { ...validDisclosure, date_partition: '2024-1' }; // 月が1桁
+      expect(() => validateDisclosure(invalid1)).toThrow(ValidationError);
+      expect(() => validateDisclosure(invalid1)).toThrow(/Invalid date_partition format/);
+
+      const invalid2 = { ...validDisclosure, date_partition: '202401' }; // ハイフンなし
+      expect(() => validateDisclosure(invalid2)).toThrow(ValidationError);
+
+      const invalid3 = { ...validDisclosure, date_partition: '2024/01' }; // スラッシュ
+      expect(() => validateDisclosure(invalid3)).toThrow(ValidationError);
+    });
+  });
+});
+
+describe('toDynamoDBItem', () => {
+  const validDisclosure: Disclosure = {
+    disclosure_id: '20240115_1234_001',
+    company_code: '1234',
+    company_name: 'テスト株式会社',
+    disclosure_type: '決算短信',
+    title: '2024年3月期 第3四半期決算短信',
+    disclosed_at: '2024-01-15T10:30:00Z',
+    pdf_url: 'https://www.release.tdnet.info/inbs/example.pdf',
+    s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+    collected_at: '2024-01-15T10:35:00Z',
+    date_partition: '2024-01',
+  };
+
+  describe('正常系: DynamoDBアイテムへの変換', () => {
+    it('有効なDisclosureをDynamoDBアイテムに変換', () => {
+      const item = toDynamoDBItem(validDisclosure);
+
+      expect(item.disclosure_id.S).toBe('20240115_1234_001');
+      expect(item.company_code.S).toBe('1234');
+      expect(item.company_name.S).toBe('テスト株式会社');
+      expect(item.disclosure_type.S).toBe('決算短信');
+      expect(item.title.S).toBe('2024年3月期 第3四半期決算短信');
+      expect(item.disclosed_at.S).toBe('2024-01-15T10:30:00Z');
+      expect(item.pdf_url.S).toBe('https://www.release.tdnet.info/inbs/example.pdf');
+      expect(item.s3_key.S).toBe('pdfs/2024/01/20240115_1234_001.pdf');
+      expect(item.collected_at.S).toBe('2024-01-15T10:35:00Z');
+      expect(item.date_partition.S).toBe('2024-01');
+    });
+  });
+
+  describe('異常系: バリデーションエラー', () => {
+    it('不正なDisclosureの場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, company_code: '123' };
+      expect(() => toDynamoDBItem(invalid)).toThrow(ValidationError);
+    });
+  });
+});
+
+describe('fromDynamoDBItem', () => {
+  const validItem: DynamoDBItem = {
+    disclosure_id: { S: '20240115_1234_001' },
+    company_code: { S: '1234' },
+    company_name: { S: 'テスト株式会社' },
+    disclosure_type: { S: '決算短信' },
+    title: { S: '2024年3月期 第3四半期決算短信' },
+    disclosed_at: { S: '2024-01-15T10:30:00Z' },
+    pdf_url: { S: 'https://www.release.tdnet.info/inbs/example.pdf' },
+    s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+    collected_at: { S: '2024-01-15T10:35:00Z' },
+    date_partition: { S: '2024-01' },
+  };
+
+  describe('正常系: DynamoDBアイテムからDisclosureへの変換', () => {
+    it('有効なDynamoDBアイテムをDisclosureに変換', () => {
+      const disclosure = fromDynamoDBItem(validItem);
+
+      expect(disclosure.disclosure_id).toBe('20240115_1234_001');
+      expect(disclosure.company_code).toBe('1234');
+      expect(disclosure.company_name).toBe('テスト株式会社');
+      expect(disclosure.disclosure_type).toBe('決算短信');
+      expect(disclosure.title).toBe('2024年3月期 第3四半期決算短信');
+      expect(disclosure.disclosed_at).toBe('2024-01-15T10:30:00Z');
+      expect(disclosure.pdf_url).toBe('https://www.release.tdnet.info/inbs/example.pdf');
+      expect(disclosure.s3_key).toBe('pdfs/2024/01/20240115_1234_001.pdf');
+      expect(disclosure.collected_at).toBe('2024-01-15T10:35:00Z');
+      expect(disclosure.date_partition).toBe('2024-01');
+    });
+  });
+
+  describe('異常系: 必須フィールドの欠落', () => {
+    it('disclosure_idが欠落している場合はValidationErrorをスロー', () => {
+      const invalid = { ...validItem };
+      delete invalid.disclosure_id;
+      expect(() => fromDynamoDBItem(invalid)).toThrow(ValidationError);
+      expect(() => fromDynamoDBItem(invalid)).toThrow(/Missing required fields/);
+    });
+
+    it('date_partitionが欠落している場合はValidationErrorをスロー', () => {
+      const invalid = { ...validItem };
+      delete invalid.date_partition;
+      expect(() => fromDynamoDBItem(invalid)).toThrow(ValidationError);
+    });
+  });
+});
+
+describe('createDisclosure', () => {
+  const baseParams = {
+    disclosure_id: '20240115_1234_001',
+    company_code: '1234',
+    company_name: 'テスト株式会社',
+    disclosure_type: '決算短信',
+    title: '2024年3月期 第3四半期決算短信',
+    disclosed_at: '2024-01-15T10:30:00Z',
+    pdf_url: 'https://www.release.tdnet.info/inbs/example.pdf',
+    s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+  };
+
+  describe('正常系: date_partitionの自動生成', () => {
+    it('date_partitionが指定されていない場合は自動生成', () => {
+      const disclosure = createDisclosure(baseParams);
+
+      expect(disclosure.date_partition).toBe('2024-01');
+      expect(disclosure.collected_at).toBeDefined();
+      expect(disclosure.collected_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    });
+
+    it('date_partitionが指定されている場合はそれを使用', () => {
+      const disclosure = createDisclosure({
+        ...baseParams,
+        date_partition: '2024-02',
+      });
+
+      expect(disclosure.date_partition).toBe('2024-02');
+    });
+
+    it('collected_atが指定されている場合はそれを使用', () => {
+      const disclosure = createDisclosure({
+        ...baseParams,
+        collected_at: '2024-01-15T10:35:00Z',
+      });
+
+      expect(disclosure.collected_at).toBe('2024-01-15T10:35:00Z');
+    });
+  });
+
+  describe('正常系: JST基準でdate_partitionを生成', () => {
+    it('UTC: 2024-01-31T15:30:00Z → JST: 2024-02-01 → date_partition: "2024-02"', () => {
+      const disclosure = createDisclosure({
+        ...baseParams,
+        disclosed_at: '2024-01-31T15:30:00Z',
+      });
+
+      expect(disclosure.date_partition).toBe('2024-02');
+    });
+
+    it('UTC: 2023-12-31T15:30:00Z → JST: 2024-01-01 → date_partition: "2024-01"', () => {
+      const disclosure = createDisclosure({
+        ...baseParams,
+        disclosed_at: '2023-12-31T15:30:00Z',
+      });
+
+      expect(disclosure.date_partition).toBe('2024-01');
+    });
+  });
+
+  describe('異常系: バリデーションエラー', () => {
+    it('不正なdisclosed_atの場合はValidationErrorをスロー', () => {
+      expect(() =>
+        createDisclosure({
+          ...baseParams,
+          disclosed_at: '2024-01-15',
+        })
+      ).toThrow(ValidationError);
+    });
+
+    it('不正なcompany_codeの場合はValidationErrorをスロー', () => {
+      expect(() =>
+        createDisclosure({
+          ...baseParams,
+          company_code: '123',
+        })
+      ).toThrow(ValidationError);
+    });
+  });
+});
+
+describe('generateDisclosureId', () => {
+  describe('正常系: 開示IDの生成', () => {
+    it('JST基準で日付を抽出してIDを生成', () => {
+      const id = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1);
+      expect(id).toBe('20240115_1234_001');
+    });
+
+    it('連番を3桁にゼロパディング', () => {
+      const id1 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 0);
+      expect(id1).toBe('20240115_1234_000');
+
+      const id2 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 99);
+      expect(id2).toBe('20240115_1234_099');
+
+      const id3 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 999);
+      expect(id3).toBe('20240115_1234_999');
+    });
+  });
+
+  describe('エッジケース: 月またぎ（UTC→JST変換）', () => {
+    it('UTC: 2024-01-31T15:30:00Z → JST: 2024-02-01 → ID: 20240201_xxxx_xxx', () => {
+      const id = generateDisclosureId('2024-01-31T15:30:00Z', '1234', 1);
+      expect(id).toBe('20240201_1234_001');
+    });
+
+    it('UTC: 2023-12-31T15:30:00Z → JST: 2024-01-01 → ID: 20240101_xxxx_xxx', () => {
+      const id = generateDisclosureId('2023-12-31T15:30:00Z', '1234', 1);
+      expect(id).toBe('20240101_1234_001');
+    });
+  });
+
+  describe('異常系: バリデーションエラー', () => {
+    it('不正なdisclosed_atの場合はValidationErrorをスロー', () => {
+      expect(() => generateDisclosureId('2024-01-15', '1234', 1)).toThrow(ValidationError);
+      expect(() => generateDisclosureId('invalid-date', '1234', 1)).toThrow(ValidationError);
+    });
+
+    it('不正なcompany_codeの場合はValidationErrorをスロー', () => {
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123', 1)).toThrow(
+        ValidationError
+      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '12345', 1)).toThrow(
+        ValidationError
+      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'ABCD', 1)).toThrow(
+        ValidationError
+      );
+    });
+
+    it('不正なsequenceの場合はValidationErrorをスロー', () => {
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '1234', -1)).toThrow(
+        ValidationError
+      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1.5)).toThrow(
+        ValidationError
+      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '1234', NaN)).toThrow(
+        ValidationError
+      );
+    });
+  });
+});

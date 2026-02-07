@@ -12,6 +12,7 @@ import { parseDisclosureList, DisclosureMetadata } from '../../scraper/html-pars
 import { RateLimiter } from '../../utils/rate-limiter';
 import { retryWithBackoff } from '../../utils/retry';
 import { logger, createErrorContext } from '../../utils/logger';
+import { sendErrorMetric, sendSuccessMetric } from '../../utils/cloudwatch-metrics';
 import { RetryableError, ValidationError } from '../../errors';
 
 /**
@@ -65,12 +66,25 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
       count: disclosures.length,
     });
 
+    // 成功メトリクス送信
+    await sendSuccessMetric(disclosures.length, 'ScrapeTdnetList', {
+      Date: date,
+    });
+
     return disclosures;
   } catch (error) {
     logger.error(
       'Failed to scrape TDnet list',
       createErrorContext(error as Error, { date })
     );
+
+    // エラーメトリクス送信
+    await sendErrorMetric(
+      error instanceof Error ? error.constructor.name : 'Unknown',
+      'ScrapeTdnetList',
+      { Date: date }
+    );
+
     throw error;
   }
 }

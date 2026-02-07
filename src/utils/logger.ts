@@ -182,6 +182,8 @@ export function setLogLevel(level: LogLevel): void {
 /**
  * エラーオブジェクトから構造化ログコンテキストを生成
  *
+ * Steering準拠の標準フォーマット: { error_type, error_message, context, stack_trace }
+ *
  * @param error エラーオブジェクト
  * @param additionalContext 追加のコンテキスト（オプション）
  * @returns ログコンテキスト
@@ -207,4 +209,47 @@ export function createErrorContext(
     stack_trace: error.stack,
     ...additionalContext,
   };
+}
+
+/**
+ * Lambda実行コンテキストを含むエラーログを記録
+ *
+ * Lambda実装チェックリストに準拠した標準エラーログフォーマット。
+ * CloudWatch Logsに構造化ログとして記録されます。
+ *
+ * @param message エラーメッセージ
+ * @param error エラーオブジェクト
+ * @param lambdaContext Lambda実行コンテキスト（オプション）
+ * @param additionalContext 追加のコンテキスト（オプション）
+ *
+ * @example
+ * ```typescript
+ * export async function handler(event: any, context: any) {
+ *   try {
+ *     await operation();
+ *   } catch (error) {
+ *     logLambdaError('Lambda execution failed', error, context, {
+ *       disclosure_id: 'TD20240115001',
+ *     });
+ *     throw error;
+ *   }
+ * }
+ * ```
+ */
+export function logLambdaError(
+  message: string,
+  error: Error,
+  lambdaContext?: { requestId?: string; functionName?: string },
+  additionalContext?: LogContext
+): void {
+  logger.error(message, {
+    error_type: error.constructor.name,
+    error_message: error.message,
+    context: {
+      request_id: lambdaContext?.requestId,
+      function_name: lambdaContext?.functionName,
+      ...additionalContext,
+    },
+    stack_trace: error.stack,
+  });
 }

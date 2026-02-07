@@ -10,7 +10,10 @@
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { generateDatePartition } from '../../utils/date-partition';
+import { retryWithBackoff } from '../../utils/retry';
 import { logger } from '../../utils/logger';
+import { sendErrorMetric, sendSuccessMetric } from '../../utils/cloudwatch-metrics';
+import { RetryableError } from '../../errors';
 import { Disclosure } from '../../types';
 
 // DynamoDBクライアントはグローバルスコープで初期化（再利用される）
@@ -73,19 +76,51 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
       date_partition,
     });
 
-    // DynamoDBに保存（重複チェック付き）
-    await dynamoClient.send(
-      new PutItemCommand({
-        TableName: getDynamoTable(),
-        Item: marshall(item),
-        ConditionExpression: 'attribute_not_exists(disclosure_id)',
-      })
+    // DynamoDBに保存（重複チェック付き、再試行あり）
+    await retryWithBackoff(
+      async () => {
+        try {
+          await dynamoClient.send(
+            new PutItemCommand({
+              TableName: getDynamoTable(),
+              Item: marshall(item),
+              ConditionExpression: 'attribute_not_exists(disclosure_id)',
+            })
+          );
+        } catch (error: any) {
+          // ProvisionedThroughputExceededExceptionは再試行可能
+          if (error.name === 'ProvisionedThroughputExceededException') {
+            throw new RetryableError(
+              `DynamoDB throughput exceeded: ${error.message}`,
+              error
+            );
+          }
+          // ConditionalCheckFailedExceptionは再試行不可（重複）
+          if (error.name === 'ConditionalCheckFailedException') {
+            throw error; // そのままスロー（外側のcatchで処理）
+          }
+          // その他のエラーもそのままスロー
+          throw error;
+        }
+      },
+      {
+        maxRetries: 3,
+        initialDelay: 1000,
+        backoffMultiplier: 2,
+        jitter: true,
+        shouldRetry: (error) => error instanceof RetryableError,
+      }
     );
 
     logger.info('Metadata saved successfully', {
       disclosure_id: disclosure.disclosure_id,
       date_partition,
       s3_key,
+    });
+
+    // 成功メトリクス送信
+    await sendSuccessMetric(1, 'SaveMetadata', {
+      DatePartition: date_partition,
     });
   } catch (error: any) {
     if (error.name === 'ConditionalCheckFailedException') {
@@ -102,6 +137,14 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
       error_type: error.constructor?.name || 'Unknown',
       error_message: error.message || String(error),
     });
+
+    // エラーメトリクス送信
+    await sendErrorMetric(
+      error.constructor?.name || 'Unknown',
+      'SaveMetadata',
+      { DisclosureId: disclosure.disclosure_id }
+    );
+
     throw error;
   }
 }
