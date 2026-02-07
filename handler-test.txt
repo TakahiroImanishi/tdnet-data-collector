@@ -1,0 +1,777 @@
+﻿
+> tdnet-data-collector@1.0.0 test
+> jest src/lambda/collector/__tests__/handler.test.ts --no-coverage
+
+2026-02-08T08:21:00.535+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "batch"
+  },
+  "execution_id": "exec_1770506460535_xt6hns_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.538+09:00 [[32minfo[39m]: Batch mode: collecting yesterday's data {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460535_xt6hns_test-req"
+}
+2026-02-08T08:21:00.538+09:00 [[32minfo[39m]: Target date for batch mode {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460535_xt6hns_test-req",
+  "date": "2026-02-07"
+}
+2026-02-08T08:21:00.539+09:00 [[32minfo[39m]: Collecting disclosures for date range {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460535_xt6hns_test-req",
+  "start_date": "2026-02-07",
+  "end_date": "2026-02-07",
+  "total_days": 1
+}
+2026-02-08T08:21:00.540+09:00 [[32minfo[39m]: Updating execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460535_xt6hns_test-req",
+  "status": "pending",
+  "progress": 0,
+  "collected_count": 0,
+  "failed_count": 0
+}
+2026-02-08T08:21:00.555+09:00 [[31merror[39m]: Failed to update execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460535_xt6hns_test-req",
+  "status": "pending",
+  "progress": 0,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.566+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "TypeError",
+  "error_message": "A dynamic import callback was invoked without --experimental-vm-modules",
+  "stack_trace": "TypeError: A dynamic import callback was invoked without --experimental-vm-modules\n    at importModuleDynamicallyCallback (node:internal/modules/esm/utils:277:11)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:127:29\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:72:26\n    at provider (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:39:13)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@smithy\\core\\dist-cjs\\index.js:62:23\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\middleware-logger\\dist-cjs\\index.js:5:26\n    at updateExecutionStatus (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\update-execution-status.ts:126:5)\n    at collectDisclosuresForDateRange (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:326:3)\n    at handleBatchMode (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:267:10)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:97:18)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:55:24)",
+  "execution_id": "exec_1770506460535_xt6hns_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 20
+}
+2026-02-08T08:21:00.568+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.580+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "batch"
+  },
+  "execution_id": "exec_1770506460580_1rm78d_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.580+09:00 [[32minfo[39m]: Batch mode: collecting yesterday's data {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460580_1rm78d_test-req"
+}
+2026-02-08T08:21:00.580+09:00 [[32minfo[39m]: Target date for batch mode {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460580_1rm78d_test-req",
+  "date": "2026-02-07"
+}
+2026-02-08T08:21:00.581+09:00 [[32minfo[39m]: Collecting disclosures for date range {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460580_1rm78d_test-req",
+  "start_date": "2026-02-07",
+  "end_date": "2026-02-07",
+  "total_days": 1
+}
+2026-02-08T08:21:00.581+09:00 [[32minfo[39m]: Updating execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460580_1rm78d_test-req",
+  "status": "pending",
+  "progress": 0,
+  "collected_count": 0,
+  "failed_count": 0
+}
+2026-02-08T08:21:00.581+09:00 [[31merror[39m]: Failed to update execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460580_1rm78d_test-req",
+  "status": "pending",
+  "progress": 0,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.582+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "TypeError",
+  "error_message": "A dynamic import callback was invoked without --experimental-vm-modules",
+  "stack_trace": "TypeError: A dynamic import callback was invoked without --experimental-vm-modules\n    at importModuleDynamicallyCallback (node:internal/modules/esm/utils:277:11)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:127:29\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:72:26\n    at provider (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:39:13)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@smithy\\core\\dist-cjs\\index.js:62:23\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\middleware-logger\\dist-cjs\\index.js:5:26\n    at updateExecutionStatus (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\update-execution-status.ts:126:5)\n    at collectDisclosuresForDateRange (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:326:3)\n    at handleBatchMode (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:267:10)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:97:18)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:71:24)",
+  "execution_id": "exec_1770506460580_1rm78d_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 2
+}
+2026-02-08T08:21:00.582+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.583+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2026-02-06",
+    "end_date": "2026-02-04"
+  },
+  "execution_id": "exec_1770506460583_eyfkug_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.594+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date (2026-02-06) must be before or equal to end_date (2026-02-04)",
+  "stack_trace": "ValidationError: start_date (2026-02-06) must be before or equal to end_date (2026-02-04)\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:220:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:104:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460583_eyfkug_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.594+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.596+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2026-02-06",
+    "end_date": "2026-02-04"
+  },
+  "execution_id": "exec_1770506460596_8iugfv_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.598+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date (2026-02-06) must be before or equal to end_date (2026-02-04)",
+  "stack_trace": "ValidationError: start_date (2026-02-06) must be before or equal to end_date (2026-02-04)\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:220:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:147:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460596_8iugfv_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.598+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.599+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "invalid"
+  },
+  "execution_id": "exec_1770506460599_73o3i1_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.599+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "Invalid mode: invalid. Expected 'batch' or 'on-demand'.",
+  "stack_trace": "ValidationError: Invalid mode: invalid. Expected 'batch' or 'on-demand'.\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:177:11)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:161:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460599_73o3i1_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.599+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.600+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "end_date": "2024-01-15"
+  },
+  "execution_id": "exec_1770506460600_12kozr_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.600+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date and end_date are required for on-demand mode",
+  "stack_trace": "ValidationError: start_date and end_date are required for on-demand mode\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:185:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:173:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460600_12kozr_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.601+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.601+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2024-01-15"
+  },
+  "execution_id": "exec_1770506460601_qa2xmk_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.601+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date and end_date are required for on-demand mode",
+  "stack_trace": "ValidationError: start_date and end_date are required for on-demand mode\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:185:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:185:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460601_qa2xmk_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.602+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.604+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2024/01/15",
+    "end_date": "2024-01-20"
+  },
+  "execution_id": "exec_1770506460604_nytzg1_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.604+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "Invalid start_date format: 2024/01/15. Expected YYYY-MM-DD format.",
+  "stack_trace": "ValidationError: Invalid start_date format: 2024/01/15. Expected YYYY-MM-DD format.\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:193:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:198:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460604_nytzg1_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.605+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.605+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2024-02-30",
+    "end_date": "2024-03-01"
+  },
+  "execution_id": "exec_1770506460605_o5hcai_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.605+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date (2024-02-30) is too old. Maximum range is 1 year.",
+  "stack_trace": "ValidationError: start_date (2024-02-30) is too old. Maximum range is 1 year.\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:229:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:211:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460605_o5hcai_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.606+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.606+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2024-01-20",
+    "end_date": "2024-01-15"
+  },
+  "execution_id": "exec_1770506460606_ipf72a_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.606+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date (2024-01-20) must be before or equal to end_date (2024-01-15)",
+  "stack_trace": "ValidationError: start_date (2024-01-20) must be before or equal to end_date (2024-01-15)\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:220:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:226:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460606_ipf72a_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.607+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.607+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2024-02-07",
+    "end_date": "2024-02-07"
+  },
+  "execution_id": "exec_1770506460607_7mws9i_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.608+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "start_date (2024-02-07) is too old. Maximum range is 1 year.",
+  "stack_trace": "ValidationError: start_date (2024-02-07) is too old. Maximum range is 1 year.\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:229:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:243:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460607_7mws9i_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.608+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.608+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2026-02-09",
+    "end_date": "2026-02-09"
+  },
+  "execution_id": "exec_1770506460608_l07dlg_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.608+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "ValidationError",
+  "error_message": "end_date (2026-02-09) cannot be in the future.",
+  "stack_trace": "ValidationError: end_date (2026-02-09) cannot be in the future.\n    at validateEvent (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:238:13)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:92:5)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:260:37)\n    at Promise.then.completed (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at _runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at _runTestsForDescribeBlock (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at runAndTransformResultsToJestFormat (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at jestAdapter (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at runTestInternal (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\jest-runner\\build\\runTest.js:444:34)",
+  "execution_id": "exec_1770506460608_l07dlg_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 0
+}
+2026-02-08T08:21:00.609+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.609+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "batch"
+  },
+  "execution_id": "exec_1770506460609_ojewx7_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.609+09:00 [[32minfo[39m]: Batch mode: collecting yesterday's data {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460609_ojewx7_test-req"
+}
+2026-02-08T08:21:00.609+09:00 [[32minfo[39m]: Target date for batch mode {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460609_ojewx7_test-req",
+  "date": "2026-02-07"
+}
+2026-02-08T08:21:00.609+09:00 [[32minfo[39m]: Collecting disclosures for date range {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460609_ojewx7_test-req",
+  "start_date": "2026-02-07",
+  "end_date": "2026-02-07",
+  "total_days": 1
+}
+2026-02-08T08:21:00.609+09:00 [[32minfo[39m]: Updating execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460609_ojewx7_test-req",
+  "status": "pending",
+  "progress": 0,
+  "collected_count": 0,
+  "failed_count": 0
+}
+2026-02-08T08:21:00.610+09:00 [[31merror[39m]: Failed to update execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460609_ojewx7_test-req",
+  "status": "pending",
+  "progress": 0,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.610+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "TypeError",
+  "error_message": "A dynamic import callback was invoked without --experimental-vm-modules",
+  "stack_trace": "TypeError: A dynamic import callback was invoked without --experimental-vm-modules\n    at importModuleDynamicallyCallback (node:internal/modules/esm/utils:277:11)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:127:29\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:72:26\n    at provider (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:39:13)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@smithy\\core\\dist-cjs\\index.js:62:23\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\middleware-logger\\dist-cjs\\index.js:5:26\n    at updateExecutionStatus (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\update-execution-status.ts:126:5)\n    at collectDisclosuresForDateRange (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:326:3)\n    at handleBatchMode (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:267:10)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:97:18)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:275:25)",
+  "execution_id": "exec_1770506460609_ojewx7_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 1
+}
+2026-02-08T08:21:00.610+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.610+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "batch"
+  },
+  "execution_id": "exec_1770506460610_kfz54p_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.610+09:00 [[32minfo[39m]: Batch mode: collecting yesterday's data {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460610_kfz54p_test-req"
+}
+2026-02-08T08:21:00.610+09:00 [[32minfo[39m]: Target date for batch mode {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460610_kfz54p_test-req",
+  "date": "2026-02-07"
+}
+2026-02-08T08:21:00.610+09:00 [[32minfo[39m]: Collecting disclosures for date range {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460610_kfz54p_test-req",
+  "start_date": "2026-02-07",
+  "end_date": "2026-02-07",
+  "total_days": 1
+}
+2026-02-08T08:21:00.610+09:00 [[32minfo[39m]: Updating execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460610_kfz54p_test-req",
+  "status": "pending",
+  "progress": 0,
+  "collected_count": 0,
+  "failed_count": 0
+}
+2026-02-08T08:21:00.611+09:00 [[31merror[39m]: Failed to update execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460610_kfz54p_test-req",
+  "status": "pending",
+  "progress": 0,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.612+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "TypeError",
+  "error_message": "A dynamic import callback was invoked without --experimental-vm-modules",
+  "stack_trace": "TypeError: A dynamic import callback was invoked without --experimental-vm-modules\n    at importModuleDynamicallyCallback (node:internal/modules/esm/utils:277:11)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:127:29\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:72:26\n    at provider (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:39:13)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@smithy\\core\\dist-cjs\\index.js:62:23\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\middleware-logger\\dist-cjs\\index.js:5:26\n    at updateExecutionStatus (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\update-execution-status.ts:126:5)\n    at collectDisclosuresForDateRange (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:326:3)\n    at handleBatchMode (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:267:10)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:97:18)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:276:25)",
+  "execution_id": "exec_1770506460610_kfz54p_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 1
+}
+2026-02-08T08:21:00.612+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.612+09:00 [[32minfo[39m]: Lambda Collector started {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "event": {
+    "mode": "on-demand",
+    "start_date": "2026-02-04",
+    "end_date": "2026-02-06"
+  },
+  "execution_id": "exec_1770506460612_x01sde_test-req",
+  "request_id": "test-request-id-12345",
+  "function_name": "test-collector-function"
+}
+2026-02-08T08:21:00.613+09:00 [[32minfo[39m]: On-demand mode: collecting data for specified range {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460612_x01sde_test-req",
+  "start_date": "2026-02-04",
+  "end_date": "2026-02-06"
+}
+2026-02-08T08:21:00.613+09:00 [[32minfo[39m]: Collecting disclosures for date range {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460612_x01sde_test-req",
+  "start_date": "2026-02-04",
+  "end_date": "2026-02-06",
+  "total_days": 3
+}
+2026-02-08T08:21:00.613+09:00 [[32minfo[39m]: Updating execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460612_x01sde_test-req",
+  "status": "pending",
+  "progress": 0,
+  "collected_count": 0,
+  "failed_count": 0
+}
+2026-02-08T08:21:00.613+09:00 [[31merror[39m]: Failed to update execution status {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "execution_id": "exec_1770506460612_x01sde_test-req",
+  "status": "pending",
+  "progress": 0,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+2026-02-08T08:21:00.613+09:00 [[31merror[39m]: Lambda Collector failed {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "error_type": "TypeError",
+  "error_message": "A dynamic import callback was invoked without --experimental-vm-modules",
+  "stack_trace": "TypeError: A dynamic import callback was invoked without --experimental-vm-modules\n    at importModuleDynamicallyCallback (node:internal/modules/esm/utils:277:11)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:127:29\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:72:26\n    at provider (C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\credential-provider-node\\dist-cjs\\index.js:39:13)\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@smithy\\core\\dist-cjs\\index.js:62:23\n    at C:\\Users\\ti198\\investment_analysis_opopo\\node_modules\\@aws-sdk\\middleware-logger\\dist-cjs\\index.js:5:26\n    at updateExecutionStatus (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\update-execution-status.ts:126:5)\n    at collectDisclosuresForDateRange (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:326:3)\n    at handleOnDemandMode (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:294:10)\n    at handler (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\handler.ts:99:18)\n    at Object.<anonymous> (C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\collector\\__tests__\\handler.test.ts:319:26)",
+  "execution_id": "exec_1770506460612_x01sde_test-req",
+  "request_id": "test-request-id-12345",
+  "duration_ms": 1
+}
+2026-02-08T08:21:00.613+09:00 [[33mwarn[39m]: Failed to send metric to CloudWatch {
+  "service": "tdnet-data-collector",
+  "environment": "test",
+  "metric_name": "LambdaError",
+  "value": 1,
+  "error_type": "Unknown",
+  "error_message": "TypeError [ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG]: A dynamic import callback was invoked without --experimental-vm-modules"
+}
+node.exe : FAIL src/lambda/collector/__tests__/handler.test.ts
+発生場所 行:1 文字:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL src/lambda...handler.test. 
+   ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Lambda Collector Handler
+    Batch Mode
+      ﾃ・should collect yesterday's data in batch mode (38 ms)
+      ﾃ・should handle scraping errors gracefully in batch mode (3 ms)
+    On-Demand Mode
+      ﾃ・should collect data for specified date range (13 ms)
+      ﾃ・should handle partial failures in on-demand mode (2 ms)
+    Validation
+      竏・should reject invalid mode (1 ms)
+      竏・should reject on-demand mode without start_date (1 ms)
+      竏・should reject on-demand mode without end_date (1 ms)
+      竏・should reject invalid date format (2 ms)
+      竏・should reject invalid date (non-existent) (1 ms)
+      竏・should reject start_date after end_date (1 ms)
+      竏・should reject dates older than 1 year (1 ms)
+      竏・should reject future dates (1 ms)
+    Execution ID Generation
+      竏・should generate unique execution IDs (3 ms)
+    Integration Tests - Property 1 & 2
+      Property 1: Date Range Collection Completeness
+        ﾃ・should collect all disclosures within specified date range (2 ms)
+
+  笳・Lambda Collector Handler 窶ｺ Batch Mode 窶ｺ should collect yesterday's data
+ in batch mode
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "success"
+    Received: "failed"
+
+    [0m [90m 55 |[39m       [36mconst[39m response [33m=[39m [36mawai
+t[39m handler(event[33m,[39m mockContext)[33m;[39m
+     [90m 56 |[39m
+    [31m[1m>[22m[39m[90m 57 |[39m       expect(response[33m.[39mstatu
+s)[33m.[39mtoBe([32m'success'[39m)[33m;[39m
+     [90m    |[39m                               [31m[1m^[22m[39m
+     [90m 58 |[39m       expect(response[33m.[39mcollected_count)[33m.[
+39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 59 |[39m       expect(response[33m.[39mfailed_count)[33m.[39m
+toBe([35m0[39m)[33m;[39m
+     [90m 60 |[39m       expect(response[33m.[39mexecution_id)[33m.[39m
+toMatch([35m/^exec_\d+_[a-z0-9]+_test-req/[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (src/lambda/collector/__tests__/handler.test.ts:5
+7:31)
+
+  笳・Lambda Collector Handler 窶ｺ Batch Mode 窶ｺ should handle scraping errors g
+racefully in batch mode
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 73 |[39m       expect(response[33m.[39mstatus)[33m.[39mto
+Be([32m'failed'[39m)[33m;[39m
+     [90m 74 |[39m       expect(response[33m.[39mcollected_count)[33m.[
+39mtoBe([35m0[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 75 |[39m       expect(response[33m.[39mfaile
+d_count)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m    |[39m                                     [31m[1m^[22m[39m
+     [90m 76 |[39m     })[33m;[39m
+     [90m 77 |[39m   })[33m;[39m
+     [90m 78 |[39m[0m
+
+      at Object.<anonymous> (src/lambda/collector/__tests__/handler.test.ts:7
+5:37)
+
+  笳・Lambda Collector Handler 窶ｺ On-Demand Mode 窶ｺ should collect data for spe
+cified date range
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "success"
+    Received: "failed"
+
+    [0m [90m 104 |[39m       [36mconst[39m response [33m=[39m [36mawa
+it[39m handler(event[33m,[39m mockContext)[33m;[39m
+     [90m 105 |[39m
+    [31m[1m>[22m[39m[90m 106 |[39m       expect(response[33m.[39mstat
+us)[33m.[39mtoBe([32m'success'[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 107 |[39m       expect(response[33m.[39mcollected_count)[33m.
+[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 108 |[39m       expect(mockScrapeTdnetList)[33m.[39mtoHaveBeenC
+alledTimes([35m3[39m)[33m;[39m [90m// 3 days[39m
+     [90m 109 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/lambda/collector/__tests__/handler.test.ts:1
+06:31)
+
+  笳・Lambda Collector Handler 窶ｺ On-Demand Mode 窶ｺ should handle partial failu
+res in on-demand mode
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "partial_success"
+    Received: "failed"
+
+    [0m [90m 147 |[39m       [36mconst[39m response [33m=[39m [36mawa
+it[39m handler(event[33m,[39m mockContext)[33m;[39m
+     [90m 148 |[39m
+    [31m[1m>[22m[39m[90m 149 |[39m       expect(response[33m.[39mstat
+us)[33m.[39mtoBe([32m'partial_success'[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 150 |[39m       expect(response[33m.[39mcollected_count)[33m.
+[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 151 |[39m       expect(response[33m.[39mfailed_count)[33m.[39
+mtoBe([35m1[39m)[33m;[39m
+     [90m 152 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/lambda/collector/__tests__/handler.test.ts:1
+49:31)
+
+  笳・Lambda Collector Handler 窶ｺ Integration Tests - Property 1 & 2 窶ｺ Propert
+y 1: Date Range Collection Completeness 窶ｺ should collect all disclosures wit
+hin specified date range
+
+    expect(jest.fn()).toHaveBeenCalledTimes(expected)
+
+    Expected number of calls: 3
+    Received number of calls: 0
+
+    [0m [90m 319 |[39m         [36mconst[39m response [33m=[39m [36ma
+wait[39m handler(event[33m,[39m mockContext)[33m;[39m
+     [90m 320 |[39m
+    [31m[1m>[22m[39m[90m 321 |[39m         expect(mockScrapeTdnetList)
+[33m.[39mtoHaveBeenCalledTimes([35m3[39m)[33m;[39m
+     [90m     |[39m                                     [31m[1m^[22m[39
+m
+     [90m 322 |[39m         expect(response[33m.[39mstatus)[33m.[39mtoB
+e([32m'success'[39m)[33m;[39m
+     [90m 323 |[39m         expect(response[33m.[39mcollected_count)[33m
+.[39mtoBe([35m6[39m)[33m;[39m
+     [90m 324 |[39m         expect(response[33m.[39mfailed_count)[33m.[
+39mtoBe([35m0[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (src/lambda/collector/__tests__/handler.test.ts:3
+21:37)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 9 passed, 14 total
+Snapshots:   0 total
+Time:        4.682 s, estimated 37 s
+Ran all test suites matching /src\\lambda\\collector\\__tests__\\handler.test
+.ts/i.

@@ -217,7 +217,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       functionName: 'tdnet-collector',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/lambda/collector'),
+      code: lambda.Code.fromAsset('dist/src/lambda/collector'),
       timeout: cdk.Duration.minutes(15),
       memorySize: 512,
       environment: {
