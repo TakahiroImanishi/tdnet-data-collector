@@ -21,7 +21,7 @@
 
 ### 1. プロジェクトセットアップ
 
-- [x] 1.1 プロジェクト初期化とCDK環境構築
+- [-] 1.1 プロジェクト初期化とCDK環境構築
   - TypeScript/Node.js 20.xプロジェクトを初期化
   - AWS CDKをインストールし、CDKプロジェクトを初期化
   - ESLint、Prettier、Jest、fast-checkを設定

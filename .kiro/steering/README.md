@@ -60,8 +60,8 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/*.test.ts` | `development/testing-strategy.md` | テストファイル |
-| `**/*.spec.ts` | `development/testing-strategy.md` | テストファイル（spec形式） |
+| `**/*.test.ts` | `development/testing-strategy.md`<br>`development/mcp-server-guidelines.md` | テストファイル |
+| `**/*.spec.ts` | `development/testing-strategy.md`<br>`development/mcp-server-guidelines.md` | テストファイル（spec形式） |
 
 ### バリデーション関連
 
@@ -73,30 +73,30 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/scraper/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md` | スクレイピング |
-| `**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md` | コレクター |
+| `**/scraper/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md`<br>`development/mcp-server-guidelines.md` | スクレイピング |
+| `**/collector/**/*.ts` | `development/tdnet-scraping-patterns.md`<br>`development/error-handling-implementation.md`<br>`development/mcp-server-guidelines.md` | コレクター |
 | `**/utils/error*.ts` | `development/error-handling-implementation.md` | エラーユーティリティ |
 | `**/utils/retry*.ts` | `development/error-handling-implementation.md` | リトライユーティリティ |
-| `**/lambda/**/*.ts` | `development/error-handling-implementation.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md` | Lambda関数全般 |
+| `**/lambda/**/*.ts` | `development/error-handling-implementation.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md` | Lambda関数全般 |
 
 ### API関連
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/api/routes/**/*.ts` | `api/api-design-guidelines.md` | APIルート |
-| `**/api/handlers/**/*.ts` | `api/api-design-guidelines.md` | APIハンドラー |
-| `**/api/**/*.ts` | `api/error-codes.md`<br>`development/error-handling-implementation.md` | API全般 |
+| `**/api/routes/**/*.ts` | `api/api-design-guidelines.md`<br>`development/mcp-server-guidelines.md` | APIルート |
+| `**/api/handlers/**/*.ts` | `api/api-design-guidelines.md`<br>`development/mcp-server-guidelines.md` | APIハンドラー |
+| `**/api/**/*.ts` | `api/error-codes.md`<br>`development/error-handling-implementation.md`<br>`development/mcp-server-guidelines.md` | API全般 |
 | `**/routes/**/*.ts` | `api/error-codes.md` | ルート定義 |
 
 ### CDK・インフラ関連
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/cdk/lib/**/*-stack.ts` | `security/security-best-practices.md`<br>`infrastructure/deployment-checklist.md` | CDKスタック |
-| `**/cdk/lib/constructs/**/*.ts` | `development/tdnet-file-naming.md` | CDKコンストラクト |
-| `**/cdk/lib/constructs/*lambda*.ts` | `infrastructure/performance-optimization.md` | CDK Lambda構成 |
-| `**/cdk/lib/constructs/*function*.ts` | `infrastructure/performance-optimization.md` | CDK Function構成 |
-| `**/cdk/**/*.ts` | `infrastructure/environment-variables.md` | CDK全般（環境変数設定） |
+| `**/cdk/lib/**/*-stack.ts` | `security/security-best-practices.md`<br>`infrastructure/deployment-checklist.md`<br>`development/mcp-server-guidelines.md` | CDKスタック |
+| `**/cdk/lib/constructs/**/*.ts` | `development/tdnet-file-naming.md`<br>`development/mcp-server-guidelines.md` | CDKコンストラクト |
+| `**/cdk/lib/constructs/*lambda*.ts` | `infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md` | CDK Lambda構成 |
+| `**/cdk/lib/constructs/*function*.ts` | `infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md` | CDK Function構成 |
+| `**/cdk/**/*.ts` | `infrastructure/environment-variables.md`<br>`development/mcp-server-guidelines.md` | CDK全般（環境変数設定） |
 | `**/dynamodb/**/*.ts` | `infrastructure/performance-optimization.md` | DynamoDB関連 |
 | `**/s3/**/*.ts` | `infrastructure/performance-optimization.md` | S3関連 |
 | `**/iam/**/*.ts` | `security/security-best-practices.md` | IAM関連 |
@@ -114,9 +114,9 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 | ファイルパターン | トリガーされるsteering | 説明 |
 |----------------|---------------------|------|
-| `**/docs/**/*.md` | `development/documentation-standards.md` | ドキュメント |
+| `**/docs/**/*.md` | `development/documentation-standards.md`<br>`development/mcp-server-guidelines.md` | ドキュメント |
 | `**/README.md` | `development/documentation-standards.md` | READMEファイル |
-| `**/.kiro/specs/**/*.md` | `development/documentation-standards.md`<br>`development/workflow-guidelines.md` | 仕様ドキュメント |
+| `**/.kiro/specs/**/*.md` | `development/documentation-standards.md`<br>`development/workflow-guidelines.md`<br>`development/mcp-server-guidelines.md` | 仕様ドキュメント |
 
 ### その他
 

@@ -281,6 +281,40 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ---
 
+## development/mcp-server-guidelines.md
+
+### fileMatchPattern
+```text
+**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md
+```
+
+### マッチすべきファイル ✅
+- `lambda/collector/handler.ts`
+- `lambda/query/handler.ts`
+- `src/lambda/export/handler.ts`
+- `cdk/lib/tdnet-stack.ts`
+- `cdk/lib/lambda-stack.ts`
+- `cdk/bin/app.ts`
+- `src/api/disclosures.ts`
+- `src/api/exports.ts`
+- `src/scraper/tdnet-scraper.ts`
+- `src/collector/batch-processor.ts`
+- `src/validators/disclosure.test.ts`
+- `tests/unit/validation.spec.ts`
+- `docs/architecture.md`
+- `docs/api-reference.md`
+- `.kiro/specs/tdnet-data-collector/spec.md`
+- `.kiro/specs/tdnet-data-collector/tasks.md`
+
+### マッチすべきでないファイル ❌
+- `src/validators/disclosure.ts` (対象フォルダ外)
+- `src/utils/logger.ts` (対象フォルダ外)
+- `README.md` (docsフォルダ外、.kiro/specsフォルダ外)
+- `package.json`
+- `.gitignore`
+
+---
+
 ## development/workflow-guidelines.md
 
 ### fileMatchPattern
@@ -597,3 +631,6 @@ Test-MultiPattern "**/*.test.ts|**/*.spec.ts" "src/validators/disclosure.ts"
   - `error-handling-implementation.md`: `**/lambda/**/*.ts`を追加
   - `environment-variables.md`: `**/cdk/**/*.ts|**/lambda/**/*.ts|**/.env*`に変更
   - `performance-optimization.md`: `**/lambda/**/*.ts`を追加
+- 2026-02-07: mcp-server-guidelines.mdのテストケースを追加
+  - fileMatchPattern: `**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md`
+  - AWS実装、テスト、ドキュメント作成時にMCPサーバー活用ガイドラインを読み込み

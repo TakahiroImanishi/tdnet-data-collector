@@ -116,15 +116,16 @@ TDnet Data Collectorプロジェクトのsteeringファイルに、MCP (Model Co
 ### 完了した作業
 - ✅ MCP Server活用ガイドラインの作成
 - ✅ README.mdの更新
+- ✅ fileMatchPatternの追加
+- ✅ pattern-matching-tests.mdの更新
 
 ### 未完了の作業
-- [ ] Git commitとpush（次のステップで実施）
 - [ ] 他のsteeringファイルからの参照追加（必要に応じて）
-- [ ] pattern-matching-tests.mdの更新（fileMatchPatternを設定する場合）
 
 ### 注意点
-- mcp-server-guidelines.mdは常時読み込みとして設定したため、fileMatchPatternは不要
-- 今後、特定のファイルパターンでのみ読み込みたい場合は、front-matterを追加してfileMatchPatternを設定
+- mcp-server-guidelines.mdは条件付き読み込みとして設定
+- fileMatchPattern: `**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md`
+- AWS実装、テスト、ドキュメント作成時に自動的に読み込まれる
 
 ### 推奨される次のアクション
 1. Git commitとpush
@@ -152,3 +153,72 @@ TDnet Data Collectorプロジェクトのsteeringファイルに、MCP (Model Co
 - **ワークフローガイドライン**: `.kiro/steering/development/workflow-guidelines.md`
 - **エラーハンドリング**: `.kiro/steering/development/error-handling-implementation.md`
 - **ドキュメント標準**: `.kiro/steering/development/documentation-standards.md`
+
+
+---
+
+## 追加作業: fileMatchPatternの設定
+
+**実施日時**: 2026-02-07 21:15頃
+
+### 実施内容
+
+#### 1. mcp-server-guidelines.mdにfileMatchPatternを追加
+
+**追加したfront-matter**:
+```yaml
+---
+inclusion: fileMatch
+fileMatchPattern: '**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md'
+---
+```
+
+**理由**:
+- MCPサーバーは主にAWS実装、テスト、ドキュメント作成時に活用される
+- 常時読み込みではなく、必要な場面でのみ読み込むことでトークン消費を最適化
+- 対象ファイル: Lambda関数、CDKスタック、API、スクレイパー、コレクター、テストファイル、ドキュメント
+
+#### 2. README.mdのfileMatchパターン対応表を更新
+
+**更新箇所**:
+- テスト関連: `**/*.test.ts`, `**/*.spec.ts` に `mcp-server-guidelines.md` を追加
+- スクレイピング・エラーハンドリング関連: `**/scraper/**/*.ts`, `**/collector/**/*.ts`, `**/lambda/**/*.ts` に追加
+- API関連: `**/api/**/*.ts` に追加
+- CDK・インフラ関連: `**/cdk/**/*.ts` に追加
+- ドキュメント関連: `**/docs/**/*.md`, `**/.kiro/specs/**/*.md` に追加
+
+#### 3. pattern-matching-tests.mdにテストケースを追加
+
+**追加内容**:
+- mcp-server-guidelines.mdのfileMatchPatternテストケース
+- マッチすべきファイル16例
+- マッチすべきでないファイル5例
+- 変更履歴を更新
+
+### 成果物
+
+**更新したファイル**:
+1. `.kiro/steering/development/mcp-server-guidelines.md` - front-matterを追加
+2. `.kiro/steering/README.md` - fileMatchパターン対応表を更新
+3. `.kiro/steering/meta/pattern-matching-tests.md` - テストケースを追加
+
+### 検証
+
+**fileMatchPatternの妥当性**:
+- ✅ Lambda関数実装時: AWS Knowledge、AWS Labs CDKサーバーの活用が必要
+- ✅ CDKスタック実装時: CDK Nagエラー解決、ベストプラクティス確認が必要
+- ✅ API実装時: エラーハンドリング、ベストプラクティス確認が必要
+- ✅ スクレイピング実装時: レート制限、エラーハンドリングの情報が必要
+- ✅ テスト実装時: テストパターン、ライブラリ使用方法の確認が必要
+- ✅ ドキュメント作成時: 最新情報の参照、技術記事の検索が必要
+
+### トークン最適化の効果
+
+**常時読み込みの場合**:
+- すべてのタスクでmcp-server-guidelines.md（約500行）が読み込まれる
+- 不要な場面でもトークンを消費
+
+**条件付き読み込みの場合**:
+- AWS実装、テスト、ドキュメント作成時のみ読み込まれる
+- バリデーション、ユーティリティ実装時は読み込まれない
+- トークン消費を約30-40%削減（推定）

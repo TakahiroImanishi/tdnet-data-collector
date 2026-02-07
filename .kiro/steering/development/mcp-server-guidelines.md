@@ -1,3 +1,8 @@
+---
+inclusion: fileMatch
+fileMatchPattern: '**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md'
+---
+
 # MCP Server 活用ガイドライン
 
 このファイルは、TDnet Data Collectorプロジェクトにおける Model Context Protocol (MCP) サーバーの活用方法をまとめたものです。
