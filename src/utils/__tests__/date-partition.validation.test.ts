@@ -186,8 +186,11 @@ describe('date_partition validation', () => {
   describe('エッジケース', () => {
     describe('月またぎ（UTC → JST）', () => {
       it('should handle month boundary correctly', () => {
+        // UTC: 2024-01-31T15:30:00Z → JST: 2024-02-01T00:30:00 → "2024-02"
         expect(generateDatePartition('2024-01-31T15:30:00Z')).toBe('2024-02');
-        expect(generateDatePartition('2024-02-01T14:59:59Z')).toBe('2024-01');
+        // UTC: 2024-02-01T14:59:59Z → JST: 2024-01-31T23:59:59 → "2024-01"
+        // Note: 14:59:59 UTC + 9 hours = 23:59:59 JST (same day in JST)
+        expect(generateDatePartition('2024-02-01T14:59:59Z')).toBe('2024-02');
       });
 
       it('should handle leap year February correctly', () => {

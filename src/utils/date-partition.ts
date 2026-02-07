@@ -33,6 +33,28 @@ export function validateDisclosedAt(disclosedAt: string): void {
     });
   }
 
+  // 日付の正規化チェック（例: 2024-02-30 → 2024-03-01 のような変換を検出）
+  // ISO8601文字列から年月日を抽出して、Dateオブジェクトと比較
+  const match = disclosedAt.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, yearStr, monthStr, dayStr] = match;
+    const inputYear = parseInt(yearStr, 10);
+    const inputMonth = parseInt(monthStr, 10);
+    const inputDay = parseInt(dayStr, 10);
+
+    // Dateオブジェクトの年月日と比較（UTCで比較）
+    if (
+      date.getUTCFullYear() !== inputYear ||
+      date.getUTCMonth() + 1 !== inputMonth ||
+      date.getUTCDate() !== inputDay
+    ) {
+      throw new ValidationError(`Invalid date: ${disclosedAt}. Date does not exist.`, {
+        disclosed_at: disclosedAt,
+        parsed_date: date.toISOString(),
+      });
+    }
+  }
+
   // 範囲チェック（1970-01-01 以降、現在時刻+1日以内）
   const minDate = new Date('1970-01-01T00:00:00Z');
   const maxDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 現在時刻+1日

@@ -200,10 +200,12 @@ describe('TypeScript型定義とインターフェース', () => {
       expect(() => generateDatePartition('invalid-date')).toThrow(ValidationError);
     });
 
-    it('should accept dates that JavaScript Date accepts', () => {
+    it('should reject non-existent dates', () => {
       // Note: JavaScript Date constructor accepts '2024-02-30' and converts to '2024-03-02'
-      // This is expected behavior - the validation focuses on format and range, not calendar validity
-      expect(() => generateDatePartition('2024-02-30T10:30:00Z')).not.toThrow();
+      // Our validation now detects this normalization and rejects non-existent dates
+      expect(() => generateDatePartition('2024-02-30T10:30:00Z')).toThrow(ValidationError);
+      expect(() => generateDatePartition('2024-02-31T10:30:00Z')).toThrow(ValidationError);
+      expect(() => generateDatePartition('2024-04-31T10:30:00Z')).toThrow(ValidationError);
     });
 
     it('should throw ValidationError for out of range date', () => {
@@ -224,11 +226,11 @@ describe('TypeScript型定義とインターフェース', () => {
       expect(() => validateDisclosedAt('invalid')).toThrow(ValidationError);
     });
 
-    it('should accept dates that JavaScript Date accepts', () => {
+    it('should reject non-existent dates', () => {
       // Note: JavaScript Date constructor accepts '2024-02-30' and converts to '2024-03-02'
-      // This is expected behavior - the validation focuses on format and range
-      expect(() => validateDisclosedAt('2024-02-30T10:30:00Z')).not.toThrow();
-      // However, completely invalid dates like '2024-13-01' will result in Invalid Date
+      // Our validation now detects this normalization and rejects non-existent dates
+      expect(() => validateDisclosedAt('2024-02-30T10:30:00Z')).toThrow(ValidationError);
+      // Completely invalid dates like '2024-13-01' will also be rejected
       expect(() => validateDisclosedAt('2024-13-01T10:30:00Z')).toThrow(ValidationError);
     });
 

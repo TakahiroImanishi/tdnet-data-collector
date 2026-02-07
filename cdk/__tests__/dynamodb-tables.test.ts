@@ -46,7 +46,7 @@ describe('DynamoDB Tables', () => {
             KeyType: 'HASH', // パーティションキー
           },
         ],
-        AttributeDefinitions: cdk.Match.arrayWith([
+        AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'disclosure_id',
             AttributeType: 'S', // String型
@@ -58,7 +58,7 @@ describe('DynamoDB Tables', () => {
     it('should have GSI_CompanyCode_DiscloseDate index', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_disclosures',
-        GlobalSecondaryIndexes: cdk.Match.arrayWith([
+        GlobalSecondaryIndexes: Match.arrayWith([
           {
             IndexName: 'GSI_CompanyCode_DiscloseDate',
             KeySchema: [
@@ -76,7 +76,7 @@ describe('DynamoDB Tables', () => {
             },
           },
         ]),
-        AttributeDefinitions: cdk.Match.arrayWith([
+        AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'company_code',
             AttributeType: 'S',
@@ -92,7 +92,7 @@ describe('DynamoDB Tables', () => {
     it('should have GSI_DatePartition index', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_disclosures',
-        GlobalSecondaryIndexes: cdk.Match.arrayWith([
+        GlobalSecondaryIndexes: Match.arrayWith([
           {
             IndexName: 'GSI_DatePartition',
             KeySchema: [
@@ -110,7 +110,7 @@ describe('DynamoDB Tables', () => {
             },
           },
         ]),
-        AttributeDefinitions: cdk.Match.arrayWith([
+        AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'date_partition',
             AttributeType: 'S',
@@ -122,9 +122,9 @@ describe('DynamoDB Tables', () => {
     it('should have exactly 2 GSIs', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_disclosures',
-        GlobalSecondaryIndexes: cdk.Match.arrayWith([
-          cdk.Match.objectLike({ IndexName: 'GSI_CompanyCode_DiscloseDate' }),
-          cdk.Match.objectLike({ IndexName: 'GSI_DatePartition' }),
+        GlobalSecondaryIndexes: Match.arrayWith([
+          Match.objectLike({ IndexName: 'GSI_CompanyCode_DiscloseDate' }),
+          Match.objectLike({ IndexName: 'GSI_DatePartition' }),
         ]),
       });
     });
@@ -153,7 +153,7 @@ describe('DynamoDB Tables', () => {
             KeyType: 'HASH', // パーティションキー
           },
         ],
-        AttributeDefinitions: cdk.Match.arrayWith([
+        AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'execution_id',
             AttributeType: 'S', // String型
@@ -175,7 +175,7 @@ describe('DynamoDB Tables', () => {
     it('should have GSI_Status_StartedAt index', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_executions',
-        GlobalSecondaryIndexes: cdk.Match.arrayWith([
+        GlobalSecondaryIndexes: Match.arrayWith([
           {
             IndexName: 'GSI_Status_StartedAt',
             KeySchema: [
@@ -193,7 +193,7 @@ describe('DynamoDB Tables', () => {
             },
           },
         ]),
-        AttributeDefinitions: cdk.Match.arrayWith([
+        AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'status',
             AttributeType: 'S',
@@ -210,7 +210,7 @@ describe('DynamoDB Tables', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_executions',
         GlobalSecondaryIndexes: [
-          cdk.Match.objectLike({ IndexName: 'GSI_Status_StartedAt' }),
+          Match.objectLike({ IndexName: 'GSI_Status_StartedAt' }),
         ],
       });
     });
@@ -220,7 +220,7 @@ describe('DynamoDB Tables', () => {
     it('should export DisclosuresTableName', () => {
       template.hasOutput('DisclosuresTableName', {
         Value: {
-          Ref: cdk.Match.stringLikeRegexp('DisclosuresTable'),
+          Ref: Match.stringLikeRegexp('DisclosuresTable'),
         },
         Export: {
           Name: 'TdnetDisclosuresTableName',
@@ -231,7 +231,7 @@ describe('DynamoDB Tables', () => {
     it('should export ExecutionsTableName', () => {
       template.hasOutput('ExecutionsTableName', {
         Value: {
-          Ref: cdk.Match.stringLikeRegexp('ExecutionsTable'),
+          Ref: Match.stringLikeRegexp('ExecutionsTable'),
         },
         Export: {
           Name: 'TdnetExecutionsTableName',
