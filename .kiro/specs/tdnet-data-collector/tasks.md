@@ -48,7 +48,7 @@
   - 任意の開示情報に対して、toDynamoDBItemが必須フィールドをすべて含むことを検証
   - _Requirements: 要件14.2（プロパティテスト）_
 
-- [ ] 2.3 date_partition生成のプロパティテスト
+- [x] 2.3 date_partition生成のプロパティテスト
   - **Property: date_partition生成の正確性**
   - **Validates: Requirements 2.1**
   - 任意のISO8601日時に対して、generateDatePartitionがYYYY-MM形式（JST基準）を返すことを検証
