@@ -655,19 +655,4 @@ aws iam delete-access-key --user-name tdnet-user --access-key-id OLD_KEY_ID
 ## 関連ドキュメント
 
 - **環境変数**: `../infrastructure/environment-variables.md` - 機密情報の管理方法
-- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - セキュリティアラートの設定
-
-
----
-
-## 関連ドキュメント
-
-### 参照元（このファイルを参照しているファイル）
-
-- **デプロイチェックリスト**: `../infrastructure/deployment-checklist.md` - セキュリティチェック項目
-- **監視とアラート**: `../infrastructure/monitoring-alerts.md` - セキュリティ監視
-
-### 参照先（このファイルが参照しているファイル）
-
-- **環境変数**: `../infrastructure/environment-variables.md` - 機密情報の管理方法
 - **監視とアラート**: `../infrastructure/monitoring-alerts.md` - セキュリティアラート設定

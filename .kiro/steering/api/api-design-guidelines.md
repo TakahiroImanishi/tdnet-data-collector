@@ -594,11 +594,5 @@ npx openapi-generator-cli generate -i docs/openapi.yaml -g typescript-axios -o s
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
-
-このファイルを参照しているファイルはありません。
-
-### 参照先（このファイルが参照しているファイル）
-
 - **データバリデーション**: `../development/data-validation.md` - APIバリデーションルール
 - **エラーコード**: `error-codes.md` - APIエラーコード標準

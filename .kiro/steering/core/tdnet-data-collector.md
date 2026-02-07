@@ -49,10 +49,13 @@ inclusion: always
 ### ファイル命名規則
 
 ```text
-work-log-[YYYYMMDD-HHMMSS].md
+work-log-[YYYYMMDD-HHMMSS]-[作業概要].md
 ```
 
-**例:** `work-log-20260207-143025.md`
+**例:** 
+- `work-log-20260207-143025-steering-requirements-review.md`
+- `work-log-20260207-150000-lambda-error-handling-implementation.md`
+- `work-log-20260207-160000-api-design-guidelines-update.md`
 
 ### 🔴 重要: 時間の正確な取得
 
@@ -70,15 +73,35 @@ PS> Get-Date -Format "yyyyMMdd-HHmmss"
 20260207-143025
 ```
 
+### 作業概要の命名ルール
+
+**形式:** ケバブケース（小文字、ハイフン区切り）
+
+**良い例:**
+- `steering-requirements-review` - steeringファイル要件レビュー
+- `lambda-error-handling` - Lambdaエラーハンドリング実装
+- `api-design-update` - API設計ガイドライン更新
+- `date-partition-implementation` - date_partition実装
+
+**悪い例:**
+- ❌ `Steering Requirements Review` - スペース、大文字を使用
+- ❌ `lambda_error_handling` - アンダースコアを使用
+- ❌ `APIDesignUpdate` - キャメルケースを使用
+- ❌ `作業記録` - 日本語を使用
+
 **禁止事項:**
 - ❌ 推測や概算の時間を使用しない（例: `160000`, `150000`）
 - ❌ 切りの良い時間を使用しない（例: `140000`, `150000`）
 - ✅ 必ず `Get-Date` コマンドで取得した正確な時間を使用する
+- ❌ 作業概要にスペース、アンダースコア、大文字、日本語を使用しない
+- ✅ 作業概要はケバブケース（小文字、ハイフン区切り）で記述する
 
 **理由:**
 - 作業記録の時系列を正確に追跡するため
 - 複数の作業記録が同じ時間になることを防ぐため
 - 作業時間の正確な記録のため
+- ファイル名から作業内容を即座に把握できるようにするため
+- ファイルシステムの互換性を確保するため（スペースや特殊文字を避ける）
 
 ### 記録内容
 
@@ -257,8 +280,9 @@ Get-Date -Format "yyyyMMdd-HHmmss"
 
 1. **作業記録の作成を明示的に指示**
    ```text
-   タスク開始時に work-log-[YYYYMMDD-HHMMSS].md を作成してください。
+   タスク開始時に work-log-[YYYYMMDD-HHMMSS]-[作業概要].md を作成してください。
    ファイル名には、PowerShellの Get-Date -Format "yyyyMMdd-HHmmss" で取得した正確な時刻を使用してください。
+   作業概要はケバブケース（小文字、ハイフン区切り）で記述してください。
    ```
 
 2. **作業記録の内容を指定**
@@ -273,17 +297,18 @@ Get-Date -Format "yyyyMMdd-HHmmss"
    ```
 
 **悪い例（作業記録の指示なし）:**
-```
+```text
 Issue 2: レート制限実装の詳細設計ドキュメントを作成してください。
 ```
 
 **良い例（作業記録の指示あり）:**
-```
+```text
 Issue 2: レート制限実装の詳細設計ドキュメントを作成してください。
 
 【重要】タスク開始時に以下を実施してください：
 1. PowerShellで現在時刻を取得: Get-Date -Format "yyyyMMdd-HHmmss"
-2. work-log-[取得した時刻].md を作成
+2. work-log-[取得した時刻]-rate-limiting-design.md を作成
+   （作業概要: rate-limiting-design をケバブケースで記述）
 3. タスク概要、実施内容、成果物、次回への申し送りを記録
 4. 保存先: .kiro/specs/tdnet-data-collector/work-logs/
 ```

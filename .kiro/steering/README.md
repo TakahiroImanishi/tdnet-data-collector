@@ -141,7 +141,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 #### レベル3: 中心的なファイル（多数のファイルを参照）
 
 **core/tdnet-implementation-rules.md** - プロジェクトの実装原則の中心
-```
+```text
 ├─→ core/error-handling-patterns.md
 ├─→ core/tdnet-data-collector.md
 ├─→ development/testing-strategy.md
@@ -160,7 +160,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 #### レベル2: 統合ファイル（複数のファイルを参照）
 
 **core/tdnet-data-collector.md** - タスク実行ルール
-```
+```text
 ├─→ core/tdnet-implementation-rules.md
 ├─→ core/error-handling-patterns.md
 ├─→ development/workflow-guidelines.md
@@ -170,7 +170,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 ```
 
 **core/error-handling-patterns.md** - エラーハンドリングの基本原則
-```
+```text
 ├─→ development/error-handling-implementation.md
 ├─→ api/error-codes.md
 ├─→ api/api-design-guidelines.md
@@ -178,7 +178,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 ```
 
 **infrastructure/deployment-checklist.md** - デプロイチェックリスト
-```
+```text
 ├─→ security/security-best-practices.md
 ├─→ infrastructure/environment-variables.md
 └─→ infrastructure/monitoring-alerts.md
@@ -187,18 +187,18 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 #### レベル1: 特化ファイル（少数のファイルを参照）
 
 **security/security-best-practices.md** - セキュリティベストプラクティス
-```
+```text
 ├─→ infrastructure/environment-variables.md
 └─→ infrastructure/monitoring-alerts.md
 ```
 
 **development/tdnet-scraping-patterns.md** - スクレイピングパターン
-```
+```text
 └─→ core/error-handling-patterns.md
 ```
 
 **development/lambda-implementation.md** - Lambda実装ガイドライン
-```
+```text
 ├─→ core/error-handling-patterns.md
 ├─→ development/error-handling-implementation.md
 ├─→ infrastructure/performance-optimization.md
@@ -206,18 +206,18 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 ```
 
 **development/testing-strategy.md** - テスト戦略
-```
+```text
 └─→ core/tdnet-implementation-rules.md
 ```
 
 **development/error-handling-implementation.md** - エラーハンドリング詳細実装
-```
+```text
 ├─→ core/error-handling-patterns.md
 └─→ api/error-codes.md
 ```
 
 **api/api-design-guidelines.md** - API設計ガイドライン
-```
+```text
 ├─→ development/data-validation.md
 └─→ api/error-codes.md
 ```

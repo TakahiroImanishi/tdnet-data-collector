@@ -451,11 +451,5 @@ export const handler = async (
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
-
 - **エラーハンドリング基本原則**: `../core/error-handling-patterns.md` - エラーコードの概要
 - **API設計ガイドライン**: `api-design-guidelines.md` - APIエラーレスポンス形式
-
-### 参照先（このファイルが参照しているファイル）
-
-このファイルは他のsteeringファイルを参照していません。

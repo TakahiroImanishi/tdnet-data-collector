@@ -309,11 +309,5 @@ aws iam get-role-policy \
 
 ## 関連ドキュメント
 
-### 参照元（このファイルを参照しているファイル）
-
 - **デプロイチェックリスト**: `deployment-checklist.md` - 環境変数の設定確認
 - **セキュリティベストプラクティス**: `../security/security-best-practices.md` - 機密情報の管理
-
-### 参照先（このファイルが参照しているファイル）
-
-このファイルは他のsteeringファイルを参照していません。
