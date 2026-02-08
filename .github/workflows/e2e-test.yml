@@ -1,0 +1,210 @@
+name: E2E Tests with LocalStack
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+  workflow_dispatch: # 手動実行を許可
+
+jobs:
+  e2e-test:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    
+    # タイムアウト設定（30分）
+    timeout-minutes: 30
+    
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+          - 4510-4559:4510-4559
+        env:
+          SERVICES: dynamodb,s3,cloudwatch,apigateway,lambda
+          DEBUG: 1
+          DATA_DIR: /tmp/localstack/data
+          DOCKER_HOST: unix:///var/run/docker.sock
+          LAMBDA_EXECUTOR: docker
+          LAMBDA_REMOTE_DOCKER: false
+          PERSISTENCE: 0  # CI環境では永続化不要
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 30s
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Wait for LocalStack to be ready
+        run: |
+          echo "Waiting for LocalStack to be ready..."
+          timeout 60 bash -c 'until curl -f http://localhost:4566/_localstack/health; do sleep 2; done'
+          echo "LocalStack is ready!"
+      
+      - name: Setup LocalStack resources
+        env:
+          AWS_REGION: ap-northeast-1
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          # AWS CLIのインストール（必要な場合）
+          if ! command -v aws &> /dev/null; then
+            echo "Installing AWS CLI..."
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -q awscliv2.zip
+            sudo ./aws/install
+          fi
+          
+          # DynamoDB テーブル作成
+          echo "Creating DynamoDB tables..."
+          
+          # tdnet_disclosures テーブル
+          aws --endpoint-url=$AWS_ENDPOINT_URL \
+              --region=$AWS_REGION \
+              dynamodb create-table \
+              --table-name tdnet_disclosures \
+              --attribute-definitions \
+                  AttributeName=disclosure_id,AttributeType=S \
+                  AttributeName=date_partition,AttributeType=S \
+                  AttributeName=disclosed_at,AttributeType=S \
+              --key-schema \
+                  AttributeName=disclosure_id,KeyType=HASH \
+              --global-secondary-indexes \
+                  '[{"IndexName":"DatePartitionIndex","KeySchema":[{"AttributeName":"date_partition","KeyType":"HASH"},{"AttributeName":"disclosed_at","KeyType":"RANGE"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' \
+              --provisioned-throughput \
+                  ReadCapacityUnits=5,WriteCapacityUnits=5 \
+              --no-cli-pager || echo "Table tdnet_disclosures may already exist"
+          
+          # tdnet_executions テーブル
+          aws --endpoint-url=$AWS_ENDPOINT_URL \
+              --region=$AWS_REGION \
+              dynamodb create-table \
+              --table-name tdnet_executions \
+              --attribute-definitions \
+                  AttributeName=execution_id,AttributeType=S \
+                  AttributeName=started_at,AttributeType=S \
+              --key-schema \
+                  AttributeName=execution_id,KeyType=HASH \
+              --global-secondary-indexes \
+                  '[{"IndexName":"StartedAtIndex","KeySchema":[{"AttributeName":"started_at","KeyType":"HASH"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' \
+              --provisioned-throughput \
+                  ReadCapacityUnits=5,WriteCapacityUnits=5 \
+              --no-cli-pager || echo "Table tdnet_executions may already exist"
+          
+          # S3 バケット作成
+          echo "Creating S3 buckets..."
+          aws --endpoint-url=$AWS_ENDPOINT_URL \
+              --region=$AWS_REGION \
+              s3 mb s3://tdnet-data-collector-pdfs-local \
+              --no-cli-pager || echo "Bucket tdnet-data-collector-pdfs-local may already exist"
+          
+          aws --endpoint-url=$AWS_ENDPOINT_URL \
+              --region=$AWS_REGION \
+              s3 mb s3://tdnet-data-collector-exports-local \
+              --no-cli-pager || echo "Bucket tdnet-data-collector-exports-local may already exist"
+          
+          # リソース確認
+          echo "Verifying resources..."
+          aws --endpoint-url=$AWS_ENDPOINT_URL --region=$AWS_REGION dynamodb list-tables --no-cli-pager
+          aws --endpoint-url=$AWS_ENDPOINT_URL --region=$AWS_REGION s3 ls --no-cli-pager
+          
+          echo "LocalStack setup complete!"
+      
+      - name: Run E2E tests
+        env:
+          # AWS設定（LocalStack）
+          AWS_REGION: ap-northeast-1
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          # DynamoDB設定
+          DYNAMODB_TABLE_DISCLOSURES: tdnet_disclosures
+          DYNAMODB_TABLE_EXECUTIONS: tdnet_executions
+          # S3設定
+          S3_BUCKET_PDFS: tdnet-data-collector-pdfs-local
+          S3_BUCKET_EXPORTS: tdnet-data-collector-exports-local
+          # API設定
+          API_KEY: test-api-key-localstack-e2e
+          # ログ設定
+          LOG_LEVEL: DEBUG
+          # レート制限設定
+          RATE_LIMIT_DELAY_MS: 100
+          # 環境識別子
+          ENVIRONMENT: ci
+          NODE_ENV: test
+          TEST_ENV: e2e
+        run: npm run test:e2e
+      
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results.json ]; then
+            echo "Test results:" >> $GITHUB_STEP_SUMMARY
+            cat test-results.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No test results file found" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            coverage/
+          retention-days: 30
+      
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let comment = '## 🧪 E2E Test Results\n\n';
+            
+            // テスト結果の読み込み（存在する場合）
+            try {
+              if (fs.existsSync('test-results.json')) {
+                const results = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
+                comment += `- ✅ Tests Passed: ${results.numPassedTests || 0}\n`;
+                comment += `- ❌ Tests Failed: ${results.numFailedTests || 0}\n`;
+                comment += `- ⏭️ Tests Skipped: ${results.numPendingTests || 0}\n`;
+                comment += `- ⏱️ Duration: ${results.testDuration || 'N/A'}ms\n`;
+              } else {
+                comment += '⚠️ Test results file not found\n';
+              }
+            } catch (error) {
+              comment += `⚠️ Error reading test results: ${error.message}\n`;
+            }
+            
+            comment += '\n---\n';
+            comment += `🔗 [View full test results](${context.payload.pull_request.html_url}/checks)\n`;
+            
+            // PRにコメント投稿
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

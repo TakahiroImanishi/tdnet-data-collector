@@ -1,0 +1,123 @@
+name: Unit Tests & Code Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+  workflow_dispatch: # 手動実行を許可
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    
+    # タイムアウト設定（15分）
+    timeout-minutes: 15
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Check code formatting
+        run: npm run format:check
+      
+      - name: Build TypeScript
+        run: npm run build
+      
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+      
+      - name: Generate coverage report
+        if: always()
+        run: |
+          echo "## 📊 Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "Coverage summary:" >> $GITHUB_STEP_SUMMARY
+            cat coverage/coverage-summary.json | jq -r '.total | "- Lines: \(.lines.pct)%\n- Statements: \(.statements.pct)%\n- Functions: \(.functions.pct)%\n- Branches: \(.branches.pct)%"' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No coverage summary found" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.node-version }}
+          path: |
+            coverage/
+            test-results/
+          retention-days: 30
+      
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let comment = '## 📊 Code Coverage Report\n\n';
+            
+            try {
+              if (fs.existsSync('coverage/coverage-summary.json')) {
+                const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+                const total = coverage.total;
+                
+                comment += '| Metric | Coverage |\n';
+                comment += '|--------|----------|\n';
+                comment += `| Lines | ${total.lines.pct}% (${total.lines.covered}/${total.lines.total}) |\n`;
+                comment += `| Statements | ${total.statements.pct}% (${total.statements.covered}/${total.statements.total}) |\n`;
+                comment += `| Functions | ${total.functions.pct}% (${total.functions.covered}/${total.functions.total}) |\n`;
+                comment += `| Branches | ${total.branches.pct}% (${total.branches.covered}/${total.branches.total}) |\n`;
+                
+                // カバレッジ目標との比較
+                const linesCoverage = total.lines.pct;
+                if (linesCoverage >= 80) {
+                  comment += '\n✅ Coverage meets the target (≥80%)\n';
+                } else {
+                  comment += `\n⚠️ Coverage is below target: ${linesCoverage}% < 80%\n`;
+                }
+              } else {
+                comment += '⚠️ Coverage summary not found\n';
+              }
+            } catch (error) {
+              comment += `⚠️ Error reading coverage: ${error.message}\n`;
+            }
+            
+            comment += '\n---\n';
+            comment += `🔗 [View full report](${context.payload.pull_request.html_url}/checks)\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

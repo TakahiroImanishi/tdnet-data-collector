@@ -1,0 +1,238 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+  workflow_dispatch: # 手動実行を許可
+
+jobs:
+  # ==========================================
+  # Job 1: Code Quality & Unit Tests
+  # ==========================================
+  quality:
+    name: Code Quality & Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Check code formatting
+        run: npm run format:check
+      
+      - name: Build TypeScript
+        run: npm run build
+      
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+      
+      - name: Upload coverage
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+      
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            coverage/
+            test-results/
+          retention-days: 30
+  
+  # ==========================================
+  # Job 2: E2E Tests with LocalStack
+  # ==========================================
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: quality # Unit testsが成功した後に実行
+    
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb,s3,cloudwatch,apigateway,lambda
+          DEBUG: 1
+          PERSISTENCE: 0
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 30s
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Wait for LocalStack
+        run: |
+          echo "Waiting for LocalStack..."
+          timeout 60 bash -c 'until curl -f http://localhost:4566/_localstack/health; do sleep 2; done'
+          echo "LocalStack is ready!"
+      
+      - name: Setup LocalStack resources
+        env:
+          AWS_REGION: ap-northeast-1
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          # AWS CLI確認
+          if ! command -v aws &> /dev/null; then
+            echo "Installing AWS CLI..."
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip -q awscliv2.zip
+            sudo ./aws/install
+          fi
+          
+          # DynamoDB テーブル作成
+          echo "Creating DynamoDB tables..."
+          aws --endpoint-url=$AWS_ENDPOINT_URL --region=$AWS_REGION \
+              dynamodb create-table \
+              --table-name tdnet_disclosures \
+              --attribute-definitions \
+                  AttributeName=disclosure_id,AttributeType=S \
+                  AttributeName=date_partition,AttributeType=S \
+                  AttributeName=disclosed_at,AttributeType=S \
+              --key-schema AttributeName=disclosure_id,KeyType=HASH \
+              --global-secondary-indexes \
+                  '[{"IndexName":"DatePartitionIndex","KeySchema":[{"AttributeName":"date_partition","KeyType":"HASH"},{"AttributeName":"disclosed_at","KeyType":"RANGE"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' \
+              --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+              --no-cli-pager || true
+          
+          aws --endpoint-url=$AWS_ENDPOINT_URL --region=$AWS_REGION \
+              dynamodb create-table \
+              --table-name tdnet_executions \
+              --attribute-definitions \
+                  AttributeName=execution_id,AttributeType=S \
+                  AttributeName=started_at,AttributeType=S \
+              --key-schema AttributeName=execution_id,KeyType=HASH \
+              --global-secondary-indexes \
+                  '[{"IndexName":"StartedAtIndex","KeySchema":[{"AttributeName":"started_at","KeyType":"HASH"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' \
+              --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+              --no-cli-pager || true
+          
+          # S3 バケット作成
+          echo "Creating S3 buckets..."
+          aws --endpoint-url=$AWS_ENDPOINT_URL --region=$AWS_REGION \
+              s3 mb s3://tdnet-data-collector-pdfs-local --no-cli-pager || true
+          aws --endpoint-url=$AWS_ENDPOINT_URL --region=$AWS_REGION \
+              s3 mb s3://tdnet-data-collector-exports-local --no-cli-pager || true
+          
+          echo "LocalStack setup complete!"
+      
+      - name: Run E2E tests
+        env:
+          AWS_REGION: ap-northeast-1
+          AWS_ENDPOINT_URL: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          DYNAMODB_TABLE_DISCLOSURES: tdnet_disclosures
+          DYNAMODB_TABLE_EXECUTIONS: tdnet_executions
+          S3_BUCKET_PDFS: tdnet-data-collector-pdfs-local
+          S3_BUCKET_EXPORTS: tdnet-data-collector-exports-local
+          API_KEY: test-api-key-localstack-e2e
+          LOG_LEVEL: DEBUG
+          RATE_LIMIT_DELAY_MS: 100
+          ENVIRONMENT: ci
+          NODE_ENV: test
+          TEST_ENV: e2e
+        run: npm run test:e2e
+      
+      - name: Upload E2E test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            coverage/
+          retention-days: 30
+  
+  # ==========================================
+  # Job 3: Test Results Summary
+  # ==========================================
+  summary:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: [quality, e2e]
+    if: always()
+    
+    steps:
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: unit-results/
+        continue-on-error: true
+      
+      - name: Download E2E test results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-results
+          path: e2e-results/
+        continue-on-error: true
+      
+      - name: Generate summary
+        run: |
+          echo "# 🎯 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Unit Tests
+          echo "### ✅ Unit Tests" >> $GITHUB_STEP_SUMMARY
+          if [ -f unit-results/coverage/coverage-summary.json ]; then
+            echo "Coverage data found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No coverage data" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # E2E Tests
+          echo "### 🧪 E2E Tests" >> $GITHUB_STEP_SUMMARY
+          if [ -d e2e-results ]; then
+            echo "E2E test results found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No E2E test results" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "Pipeline completed at $(date)" >> $GITHUB_STEP_SUMMARY
