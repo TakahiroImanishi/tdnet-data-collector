@@ -1183,14 +1183,16 @@
       - S3クライアントエラー時の分岐
     - 推定テストケース: 5件
   
-  - [ ] **15.29-B: src/lambda/export/create-export-job.ts (50%)**
-    - 現状: 3/6ブランチ
-    - 不足: 3ブランチ
+  - [x] **15.29-B: src/lambda/export/create-export-job.ts (50% → 100%)**
+    - 現状: 3/6ブランチ → **6/6ブランチ** ✅
+    - 目標: 80%以上 → **100%達成** ✅
     - テスト対象:
-      - フィルター条件の組み合わせ分岐
-      - DynamoDBエラー時の分岐
-      - TTL計算の境界値
-    - 推定テストケース: 6件
+      - 環境変数デフォルト値分岐（EXPORT_STATUS_TABLE_NAME、AWS_REGION、AWS_ENDPOINT_URL）
+      - 再試行ロジック分岐（ProvisionedThroughputExceededException）
+      - エラーハンドリング分岐（再試行あり/なし）
+    - テストケース: 32件（+3件追加）
+    - _完了: 2026-02-08 22:03:20_
+    - _作業記録: work-log-20260208-220320-task15-29-b-create-export-job.md_
   
   - [ ] **15.29-C: src/lambda/collect/handler.ts (57.5%)**
     - 現状: 23/40ブランチ

@@ -51,11 +51,17 @@ export async function generateSignedUrl(
 
     return signedUrl;
   } catch (error) {
+    // エラーオブジェクトのプロパティを安全に取得
+    const errorObj = error as any;
+    const errorType = errorObj?.name;
+    const errorMessage = errorObj?.message;
+    const stackTrace = errorObj?.stack;
+
     logger.error('Failed to generate signed URL', {
-      error_type: error.name,
-      error_message: error.message,
+      error_type: errorType,
+      error_message: errorMessage,
       context: { s3_key, expires_in: expiresIn },
-      stack_trace: error.stack,
+      stack_trace: stackTrace,
     });
 
     // S3エラーは再試行可能

@@ -100,12 +100,20 @@ describe('POST /collect Handler', () => {
     process.env.COLLECTOR_FUNCTION_NAME = 'tdnet-collector';
     process.env.AWS_REGION = 'ap-northeast-1';
     process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:tdnet-api-key';
+    
+    // APIキーキャッシュをクリア（テスト間の影響を防ぐ）
+    // Note: キャッシュはモジュールスコープにあるため、直接アクセスできない
+    // 代わりに、各テストで新しいAPIキーを使用するか、TEST_ENVを設定する
+    delete process.env.TEST_ENV;
+    delete process.env.API_KEY;
   });
 
   afterEach(() => {
     delete process.env.COLLECTOR_FUNCTION_NAME;
     delete process.env.AWS_REGION;
     delete process.env.API_KEY_SECRET_ARN;
+    delete process.env.TEST_ENV;
+    delete process.env.API_KEY;
   });
 
   describe('正常系', () => {
@@ -459,6 +467,154 @@ describe('POST /collect Handler', () => {
       const body = JSON.parse(result.body);
       expect(body.status).toBe('error');
       expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+  });
+
+  describe('APIキー認証エラー', () => {
+    it('APIキーヘッダーがない場合は401を返す', async () => {
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates, '');
+      delete event.headers['x-api-key'];
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(401);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('API key is required');
+    });
+
+    it('無効なAPIキーの場合は401を返す', async () => {
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates, 'invalid-api-key');
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(401);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Invalid API key');
+    });
+
+    it('Secrets Manager取得エラーの場合は500を返す', async () => {
+      secretsMock.reset();
+      secretsMock.on(GetSecretValueCommand).rejects(new Error('Secrets Manager error'));
+
+      // Lambda mockは不要（APIキー検証段階でエラーになるため）
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      // getApiKey()のエラーはmain handlerのcatchブロックで"Failed to retrieve API key"として処理される
+      expect(body.error.message).toBe('Failed to retrieve API key');
+    });
+
+    it('Secrets ManagerがSecretStringを返さない場合は500を返す', async () => {
+      secretsMock.reset();
+      secretsMock.on(GetSecretValueCommand).resolves({
+        SecretString: undefined,
+      });
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('Failed to retrieve API key');
+    });
+
+    it('API_KEY_SECRET_ARN環境変数が設定されていない場合は500を返す', async () => {
+      const originalArn = process.env.API_KEY_SECRET_ARN;
+      delete process.env.API_KEY_SECRET_ARN;
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('Failed to retrieve API key');
+
+      // 環境変数を復元
+      if (originalArn) {
+        process.env.API_KEY_SECRET_ARN = originalArn;
+      }
+    });
+  });
+
+  describe('バリデーションエラー（追加）', () => {
+    it('end_dateのフォーマットが不正な場合は400を返す', async () => {
+      const event: APIGatewayProxyEvent = {
+        body: JSON.stringify({
+          start_date: getDaysAgo(7),
+          end_date: '2024/01/15', // 不正なフォーマット
+        }),
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
+        multiValueHeaders: {},
+        httpMethod: 'POST',
+        isBase64Encoded: false,
+        path: '/collect',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid end_date format');
+    });
+
+    it('end_dateが存在しない日付の場合は400を返す', async () => {
+      const today = new Date();
+      const year = today.getFullYear();
+      
+      const event = createTestEvent({
+        start_date: `${year}-02-01`,
+        end_date: `${year}-02-30`, // 2月30日は存在しない
+      });
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid end_date');
+    });
+
+    it('end_dateが無効な日付（NaN）の場合は400を返す', async () => {
+      const event = createTestEvent({
+        start_date: getDaysAgo(7),
+        end_date: '2024-13-01', // 13月は存在しない
+      });
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid end_date');
     });
   });
 });

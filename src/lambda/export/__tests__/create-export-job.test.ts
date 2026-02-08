@@ -6,7 +6,6 @@
 
 // モック設定（importより前に定義）
 const mockSend = jest.fn();
-const mockRetryWithBackoff = jest.fn();
 const mockLoggerInfo = jest.fn();
 const mockLoggerError = jest.fn();
 
@@ -27,9 +26,13 @@ jest.mock('../../../utils/logger', () => ({
   },
 }));
 
-jest.mock('../../../utils/retry', () => ({
-  retryWithBackoff: mockRetryWithBackoff,
-}));
+// retryWithBackoffは実際の実装を使用（ブランチカバレッジのため）
+jest.mock('../../../utils/retry', () => {
+  const actual = jest.requireActual('../../../utils/retry');
+  return {
+    retryWithBackoff: actual.retryWithBackoff,
+  };
+});
 
 import { createExportJob } from '../create-export-job';
 import { ExportRequestBody } from '../types';
@@ -51,12 +54,8 @@ describe('createExportJob', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSend.mockClear();
-    mockRetryWithBackoff.mockClear();
     mockLoggerInfo.mockClear();
     mockLoggerError.mockClear();
-
-    // デフォルトでretryWithBackoffは渡された関数を実行
-    mockRetryWithBackoff.mockImplementation(async (fn) => await fn());
 
     // デフォルトでDynamoDB操作は成功
     mockSend.mockResolvedValue({
@@ -66,6 +65,7 @@ describe('createExportJob', () => {
     // 環境変数設定
     process.env.EXPORT_STATUS_TABLE_NAME = 'test-export-status-table';
     process.env.AWS_REGION = 'ap-northeast-1';
+    delete process.env.AWS_ENDPOINT_URL; // デフォルトでは未設定
 
     // Date.now()をモック（一貫したタイムスタンプ）
     jest.spyOn(Date, 'now').mockReturnValue(1705305600000); // 2024-01-15 10:00:00 UTC
@@ -286,62 +286,51 @@ describe('createExportJob', () => {
   });
 
   describe('再試行設定', () => {
-    it('retryWithBackoffが呼び出される', async () => {
-      // Act
-      await createExportJob(mockRequestBody, mockRequestId);
-
-      // Assert
-      expect(mockRetryWithBackoff).toHaveBeenCalledTimes(1);
-      expect(mockRetryWithBackoff).toHaveBeenCalledWith(
-        expect.any(Function),
-        expect.objectContaining({
-          maxRetries: 3,
-          initialDelay: 1000,
-          backoffMultiplier: 2,
-          jitter: true,
-          shouldRetry: expect.any(Function),
-        })
-      );
-    });
-
     it('ProvisionedThroughputExceededExceptionで再試行する', async () => {
       // Arrange
-      const error = new Error('Provisioned throughput exceeded');
-      error.name = 'ProvisionedThroughputExceededException';
-
-      // retryWithBackoffの設定を取得
-      mockRetryWithBackoff.mockImplementation(async (fn, options) => {
-        // shouldRetry関数をテスト
-        const shouldRetry = options.shouldRetry;
-        expect(shouldRetry(error)).toBe(true);
-        return await fn();
+      let attemptCount = 0;
+      mockSend.mockImplementation(() => {
+        attemptCount++;
+        if (attemptCount < 3) {
+          const error = new Error('Provisioned throughput exceeded');
+          error.name = 'ProvisionedThroughputExceededException';
+          return Promise.reject(error);
+        }
+        return Promise.resolve({ $metadata: { httpStatusCode: 200 } });
       });
 
       // Act
       await createExportJob(mockRequestBody, mockRequestId);
 
       // Assert
-      expect(mockRetryWithBackoff).toHaveBeenCalled();
+      expect(mockSend).toHaveBeenCalledTimes(3);
+      expect(attemptCount).toBe(3);
     });
 
     it('その他のエラーでは再試行しない', async () => {
       // Arrange
       const error = new Error('Validation error');
       error.name = 'ValidationException';
+      mockSend.mockRejectedValue(error);
 
-      // retryWithBackoffの設定を取得
-      mockRetryWithBackoff.mockImplementation(async (fn, options) => {
-        // shouldRetry関数をテスト
-        const shouldRetry = options.shouldRetry;
-        expect(shouldRetry(error)).toBe(false);
-        return await fn();
-      });
+      // Act & Assert
+      await expect(createExportJob(mockRequestBody, mockRequestId)).rejects.toThrow(
+        'Validation error'
+      );
+      expect(mockSend).toHaveBeenCalledTimes(1);
+    });
 
-      // Act
-      await createExportJob(mockRequestBody, mockRequestId);
+    it('ResourceNotFoundExceptionでは再試行しない', async () => {
+      // Arrange
+      const error = new Error('Resource not found');
+      error.name = 'ResourceNotFoundException';
+      mockSend.mockRejectedValue(error);
 
-      // Assert
-      expect(mockRetryWithBackoff).toHaveBeenCalled();
+      // Act & Assert
+      await expect(createExportJob(mockRequestBody, mockRequestId)).rejects.toThrow(
+        'Resource not found'
+      );
+      expect(mockSend).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -350,7 +339,7 @@ describe('createExportJob', () => {
       // Arrange
       const dynamoError = new Error('DynamoDB error');
       dynamoError.name = 'InternalServerError';
-      mockRetryWithBackoff.mockRejectedValue(dynamoError);
+      mockSend.mockRejectedValue(dynamoError);
 
       // Act & Assert
       await expect(createExportJob(mockRequestBody, mockRequestId)).rejects.toThrow(
@@ -362,24 +351,28 @@ describe('createExportJob', () => {
       // Arrange
       const throughputError = new Error('Provisioned throughput exceeded');
       throughputError.name = 'ProvisionedThroughputExceededException';
-      mockRetryWithBackoff.mockRejectedValue(throughputError);
+      mockSend.mockRejectedValue(throughputError);
 
       // Act & Assert
       await expect(createExportJob(mockRequestBody, mockRequestId)).rejects.toThrow(
         'Provisioned throughput exceeded'
       );
+      // 再試行されることを確認（maxRetries: 3 + 初回 = 4回）
+      expect(mockSend).toHaveBeenCalledTimes(4);
     });
 
     it('ConditionalCheckFailedExceptionが発生した場合、エラーを伝播する', async () => {
       // Arrange
       const conditionalError = new Error('Conditional check failed');
       conditionalError.name = 'ConditionalCheckFailedException';
-      mockRetryWithBackoff.mockRejectedValue(conditionalError);
+      mockSend.mockRejectedValue(conditionalError);
 
       // Act & Assert
       await expect(createExportJob(mockRequestBody, mockRequestId)).rejects.toThrow(
         'Conditional check failed'
       );
+      // 再試行されないことを確認
+      expect(mockSend).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -413,6 +406,76 @@ describe('createExportJob', () => {
       const command = mockSend.mock.calls[0][0] as PutItemCommand;
       // 環境変数で設定されたテーブル名が使用される
       expect(command.input.TableName).toBe(process.env.EXPORT_STATUS_TABLE_NAME);
+    });
+
+    it('EXPORT_STATUS_TABLE_NAMEが未設定の場合、デフォルト値が使用される', async () => {
+      // Arrange
+      delete process.env.EXPORT_STATUS_TABLE_NAME;
+      
+      // モジュールを再読み込みしてデフォルト値を適用
+      jest.resetModules();
+      const { createExportJob: createExportJobReloaded } = require('../create-export-job');
+
+      // Act
+      await createExportJobReloaded(mockRequestBody, mockRequestId);
+
+      // Assert
+      const command = mockSend.mock.calls[0][0] as PutItemCommand;
+      expect(command.input.TableName).toBe('tdnet-export-status');
+    });
+
+    it('AWS_ENDPOINT_URLが設定されている場合、エンドポイントが使用される', async () => {
+      // Arrange
+      process.env.AWS_ENDPOINT_URL = 'http://localhost:4566';
+      
+      // モジュールを再読み込みしてエンドポイント設定を適用
+      jest.resetModules();
+      jest.mock('@aws-sdk/client-dynamodb', () => {
+        const actualModule = jest.requireActual('@aws-sdk/client-dynamodb');
+        return {
+          ...actualModule,
+          DynamoDBClient: jest.fn().mockImplementation((config) => {
+            // エンドポイントが設定されていることを確認
+            expect(config.endpoint).toBe('http://localhost:4566');
+            return { send: mockSend };
+          }),
+        };
+      });
+      
+      const { createExportJob: createExportJobReloaded } = require('../create-export-job');
+
+      // Act
+      await createExportJobReloaded(mockRequestBody, mockRequestId);
+
+      // Assert
+      expect(mockSend).toHaveBeenCalled();
+    });
+
+    it('AWS_REGIONが未設定の場合、デフォルトリージョンが使用される', async () => {
+      // Arrange
+      delete process.env.AWS_REGION;
+      
+      // モジュールを再読み込みしてデフォルトリージョンを適用
+      jest.resetModules();
+      jest.mock('@aws-sdk/client-dynamodb', () => {
+        const actualModule = jest.requireActual('@aws-sdk/client-dynamodb');
+        return {
+          ...actualModule,
+          DynamoDBClient: jest.fn().mockImplementation((config) => {
+            // デフォルトリージョンが設定されていることを確認
+            expect(config.region).toBe('ap-northeast-1');
+            return { send: mockSend };
+          }),
+        };
+      });
+      
+      const { createExportJob: createExportJobReloaded } = require('../create-export-job');
+
+      // Act
+      await createExportJobReloaded(mockRequestBody, mockRequestId);
+
+      // Assert
+      expect(mockSend).toHaveBeenCalled();
     });
   });
 
