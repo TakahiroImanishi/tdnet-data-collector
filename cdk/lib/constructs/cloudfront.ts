@@ -147,31 +147,23 @@ export class DashboardCloudFront extends Construct {
 
       // HTTPバージョン
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
-
-      // 最小TLSバージョン（セキュリティ要件: TLS 1.2以上）
-      // デフォルトのCloudFront証明書を使用する場合でも、TLS 1.2以上を強制
-      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
     });
 
     // CloudFront Distribution URLを出力
-    // 注: CfnOutputのIDは、Constructのスコープ内で一意である必要があります
-    // テストでは `{constructId}DistributionDomainName` の形式を期待しているため、
-    // IDを `${id}DistributionDomainName` とすることで、
-    // 最終的な出力名が `{stackName}{constructId}DistributionDomainName` となります
-    new cdk.CfnOutput(this, `${id}DistributionDomainName`, {
+    new cdk.CfnOutput(this, 'DistributionDomainName', {
       value: this.distribution.distributionDomainName,
       description: 'CloudFront Distribution Domain Name',
       exportName: `tdnet-dashboard-domain-${props.environment}`,
     });
 
-    new cdk.CfnOutput(this, `${id}DistributionId`, {
+    new cdk.CfnOutput(this, 'DistributionId', {
       value: this.distribution.distributionId,
       description: 'CloudFront Distribution ID',
       exportName: `tdnet-dashboard-distribution-id-${props.environment}`,
     });
 
     // CloudFront Distribution URLをHTTPS形式で出力
-    new cdk.CfnOutput(this, `${id}DashboardUrl`, {
+    new cdk.CfnOutput(this, 'DashboardUrl', {
       value: `https://${this.distribution.distributionDomainName}`,
       description: 'TDnet Dashboard URL',
       exportName: `tdnet-dashboard-url-${props.environment}`,
