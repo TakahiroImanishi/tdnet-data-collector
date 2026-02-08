@@ -396,7 +396,7 @@
   - _関連: steering/development/tdnet-scraping-patterns.md_
   - _完了: 2026-02-08, すべての検証項目で合格_
 
-- [ ] 9.10 CloudWatchメトリクスの完全性検証
+- [x] 9.10 CloudWatchメトリクスの完全性検証
   - すべてのLambda関数でエラーメトリクスが送信されていることを確認
   - 成功メトリクス、実行時間メトリクスが送信されていることを確認
   - バッチ処理結果メトリクスが送信されていることを確認
@@ -405,6 +405,7 @@
   - _優先度: 🟠 High_
   - _推定工数: 2-3時間_
   - _関連: steering/infrastructure/monitoring-alerts.md_
+  - _完了: 2026-02-08, すべての検証項目で合格_
 
 - [x] 9.11 Lambda実装チェックリストの完全性検証
   - すべてのLambda関数が実装チェックリストの必須項目を満たしていることを確認
@@ -415,7 +416,7 @@
   - _関連: steering/core/error-handling-patterns.md（Lambda実装チェックリスト）_
   - _完了: 2026-02-08, すべての必須項目で合格_
 
-- [ ] 9.12 CDK構成の完全性検証
+- [x] 9.12 CDK構成の完全性検証
   - すべてのLambda関数のタイムアウト、メモリ、環境変数が適切に設定されていることを確認
   - IAMロールが最小権限の原則に従っていることを確認
   - DynamoDBテーブル、S3バケットの暗号化が有効化されていることを確認
@@ -424,6 +425,7 @@
   - _優先度: 🟠 High_
   - _推定工数: 3-4時間_
   - _関連: steering/infrastructure/performance-optimization.md, steering/security/security-best-practices.md_
+  - _完了: 2026-02-08, すべての検証項目で合格_
 
 - [ ] 9.13 テストカバレッジの完全性検証
   - ユニットテストのコードカバレッジが80%以上であることを確認
