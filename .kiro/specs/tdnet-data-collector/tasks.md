@@ -340,7 +340,7 @@
   - _成果物: dependencies.ts, test-helpers.ts, handler.test.improved.ts, README.md_
   - _注意: 既存テストの更新は次のステップ（Phase 2並行作業）_
 
-- [ ] 9.5 ドキュメント化（Phase 2並行作業）
+- [x] 9.5 ドキュメント化（Phase 2並行作業）
   - Lambda専用ログヘルパーのドキュメント化
   - 複数メトリクス一括送信機能のドキュメント化
   - Lambda Collectorアーキテクチャドキュメントの作成
@@ -348,7 +348,8 @@
   - _Requirements: 要件13.1（ドキュメント）_
   - _優先度: 🟠 High (Lambda専用ログヘルパー、一括送信), 🟡 Medium (アーキテクチャ、README)_
   - _推定工数: 7-10時間_
-  - _注意: Phase 2開始後に並行して実施_
+  - _完了: 2026-02-08, すべてのドキュメント化タスクを完了_
+  - _成果物: docs/guides/lambda-error-logging.md, docs/guides/batch-metrics.md, docs/architecture/lambda-collector.md, README.md（大幅拡充）_
 
 - [ ] 9.6 統合テストの完成（Phase 2並行作業）
   - Property 1-2の統合テスト実装（handler.integration.test.ts）
