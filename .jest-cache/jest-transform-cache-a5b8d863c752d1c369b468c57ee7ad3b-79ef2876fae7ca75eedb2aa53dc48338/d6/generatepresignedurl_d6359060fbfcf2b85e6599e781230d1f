@@ -1,0 +1,731 @@
+3c557588cceaab9f6a8ff6ca9586a387
+"use strict";
+
+/**
+ * Generate Presigned URL
+ *
+ * S3署名付きURLを生成します。
+ * PDFファイルのダウンロード用に使用されます。
+ *
+ * Requirements: 要件4.4（PDFダウンロード）
+ */
+/* istanbul ignore next */
+function cov_25a83aii25() {
+  var path = "C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\query\\generate-presigned-url.ts";
+  var hash = "0e53b37809acdc0c29833b12cf449c6cac492aa2";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\query\\generate-presigned-url.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 52
+        }
+      },
+      "2": {
+        start: {
+          line: 12,
+          column: 0
+        },
+        end: {
+          line: 12,
+          column: 54
+        }
+      },
+      "3": {
+        start: {
+          line: 13,
+          column: 20
+        },
+        end: {
+          line: 13,
+          column: 49
+        }
+      },
+      "4": {
+        start: {
+          line: 14,
+          column: 31
+        },
+        end: {
+          line: 14,
+          column: 71
+        }
+      },
+      "5": {
+        start: {
+          line: 15,
+          column: 17
+        },
+        end: {
+          line: 15,
+          column: 46
+        }
+      },
+      "6": {
+        start: {
+          line: 17,
+          column: 17
+        },
+        end: {
+          line: 19,
+          column: 2
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 20
+        },
+        end: {
+          line: 20,
+          column: 77
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 31
+        },
+        end: {
+          line: 21,
+          column: 35
+        }
+      },
+      "9": {
+        start: {
+          line: 36,
+          column: 4
+        },
+        end: {
+          line: 62,
+          column: 5
+        }
+      },
+      "10": {
+        start: {
+          line: 37,
+          column: 8
+        },
+        end: {
+          line: 41,
+          column: 11
+        }
+      },
+      "11": {
+        start: {
+          line: 42,
+          column: 24
+        },
+        end: {
+          line: 45,
+          column: 10
+        }
+      },
+      "12": {
+        start: {
+          line: 46,
+          column: 20
+        },
+        end: {
+          line: 48,
+          column: 10
+        }
+      },
+      "13": {
+        start: {
+          line: 49,
+          column: 8
+        },
+        end: {
+          line: 52,
+          column: 11
+        }
+      },
+      "14": {
+        start: {
+          line: 53,
+          column: 8
+        },
+        end: {
+          line: 53,
+          column: 19
+        }
+      },
+      "15": {
+        start: {
+          line: 56,
+          column: 8
+        },
+        end: {
+          line: 60,
+          column: 11
+        }
+      },
+      "16": {
+        start: {
+          line: 61,
+          column: 8
+        },
+        end: {
+          line: 61,
+          column: 20
+        }
+      },
+      "17": {
+        start: {
+          line: 72,
+          column: 19
+        },
+        end: {
+          line: 72,
+          column: 28
+        }
+      },
+      "18": {
+        start: {
+          line: 73,
+          column: 4
+        },
+        end: {
+          line: 85,
+          column: 8
+        }
+      },
+      "19": {
+        start: {
+          line: 74,
+          column: 8
+        },
+        end: {
+          line: 84,
+          column: 9
+        }
+      },
+      "20": {
+        start: {
+          line: 75,
+          column: 24
+        },
+        end: {
+          line: 75,
+          column: 68
+        }
+      },
+      "21": {
+        start: {
+          line: 76,
+          column: 12
+        },
+        end: {
+          line: 76,
+          column: 35
+        }
+      },
+      "22": {
+        start: {
+          line: 79,
+          column: 12
+        },
+        end: {
+          line: 82,
+          column: 15
+        }
+      },
+      "23": {
+        start: {
+          line: 86,
+          column: 4
+        },
+        end: {
+          line: 86,
+          column: 18
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "generatePresignedUrl",
+        decl: {
+          start: {
+            line: 35,
+            column: 15
+          },
+          end: {
+            line: 35,
+            column: 35
+          }
+        },
+        loc: {
+          start: {
+            line: 35,
+            column: 79
+          },
+          end: {
+            line: 63,
+            column: 1
+          }
+        },
+        line: 35
+      },
+      "1": {
+        name: "generatePresignedUrls",
+        decl: {
+          start: {
+            line: 71,
+            column: 15
+          },
+          end: {
+            line: 71,
+            column: 36
+          }
+        },
+        loc: {
+          start: {
+            line: 71,
+            column: 81
+          },
+          end: {
+            line: 87,
+            column: 1
+          }
+        },
+        line: 71
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 73,
+            column: 33
+          },
+          end: {
+            line: 73,
+            column: 34
+          }
+        },
+        loc: {
+          start: {
+            line: 73,
+            column: 50
+          },
+          end: {
+            line: 85,
+            column: 5
+          }
+        },
+        line: 73
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 18,
+            column: 12
+          },
+          end: {
+            line: 18,
+            column: 54
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 18,
+            column: 12
+          },
+          end: {
+            line: 18,
+            column: 34
+          }
+        }, {
+          start: {
+            line: 18,
+            column: 38
+          },
+          end: {
+            line: 18,
+            column: 54
+          }
+        }],
+        line: 18
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 20,
+            column: 20
+          },
+          end: {
+            line: 20,
+            column: 77
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 20,
+            column: 20
+          },
+          end: {
+            line: 20,
+            column: 46
+          }
+        }, {
+          start: {
+            line: 20,
+            column: 50
+          },
+          end: {
+            line: 20,
+            column: 77
+          }
+        }],
+        line: 20
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 35,
+            column: 43
+          },
+          end: {
+            line: 35,
+            column: 77
+          }
+        },
+        type: "default-arg",
+        locations: [{
+          start: {
+            line: 35,
+            column: 55
+          },
+          end: {
+            line: 35,
+            column: 77
+          }
+        }],
+        line: 35
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 59,
+            column: 19
+          },
+          end: {
+            line: 59,
+            column: 73
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 59,
+            column: 44
+          },
+          end: {
+            line: 59,
+            column: 57
+          }
+        }, {
+          start: {
+            line: 59,
+            column: 60
+          },
+          end: {
+            line: 59,
+            column: 73
+          }
+        }],
+        line: 59
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 71,
+            column: 45
+          },
+          end: {
+            line: 71,
+            column: 79
+          }
+        },
+        type: "default-arg",
+        locations: [{
+          start: {
+            line: 71,
+            column: 57
+          },
+          end: {
+            line: 71,
+            column: 79
+          }
+        }],
+        line: 71
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 81,
+            column: 23
+          },
+          end: {
+            line: 81,
+            column: 77
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 81,
+            column: 48
+          },
+          end: {
+            line: 81,
+            column: 61
+          }
+        }, {
+          start: {
+            line: 81,
+            column: 64
+          },
+          end: {
+            line: 81,
+            column: 77
+          }
+        }],
+        line: 81
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0],
+      "3": [0, 0],
+      "4": [0],
+      "5": [0, 0]
+    },
+    inputSourceMap: {
+      file: "C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\query\\generate-presigned-url.ts",
+      mappings: ";AAAA;;;;;;;GAOG;;AA2BH,oDAkCC;AASD,sDAsBC;AA1FD,kDAAgE;AAChE,wEAA6D;AAC7D,+CAA4C;AAE5C,0BAA0B;AAC1B,MAAM,QAAQ,GAAG,IAAI,oBAAQ,CAAC;IAC5B,MAAM,EAAE,OAAO,CAAC,GAAG,CAAC,UAAU,IAAI,gBAAgB;CACnD,CAAC,CAAC;AAEH,MAAM,WAAW,GAAG,OAAO,CAAC,GAAG,CAAC,cAAc,IAAI,2BAA2B,CAAC;AAC9E,MAAM,sBAAsB,GAAG,IAAI,CAAC,CAAC,MAAM;AAE3C;;;;;;;;;;;;GAYG;AACI,KAAK,UAAU,oBAAoB,CACxC,KAAa,EACb,YAAoB,sBAAsB;IAE1C,IAAI,CAAC;QACH,eAAM,CAAC,IAAI,CAAC,0BAA0B,EAAE;YACtC,MAAM,EAAE,KAAK;YACb,MAAM,EAAE,WAAW;YACnB,UAAU,EAAE,SAAS;SACtB,CAAC,CAAC;QAEH,MAAM,OAAO,GAAG,IAAI,4BAAgB,CAAC;YACnC,MAAM,EAAE,WAAW;YACnB,GAAG,EAAE,KAAK;SACX,CAAC,CAAC;QAEH,MAAM,GAAG,GAAG,MAAM,IAAA,mCAAY,EAAC,QAAQ,EAAE,OAAO,EAAE;YAChD,SAAS;SACV,CAAC,CAAC;QAEH,eAAM,CAAC,IAAI,CAAC,sCAAsC,EAAE;YAClD,MAAM,EAAE,KAAK;YACb,UAAU,EAAE,GAAG,CAAC,MAAM;SACvB,CAAC,CAAC;QAEH,OAAO,GAAG,CAAC;IACb,CAAC;IAAC,OAAO,KAAK,EAAE,CAAC;QACf,eAAM,CAAC,KAAK,CAAC,kCAAkC,EAAE;YAC/C,MAAM,EAAE,KAAK;YACb,MAAM,EAAE,WAAW;YACnB,KAAK,EAAE,KAAK,YAAY,KAAK,CAAC,CAAC,CAAC,KAAK,CAAC,OAAO,CAAC,CAAC,CAAC,MAAM,CAAC,KAAK,CAAC;SAC9D,CAAC,CAAC;QACH,MAAM,KAAK,CAAC;IACd,CAAC;AACH,CAAC;AAED;;;;;;GAMG;AACI,KAAK,UAAU,qBAAqB,CACzC,MAAgB,EAChB,YAAoB,sBAAsB;IAE1C,MAAM,MAAM,GAAG,IAAI,GAAG,EAAkB,CAAC;IAEzC,MAAM,OAAO,CAAC,GAAG,CACf,MAAM,CAAC,GAAG,CAAC,KAAK,EAAE,KAAK,EAAE,EAAE;QACzB,IAAI,CAAC;YACH,MAAM,GAAG,GAAG,MAAM,oBAAoB,CAAC,KAAK,EAAE,SAAS,CAAC,CAAC;YACzD,MAAM,CAAC,GAAG,CAAC,KAAK,EAAE,GAAG,CAAC,CAAC;QACzB,CAAC;QAAC,OAAO,KAAK,EAAE,CAAC;YACf,eAAM,CAAC,KAAK,CAAC,0CAA0C,EAAE;gBACvD,MAAM,EAAE,KAAK;gBACb,KAAK,EAAE,KAAK,YAAY,KAAK,CAAC,CAAC,CAAC,KAAK,CAAC,OAAO,CAAC,CAAC,CAAC,MAAM,CAAC,KAAK,CAAC;aAC9D,CAAC,CAAC;YACH,oBAAoB;QACtB,CAAC;IACH,CAAC,CAAC,CACH,CAAC;IAEF,OAAO,MAAM,CAAC;AAChB,CAAC",
+      names: [],
+      sources: ["C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\query\\generate-presigned-url.ts"],
+      sourcesContent: ["/**\r\n * Generate Presigned URL\r\n *\r\n * S3\u7F72\u540D\u4ED8\u304DURL\u3092\u751F\u6210\u3057\u307E\u3059\u3002\r\n * PDF\u30D5\u30A1\u30A4\u30EB\u306E\u30C0\u30A6\u30F3\u30ED\u30FC\u30C9\u7528\u306B\u4F7F\u7528\u3055\u308C\u307E\u3059\u3002\r\n *\r\n * Requirements: \u8981\u4EF64.4\uFF08PDF\u30C0\u30A6\u30F3\u30ED\u30FC\u30C9\uFF09\r\n */\r\n\r\nimport { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';\r\nimport { getSignedUrl } from '@aws-sdk/s3-request-presigner';\r\nimport { logger } from '../../utils/logger';\r\n\r\n// S3\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\uFF08\u30B0\u30ED\u30FC\u30D0\u30EB\u30B9\u30B3\u30FC\u30D7\u3067\u521D\u671F\u5316\uFF09\r\nconst s3Client = new S3Client({\r\n  region: process.env.AWS_REGION || 'ap-northeast-1',\r\n});\r\n\r\nconst BUCKET_NAME = process.env.S3_BUCKET_NAME || 'tdnet-data-collector-pdfs';\r\nconst URL_EXPIRATION_SECONDS = 3600; // 1\u6642\u9593\r\n\r\n/**\r\n * S3\u7F72\u540D\u4ED8\u304DURL\u3092\u751F\u6210\r\n *\r\n * @param s3Key S3\u30AD\u30FC\uFF08PDF\u30D5\u30A1\u30A4\u30EB\u306E\u30D1\u30B9\uFF09\r\n * @param expiresIn \u6709\u52B9\u671F\u9650\uFF08\u79D2\uFF09\u30C7\u30D5\u30A9\u30EB\u30C8: 3600\u79D2\uFF081\u6642\u9593\uFF09\r\n * @returns \u7F72\u540D\u4ED8\u304DURL\r\n *\r\n * @example\r\n * ```typescript\r\n * const url = await generatePresignedUrl('2024/01/15/TD20240115001_7203.pdf');\r\n * // => \"https://tdnet-pdfs.s3.amazonaws.com/2024/01/15/TD20240115001_7203.pdf?X-Amz-...\"\r\n * ```\r\n */\r\nexport async function generatePresignedUrl(\r\n  s3Key: string,\r\n  expiresIn: number = URL_EXPIRATION_SECONDS\r\n): Promise<string> {\r\n  try {\r\n    logger.info('Generating presigned URL', {\r\n      s3_key: s3Key,\r\n      bucket: BUCKET_NAME,\r\n      expires_in: expiresIn,\r\n    });\r\n\r\n    const command = new GetObjectCommand({\r\n      Bucket: BUCKET_NAME,\r\n      Key: s3Key,\r\n    });\r\n\r\n    const url = await getSignedUrl(s3Client, command, {\r\n      expiresIn,\r\n    });\r\n\r\n    logger.info('Presigned URL generated successfully', {\r\n      s3_key: s3Key,\r\n      url_length: url.length,\r\n    });\r\n\r\n    return url;\r\n  } catch (error) {\r\n    logger.error('Failed to generate presigned URL', {\r\n      s3_key: s3Key,\r\n      bucket: BUCKET_NAME,\r\n      error: error instanceof Error ? error.message : String(error),\r\n    });\r\n    throw error;\r\n  }\r\n}\r\n\r\n/**\r\n * \u8907\u6570\u306ES3\u7F72\u540D\u4ED8\u304DURL\u3092\u4E00\u62EC\u751F\u6210\r\n *\r\n * @param s3Keys S3\u30AD\u30FC\u306E\u30EA\u30B9\u30C8\r\n * @param expiresIn \u6709\u52B9\u671F\u9650\uFF08\u79D2\uFF09\u30C7\u30D5\u30A9\u30EB\u30C8: 3600\u79D2\uFF081\u6642\u9593\uFF09\r\n * @returns \u7F72\u540D\u4ED8\u304DURL\u306E\u30DE\u30C3\u30D7\uFF08\u30AD\u30FC: S3\u30AD\u30FC\u3001\u5024: \u7F72\u540D\u4ED8\u304DURL\uFF09\r\n */\r\nexport async function generatePresignedUrls(\r\n  s3Keys: string[],\r\n  expiresIn: number = URL_EXPIRATION_SECONDS\r\n): Promise<Map<string, string>> {\r\n  const urlMap = new Map<string, string>();\r\n\r\n  await Promise.all(\r\n    s3Keys.map(async (s3Key) => {\r\n      try {\r\n        const url = await generatePresignedUrl(s3Key, expiresIn);\r\n        urlMap.set(s3Key, url);\r\n      } catch (error) {\r\n        logger.error('Failed to generate presigned URL for key', {\r\n          s3_key: s3Key,\r\n          error: error instanceof Error ? error.message : String(error),\r\n        });\r\n        // \u30A8\u30E9\u30FC\u304C\u767A\u751F\u3057\u3066\u3082\u30B9\u30AD\u30C3\u30D7\u3057\u3066\u7D99\u7D9A\r\n      }\r\n    })\r\n  );\r\n\r\n  return urlMap;\r\n}\r\n"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "0e53b37809acdc0c29833b12cf449c6cac492aa2"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_25a83aii25 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_25a83aii25();
+cov_25a83aii25().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_25a83aii25().s[1]++;
+exports.generatePresignedUrl = generatePresignedUrl;
+/* istanbul ignore next */
+cov_25a83aii25().s[2]++;
+exports.generatePresignedUrls = generatePresignedUrls;
+const client_s3_1 =
+/* istanbul ignore next */
+(cov_25a83aii25().s[3]++, require("@aws-sdk/client-s3"));
+const s3_request_presigner_1 =
+/* istanbul ignore next */
+(cov_25a83aii25().s[4]++, require("@aws-sdk/s3-request-presigner"));
+const logger_1 =
+/* istanbul ignore next */
+(cov_25a83aii25().s[5]++, require("../../utils/logger"));
+// S3クライアント（グローバルスコープで初期化）
+const s3Client =
+/* istanbul ignore next */
+(cov_25a83aii25().s[6]++, new client_s3_1.S3Client({
+  region: 
+  /* istanbul ignore next */
+  (cov_25a83aii25().b[0][0]++, process.env.AWS_REGION) ||
+  /* istanbul ignore next */
+  (cov_25a83aii25().b[0][1]++, 'ap-northeast-1')
+}));
+const BUCKET_NAME =
+/* istanbul ignore next */
+(cov_25a83aii25().s[7]++, 
+/* istanbul ignore next */
+(cov_25a83aii25().b[1][0]++, process.env.S3_BUCKET_NAME) ||
+/* istanbul ignore next */
+(cov_25a83aii25().b[1][1]++, 'tdnet-data-collector-pdfs'));
+const URL_EXPIRATION_SECONDS =
+/* istanbul ignore next */
+(cov_25a83aii25().s[8]++, 3600); // 1時間
+/**
+ * S3署名付きURLを生成
+ *
+ * @param s3Key S3キー（PDFファイルのパス）
+ * @param expiresIn 有効期限（秒）デフォルト: 3600秒（1時間）
+ * @returns 署名付きURL
+ *
+ * @example
+ * ```typescript
+ * const url = await generatePresignedUrl('2024/01/15/TD20240115001_7203.pdf');
+ * // => "https://tdnet-pdfs.s3.amazonaws.com/2024/01/15/TD20240115001_7203.pdf?X-Amz-..."
+ * ```
+ */
+async function generatePresignedUrl(s3Key, expiresIn =
+/* istanbul ignore next */
+(cov_25a83aii25().b[2][0]++, URL_EXPIRATION_SECONDS)) {
+  /* istanbul ignore next */
+  cov_25a83aii25().f[0]++;
+  cov_25a83aii25().s[9]++;
+  try {
+    /* istanbul ignore next */
+    cov_25a83aii25().s[10]++;
+    logger_1.logger.info('Generating presigned URL', {
+      s3_key: s3Key,
+      bucket: BUCKET_NAME,
+      expires_in: expiresIn
+    });
+    const command =
+    /* istanbul ignore next */
+    (cov_25a83aii25().s[11]++, new client_s3_1.GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: s3Key
+    }));
+    const url =
+    /* istanbul ignore next */
+    (cov_25a83aii25().s[12]++, await (0, s3_request_presigner_1.getSignedUrl)(s3Client, command, {
+      expiresIn
+    }));
+    /* istanbul ignore next */
+    cov_25a83aii25().s[13]++;
+    logger_1.logger.info('Presigned URL generated successfully', {
+      s3_key: s3Key,
+      url_length: url.length
+    });
+    /* istanbul ignore next */
+    cov_25a83aii25().s[14]++;
+    return url;
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_25a83aii25().s[15]++;
+    logger_1.logger.error('Failed to generate presigned URL', {
+      s3_key: s3Key,
+      bucket: BUCKET_NAME,
+      error: error instanceof Error ?
+      /* istanbul ignore next */
+      (cov_25a83aii25().b[3][0]++, error.message) :
+      /* istanbul ignore next */
+      (cov_25a83aii25().b[3][1]++, String(error))
+    });
+    /* istanbul ignore next */
+    cov_25a83aii25().s[16]++;
+    throw error;
+  }
+}
+/**
+ * 複数のS3署名付きURLを一括生成
+ *
+ * @param s3Keys S3キーのリスト
+ * @param expiresIn 有効期限（秒）デフォルト: 3600秒（1時間）
+ * @returns 署名付きURLのマップ（キー: S3キー、値: 署名付きURL）
+ */
+async function generatePresignedUrls(s3Keys, expiresIn =
+/* istanbul ignore next */
+(cov_25a83aii25().b[4][0]++, URL_EXPIRATION_SECONDS)) {
+  /* istanbul ignore next */
+  cov_25a83aii25().f[1]++;
+  const urlMap =
+  /* istanbul ignore next */
+  (cov_25a83aii25().s[17]++, new Map());
+  /* istanbul ignore next */
+  cov_25a83aii25().s[18]++;
+  await Promise.all(s3Keys.map(async s3Key => {
+    /* istanbul ignore next */
+    cov_25a83aii25().f[2]++;
+    cov_25a83aii25().s[19]++;
+    try {
+      const url =
+      /* istanbul ignore next */
+      (cov_25a83aii25().s[20]++, await generatePresignedUrl(s3Key, expiresIn));
+      /* istanbul ignore next */
+      cov_25a83aii25().s[21]++;
+      urlMap.set(s3Key, url);
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_25a83aii25().s[22]++;
+      logger_1.logger.error('Failed to generate presigned URL for key', {
+        s3_key: s3Key,
+        error: error instanceof Error ?
+        /* istanbul ignore next */
+        (cov_25a83aii25().b[5][0]++, error.message) :
+        /* istanbul ignore next */
+        (cov_25a83aii25().b[5][1]++, String(error))
+      });
+      // エラーが発生してもスキップして継続
+    }
+  }));
+  /* istanbul ignore next */
+  cov_25a83aii25().s[23]++;
+  return urlMap;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMjVhODNhaWkyNSIsInBhdGgiLCJoYXNoIiwiZ2xvYmFsIiwiRnVuY3Rpb24iLCJnY3YiLCJjb3ZlcmFnZURhdGEiLCJzdGF0ZW1lbnRNYXAiLCJzdGFydCIsImxpbmUiLCJjb2x1bW4iLCJlbmQiLCJmbk1hcCIsIm5hbWUiLCJkZWNsIiwibG9jIiwiYnJhbmNoTWFwIiwidHlwZSIsImxvY2F0aW9ucyIsInMiLCJmIiwiYiIsImlucHV0U291cmNlTWFwIiwiZmlsZSIsIm1hcHBpbmdzIiwibmFtZXMiLCJzb3VyY2VzIiwic291cmNlc0NvbnRlbnQiLCJ2ZXJzaW9uIiwiX2NvdmVyYWdlU2NoZW1hIiwiY292ZXJhZ2UiLCJhY3R1YWxDb3ZlcmFnZSIsImV4cG9ydHMiLCJnZW5lcmF0ZVByZXNpZ25lZFVybCIsImdlbmVyYXRlUHJlc2lnbmVkVXJscyIsImNsaWVudF9zM18xIiwicmVxdWlyZSIsInMzX3JlcXVlc3RfcHJlc2lnbmVyXzEiLCJsb2dnZXJfMSIsInMzQ2xpZW50IiwiUzNDbGllbnQiLCJyZWdpb24iLCJwcm9jZXNzIiwiZW52IiwiQVdTX1JFR0lPTiIsIkJVQ0tFVF9OQU1FIiwiUzNfQlVDS0VUX05BTUUiLCJVUkxfRVhQSVJBVElPTl9TRUNPTkRTIiwiczNLZXkiLCJleHBpcmVzSW4iLCJsb2dnZXIiLCJpbmZvIiwiczNfa2V5IiwiYnVja2V0IiwiZXhwaXJlc19pbiIsImNvbW1hbmQiLCJHZXRPYmplY3RDb21tYW5kIiwiQnVja2V0IiwiS2V5IiwidXJsIiwiZ2V0U2lnbmVkVXJsIiwidXJsX2xlbmd0aCIsImxlbmd0aCIsImVycm9yIiwiRXJyb3IiLCJtZXNzYWdlIiwiU3RyaW5nIiwiczNLZXlzIiwidXJsTWFwIiwiTWFwIiwiUHJvbWlzZSIsImFsbCIsIm1hcCIsInNldCJdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGkxOThcXGludmVzdG1lbnRfYW5hbHlzaXNfb3BvcG9cXHNyY1xcbGFtYmRhXFxxdWVyeVxcZ2VuZXJhdGUtcHJlc2lnbmVkLXVybC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogR2VuZXJhdGUgUHJlc2lnbmVkIFVSTFxyXG4gKlxyXG4gKiBTM+e9suWQjeS7mOOBjVVSTOOCkueUn+aIkOOBl+OBvuOBmeOAglxyXG4gKiBQREbjg5XjgqHjgqTjg6vjga7jg4Djgqbjg7Pjg63jg7zjg4nnlKjjgavkvb/nlKjjgZXjgozjgb7jgZnjgIJcclxuICpcclxuICogUmVxdWlyZW1lbnRzOiDopoHku7Y0LjTvvIhQREbjg4Djgqbjg7Pjg63jg7zjg4nvvIlcclxuICovXHJcblxyXG5pbXBvcnQgeyBTM0NsaWVudCwgR2V0T2JqZWN0Q29tbWFuZCB9IGZyb20gJ0Bhd3Mtc2RrL2NsaWVudC1zMyc7XHJcbmltcG9ydCB7IGdldFNpZ25lZFVybCB9IGZyb20gJ0Bhd3Mtc2RrL3MzLXJlcXVlc3QtcHJlc2lnbmVyJztcclxuaW1wb3J0IHsgbG9nZ2VyIH0gZnJvbSAnLi4vLi4vdXRpbHMvbG9nZ2VyJztcclxuXHJcbi8vIFMz44Kv44Op44Kk44Ki44Oz44OI77yI44Kw44Ot44O844OQ44Or44K544Kz44O844OX44Gn5Yid5pyf5YyW77yJXHJcbmNvbnN0IHMzQ2xpZW50ID0gbmV3IFMzQ2xpZW50KHtcclxuICByZWdpb246IHByb2Nlc3MuZW52LkFXU19SRUdJT04gfHwgJ2FwLW5vcnRoZWFzdC0xJyxcclxufSk7XHJcblxyXG5jb25zdCBCVUNLRVRfTkFNRSA9IHByb2Nlc3MuZW52LlMzX0JVQ0tFVF9OQU1FIHx8ICd0ZG5ldC1kYXRhLWNvbGxlY3Rvci1wZGZzJztcclxuY29uc3QgVVJMX0VYUElSQVRJT05fU0VDT05EUyA9IDM2MDA7IC8vIDHmmYLplpNcclxuXHJcbi8qKlxyXG4gKiBTM+e9suWQjeS7mOOBjVVSTOOCkueUn+aIkFxyXG4gKlxyXG4gKiBAcGFyYW0gczNLZXkgUzPjgq3jg7zvvIhQREbjg5XjgqHjgqTjg6vjga7jg5HjgrnvvIlcclxuICogQHBhcmFtIGV4cGlyZXNJbiDmnInlirnmnJ/pmZDvvIjnp5LvvInjg4fjg5Xjgqnjg6vjg4g6IDM2MDDnp5LvvIgx5pmC6ZaT77yJXHJcbiAqIEByZXR1cm5zIOe9suWQjeS7mOOBjVVSTFxyXG4gKlxyXG4gKiBAZXhhbXBsZVxyXG4gKiBgYGB0eXBlc2NyaXB0XHJcbiAqIGNvbnN0IHVybCA9IGF3YWl0IGdlbmVyYXRlUHJlc2lnbmVkVXJsKCcyMDI0LzAxLzE1L1REMjAyNDAxMTUwMDFfNzIwMy5wZGYnKTtcclxuICogLy8gPT4gXCJodHRwczovL3RkbmV0LXBkZnMuczMuYW1hem9uYXdzLmNvbS8yMDI0LzAxLzE1L1REMjAyNDAxMTUwMDFfNzIwMy5wZGY/WC1BbXotLi4uXCJcclxuICogYGBgXHJcbiAqL1xyXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2VuZXJhdGVQcmVzaWduZWRVcmwoXHJcbiAgczNLZXk6IHN0cmluZyxcclxuICBleHBpcmVzSW46IG51bWJlciA9IFVSTF9FWFBJUkFUSU9OX1NFQ09ORFNcclxuKTogUHJvbWlzZTxzdHJpbmc+IHtcclxuICB0cnkge1xyXG4gICAgbG9nZ2VyLmluZm8oJ0dlbmVyYXRpbmcgcHJlc2lnbmVkIFVSTCcsIHtcclxuICAgICAgczNfa2V5OiBzM0tleSxcclxuICAgICAgYnVja2V0OiBCVUNLRVRfTkFNRSxcclxuICAgICAgZXhwaXJlc19pbjogZXhwaXJlc0luLFxyXG4gICAgfSk7XHJcblxyXG4gICAgY29uc3QgY29tbWFuZCA9IG5ldyBHZXRPYmplY3RDb21tYW5kKHtcclxuICAgICAgQnVja2V0OiBCVUNLRVRfTkFNRSxcclxuICAgICAgS2V5OiBzM0tleSxcclxuICAgIH0pO1xyXG5cclxuICAgIGNvbnN0IHVybCA9IGF3YWl0IGdldFNpZ25lZFVybChzM0NsaWVudCwgY29tbWFuZCwge1xyXG4gICAgICBleHBpcmVzSW4sXHJcbiAgICB9KTtcclxuXHJcbiAgICBsb2dnZXIuaW5mbygnUHJlc2lnbmVkIFVSTCBnZW5lcmF0ZWQgc3VjY2Vzc2Z1bGx5Jywge1xyXG4gICAgICBzM19rZXk6IHMzS2V5LFxyXG4gICAgICB1cmxfbGVuZ3RoOiB1cmwubGVuZ3RoLFxyXG4gICAgfSk7XHJcblxyXG4gICAgcmV0dXJuIHVybDtcclxuICB9IGNhdGNoIChlcnJvcikge1xyXG4gICAgbG9nZ2VyLmVycm9yKCdGYWlsZWQgdG8gZ2VuZXJhdGUgcHJlc2lnbmVkIFVSTCcsIHtcclxuICAgICAgczNfa2V5OiBzM0tleSxcclxuICAgICAgYnVja2V0OiBCVUNLRVRfTkFNRSxcclxuICAgICAgZXJyb3I6IGVycm9yIGluc3RhbmNlb2YgRXJyb3IgPyBlcnJvci5tZXNzYWdlIDogU3RyaW5nKGVycm9yKSxcclxuICAgIH0pO1xyXG4gICAgdGhyb3cgZXJyb3I7XHJcbiAgfVxyXG59XHJcblxyXG4vKipcclxuICog6KSH5pWw44GuUzPnvbLlkI3ku5jjgY1VUkzjgpLkuIDmi6znlJ/miJBcclxuICpcclxuICogQHBhcmFtIHMzS2V5cyBTM+OCreODvOOBruODquOCueODiFxyXG4gKiBAcGFyYW0gZXhwaXJlc0luIOacieWKueacn+mZkO+8iOenku+8ieODh+ODleOCqeODq+ODiDogMzYwMOenku+8iDHmmYLplpPvvIlcclxuICogQHJldHVybnMg572y5ZCN5LuY44GNVVJM44Gu44Oe44OD44OX77yI44Kt44O8OiBTM+OCreODvOOAgeWApDog572y5ZCN5LuY44GNVVJM77yJXHJcbiAqL1xyXG5leHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2VuZXJhdGVQcmVzaWduZWRVcmxzKFxyXG4gIHMzS2V5czogc3RyaW5nW10sXHJcbiAgZXhwaXJlc0luOiBudW1iZXIgPSBVUkxfRVhQSVJBVElPTl9TRUNPTkRTXHJcbik6IFByb21pc2U8TWFwPHN0cmluZywgc3RyaW5nPj4ge1xyXG4gIGNvbnN0IHVybE1hcCA9IG5ldyBNYXA8c3RyaW5nLCBzdHJpbmc+KCk7XHJcblxyXG4gIGF3YWl0IFByb21pc2UuYWxsKFxyXG4gICAgczNLZXlzLm1hcChhc3luYyAoczNLZXkpID0+IHtcclxuICAgICAgdHJ5IHtcclxuICAgICAgICBjb25zdCB1cmwgPSBhd2FpdCBnZW5lcmF0ZVByZXNpZ25lZFVybChzM0tleSwgZXhwaXJlc0luKTtcclxuICAgICAgICB1cmxNYXAuc2V0KHMzS2V5LCB1cmwpO1xyXG4gICAgICB9IGNhdGNoIChlcnJvcikge1xyXG4gICAgICAgIGxvZ2dlci5lcnJvcignRmFpbGVkIHRvIGdlbmVyYXRlIHByZXNpZ25lZCBVUkwgZm9yIGtleScsIHtcclxuICAgICAgICAgIHMzX2tleTogczNLZXksXHJcbiAgICAgICAgICBlcnJvcjogZXJyb3IgaW5zdGFuY2VvZiBFcnJvciA/IGVycm9yLm1lc3NhZ2UgOiBTdHJpbmcoZXJyb3IpLFxyXG4gICAgICAgIH0pO1xyXG4gICAgICAgIC8vIOOCqOODqeODvOOBjOeZuueUn+OBl+OBpuOCguOCueOCreODg+ODl+OBl+OBpue2mee2mlxyXG4gICAgICB9XHJcbiAgICB9KVxyXG4gICk7XHJcblxyXG4gIHJldHVybiB1cmxNYXA7XHJcbn1cclxuIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Ozs7OztBQUFBO0FBQUEsU0FBQUEsZUFBQTtFQUFBLElBQUFDLElBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsTUFBQSxPQUFBQyxRQUFBO0VBQUEsSUFBQUMsR0FBQTtFQUFBLElBQUFDLFlBQUE7SUFBQUwsSUFBQTtJQUFBTSxZQUFBO01BQUE7UUFBQUMsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO0lBQUE7SUFBQUUsS0FBQTtNQUFBO1FBQUFDLElBQUE7UUFBQUMsSUFBQTtVQUFBTixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBSyxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFELElBQUE7TUFBQTtNQUFBO1FBQUFJLElBQUE7UUFBQUMsSUFBQTtVQUFBTixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBSyxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFELElBQUE7TUFBQTtNQUFBO1FBQUFJLElBQUE7UUFBQUMsSUFBQTtVQUFBTixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBSyxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFELElBQUE7TUFBQTtJQUFBO0lBQUFPLFNBQUE7TUFBQTtRQUFBRCxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFPLElBQUE7UUFBQUMsU0FBQTtVQUFBVixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtVQUFBRixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBTSxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFPLElBQUE7UUFBQUMsU0FBQTtVQUFBVixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtVQUFBRixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBTSxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFPLElBQUE7UUFBQUMsU0FBQTtVQUFBVixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBTSxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFPLElBQUE7UUFBQUMsU0FBQTtVQUFBVixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtVQUFBRixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBTSxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFPLElBQUE7UUFBQUMsU0FBQTtVQUFBVixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7TUFBQTtRQUFBTSxHQUFBO1VBQUFQLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFPLElBQUE7UUFBQUMsU0FBQTtVQUFBVixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtVQUFBRixLQUFBO1lBQUFDLElBQUE7WUFBQUMsTUFBQTtVQUFBO1VBQUFDLEdBQUE7WUFBQUYsSUFBQTtZQUFBQyxNQUFBO1VBQUE7UUFBQTtRQUFBRCxJQUFBO01BQUE7SUFBQTtJQUFBVSxDQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO0lBQUE7SUFBQUMsQ0FBQTtNQUFBO01BQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7SUFBQTtJQUFBQyxjQUFBO01BQUFDLElBQUE7TUFBQUMsUUFBQTtNQUFBQyxLQUFBO01BQUFDLE9BQUE7TUFBQUMsY0FBQTtNQUFBQyxPQUFBO0lBQUE7SUFBQUMsZUFBQTtJQUFBM0IsSUFBQTtFQUFBO0VBQUEsSUFBQTRCLFFBQUEsR0FBQTNCLE1BQUEsQ0FBQUUsR0FBQSxNQUFBRixNQUFBLENBQUFFLEdBQUE7RUFBQSxLQUFBeUIsUUFBQSxDQUFBN0IsSUFBQSxLQUFBNkIsUUFBQSxDQUFBN0Is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
