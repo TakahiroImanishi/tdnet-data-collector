@@ -1,77 +1,32 @@
 ---
 inclusion: always
-description: "TDnet Data Collectorプロジェクトの基本的な実装原則"
+description: "TDnet Data Collectorプロジェクトの基本実装原則"
 ---
 
 # TDnet Data Collector - 実装ルール
 
-このファイルは、TDnet Data Collectorプロジェクトの基本的な実装原則をまとめたものです。詳細な実装ガイドラインは各専門ファイルを参照してください。
+TDnetから上場企業の開示情報を自動収集するAWSサーバーレスシステムの実装原則。
 
-## プロジェクト概要
+## 技術スタック
 
-TDnet Data Collectorは、日本取引所グループのTDnet（適時開示情報閲覧サービス）から上場企業の開示情報を自動収集するAWSベースのサーバーレスシステムです。
-
-### 主要な技術スタック
-
-- **実行環境**: AWS Lambda (Node.js 20.x, TypeScript)
-- **データベース**: Amazon DynamoDB
-- **ストレージ**: Amazon S3
-- **API**: Amazon API Gateway
-- **IaC**: AWS CDK (TypeScript)
-- **監視**: CloudWatch Logs & Metrics
-- **セキュリティ**: AWS WAF, Secrets Manager, CloudTrail
+Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWatch | WAF
 
 ## 実装原則
 
-### 1. コスト最適化を最優先
+### 1. コスト最適化最優先
+AWS無料枠を最大活用。詳細: `../infrastructure/performance-optimization.md`
 
-AWS無料枠を最大限活用し、サーバーレスアーキテクチャを採用してコストを最小化します。
+### 2. エラーハンドリング徹底
+外部API呼び出しに再試行ロジック実装、部分的失敗を許容。詳細: `error-handling-patterns.md`, `../development/error-handling-implementation.md`
 
-**詳細**: `../infrastructure/performance-optimization.md` を参照
+### 3. レート制限遵守
+TDnetへのリクエスト間隔を適切に制御。詳細: `../development/tdnet-scraping-patterns.md`
 
-### 2. エラーハンドリングの徹底
+### 4. データ整合性保証
+重複チェックとデータ検証を徹底。詳細: `../development/data-validation.md`
 
-すべての外部API呼び出しに再試行ロジックを実装し、部分的な失敗を許容する設計を採用します。
-
-**詳細**: `error-handling-patterns.md` および `../development/error-handling-implementation.md` を参照
-
-### 3. レート制限とマナー
-
-TDnetへのリクエスト間隔を適切に制御し、過度な負荷をかけないようにします。
-
-**詳細**: `../development/tdnet-scraping-patterns.md` を参照
-
-### 4. データ整合性の保証
-
-重複チェックとデータ検証を徹底し、メタデータとファイルの対応関係を厳密に管理します。
-
-**詳細**: `../development/data-validation.md` を参照
-
-### 5. date_partition による効率的なクエリ
-
-DynamoDBのクエリ効率を最大化するため、`date_partition`（YYYY-MM形式）を使用します。
-
-**設計原則:**
-- `date_partition`は`disclosed_at`から自動生成（YYYY-MM形式）
-- GSI（Global Secondary Index）のパーティションキーとして使用
-- 月単位のクエリを高速化
-- 日付範囲クエリは複数の月を並行クエリ
-
-**重要な考慮事項:**
-
-1. **タイムゾーン処理**: JST（日本標準時）を基準とする
-   - TDnetは日本の開示情報サービスのため、開示時刻はJST（UTC+9）で管理
-   - `disclosed_at`はISO 8601形式（UTC）を推奨: `"2024-01-15T01:30:00Z"`
-   - 内部処理でJSTに変換してから`date_partition`を生成
-
-2. **エッジケース**: 月またぎ、うるう年、年またぎに注意
-   - 例: UTC `2024-01-31T15:30:00Z` → JST `2024-02-01T00:30:00` → `date_partition: "2024-02"`
-
-3. **バリデーション**: ISO 8601形式、有効な日付、範囲チェック（1970-01-01以降）
-
-4. **エラーハンドリング**: バリデーションエラーは即座に失敗（Non-Retryable Error）
-
-**詳細な実装、バリデーション、テストケースは `../development/data-validation.md` を参照。**
+### 5. date_partition活用
+DynamoDB GSIで`date_partition`（YYYY-MM形式）を使用し月単位クエリを高速化。JST基準で`disclosed_at`から自動生成。詳細: `../development/data-validation.md`
 
 ## 関連ドキュメント
 

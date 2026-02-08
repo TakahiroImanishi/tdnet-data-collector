@@ -1,290 +1,81 @@
 ---
 inclusion: always
-description: "タスク実行の3ステップと作業記録・改善記録の作成ルール"
+description: "タスク実行の3ステップと作業記録ルール"
 ---
 
 # TDnet Data Collector - タスク実行ルール
 
-このファイルは、TDnet Data Collectorプロジェクトのタスク実行時に従うべき基本ルールをまとめたものです。
-
----
-
 ## タスク実行の3ステップ
 
-### 1️⃣ タスク開始: タスク分析と作業記録作成
+### 1️⃣ タスク開始
+1. タスク分析・理解
+2. コードベース調査（context-gatherer使用可）
+3. 作業記録作成（`.kiro/specs/tdnet-data-collector/work-logs/`）
+4. 実装開始
 
-**実施順序:**
-1. タスク内容を分析・理解
-2. 必要に応じてコードベースを調査（context-gatherer使用可能な場合）
-3. 作業記録を作成（タスク概要、目的、背景、実施計画を記入）
-4. コード実装を開始
+### 2️⃣ タスク実行
+実装、テスト実行、問題と解決策を作業記録に随時追記
 
-**保存先:** `.kiro/specs/tdnet-data-collector/work-logs/`
+### 3️⃣ タスク完了
+✅ 作業記録に成果物と申し送り記入 → ✅ git commit & push → ✅ 問題あれば改善記録作成
 
-**重要:** 作業記録は、タスクを理解した後に作成します。形式的な記録ではなく、実際の作業計画を反映させてください。
+## 作業記録
 
----
-
-### 2️⃣ タスク実行: 作業内容を随時記録
-
-**実施内容:**
-- コード実装、ファイル作成、テスト実行など
-- 問題が発生したら、問題と解決策を作業記録に追記
-- 作業の進捗を随時記録
-
----
-
-### 3️⃣ タスク完了: コミット & 振り返り
-
-**必須作業:**
-```text
-✅ 作業記録に成果物と次回への申し送りを記入
-✅ git commit & push（変更をリモートにプッシュ）
-✅ 振り返り: 問題点があれば改善記録を作成
+### ファイル命名
 ```
-
----
-
-## 作業記録の詳細
-
-### ファイル命名規則
-
-```text
 work-log-[YYYYMMDD-HHMMSS]-[作業概要].md
 ```
 
-**例:** 
-- `work-log-20260207-143025-steering-requirements-review.md`
-- `work-log-20260207-150000-lambda-error-handling-implementation.md`
-- `work-log-20260207-160000-api-design-guidelines-update.md`
+**時間取得**: `Get-Date -Format "yyyyMMdd-HHmmss"` で正確な時刻を使用（推測禁止）
 
-### 🔴 重要: 時間の正確な取得
-
-**作業記録のファイル名には、必ず現在時刻を正確に使用すること:**
-
-```powershell
-# Windows PowerShellで現在時刻を取得
-Get-Date -Format "yyyyMMdd-HHmmss"
-```
-
-**例:**
-```powershell
-# 2026年2月7日 14:30:25 の場合
-PS> Get-Date -Format "yyyyMMdd-HHmmss"
-20260207-143025
-```
-
-### 作業概要の命名ルール
-
-**形式:** ケバブケース（小文字、ハイフン区切り）
-
-**良い例:**
-- `steering-requirements-review` - steeringファイル要件レビュー
-- `lambda-error-handling` - Lambdaエラーハンドリング実装
-- `api-design-update` - API設計ガイドライン更新
-- `date-partition-implementation` - date_partition実装
-
-**悪い例:**
-- ❌ `Steering Requirements Review` - スペース、大文字を使用
-- ❌ `lambda_error_handling` - アンダースコアを使用
-- ❌ `APIDesignUpdate` - キャメルケースを使用
-- ❌ `作業記録` - 日本語を使用
-
-**禁止事項:**
-- ❌ 推測や概算の時間を使用しない（例: `160000`, `150000`）
-- ❌ 切りの良い時間を使用しない（例: `140000`, `150000`）
-- ✅ 必ず `Get-Date` コマンドで取得した正確な時間を使用する
-- ❌ 作業概要にスペース、アンダースコア、大文字、日本語を使用しない
-- ✅ 作業概要はケバブケース（小文字、ハイフン区切り）で記述する
-
-**理由:**
-- 作業記録の時系列を正確に追跡するため
-- 複数の作業記録が同じ時間になることを防ぐため
-- 作業時間の正確な記録のため
-- ファイル名から作業内容を即座に把握できるようにするため
-- ファイルシステムの互換性を確保するため（スペースや特殊文字を避ける）
+**作業概要**: ケバブケース（小文字、ハイフン区切り）
+- ✅ `lambda-error-handling`, `api-design-update`
+- ❌ `Lambda Error Handling`（スペース・大文字）, `lambda_error_handling`（アンダースコア）
 
 ### 記録内容
+タスク概要 | 実施内容 | 成果物 | 次回への申し送り
 
-| セクション | 内容 |
-|-----------|------|
-| **タスク概要** | 目的、背景、目標 |
-| **実施内容** | 実施した作業、問題と解決策 |
-| **成果物** | 作成・変更したファイル |
-| **次回への申し送り** | 未完了の作業、注意点 |
+詳細: `.kiro/specs/tdnet-data-collector/work-logs/README.md`
 
-詳細は `.kiro/specs/tdnet-data-collector/work-logs/README.md` を参照。
+## Git Commit
 
----
-
-## Git Commit & Push
-
-### コミットメッセージ規則
-
-```text
+```
 [タスク種別] 簡潔な変更内容
 
-関連: work-log-[日時].md または task-[番号]-improvement-[連番]-[日時].md
+関連: work-log-[日時].md
 ```
 
-**タスク種別:**
-- `feat`: 新機能追加
-- `fix`: バグ修正
-- `docs`: ドキュメント更新
-- `refactor`: リファクタリング
-- `test`: テスト追加・修正
-- `chore`: その他の変更
-- `improve`: 改善実施
+タスク種別: feat, fix, docs, refactor, test, chore, improve
 
-**例:**
-```text
-feat: TDnet開示情報収集Lambda関数を実装
+## 改善記録（問題発生時のみ）
 
-関連: work-log-20260207-143025.md
-```
+**作成条件**: エラー発生、パフォーマンス懸念、品質改善必要時
 
-### Git操作手順
+**命名**: `task-[番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md`
 
-```powershell
-git add .
-git commit -m "[タスク種別] 簡潔な変更内容"
-git push origin main
-```
+**保存先**: `.kiro/specs/tdnet-data-collector/improvements/`
 
----
+詳細: `.kiro/specs/tdnet-data-collector/improvements/README.md`
 
-## 振り返りと改善（タスク完了後）
+## サブエージェント活用
 
-### いつ振り返るか？
-
-**タスク完了後、以下の場合は改善記録を作成:**
-- ❌ エラーや問題が発生した
-- ⚠️ パフォーマンスやコストに懸念がある
-- 🔄 コードの品質や保守性を改善したい
-- 📚 ドキュメントを充実させたい
-
-**問題がなければ、振り返りは不要です。**
-
----
-
-### 改善記録の作成
-
-**ファイル命名規則:**
-```text
-task-[タスク番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md
-```
-
-**例:** `task-1.1-improvement-1-20260207-143025.md`
-
-**時間の取得:**
-```powershell
-# Windows PowerShellで現在時刻を取得
-Get-Date -Format "yyyyMMdd-HHmmss"
-```
-
-**注意:** 作業記録と同様に、必ず `Get-Date` コマンドで正確な時間を取得すること。
-
-**保存先:** `.kiro/specs/tdnet-data-collector/improvements/`
-
-**記録内容:**
-- 問題点の分析
-- 改善点の特定
-- 実施した改善内容
-- 改善結果の検証
-
-詳細は `.kiro/specs/tdnet-data-collector/improvements/README.md` を参照。
-
----
-
-### 改善の優先順位
-
-| 優先度 | 対象 |
-|--------|------|
-| 🔴 **Critical** | システムが動作しない、データ損失のリスク |
-| 🟠 **High** | パフォーマンス、セキュリティ、コスト問題 |
-| 🟡 **Medium** | コード品質、保守性、テストカバレッジ |
-| 🟢 **Low** | ドキュメント、コメント、スタイル |
-
----
-
-## 作業記録 vs 改善記録
-
-| 項目 | 作業記録 | 改善記録 |
-|------|---------|---------|
-| **作成タイミング** | タスク開始時（必須） | タスク完了後（問題があれば） |
-| **目的** | 作業履歴の記録 | 継続的改善の記録 |
-| **内容** | 実施した作業、成果物 | 問題分析、改善内容 |
-| **対象** | すべてのタスク | 改善が必要なタスクのみ |
-
----
-
-## サブエージェントの活用
-
-### 前提条件
-
-⚠️ **サブエージェントはAutopilotモードでのみ利用可能です。**
-
-- **Autopilotモード**: サブエージェントを使用して並列実行が可能
-- **Supervisedモード**: サブエージェントは使用できません。順次実行のみ
+⚠️ **Autopilotモードのみ利用可能**
 
 ### 基本方針
-
-**タスク実行時は、適切な場面でサブエージェントを積極的に活用すること。特に並列実行可能なタスクは、必ずサブエージェントに分割して効率的に実行すること。**
+並列実行可能なタスクは積極的にサブエージェントに分割
 
 ### 利用可能なサブエージェント
+- **context-gatherer**: コードベース探索（新機能実装前、バグ調査）
+- **general-task-execution**: 独立サブタスク委譲、並列実行
+- **custom-agent-creator**: 繰り返しタスク自動化
 
-| サブエージェント | 役割 | 使用場面 |
-|----------------|------|---------|
-| **context-gatherer** | コードベース探索 | 新機能実装前、バグ調査、リファクタリング前 |
-| **general-task-execution** | サブタスク委譲 | 独立したサブタスク、並列実行可能なタスク |
-| **custom-agent-creator** | タスク自動化 | 繰り返しタスク、プロジェクト固有ワークフロー |
+### サブエージェント実行時の必須指示
 
-### 🔴 サブエージェント実行時の必須ルール
+1. **作業記録作成**: `work-log-[YYYYMMDD-HHMMSS]-[作業概要].md`を作成（`Get-Date -Format "yyyyMMdd-HHmmss"`使用）
+2. **記録内容**: タスク概要、実施内容、成果物、申し送り
+3. **保存先**: `.kiro/specs/tdnet-data-collector/work-logs/`
+4. **tasks.md更新**: タスク完了後、[ ]→[x]、完了日時・テスト結果追記
 
-**サブエージェントに作業を委譲する際は、以下を必ず指示に含めること:**
+**メインエージェントの責任**: サブエージェント作業記録確認、メイン記録にリンク追加、Git コミット、tasks.md更新確認
 
-1. **作業記録の作成を明示的に指示**
-   ```text
-   タスク開始時に work-log-[YYYYMMDD-HHMMSS]-[作業概要].md を作成してください。
-   ファイル名には、PowerShellの Get-Date -Format "yyyyMMdd-HHmmss" で取得した正確な時刻を使用してください。
-   作業概要はケバブケース（小文字、ハイフン区切り）で記述してください。
-   ```
-
-2. **作業記録の内容を指定**
-   - タスク概要（目的、背景、目標）
-   - 実施内容（実施した作業、問題と解決策）
-   - 成果物（作成・変更したファイル）
-   - 次回への申し送り（未完了の作業、注意点）
-
-3. **保存先を明示**
-   ```text
-   保存先: .kiro/specs/tdnet-data-collector/work-logs/
-   ```
-
-4. **tasks.md進捗更新を明示的に指示**
-   ```text
-   【重要】タスク完了後、以下を必ず実施してください：
-   1. .kiro/specs/tdnet-data-collector/tasks.md の該当タスクを [ ] から [x] に更新
-   2. 完了日時とテスト結果を追記（例: _完了: 2026-02-08, 29テスト成功_）
-   3. 注意事項があれば追記（例: _注意: 実際のHTML構造に合わせて調整が必要_）
-   ```
-
-**メインエージェントの責任:**
-- サブエージェント実行後、各サブエージェントの作業記録を確認
-- メインの作業記録に、サブエージェントの作業記録へのリンクを追加
-- すべての作業記録をGitにコミット
-- tasks.mdの進捗が正しく更新されているか確認
-- 更新漏れがあれば、メインエージェントが責任を持って更新
-
-**詳細な並列実行判断基準、実装例は `../development/workflow-guidelines.md` を参照。**
-
----
-
-## 関連ドキュメント
-
-- **実装ルール**: `tdnet-implementation-rules.md` - 基本的な実装原則
-- **エラーハンドリング**: `error-handling-patterns.md` - エラー処理の詳細パターン
-- **ワークフローガイドライン**: `../development/workflow-guidelines.md` - サブエージェント活用と並列実行
-- **ドキュメント標準**: `../development/documentation-standards.md` - ドキュメント作成の標準規則
-- **作業記録**: `../../specs/tdnet-data-collector/work-logs/README.md` - 作業記録の作成方法
-- **改善記録**: `../../specs/tdnet-data-collector/improvements/README.md` - 改善記録の作成方法
+詳細: `../development/workflow-guidelines.md`, `tdnet-implementation-rules.md`, `error-handling-patterns.md`
