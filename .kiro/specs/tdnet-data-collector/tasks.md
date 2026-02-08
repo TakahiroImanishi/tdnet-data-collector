@@ -1009,6 +1009,39 @@
   - _完了: 2026-02-08, E2Eテスト28/28成功（100%）, 全体テスト630/756成功（83.3%）_
   - _注意: Collect handlerテスト126件失敗（APIキー認証モック不完全）、Phase 3並行作業として修正予定_
 
+### 15.22. Phase 2残課題（並行作業）
+
+- [x] 15.22.1 Collect handlerテストのAPIキー認証モック修正
+  - バックアップファイルから復元: `handler.test.ts.bak` → `handler.test.ts`
+  - Secrets Managerモックを追加（SecretsManagerClient, GetSecretValueCommand）
+  - beforeEachでAPIキーシークレットのモックを設定
+  - createTestEventヘルパー関数を作成（x-api-keyヘッダー自動追加）
+  - すべてのテストケースでcreateTestEventを使用
+  - テスト再実行: 14/14テスト成功を確認
+  - _Requirements: 要件11.1（API認証）_
+  - _優先度: 🟠 High_
+  - _推定工数: 2-3時間_
+  - _関連: work-log-20260208-173416-task15-21-phase2-final-verification.md_
+  - _完了: 2026-02-08, 14/14テスト成功（100%）_
+  - _注意: PowerShell正規表現でエンコーディング破損、Node.jsスクリプトで修正_
+
+- [ ] 15.22.2 プロパティテストの成功率確認
+  - プロパティテストのみを実行: `npm test -- --testNamePattern="Property"`
+  - 100%成功することを確認
+  - 失敗がある場合は原因を特定して修正
+  - _Requirements: 要件14.2（プロパティテスト）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 30分_
+
+- [ ] 15.22.3 テストカバレッジの最終確認
+  - 全テストスイート実行: `npm test -- --coverage`
+  - テスト成功率100%を確認
+  - コードカバレッジ80%以上を確認
+  - カバレッジレポートを確認
+  - _Requirements: 要件14.1（テスト）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 1時間_
+
 
 ## Phase 3: Webダッシュボードと監視
 
