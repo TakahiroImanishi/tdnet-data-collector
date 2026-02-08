@@ -4,6 +4,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+import { NagSuppressions } from 'cdk-nag';
 
 /**
  * CloudFront Distribution Constructのプロパティ
@@ -168,5 +169,20 @@ export class DashboardCloudFront extends Construct {
       description: 'TDnet Dashboard URL',
       exportName: `tdnet-dashboard-url-${props.environment}`,
     });
+
+    // CDK Nag抑制: AwsSolutions-CFR4
+    // デフォルトのCloudFront証明書を使用する場合、TLS 1.2を強制できない制限がある
+    // カスタムドメインがない環境では、デフォルト証明書を使用せざるを得ない
+    // minimumProtocolVersionの設定は、将来ACM証明書に移行する際に有効
+    NagSuppressions.addResourceSuppressions(
+      this.distribution,
+      [
+        {
+          id: 'AwsSolutions-CFR4',
+          reason: 'デフォルトのCloudFront証明書を使用。カスタムドメインがない環境では、ACM証明書を使用できないため、デフォルト証明書を使用。minimumProtocolVersionは将来のACM証明書移行時に有効。',
+        },
+      ],
+      true
+    );
   }
 }
