@@ -1641,6 +1641,47 @@
   - _完了: 2026-02-08, ビルド成功（162.15 kB gzip後）、デプロイスクリプト確認完了_
   - _作業記録: work-log-20260208-224908-task19-3-4-e2e-deploy.md_
 
+### 19.5. 全量テスト失敗ケース解消
+
+- [ ] 19.5 APIキーキャッシュロジック修正
+  - **ファイル**: `src/lambda/collect/__tests__/handler.test.ts:827`
+  - **失敗内容**: キャッシュが有効な場合でもSecrets Managerが1回呼ばれている
+  - **原因**: キャッシュロジックが正しく動作していない、またはモックの設定が不適切
+  - **対応内容**:
+    - `src/lambda/collect/handler.ts` のキャッシュロジックを確認
+    - キャッシュが有効な場合にSecrets Managerを呼ばないように修正
+    - テストのモック設定を確認・修正
+  - _Requirements: 要件11.1（API認証）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 2-3時間_
+  - _関連: work-log-20260209-070746-full-test-analysis.md_
+
+- [ ] 19.6 CloudFront ViewerCertificate設定追加
+  - **ファイル**: `cdk/lib/constructs/dashboard-cloudfront.ts`
+  - **失敗内容**: CloudFront DistributionのViewerCertificateプロパティが設定されていない
+  - **原因**: CDK Constructで`ViewerCertificate`の設定が欠落している
+  - **対応内容**:
+    - `ViewerCertificate`プロパティを追加
+    - 最小TLSバージョンを`TLSv1.2_2021`に設定
+    - セキュリティ要件を満たす設定を実装
+  - _Requirements: 要件13.1（セキュリティ）_
+  - _優先度: 🔴 Critical（セキュリティ要件）_
+  - _推定工数: 1-2時間_
+  - _関連: work-log-20260209-070746-full-test-analysis.md_
+
+- [ ] 19.7 CloudFront CfnOutput追加
+  - **ファイル**: `cdk/lib/constructs/dashboard-cloudfront.ts`
+  - **失敗内容**: CfnOutputが作成されていない（TestCloudFrontDistributionDomainName*が見つからない）
+  - **原因**: CDK Constructで`CfnOutput`の設定が欠落している
+  - **対応内容**:
+    - Distribution Domain NameをCfnOutputとして出力
+    - 出力名を`{stackName}CloudFrontDistributionDomainName`形式に設定
+    - Description、Exportを適切に設定
+  - _Requirements: 要件10.1（Webダッシュボード）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 1時間_
+  - _関連: work-log-20260209-070746-full-test-analysis.md_
+
 
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
 
