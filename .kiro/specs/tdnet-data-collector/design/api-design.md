@@ -660,22 +660,15 @@ X-RateLimit-Reset: 1705305600
 GET /disclosures?limit=20&offset=20
 ```
 
-### カーソルベースページネーション（未実装）
+**特徴:**
+- ✅ 直感的で理解しやすい
+- ✅ 特定ページへのジャンプが可能
+- ✅ RESTful APIの一般的なパターン
+- ⚠️ 大量データ（10万件以上）ではパフォーマンスに注意
 
-**推奨実装:**
-- DynamoDBの `LastEvaluatedKey` を使用
-- `next_token` パラメータでページネーション
-
-**推奨レスポンス:**
-```json
-{
-  "disclosures": [...],
-  "meta": {
-    "has_next": true,
-    "next_token": "eyJkaXNjbG9zdXJlX2lkIjoiMjAyNDAxMTVfNzIwM18wMDEifQ=="
-  }
-}
-```
+**将来の検討事項:**
+- データ量が10万件を超える場合、カーソルベース（DynamoDB LastEvaluatedKey）への移行を検討
+- その際は、API v2として新しいエンドポイントを作成することを推奨
 
 ---
 
@@ -758,20 +751,16 @@ GET /disclosures?limit=20&offset=20
 
 ### 優先度: 中
 
-3. **ページネーション方式の統一**
-   - カーソルベース（`next_token`）の実装を検討
-   - または、オフセットベースに統一
-
-4. **レート制限の実装**
+3. **レート制限の実装**
    - API Gatewayレベルでレート制限を設定
    - Lambda関数でレート制限ヘッダーを返却
 
 ### 優先度: 低
 
-5. **CORS設定の最適化**
+4. **CORS設定の最適化**
    - 本番環境では特定のドメインに制限
 
-6. **GET /disclosures の `month` パラメータ**
+5. **GET /disclosures の `month` パラメータ**
    - date_partition を使用した効率的なクエリの実装
 
 ---

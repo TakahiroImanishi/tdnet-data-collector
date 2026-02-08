@@ -91,20 +91,22 @@ paths:
               - 業績予想修正
               - 配当予想修正
               - 自己株式取征E
-              - そ�E仁E
+              - そ�E仁E
         - name: limit
           in: query
-          description: Number of results per page
+          description: Number of results per page (maximum 1000)
           schema:
             type: integer
             minimum: 1
-            maximum: 100
-            default: 20
-        - name: next_token
+            maximum: 1000
+            default: 100
+        - name: offset
           in: query
-          description: 'Pagination token from previous response (cursor-based pagination, recommended for DynamoDB)'
+          description: 'Offset for pagination (0-based)'
           schema:
-            type: string
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
           description: Success
@@ -538,31 +540,54 @@ components:
 
     PaginationMeta:
       type: object
+      required:
+        - total
+        - count
+        - offset
+        - limit
       properties:
-        has_next:
-          type: boolean
-          description: Whether there are more results
-        next_token:
-          type: string
-          nullable: true
-          description: 'Token for next page (cursor-based pagination, use this for subsequent requests)'
+        total:
+          type: integer
+          description: Total number of results
+        count:
+          type: integer
+          description: Number of results in current response
+        offset:
+          type: integer
+          description: Current offset
+        limit:
+          type: integer
+          description: Results per page
 
     DisclosureListResponse:
       type: object
       required:
         - status
-        - data
-        - meta
+        - disclosures
+        - total
+        - count
+        - offset
+        - limit
       properties:
         status:
           type: string
           enum: [success]
-        data:
+        disclosures:
           type: array
           items:
             $ref: '#/components/schemas/Disclosure'
-        meta:
-          $ref: '#/components/schemas/PaginationMeta'
+        total:
+          type: integer
+          description: Total number of results
+        count:
+          type: integer
+          description: Number of results in current response
+        offset:
+          type: integer
+          description: Current offset
+        limit:
+          type: integer
+          description: Results per page
 
     DisclosureDetailResponse:
       type: object
@@ -709,7 +734,7 @@ components:
             - 業績予想修正
             - 配当予想修正
             - 自己株式取征E
-            - そ�E仁E
+            - そ�E仁E
         format:
           type: string
           enum: [csv, json]

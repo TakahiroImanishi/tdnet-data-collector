@@ -980,13 +980,15 @@
   - _完了: 2026-02-08, Collect Lambda関数にAPIキー認証追加_
   - _注意: すべてのLambda関数でSecrets Manager経由の認証に統一済み_
 
-- [ ] 15.20 ページネーション方式の統一（Phase 2 Medium）
+- [x] 15.20 ページネーション方式の統一（Phase 2 Medium）
   - カーソルベース（`next_token`）とオフセットベース（`offset`）のどちらを採用するか決定
   - 採用しない方を仕様または実装から削除
   - _Requirements: 要件4.1（API設計）_
   - _優先度: 🟡 Medium_
   - _推定工数: 2-3時間_
   - _関連: work-log-20260208-154512-api-design-review.md_
+  - _完了: 2026-02-08, オフセットベース（offset/limit）を採用_
+  - _注意: OpenAPI仕様とAPI設計書を統一、カーソルベース定義を削除_
 
 - [ ] 15.21 Phase 2完了確認（最終）
   - すべてのE2Eテストが成功することを確認

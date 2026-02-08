@@ -43,9 +43,13 @@ graph TB
     end
     
     subgraph "コンピューティング層"
-        LC[Lambda: Collector<br/>データ収集]
-        LQ[Lambda: Query<br/>データクエリ]
-        LE[Lambda: Export<br/>データエクスポート]
+        LC[Lambda: Collector<br/>データ収集<br/>15分, 512MB]
+        LQ[Lambda: Query<br/>データクエリ<br/>30秒, 256MB]
+        LE[Lambda: Export<br/>データエクスポート<br/>5分, 512MB]
+        LCT[Lambda: Collect<br/>収集トリガー<br/>30秒, 256MB]
+        LCS[Lambda: Collect Status<br/>収集状態取得<br/>30秒, 256MB]
+        LES[Lambda: Export Status<br/>エクスポート状態取得<br/>30秒, 256MB]
+        LPD[Lambda: PDF Download<br/>PDF署名付きURL生成<br/>30秒, 256MB]
     end
     
     subgraph "ストレージ層"
@@ -659,11 +663,11 @@ GET /disclosures/{disclosure_id}/pdf
    - ソートキー: disclosed_at
    - 用途: 企業コードと日付範囲での検索
 
-2. GSI_DateRange
-   - パーティションキー: date_partition (String) # YYYY-MM-DD形式
+2. GSI_DatePartition
+   - パーティションキー: date_partition (String) # YYYY-MM形式
    - ソートキー: disclosed_at
-   - 用途: 日付範囲での効率的な検索
-   - 備考: 日単位でパーティション分割し、日付範囲クエリを最適化
+   - 用途: 月単位での効率的な検索
+   - 備考: 月単位でパーティション分割し、日付範囲クエリを最適化
 ```
 
 **テーブル2: tdnet_executions（実行状態）**
@@ -904,6 +908,40 @@ const webAcl = new wafv2.CfnWebACL(this, 'ApiWaf', {
 - Lambda関数のIAMロールにのみ読み取り権限を付与
 - ローテーション: 90日ごとに自動ローテーション
 ```
+
+**API Keyセキュリティベストプラクティス**
+
+```typescript
+// ✅ 推奨: Secrets Manager ARNを環境変数に設定
+const lambdaFunction = new lambda.Function(this, 'Function', {
+    environment: {
+        API_KEY_SECRET_ARN: apiKeySecret.secretArn,  // ARNのみを設定
+    },
+});
+
+// Lambda関数内でシークレットを取得
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+const secretsManager = new SecretsManagerClient({ region: 'ap-northeast-1' });
+const response = await secretsManager.send(new GetSecretValueCommand({
+    SecretId: process.env.API_KEY_SECRET_ARN,
+}));
+const apiKey = response.SecretString;
+
+// ❌ 非推奨: シークレット値を直接環境変数に設定
+// 理由: CloudWatch Logsやコンソールで露出するリスクがある
+const lambdaFunction = new lambda.Function(this, 'Function', {
+    environment: {
+        API_KEY: apiKeySecret.secretValue.unsafeUnwrap(),  // 直接展開は避ける
+    },
+});
+```
+
+**セキュリティ上の理由:**
+1. **ログ露出の防止**: 環境変数はCloudWatch Logsに記録される可能性がある
+2. **コンソール露出の防止**: Lambda関数の設定画面で環境変数が表示される
+3. **監査証跡**: Secrets Manager経由のアクセスはCloudTrailで記録される
+4. **ローテーション対応**: シークレットローテーション時に再デプロイ不要
 
 **CloudTrail**
 
@@ -1474,7 +1512,7 @@ export interface Disclosure {
     pdf_url?: string;              // TDnetのPDF URL
     downloaded_at: string;         // ダウンロード日時（ISO8601形式）
     file_size: number;             // ファイルサイズ（bytes）
-    date_partition: string;        // 日付パーティション（YYYY-MM-DD形式）
+    date_partition: string;        // 日付パーティション（YYYY-MM形式）
 }
 
 export function toDynamoDBItem(disclosure: Disclosure): Record<string, any> {
@@ -1512,23 +1550,23 @@ export function generateDatePartition(disclosedAt: string): string {
      * disclosed_atから日付パーティションを生成
      * 
      * @param disclosedAt - ISO8601形式の開示日時（例: "2024-01-15T15:00:00+09:00"）
-     * @returns YYYY-MM-DD形式の日付パーティション（例: "2024-01-15"）
+     * @returns YYYY-MM形式の日付パーティション（例: "2024-01"）
      * 
      * @example
-     * generateDatePartition('2024-01-15T15:00:00+09:00') // => '2024-01-15'
-     * generateDatePartition('2024-12-31T23:59:59+09:00') // => '2024-12-31'
+     * generateDatePartition('2024-01-15T15:00:00+09:00') // => '2024-01'
+     * generateDatePartition('2024-12-31T23:59:59+09:00') // => '2024-12'
      * 
      * @throws {Error} disclosed_atが不正な形式の場合
      */
-    if (!disclosedAt || disclosedAt.length < 10) {
+    if (!disclosedAt || disclosedAt.length < 7) {
         throw new Error('Invalid disclosed_at format for partition generation');
     }
     
-    // ISO8601形式から日付部分を抽出（YYYY-MM-DD）
-    const partition = disclosedAt.substring(0, 10);
+    // ISO8601形式から年月部分を抽出（YYYY-MM）
+    const partition = disclosedAt.substring(0, 7);
     
     // 日付の妥当性を簡易チェック
-    const date = new Date(partition);
+    const date = new Date(partition + '-01');
     if (isNaN(date.getTime())) {
         throw new Error(`Invalid date partition: ${partition}`);
     }
