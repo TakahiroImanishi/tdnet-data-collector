@@ -899,6 +899,21 @@
   - _完了: 2026-02-08, 24/28テスト成功（85.7%）_
   - _注意: 環境変数読み込み問題は完全に解決。残り4件の500エラーはGSI未作成が原因（別タスクで対応）_
 
+- [-] 15.12.2 LocalStack DynamoDB GSI作成とE2Eテスト完全成功
+  - DynamoDBテーブル定義JSONファイルにGSIを追加
+    - `GSI_CompanyCode_DiscloseDate`: パーティションキー=company_code, ソートキー=disclosed_at
+    - `GSI_DatePartition`: パーティションキー=date_partition, ソートキー=disclosed_at
+  - scripts/dynamodb-tables/tdnet_disclosures.jsonを更新
+  - LocalStackセットアップスクリプト（scripts/localstack-setup.ps1）を更新してGSI作成を追加
+  - LocalStackを再起動してGSIを作成
+  - E2Eテスト再実行: 28/28テスト成功を確認
+  - _Requirements: 要件14.4（E2Eテスト）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+  - _前提条件: タスク15.12.1完了_
+  - _問題: Query/Export handlerで500エラー（4件）。GSIが作成されていないためクエリが失敗_
+  - _解決策: DynamoDBテーブル定義にGSIを追加し、LocalStackで作成_
+
 - [ ] 15.14 Phase 2完了確認（最終）
   - すべてのE2Eテストが成功することを確認
   - execution_id不一致問題が解決されていることを確認

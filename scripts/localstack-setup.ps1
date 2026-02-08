@@ -52,27 +52,54 @@ Write-Info "Creating DynamoDB tables..."
 # Table 1: tdnet_disclosures
 Write-Info "Creating table: tdnet_disclosures"
 try {
-    aws --endpoint-url=$ENDPOINT `
-        --region=$REGION `
-        dynamodb create-table `
-        --table-name tdnet_disclosures `
-        --attribute-definitions `
-            AttributeName=disclosure_id,AttributeType=S `
-            AttributeName=date_partition,AttributeType=S `
-            AttributeName=disclosed_at,AttributeType=S `
-        --key-schema `
-            AttributeName=disclosure_id,KeyType=HASH `
-        --global-secondary-indexes `
-            '[{"IndexName":"DatePartitionIndex","KeySchema":[{"AttributeName":"date_partition","KeyType":"HASH"},{"AttributeName":"disclosed_at","KeyType":"RANGE"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' `
-        --provisioned-throughput `
-            ReadCapacityUnits=5,WriteCapacityUnits=5 `
-        --no-cli-pager `
-        2>&1 | Out-Null
+    # Delete existing table if it exists
+    Write-Info "Checking if table 'tdnet_disclosures' exists..."
+    $tableExists = $false
+    try {
+        aws --endpoint-url=$ENDPOINT `
+            --region=$REGION `
+            dynamodb describe-table `
+            --table-name tdnet_disclosures `
+            --no-cli-pager `
+            2>&1 | Out-Null
+        
+        if ($LASTEXITCODE -eq 0) {
+            $tableExists = $true
+            Write-Warning-Custom "Table 'tdnet_disclosures' already exists. Deleting..."
+            aws --endpoint-url=$ENDPOINT `
+                --region=$REGION `
+                dynamodb delete-table `
+                --table-name tdnet_disclosures `
+                --no-cli-pager `
+                2>&1 | Out-Null
+            
+            Write-Info "Waiting for table deletion..."
+            Start-Sleep -Seconds 3
+            Write-Success "Table 'tdnet_disclosures' deleted"
+        }
+    } catch {
+        # Table doesn't exist, continue
+    }
     
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "Table 'tdnet_disclosures' created successfully"
+    # Create table using JSON file
+    Write-Info "Creating table 'tdnet_disclosures' with GSI..."
+    $jsonPath = "scripts/dynamodb-tables/tdnet_disclosures.json"
+    
+    if (Test-Path $jsonPath) {
+        aws --endpoint-url=$ENDPOINT `
+            --region=$REGION `
+            dynamodb create-table `
+            --cli-input-json "file://$jsonPath" `
+            --no-cli-pager `
+            2>&1 | Out-Null
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "Table 'tdnet_disclosures' created successfully with GSI_CompanyCode_DiscloseDate and GSI_DatePartition"
+        } else {
+            Write-Error-Custom "Failed to create table 'tdnet_disclosures'"
+        }
     } else {
-        Write-Warning-Custom "Table 'tdnet_disclosures' may already exist or creation failed"
+        Write-Error-Custom "Table definition file not found: $jsonPath"
     }
 } catch {
     Write-Warning-Custom "Failed to create table 'tdnet_disclosures': $_"
@@ -230,7 +257,7 @@ Write-Host "LocalStack Setup Complete!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Info "DynamoDB Tables:"
-Write-Host "  - tdnet_disclosures (with DatePartitionIndex GSI)"
+Write-Host "  - tdnet_disclosures (with GSI_CompanyCode_DiscloseDate and GSI_DatePartition)"
 Write-Host "  - tdnet_executions (with StartedAtIndex GSI)"
 Write-Host "  - tdnet-export-status"
 Write-Host ""

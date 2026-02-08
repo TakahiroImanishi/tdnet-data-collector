@@ -6,6 +6,10 @@
       "AttributeType": "S"
     },
     {
+      "AttributeName": "company_code",
+      "AttributeType": "S"
+    },
+    {
       "AttributeName": "date_partition",
       "AttributeType": "S"
     },
@@ -22,7 +26,27 @@
   ],
   "GlobalSecondaryIndexes": [
     {
-      "IndexName": "DatePartitionIndex",
+      "IndexName": "GSI_CompanyCode_DiscloseDate",
+      "KeySchema": [
+        {
+          "AttributeName": "company_code",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "disclosed_at",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      },
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+      }
+    },
+    {
+      "IndexName": "GSI_DatePartition",
       "KeySchema": [
         {
           "AttributeName": "date_partition",
