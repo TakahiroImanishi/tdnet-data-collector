@@ -47,6 +47,8 @@ logs/
 # Test coverage
 coverage/
 .nyc_output/
+.jest-cache/
+test-results.txt
 
 # Temporary files
 tmp/
