@@ -325,14 +325,16 @@
   - _注意: CDK Bootstrap実行はPhase 2開始時に実施（タスク10.1以降）_
   - _注意: .env.developmentの{account-id}を実際の値に置き換える必要あり_
 
-- [ ] 9.4 テスト環境の整備（Phase 2並行作業）
+- [x] 9.4 テスト環境の整備（Phase 2並行作業）
   - 依存関係の注入（DI）の導入
   - AWS SDKモックの改善（aws-sdk-client-mock導入検討）
   - Jest設定の見直し（ESモジュール対応）
   - _Requirements: 要件14.1（テスト）_
   - _優先度: 🟠 High_
   - _推定工数: 10-15時間_
-  - _注意: Phase 2開始後に並行して実施_
+  - _完了: 2026-02-08, DI実装・テストヘルパー作成・Jest最適化完了_
+  - _成果物: dependencies.ts, test-helpers.ts, handler.test.improved.ts, README.md_
+  - _注意: 既存テストの更新は次のステップ（Phase 2並行作業）_
 
 - [ ] 9.5 ドキュメント化（Phase 2並行作業）
   - Lambda専用ログヘルパーのドキュメント化
