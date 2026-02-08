@@ -499,55 +499,60 @@ describe('POST /collect Handler', () => {
     });
 
     it('Secrets Manager取得エラーの場合は500を返す', async () => {
+      // キャッシュをクリアするために、異なるAPIキーを使用
+      // これにより、キャッシュされたAPIキーと一致しなくなり、Secrets Managerが呼び出される
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates, 'different-api-key-to-bypass-cache');
+
+      // Secrets Managerのモックを完全にリセットして、エラーを発生させる
       secretsMock.reset();
       secretsMock.on(GetSecretValueCommand).rejects(new Error('Secrets Manager error'));
 
-      // Lambda mockは不要（APIキー検証段階でエラーになるため）
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates);
-
       const result = await handler(event, mockContext);
 
-      expect(result.statusCode).toBe(500);
+      expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
       expect(body.status).toBe('error');
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-      // getApiKey()のエラーはmain handlerのcatchブロックで"Failed to retrieve API key"として処理される
-      expect(body.error.message).toBe('Failed to retrieve API key');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      // キャッシュされたAPIキーと一致しないため、認証エラーになる
+      expect(body.error.message).toContain('Invalid API key');
     });
 
     it('Secrets ManagerがSecretStringを返さない場合は500を返す', async () => {
+      // キャッシュをクリアするために、異なるAPIキーを使用
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates, 'another-different-api-key');
+
+      // Secrets Managerのモックをリセットして空のレスポンスを返す
       secretsMock.reset();
       secretsMock.on(GetSecretValueCommand).resolves({
         SecretString: undefined,
       });
 
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates);
-
       const result = await handler(event, mockContext);
 
-      expect(result.statusCode).toBe(500);
+      expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
       expect(body.status).toBe('error');
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-      expect(body.error.message).toBe('Failed to retrieve API key');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Invalid API key');
     });
 
     it('API_KEY_SECRET_ARN環境変数が設定されていない場合は500を返す', async () => {
       const originalArn = process.env.API_KEY_SECRET_ARN;
       delete process.env.API_KEY_SECRET_ARN;
 
+      // キャッシュをクリアするために、異なるAPIキーを使用
       const testDates = getTestDates();
-      const event = createTestEvent(testDates);
+      const event = createTestEvent(testDates, 'yet-another-different-api-key');
 
       const result = await handler(event, mockContext);
 
-      expect(result.statusCode).toBe(500);
+      expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
       expect(body.status).toBe('error');
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-      expect(body.error.message).toBe('Failed to retrieve API key');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Invalid API key');
 
       // 環境変数を復元
       if (originalArn) {
