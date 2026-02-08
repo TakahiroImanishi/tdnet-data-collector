@@ -101,3 +101,112 @@ TDnet Data Collectorのエクスポート機能を実装し、ユーザーが開
   - S3 GetObjectCommandの署名付きURL生成
   - 有効期限7日間の設定
 
+### 実装フェーズ3: CDK定義とテスト
+- ✅ タスク12.6: Lambda ExportのCDK定義
+  - ExportStatusTable（DynamoDB）の作成
+  - Lambda Export関数の定義（タイムアウト5分、メモリ512MB）
+  - 環境変数設定（DYNAMODB_TABLE_NAME, EXPORT_STATUS_TABLE_NAME, EXPORT_BUCKET_NAME, API_KEY）
+  - IAM権限設定（DynamoDB読み書き、S3読み書き、CloudWatchメトリクス）
+  - API Gateway統合（/export エンドポイント、POST、APIキー認証必須）
+  - CORS設定
+  
+- ✅ タスク12.7: Lambda Exportユニットテスト
+  - handler.test.ts: ハンドラーのテスト（29テストケース）
+    - 正常系: JSON/CSV形式のエクスポート
+    - 異常系: APIキー認証（未指定、不正）
+    - 異常系: バリデーション（空ボディ、不正JSON、不正フォーマット、不正日付、日付順序、不正企業コード）
+    - CORS対応の検証
+  - export-to-s3.test.ts: S3エクスポートのテスト（15テストケース）
+    - JSON形式のエクスポート
+    - CSV形式のエクスポート（ヘッダー、データ行、エスケープ処理）
+    - S3キー生成
+    - ライフサイクルポリシー（auto-deleteタグ）
+  
+- ✅ タスク12.8: エクスポートファイル有効期限のテスト
+  - export-file-expiration.property.test.ts: プロパティテスト（4プロパティ）
+    - Property 1: すべてのエクスポートファイルに auto-delete タグが設定される
+    - Property 2: S3キーが正しいフォーマットで生成される
+    - Property 3: ContentTypeが正しく設定される
+    - Property 4: CSV形式の場合、カンマを含む値が正しくエスケープされる
+
+---
+
+## 成果物
+
+### 実装ファイル
+1. **src/lambda/export/types.ts** - 型定義
+2. **src/lambda/export/handler.ts** - メインハンドラー
+3. **src/lambda/export/create-export-job.ts** - エクスポートジョブ作成
+4. **src/lambda/export/process-export.ts** - エクスポート処理
+5. **src/lambda/export/query-disclosures.ts** - DynamoDBクエリ
+6. **src/lambda/export/export-to-s3.ts** - S3エクスポート
+7. **src/lambda/export/update-export-status.ts** - ステータス更新
+8. **src/lambda/export/generate-signed-url.ts** - 署名付きURL生成
+9. **src/lambda/export/index.ts** - エントリーポイント
+
+### CDK定義
+10. **cdk/lib/tdnet-data-collector-stack.ts** - CDKスタック更新
+    - ExportStatusTable追加
+    - Lambda Export関数追加
+    - API Gateway /export エンドポイント追加
+
+### テストファイル
+11. **src/lambda/export/__tests__/handler.test.ts** - ハンドラーユニットテスト（29テスト）
+12. **src/lambda/export/__tests__/export-to-s3.test.ts** - S3エクスポートユニットテスト（15テスト）
+13. **src/lambda/export/__tests__/export-file-expiration.property.test.ts** - プロパティテスト（4プロパティ）
+
+### 実装した機能
+- ✅ APIキー認証（x-api-key ヘッダー）
+- ✅ リクエストバリデーション（フォーマット、日付、企業コード）
+- ✅ エクスポートジョブ作成（DynamoDB保存、TTL 30日）
+- ✅ 非同期エクスポート処理（進捗更新: 10%, 50%, 90%, 100%）
+- ✅ DynamoDBクエリ（date_partition使用、複数月並行クエリ）
+- ✅ JSON/CSV形式エクスポート
+- ✅ CSV値エスケープ（カンマ、ダブルクォート、改行）
+- ✅ S3アップロード（ライフサイクルポリシー: 7日後自動削除）
+- ✅ 署名付きURL生成（有効期限7日）
+- ✅ エラーハンドリング（再試行ロジック、構造化ログ）
+- ✅ CORS対応
+- ✅ CloudWatchメトリクス送信
+
+---
+
+## 次回への申し送り
+
+### 完了事項
+- タスク12.1-12.8: すべて完了
+- Lambda Export実装完了
+- CDK定義完了
+- ユニットテスト完了（44テストケース）
+- プロパティテスト完了（4プロパティ）
+
+### 注意事項
+1. **環境変数の設定**
+   - API_KEY: Secrets Managerから取得（/tdnet/api-key）
+   - DYNAMODB_TABLE_NAME: tdnet_disclosures
+   - EXPORT_STATUS_TABLE_NAME: tdnet_export_status
+   - EXPORT_BUCKET_NAME: tdnet-data-collector-exports-{account}
+
+2. **S3ライフサイクルポリシー**
+   - exportsバケットに7日後自動削除ポリシーが設定済み
+   - auto-delete=true タグでフィルタリング
+
+3. **DynamoDB GSI**
+   - DatePartitionIndex: date_partition + disclosed_at
+   - GSI_Status_RequestedAt: status + requested_at
+
+4. **API Gateway**
+   - エンドポイント: POST /export
+   - 認証: APIキー必須
+   - レスポンス: 202 Accepted（非同期処理）
+
+5. **テスト実行**
+   - ユニットテスト: `npm test -- export`
+   - プロパティテスト: `npm test -- export-file-expiration.property`
+
+### 未実装の機能（今後の拡張）
+- エクスポート状態取得API（GET /export/{export_id}）
+- エクスポートジョブのキャンセル機能
+- エクスポートファイルのダウンロード履歴記録
+- エクスポートファイルのウイルススキャン
+

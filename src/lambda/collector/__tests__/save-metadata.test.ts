@@ -376,6 +376,10 @@ describe('saveMetadata', () => {
 });
 
   describe('再試行ロジック', () => {
+    beforeEach(() => {
+      dynamoMock.reset();
+    });
+
     it('ProvisionedThroughputExceededExceptionで再試行する', async () => {
       // Arrange
       const disclosure: Disclosure = {

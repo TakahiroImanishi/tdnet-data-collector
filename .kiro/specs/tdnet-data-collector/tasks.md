@@ -556,53 +556,61 @@
 
 ### 12. Lambda Export実装
 
-- [ ] 12.1 Lambda Exportハンドラーの実装
+- [x] 12.1 Lambda Exportハンドラーの実装
   - イベント型定義（ExportEvent、ExportResponse）
   - エクスポートリクエストのパース
   - APIキー認証の検証
   - _Requirements: 要件5.1, 11.1（エクスポート、認証）_
+  - _完了: 2026-02-08, 29テスト成功_
 
-- [ ] 12.2 createExportJob関数の実装
+- [x] 12.2 createExportJob関数の実装
   - エクスポートIDの生成
   - 実行状態をDynamoDBに保存（status: pending）
   - 非同期でprocessExportを開始
   - _Requirements: 要件5.1（エクスポート）_
+  - _完了: 2026-02-08_
 
-- [ ] 12.3 processExport関数の実装
+- [x] 12.3 processExport関数の実装
   - データ取得（queryDisclosures使用）
   - 進捗更新（10%、50%、90%、100%）
   - S3へのエクスポート
   - 署名付きURL生成（有効期限7日）
   - _Requirements: 要件5.1, 5.4（エクスポート、進捗）_
+  - _完了: 2026-02-08_
 
-- [ ] 12.4 exportToS3関数の実装
+- [x] 12.4 exportToS3関数の実装
   - JSON/CSV形式でS3に保存
   - 大量データ対応（ストリーム処理）
   - _Requirements: 要件5.2（エクスポート形式）_
+  - _完了: 2026-02-08, 15テスト成功_
 
-- [ ] 12.5 updateExportStatus関数の実装
+- [x] 12.5 updateExportStatus関数の実装
   - エクスポート状態の更新
   - エラー時のエラーメッセージ記録
   - _Requirements: 要件5.4（進捗）_
+  - _完了: 2026-02-08_
 
-- [ ] 12.6 Lambda ExportのCDK定義
+- [x] 12.6 Lambda ExportのCDK定義
   - NodejsFunction構成（タイムアウト5分、メモリ512MB）
   - 環境変数設定
   - IAMロール設定
   - API Gatewayとの統合
   - _Requirements: 要件12.1, 12.3（コスト最適化）_
+  - _完了: 2026-02-08_
 
-- [ ]* 12.7 Lambda Exportユニットテスト
+- [x] 12.7 Lambda Exportユニットテスト
   - エクスポートジョブ作成の検証
   - 進捗更新の検証
   - CSV/JSON変換の検証
   - _Requirements: 要件14.1（ユニットテスト）_
+  - _完了: 2026-02-08, 44テスト成功（handler: 29件、export-to-s3: 15件）_
 
-- [ ]* 12.8 エクスポートファイル有効期限のテスト
+- [x] 12.8 エクスポートファイル有効期限のテスト
   - **Property 10: エクスポートファイルの有効期限**
   - **Validates: Requirements 7.2, 12.4**
   - エクスポートファイルに7日後の自動削除ライフサイクルポリシーが適用されることを確認
   - _Requirements: 要件14.2（プロパティテスト）_
+  - _完了: 2026-02-08, 4プロパティテスト成功（各100回反復）_
 
 ### 13. APIエンドポイント実装
 
