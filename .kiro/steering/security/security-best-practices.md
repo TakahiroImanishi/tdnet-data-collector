@@ -9,11 +9,9 @@ TDnet Data Collectorプロジェクトのセキュリティ実装チェックリ
 
 ## セキュリティ原則
 
-1. **最小権限**: 必要最小限の権限のみ付与
-2. **深層防御**: 複数のセキュリティレイヤー実装
-3. **暗号化**: 転送時・保存時ともに暗号化
-4. **監査**: すべてのアクセスをログ記録
-5. **定期見直し**: セキュリティ設定を定期レビュー
+1. **最小権限**: 必要最小限の権限のみ付与（ワイルドカード権限禁止）
+2. **暗号化**: 転送時・保存時ともに暗号化（TLS 1.2以上、SSE-S3/AWS管理キー）
+3. **監査**: CloudTrail有効化、構造化ログ、機密情報マスク
 
 ## IAM権限管理
 
@@ -27,27 +25,6 @@ TDnet Data Collectorプロジェクトのセキュリティ実装チェックリ
 | SNS | sns:Publish | 特定トピックのみ |
 | SSM Parameter Store | ssm:GetParameter | `/tdnet/${environment}/*` のみ |
 | Secrets Manager | secretsmanager:GetSecretValue | 特定シークレットのみ |
-
-### CDK実装パターン
-
-```typescript
-// 最小権限の実装例
-const collectorRole = new iam.Role(this, 'CollectorRole', {
-    assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-});
-
-// CloudWatch Logs（必須）
-collectorRole.addManagedPolicy(
-    iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
-);
-
-// 特定リソースへの権限
-collectorRole.addToPolicy(new iam.PolicyStatement({
-    effect: iam.Effect.ALLOW,
-    actions: ['s3:PutObject', 's3:GetObject'],
-    resources: [`${pdfBucket.bucketArn}/*`],
-}));
-```
 
 ### 禁止事項
 
@@ -77,21 +54,6 @@ actions: ['s3:PutObject', 's3:GetObject'], resources: [`${bucket.bucketArn}/*`]
 | DynamoDB | AWS管理キー | `encryption: dynamodb.TableEncryption.AWS_MANAGED` |
 | Lambda環境変数 | KMS | `environmentEncryption: kmsKey` |
 
-```typescript
-// S3暗号化
-const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
-    encryption: s3.BucketEncryption.S3_MANAGED,
-    enforceSSL: true,
-    blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-});
-
-// DynamoDB暗号化
-const table = new dynamodb.Table(this, 'DisclosuresTable', {
-    encryption: dynamodb.TableEncryption.AWS_MANAGED,
-    pointInTimeRecovery: true,
-});
-```
-
 ## 機密情報管理
 
 ### Secrets Manager vs SSM Parameter Store
@@ -100,23 +62,6 @@ const table = new dynamodb.Table(this, 'DisclosuresTable', {
 |------|------------|------|
 | APIキー、パスワード | Secrets Manager | 自動ローテーション、監査ログ |
 | 設定値、非機密情報 | SSM Parameter Store | コスト効率 |
-
-### 実装パターン
-
-```typescript
-// Secrets Manager（機密情報）
-const apiKeySecret = new secretsmanager.Secret(this, 'ApiKeySecret', {
-    secretName: `tdnet/${props.environment}/api-key`,
-});
-apiKeySecret.grantRead(collectorFn);
-
-// SSM Parameter Store（設定値）
-const configParam = new ssm.StringParameter(this, 'ConfigParam', {
-    parameterName: `/tdnet/${props.environment}/config`,
-    type: ssm.ParameterType.SECURE_STRING,
-});
-configParam.grantRead(collectorFn);
-```
 
 ### 環境変数の扱い
 
@@ -130,54 +75,11 @@ environment: { API_KEY_SECRET_ARN: apiKeySecret.secretArn }
 
 ## API Gateway セキュリティ
 
-### WAF設定
+### WAF設定（基本）
 
-```typescript
-// WAF Web ACL（レート制限 + AWS管理ルール）
-const webAcl = new wafv2.CfnWebACL(this, 'ApiWaf', {
-    scope: 'REGIONAL',
-    defaultAction: { allow: {} },
-    rules: [
-        {
-            name: 'RateLimitRule',
-            priority: 1,
-            statement: {
-                rateBasedStatement: {
-                    limit: 2000, // 5分間で2000リクエスト
-                    aggregateKeyType: 'IP',
-                },
-            },
-            action: { block: {} },
-            visibilityConfig: {
-                sampledRequestsEnabled: true,
-                cloudWatchMetricsEnabled: true,
-                metricName: 'RateLimitRule',
-            },
-        },
-        {
-            name: 'AWSManagedRulesCommonRuleSet',
-            priority: 2,
-            statement: {
-                managedRuleGroupStatement: {
-                    vendorName: 'AWS',
-                    name: 'AWSManagedRulesCommonRuleSet',
-                },
-            },
-            overrideAction: { none: {} },
-            visibilityConfig: {
-                sampledRequestsEnabled: true,
-                cloudWatchMetricsEnabled: true,
-                metricName: 'AWSManagedRulesCommonRuleSet',
-            },
-        },
-    ],
-    visibilityConfig: {
-        sampledRequestsEnabled: true,
-        cloudWatchMetricsEnabled: true,
-        metricName: 'TdnetApiWaf',
-    },
-});
-```
+- レート制限: 5分間で2000リクエスト/IP
+- AWS管理ルール: `AWSManagedRulesCommonRuleSet`
+- CloudWatchメトリクス有効化
 
 ### APIキー認証
 
@@ -189,8 +91,6 @@ const usagePlan = api.addUsagePlan('TdnetUsagePlan', {
     quota: { limit: 10000, period: apigateway.Period.MONTH },
 });
 usagePlan.addApiKey(apiKey);
-
-// エンドポイントでAPIキー要求
 disclosures.addMethod('GET', integration, { apiKeyRequired: true });
 ```
 
@@ -202,8 +102,6 @@ defaultCorsPreflightOptions: {
     allowOrigins: ['https://dashboard.example.com'],
     allowMethods: ['GET', 'POST', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'X-API-Key'],
-    allowCredentials: true,
-    maxAge: cdk.Duration.hours(1),
 }
 ```
 
@@ -211,18 +109,8 @@ defaultCorsPreflightOptions: {
 
 ### CloudTrail設定
 
-```typescript
-// APIコール記録
-const trail = new cloudtrail.Trail(this, 'TdnetTrail', {
-    sendToCloudWatchLogs: true,
-    includeGlobalServiceEvents: true,
-});
-
-// S3イベント記録
-trail.addS3EventSelector([{ bucket: pdfBucket }], {
-    readWriteType: cloudtrail.ReadWriteType.ALL,
-});
-```
+- APIコール記録: `sendToCloudWatchLogs: true`
+- S3イベント記録: `addS3EventSelector`
 
 ### ログからの機密情報除外
 
@@ -234,13 +122,9 @@ function sanitizeForLog(data: any): any {
     if (sanitized.password) sanitized.password = '***REDACTED***';
     return sanitized;
 }
-
-logger.info('Processing disclosure', sanitizeForLog({ disclosure_id, api_key }));
 ```
 
 ## 脆弱性管理
-
-### 依存関係スキャン
 
 ```bash
 # 脆弱性チェック
@@ -248,9 +132,6 @@ npm audit
 
 # 自動修正
 npm audit fix
-
-# 強制修正（破壊的変更含む）
-npm audit fix --force
 ```
 
 ### Dependabot設定
@@ -263,7 +144,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
 ```
 
 ## セキュリティチェックリスト
@@ -288,22 +168,13 @@ updates:
 - [ ] 依存関係の更新
 - [ ] クレデンシャルのローテーション
 
-## インシデント対応フロー
+## インシデント対応
 
 1. **検知**: CloudWatch Alarms, GuardDuty（オプション）
-2. **初期対応**: 影響範囲特定、緩和策実施、関係者通知
-3. **調査**: CloudTrail/CloudWatch Logs分析、X-Rayトレース確認
-4. **復旧**: 脆弱性修正、クレデンシャルローテーション、再デプロイ
+2. **初期対応**: 影響範囲特定、緩和策実施
+3. **調査**: CloudTrail/CloudWatch Logs分析
+4. **復旧**: 脆弱性修正、クレデンシャルローテーション
 5. **事後対応**: インシデントレポート作成、再発防止策実施
-
-### クレデンシャルローテーション
-
-```bash
-# Secrets Managerローテーション
-aws secretsmanager rotate-secret \
-  --secret-id tdnet/prod/api-key \
-  --rotation-lambda-arn arn:aws:lambda:...
-```
 
 ## 関連ドキュメント
 

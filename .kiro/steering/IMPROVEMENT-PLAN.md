@@ -158,7 +158,23 @@
 
 ## Phase 4: その他（優先度: 低）
 
-### security/security-best-practices.md - 推定40%削減
+### ✅ security/security-best-practices.md - 40%削減完了
+**削減前**: 約2,054トークン  
+**削減後**: 約1,232トークン  
+**削減率**: 約40%
+
+**削減内容**:
+- ✅ セキュリティ原則を5項目→3項目に集約
+- ✅ IAM CDK実装例を削除（禁止事項のみ残す）
+- ✅ 暗号化CDK実装例を削除（表のみ維持）
+- ✅ 機密情報管理の詳細実装を削除
+- ✅ WAF設定の完全実装を削除（100行以上のコード→基本設定のみ）
+- ✅ CloudTrail詳細実装を削除
+- ✅ 脆弱性管理を簡略化
+- ✅ インシデント対応フローを簡略化
+
+**完了日**: 2026-02-09
+
 ### api/api-design-guidelines.md - 推定50%削減
 ### api/error-codes.md - 推定40%削減
 ### meta/pattern-matching-tests.md - 現状維持
@@ -185,8 +201,10 @@
 - **Phase 3（infrastructure/）**: 約1,411トークン削減（完了）
   - ✅ deployment-checklist.md: 約359トークン削減
   - ✅ performance-optimization.md: 約1,052トークン削減
-- **Phase 4（その他）**: 約800トークン削減
-- **合計**: 約11,147トークン削減（全体の約55%削減）
+- **Phase 4（その他）**: 約822トークン削減（security-best-practices.md完了）
+  - ✅ security-best-practices.md: 約822トークン削減
+  - 🔄 残り: api/api-design-guidelines.md, api/error-codes.md
+- **合計**: 約11,169トークン削減（全体の約55%削減）
 
 ### 実用性の向上
 - 必要な情報に素早くアクセス可能
