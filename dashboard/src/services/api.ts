@@ -109,4 +109,99 @@ export const getDisclosureTypes = async (): Promise<string[]> => {
   }
 };
 
+/**
+ * PDFの署名付きURLを取得
+ */
+export const getPdfDownloadUrl = async (
+  disclosureId: string
+): Promise<ApiResponse<{ url: string; expires_in: number }>> => {
+  try {
+    const response = await apiClient.get<ApiResponse<{ url: string; expires_in: number }>>(
+      `/disclosures/${disclosureId}/pdf`
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error('PDF署名付きURLの取得に失敗しました:', error);
+    throw error;
+  }
+};
+
+/**
+ * エクスポートジョブを作成
+ */
+export const createExportJob = async (
+  params: {
+    start_date: string;
+    end_date: string;
+    company_code?: string;
+    disclosure_type?: string;
+  }
+): Promise<ApiResponse<{ export_id: string; status: string }>> => {
+  try {
+    const response = await apiClient.post<ApiResponse<{ export_id: string; status: string }>>(
+      '/exports',
+      params
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error('エクスポートジョブの作成に失敗しました:', error);
+    throw error;
+  }
+};
+
+/**
+ * エクスポートジョブの状態を取得
+ */
+export const getExportStatus = async (
+  exportId: string
+): Promise<ApiResponse<{
+  export_id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  download_url?: string;
+  error_message?: string;
+  created_at: string;
+  completed_at?: string;
+}>> => {
+  try {
+    const response = await apiClient.get(
+      `/exports/${exportId}`
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error('エクスポート状態の取得に失敗しました:', error);
+    throw error;
+  }
+};
+
+/**
+ * 収集実行の状態を取得
+ */
+export const getCollectionStatus = async (
+  executionId: string
+): Promise<ApiResponse<{
+  execution_id: string;
+  status: 'running' | 'completed' | 'failed';
+  progress: number;
+  total_items: number;
+  processed_items: number;
+  failed_items: number;
+  started_at: string;
+  completed_at?: string;
+  error_message?: string;
+}>> => {
+  try {
+    const response = await apiClient.get(
+      `/collect/${executionId}`
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error('収集実行状態の取得に失敗しました:', error);
+    throw error;
+  }
+};
+
 export default apiClient;
