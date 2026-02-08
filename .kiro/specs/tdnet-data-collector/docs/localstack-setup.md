@@ -35,41 +35,11 @@ LocalStackは、AWSクラウドサービスをローカル環境でエミュレ�
 2. インストーラーを実行
 3. Docker Desktopを起動
 
-### 2. LocalStackのインストール
+### 2. LocalStackのセットアップ（Docker Compose使用）
 
-#### 方法1: Docker Composeを使用（推奨）
+プロジェクトルートに `docker-compose.yml` が既に用意されています。
 
-プロジェクトルートに `docker-compose.yml` を作成:
-
-```yaml
-version: '3.8'
-
-services:
-  localstack:
-    image: localstack/localstack:latest
-    container_name: tdnet-localstack
-    ports:
-      - "4566:4566"  # LocalStack Gateway
-      - "4510-4559:4510-4559"  # 外部サービスポート範囲
-    environment:
-      - SERVICES=dynamodb,s3,cloudwatch,sns,sqs
-      - DEBUG=1
-      - DATA_DIR=/tmp/localstack/data
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - LAMBDA_EXECUTOR=docker
-      - LAMBDA_REMOTE_DOCKER=false
-    volumes:
-      - "./localstack-data:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    networks:
-      - tdnet-network
-
-networks:
-  tdnet-network:
-    driver: bridge
-```
-
-起動コマンド:
+#### LocalStackの起動
 
 ```powershell
 # LocalStackを起動
@@ -86,23 +56,71 @@ docker-compose down -v
 docker-compose up -d
 ```
 
-#### 方法2: LocalStack CLIを使用
+#### DynamoDBテーブルとS3バケットの自動作成
+
+セットアップスクリプト `scripts/localstack-setup.ps1` を実行します：
 
 ```powershell
-# LocalStack CLIをインストール
-pip install localstack
+# 実行権限を付与（初回のみ）
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # LocalStackを起動
-localstack start -d
+docker-compose up -d
 
-# 状態確認
-localstack status
-
-# 停止
-localstack stop
+# セットアップスクリプトを実行
+.\scripts\localstack-setup.ps1
 ```
 
-### 3. AWS CLIのLocalStack設定
+スクリプトは以下を自動的に実行します：
+- LocalStackの起動確認
+- DynamoDBテーブルの作成（`tdnet_disclosures`, `tdnet_executions`）
+- S3バケットの作成（`tdnet-data-collector-pdfs-local`, `tdnet-data-collector-exports-local`）
+- 作成したリソースの検証
+
+### 3. 環境変数の設定
+
+`.env.local` ファイルが既に用意されています。このファイルには以下の設定が含まれています：
+
+```env
+# LocalStack環境変数
+AWS_ENDPOINT_URL=http://localhost:4566
+AWS_REGION=ap-northeast-1
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+
+# DynamoDB
+DYNAMODB_TABLE_DISCLOSURES=tdnet_disclosures
+DYNAMODB_TABLE_EXECUTIONS=tdnet_executions
+
+# S3
+S3_BUCKET_PDFS=tdnet-data-collector-pdfs-local
+S3_BUCKET_EXPORTS=tdnet-data-collector-exports-local
+
+# API Key
+API_KEY=test-api-key-localstack-e2e
+
+# その他
+LOG_LEVEL=DEBUG
+ENVIRONMENT=local
+NODE_ENV=test
+TEST_ENV=e2e
+```
+
+### 4. 動作確認
+
+```powershell
+# DynamoDBテーブル一覧を確認
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 dynamodb list-tables
+
+# S3バケット一覧を確認
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 s3 ls
+```
+
+### 5. AWS CLIのLocalStack設定（オプション）
+
+### 5. AWS CLIのLocalStack設定（オプション）
+
+AWS CLIでLocalStackを使用する場合は、プロファイルを設定できます。
 
 #### AWS CLI v2のインストール
 
@@ -146,76 +164,66 @@ aws --profile localstack --endpoint-url=http://localhost:4566 s3 ls
 aws --profile localstack --endpoint-url=http://localhost:4566 dynamodb list-tables
 ```
 
-## LocalStack環境のセットアップ
+## クイックスタートガイド
 
-### 1. DynamoDBテーブルの作成
-
-`scripts/localstack-setup.sh` を作成:
-
-```bash
-#!/bin/bash
-
-# LocalStackエンドポイント
-ENDPOINT="http://localhost:4566"
-REGION="ap-northeast-1"
-
-echo "Creating DynamoDB tables..."
-
-# Disclosuresテーブル
-aws --endpoint-url=$ENDPOINT \
-    --region=$REGION \
-    dynamodb create-table \
-    --table-name tdnet-disclosures-local \
-    --attribute-definitions \
-        AttributeName=disclosure_id,AttributeType=S \
-        AttributeName=date_partition,AttributeType=S \
-        AttributeName=disclosed_at,AttributeType=S \
-    --key-schema \
-        AttributeName=disclosure_id,KeyType=HASH \
-    --global-secondary-indexes \
-        "[
-            {
-                \"IndexName\": \"DatePartitionIndex\",
-                \"KeySchema\": [
-                    {\"AttributeName\":\"date_partition\",\"KeyType\":\"HASH\"},
-                    {\"AttributeName\":\"disclosed_at\",\"KeyType\":\"RANGE\"}
-                ],
-                \"Projection\": {\"ProjectionType\":\"ALL\"},
-                \"ProvisionedThroughput\": {\"ReadCapacityUnits\":5,\"WriteCapacityUnits\":5}
-            }
-        ]" \
-    --provisioned-throughput \
-        ReadCapacityUnits=5,WriteCapacityUnits=5
-
-# ExecutionStatusテーブル
-aws --endpoint-url=$ENDPOINT \
-    --region=$REGION \
-    dynamodb create-table \
-    --table-name tdnet-execution-status-local \
-    --attribute-definitions \
-        AttributeName=execution_id,AttributeType=S \
-    --key-schema \
-        AttributeName=execution_id,KeyType=HASH \
-    --provisioned-throughput \
-        ReadCapacityUnits=5,WriteCapacityUnits=5
-
-echo "DynamoDB tables created successfully!"
-```
-
-PowerShell版 `scripts/localstack-setup.ps1`:
+LocalStack環境を素早くセットアップするには、以下の手順を実行してください：
 
 ```powershell
-# LocalStackエンドポイント
-$ENDPOINT = "http://localhost:4566"
-$REGION = "ap-northeast-1"
+# 1. LocalStackを起動
+docker-compose up -d
 
-Write-Host "Creating DynamoDB tables..."
+# 2. LocalStackが起動するまで待機（約30秒）
+Start-Sleep -Seconds 30
 
+# 3. セットアップスクリプトを実行
+.\scripts\localstack-setup.ps1
+
+# 4. 動作確認
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 dynamodb list-tables
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 s3 ls
+
+# 5. E2Eテストを実行
+npm run test:e2e
+```
+
+## LocalStack環境のセットアップ（詳細）
+
+### セットアップスクリプトの詳細
+
+`scripts/localstack-setup.ps1` は以下の処理を実行します：
+
+1. **LocalStackの起動確認**
+   - ヘルスチェックエンドポイント（`http://localhost:4566/_localstack/health`）を確認
+   - LocalStackが起動していない場合は、エラーメッセージを表示して終了
+
+2. **DynamoDBテーブルの作成**
+   - `tdnet_disclosures` テーブル
+     - パーティションキー: `disclosure_id` (String)
+     - GSI: `DatePartitionIndex`（`date_partition` + `disclosed_at`）
+   - `tdnet_executions` テーブル
+     - パーティションキー: `execution_id` (String)
+     - GSI: `StartedAtIndex`（`started_at`）
+
+3. **S3バケットの作成**
+   - `tdnet-data-collector-pdfs-local` - PDF保存用
+   - `tdnet-data-collector-exports-local` - エクスポートファイル保存用
+
+4. **リソースの検証**
+   - 作成したテーブルとバケットが正しく作成されたか確認
+   - 結果をカラフルな出力で表示
+
+### 手動でのリソース作成（参考）
+
+セットアップスクリプトを使用せずに、手動でリソースを作成する場合：
+
+#### DynamoDBテーブルの作成
+
+```powershell
 # Disclosuresテーブル
-aws --endpoint-url=$ENDPOINT `
-    --region=$REGION `
+aws --endpoint-url=http://localhost:4566 `
+    --region=ap-northeast-1 `
     dynamodb create-table `
-    --table-name tdnet-disclosures-local `
+    --table-name tdnet_disclosures `
     --attribute-definitions `
         AttributeName=disclosure_id,AttributeType=S `
         AttributeName=date_partition,AttributeType=S `
@@ -227,66 +235,38 @@ aws --endpoint-url=$ENDPOINT `
     --provisioned-throughput `
         ReadCapacityUnits=5,WriteCapacityUnits=5
 
-# ExecutionStatusテーブル
-aws --endpoint-url=$ENDPOINT `
-    --region=$REGION `
+# Executionsテーブル
+aws --endpoint-url=http://localhost:4566 `
+    --region=ap-northeast-1 `
     dynamodb create-table `
-    --table-name tdnet-execution-status-local `
+    --table-name tdnet_executions `
     --attribute-definitions `
         AttributeName=execution_id,AttributeType=S `
+        AttributeName=started_at,AttributeType=S `
     --key-schema `
         AttributeName=execution_id,KeyType=HASH `
+    --global-secondary-indexes `
+        '[{"IndexName":"StartedAtIndex","KeySchema":[{"AttributeName":"started_at","KeyType":"HASH"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' `
     --provisioned-throughput `
         ReadCapacityUnits=5,WriteCapacityUnits=5
-
-Write-Host "DynamoDB tables created successfully!"
 ```
 
-実行:
-
-```powershell
-# 実行権限を付与（初回のみ）
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# スクリプトを実行
-.\scripts\localstack-setup.ps1
-```
-
-### 2. S3バケットの作成
+#### S3バケットの作成
 
 ```powershell
 # S3バケットを作成
 aws --endpoint-url=http://localhost:4566 `
     --region=ap-northeast-1 `
-    s3 mb s3://tdnet-pdfs-local
+    s3 mb s3://tdnet-data-collector-pdfs-local
+
+aws --endpoint-url=http://localhost:4566 `
+    --region=ap-northeast-1 `
+    s3 mb s3://tdnet-data-collector-exports-local
 
 # バケット一覧を確認
 aws --endpoint-url=http://localhost:4566 `
     --region=ap-northeast-1 `
     s3 ls
-```
-
-### 3. 環境変数の設定
-
-`.env.local` ファイルを作成:
-
-```env
-# LocalStack環境変数
-AWS_ENDPOINT_URL=http://localhost:4566
-AWS_REGION=ap-northeast-1
-AWS_ACCESS_KEY_ID=test
-AWS_SECRET_ACCESS_KEY=test
-
-# DynamoDB
-DYNAMODB_TABLE_NAME=tdnet-disclosures-local
-EXECUTION_STATUS_TABLE_NAME=tdnet-execution-status-local
-
-# S3
-S3_BUCKET_NAME=tdnet-pdfs-local
-
-# その他
-LOG_LEVEL=debug
-NODE_ENV=local
 ```
 
 ## 統合テストでの使用
@@ -311,9 +291,10 @@ if (process.env.NODE_ENV === 'test') {
   process.env.AWS_REGION = 'ap-northeast-1';
   process.env.AWS_ACCESS_KEY_ID = 'test';
   process.env.AWS_SECRET_ACCESS_KEY = 'test';
-  process.env.DYNAMODB_TABLE_NAME = 'tdnet-disclosures-local';
-  process.env.EXECUTION_STATUS_TABLE_NAME = 'tdnet-execution-status-local';
-  process.env.S3_BUCKET_NAME = 'tdnet-pdfs-local';
+  process.env.DYNAMODB_TABLE_DISCLOSURES = 'tdnet_disclosures';
+  process.env.DYNAMODB_TABLE_EXECUTIONS = 'tdnet_executions';
+  process.env.S3_BUCKET_PDFS = 'tdnet-data-collector-pdfs-local';
+  process.env.S3_BUCKET_EXPORTS = 'tdnet-data-collector-exports-local';
 }
 ```
 
@@ -371,6 +352,9 @@ docker-compose up -d
 # 統合テストを実行
 npm run test:integration
 
+# E2Eテストを実行
+npm run test:e2e
+
 # LocalStackを停止
 docker-compose down
 ```
@@ -389,6 +373,9 @@ docker ps
 # LocalStackコンテナを削除して再起動
 docker-compose down -v
 docker-compose up -d
+
+# ログを確認
+docker-compose logs -f localstack
 ```
 
 ### 2. テーブルが作成されない
@@ -397,8 +384,11 @@ docker-compose up -d
 
 **解決策**:
 ```powershell
+# LocalStackが完全に起動するまで待機
+Start-Sleep -Seconds 30
+
 # テーブル一覧を確認
-aws --endpoint-url=http://localhost:4566 dynamodb list-tables
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 dynamodb list-tables
 
 # テーブルを再作成
 .\scripts\localstack-setup.ps1
@@ -411,10 +401,11 @@ aws --endpoint-url=http://localhost:4566 dynamodb list-tables
 **解決策**:
 ```powershell
 # バケット一覧を確認
-aws --endpoint-url=http://localhost:4566 s3 ls
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 s3 ls
 
 # バケットを再作成
-aws --endpoint-url=http://localhost:4566 s3 mb s3://tdnet-pdfs-local
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 s3 mb s3://tdnet-data-collector-pdfs-local
+aws --endpoint-url=http://localhost:4566 --region=ap-northeast-1 s3 mb s3://tdnet-data-collector-exports-local
 ```
 
 ### 4. ポート4566が使用中
@@ -431,6 +422,37 @@ taskkill /PID <PID> /F
 
 # LocalStackを再起動
 docker-compose up -d
+```
+
+### 5. セットアップスクリプトが実行できない
+
+**症状**: `.\scripts\localstack-setup.ps1 : このシステムではスクリプトの実行が無効になっているため...`
+
+**解決策**:
+```powershell
+# 実行ポリシーを確認
+Get-ExecutionPolicy
+
+# 実行ポリシーを変更（CurrentUserスコープのみ）
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# スクリプトを再実行
+.\scripts\localstack-setup.ps1
+```
+
+### 6. AWS CLIが見つからない
+
+**症状**: `aws : 用語 'aws' は、コマンドレット、関数、スクリプト ファイル、または操作可能なプログラムの名前として認識されません。`
+
+**解決策**:
+```powershell
+# AWS CLI v2をインストール
+# https://awscli.amazonaws.com/AWSCLIV2.msi からダウンロードしてインストール
+
+# インストール後、PowerShellを再起動
+
+# AWS CLIのバージョンを確認
+aws --version
 ```
 
 ## 参考リンク

@@ -63,3 +63,6 @@ secrets/
 *.pem
 *.key
 *.cert
+
+# LocalStack
+localstack-data/

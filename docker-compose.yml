@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: tdnet-localstack
+    ports:
+      - "4566:4566"  # LocalStack Gateway
+      - "4510-4559:4510-4559"  # External service port range
+    environment:
+      # Services to emulate
+      - SERVICES=dynamodb,s3,cloudwatch,apigateway,lambda
+      # Debug mode
+      - DEBUG=1
+      # Data directory
+      - DATA_DIR=/tmp/localstack/data
+      # Docker configuration
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # Lambda executor
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_REMOTE_DOCKER=false
+      # Persistence
+      - PERSISTENCE=1
+    volumes:
+      # Persist LocalStack data
+      - "./localstack-data:/tmp/localstack"
+      # Docker socket for Lambda execution
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - tdnet-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  tdnet-network:
+    driver: bridge

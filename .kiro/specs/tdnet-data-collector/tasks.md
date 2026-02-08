@@ -795,7 +795,7 @@
   - _完了: 2026-02-08, collect handlerの28件のテスト失敗を修正_
   - _成果物: 日付バリデーションロジック改善、テスト成功率96.1%_
 
-- [ ] 15.11 LocalStack環境のセットアップ
+- [x] 15.11 LocalStack環境のセットアップ
   - Docker Composeファイルの作成（docker-compose.yml）
   - LocalStackサービスの設定（DynamoDB、S3、CloudWatch）
   - セットアップスクリプトの作成（scripts/localstack-setup.ps1）
@@ -806,6 +806,9 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _関連: docs/localstack-setup.md, docs/e2e-test-guide.md_
+  - _完了: 2026-02-08, Docker Compose、セットアップスクリプト、環境変数ファイル作成完了_
+  - _成果物: docker-compose.yml, scripts/localstack-setup.ps1, .env.local, 更新されたドキュメント_
+  - _注意: Docker Desktopのインストールが必要、AWS CLI v2が必要_
 
 - [ ] 15.12 E2Eテストの実行と検証
   - LocalStack環境の起動確認
@@ -844,36 +847,41 @@
 
 ## Phase 3: 自動化とWebダッシュボード
 
-### 16. EventBridgeスケジューリング
+### 16. EventBridgeスケジューリング（タスク31本番リリース後に実施）
 
 - [ ] 16.1 EventBridge RuleをCDKで定義
   - 日次スケジュール設定（毎日9:00 JST実行）
   - Lambda Collectorをターゲットに設定
   - バッチモードでの実行設定
   - _Requirements: 要件4.1, 4.2（バッチ処理）_
+  - _注意: タスク31本番リリース後に実施_
 
 - [ ]* 16.2 EventBridge設定の検証テスト
   - EventBridge Ruleが正しく作成されていることを確認
   - スケジュール設定が正しいことを確認
   - _Requirements: 要件14.1（テスト）_
+  - _注意: タスク31本番リリース後に実施_
 
-### 17. SNS通知設定
+### 17. SNS通知設定（タスク31本番リリース後に実施）
 
 - [ ] 17.1 SNS TopicをCDKで定義
   - tdnet-alerts トピック作成
   - Emailサブスクリプション設定
   - Lambda関数からの通知送信権限付与
   - _Requirements: 要件4.4（通知）_
+  - _注意: タスク31本番リリース後に実施_
 
 - [ ] 17.2 通知送信ロジックの実装
   - エラー発生時のSNS通知送信
   - バッチ完了時のサマリー通知送信
   - _Requirements: 要件4.3, 4.4（サマリーレポート、通知）_
+  - _注意: タスク31本番リリース後に実施_
 
 - [ ]* 17.3 SNS通知のユニットテスト
   - エラー時に通知が送信されることを確認
   - 通知内容が正しいことを確認
   - _Requirements: 要件14.1（ユニットテスト）_
+  - _注意: タスク31本番リリース後に実施_
 
 ### 18. CloudWatch監視設定
 
@@ -1094,11 +1102,6 @@
   - _Requirements: 要件14.5（CI/CD）_
 
 ### 26. コスト最適化
-
-- [ ] 26.1 AWS Budgetsの設定
-  - 月額予算設定（$20/月）
-  - 80%超過時のアラート設定
-  - _Requirements: 要件12.1（コスト管理）_
 
 - [ ] 26.2 S3ライフサイクルポリシーの最適化
   - 90日後にStandard-IAに移行
