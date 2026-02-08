@@ -1576,10 +1576,10 @@
     - 問題: `act()`ラッピング不足、タイマーモック問題
     - _完了: 2026-02-08 22:33, 全8テスト成功、act()ラッピング追加、タイムアウト設定修正_
     - _作業記録: work-log-20260208-223316-task19-2-1-export-dialog-test.md_
-  - [-] 19.2.2 `dashboard/src/App.test.tsx` - 1件失敗
+  - [x] 19.2.2 `dashboard/src/App.test.tsx` - 1件失敗
     - "learn react"テキスト検索失敗
     - 問題: テストが実際のアプリ構造と不一致
-  - [ ] 19.2.3 Material-UI Grid v2移行
+  - [-] 19.2.3 Material-UI Grid v2移行
     - `item`, `xs`, `sm`, `md`プロパティの非推奨警告解消
     - Grid2コンポーネントへの移行
   - [ ] 19.2.4 `act()`警告の解消

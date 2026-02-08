@@ -9,7 +9,7 @@ import {
   Typography,
   Collapse,
   IconButton,
-  Grid,
+  Stack,
 } from '@mui/material';
 import { Search as SearchIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import { SearchParams } from '../types/disclosure';
@@ -100,72 +100,65 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
       </Box>
 
       {/* 基本検索フィールド */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <TextField
-            fullWidth
-            label="企業名"
-            placeholder="例: トヨタ自動車"
-            value={formData.company_name}
-            onChange={handleChange('company_name')}
-            disabled={loading}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <TextField
-            fullWidth
-            label="企業コード"
-            placeholder="例: 7203"
-            value={formData.company_code}
-            onChange={handleChange('company_code')}
-            disabled={loading}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            select
-            label="開示種類"
-            value={formData.disclosure_type}
-            onChange={handleChange('disclosure_type')}
-            disabled={loading}
-          >
-            <MenuItem value="">すべて</MenuItem>
-            {disclosureTypes.map((type) => (
-              <MenuItem key={type} value={type}>
-                {type}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-      </Grid>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          label="企業名"
+          placeholder="例: トヨタ自動車"
+          value={formData.company_name}
+          onChange={handleChange('company_name')}
+          disabled={loading}
+          sx={{ flex: { xs: 1, md: '0 0 calc(33.333% - 11px)' } }}
+        />
+        <TextField
+          fullWidth
+          label="企業コード"
+          placeholder="例: 7203"
+          value={formData.company_code}
+          onChange={handleChange('company_code')}
+          disabled={loading}
+          sx={{ flex: { xs: 1, md: '0 0 calc(33.333% - 11px)' } }}
+        />
+        <TextField
+          fullWidth
+          select
+          label="開示種類"
+          value={formData.disclosure_type}
+          onChange={handleChange('disclosure_type')}
+          disabled={loading}
+          sx={{ flex: { xs: 1, md: '0 0 calc(33.333% - 11px)' } }}
+        >
+          <MenuItem value="">すべて</MenuItem>
+          {disclosureTypes.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Stack>
 
       {/* 詳細フィルター（折りたたみ可能） */}
       <Collapse in={expanded}>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              type="date"
-              label="開示日（開始）"
-              value={formData.start_date}
-              onChange={handleChange('start_date')}
-              slotProps={{ inputLabel: { shrink: true } }}
-              disabled={loading}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              type="date"
-              label="開示日（終了）"
-              value={formData.end_date}
-              onChange={handleChange('end_date')}
-              slotProps={{ inputLabel: { shrink: true } }}
-              disabled={loading}
-            />
-          </Grid>
-        </Grid>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+          <TextField
+            fullWidth
+            type="date"
+            label="開示日（開始）"
+            value={formData.start_date}
+            onChange={handleChange('start_date')}
+            slotProps={{ inputLabel: { shrink: true } }}
+            disabled={loading}
+          />
+          <TextField
+            fullWidth
+            type="date"
+            label="開示日（終了）"
+            value={formData.end_date}
+            onChange={handleChange('end_date')}
+            slotProps={{ inputLabel: { shrink: true } }}
+            disabled={loading}
+          />
+        </Stack>
       </Collapse>
 
       {/* アクションボタン */}

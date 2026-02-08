@@ -164,6 +164,22 @@ describe('Export Status Lambda Handler', () => {
       expect(body.error.message).toContain('export_id is required');
     });
 
+    it('pathParametersがnullの場合、400エラーを返す', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: null,
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+
     it('export_idのフォーマットが不正な場合、400エラーを返す', async () => {
       // Arrange
       const event: Partial<APIGatewayProxyEvent> = {
@@ -358,6 +374,35 @@ describe('Export Status Lambda Handler', () => {
       expect(secretsManagerMock.calls()).toHaveLength(1);
     });
 
+    it('テスト環境ではAPI_KEY環境変数から取得する', async () => {
+      // Arrange
+      process.env.TEST_ENV = 'e2e';
+      process.env.API_KEY = 'test-env-api-key';
+      secretsManagerMock.reset();
+
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'test-env-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-xyz789' },
+          status: { S: 'completed' },
+          progress: { N: '100' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:05:00Z' },
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      expect(secretsManagerMock.calls()).toHaveLength(0); // Secrets Managerは呼ばれない
+    });
+
     it('API_KEY_SECRET_ARNが未設定の場合エラーを返す', async () => {
       // Arrange
       delete process.env.API_KEY_SECRET_ARN;
@@ -412,6 +457,40 @@ describe('Export Status Lambda Handler', () => {
 
       // Assert
       expect(result.statusCode).toBe(500);
+    });
+
+    it('APIキーキャッシュが有効な場合はSecrets Managerを呼ばない', async () => {
+      // Arrange
+      process.env.TEST_ENV = 'e2e';
+      process.env.API_KEY = 'cached-api-key';
+      secretsManagerMock.reset();
+
+      const event1: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'cached-api-key' },
+      };
+
+      const event2: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-abc123' },
+        headers: { 'x-api-key': 'cached-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-xyz789' },
+          status: { S: 'completed' },
+          progress: { N: '100' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:05:00Z' },
+        },
+      });
+
+      // Act
+      await handler(event1 as APIGatewayProxyEvent, mockContext);
+      await handler(event2 as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(secretsManagerMock.calls()).toHaveLength(0); // キャッシュが使われる
     });
   });
 
@@ -578,6 +657,29 @@ describe('Export Status Lambda Handler', () => {
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
       expect(body.data.error_message).toBe('S3 upload failed');
+    });
+
+    it('エラーにdetailsプロパティがある場合も正しく処理できる', async () => {
+      // Arrange
+      const errorWithDetails: any = new Error('Validation failed');
+      errorWithDetails.name = 'ValidationError';
+      errorWithDetails.details = { field: 'export_id', reason: 'invalid format' };
+
+      dynamoMock.on(GetItemCommand).rejects(errorWithDetails);
+
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.details).toBeDefined();
+      expect(body.error.details.field).toBe('export_id');
     });
   });
 });

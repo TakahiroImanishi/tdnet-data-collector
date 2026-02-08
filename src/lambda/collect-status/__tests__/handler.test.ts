@@ -496,5 +496,65 @@ describe('GET /collect/{execution_id} Handler', () => {
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('VALIDATION_ERROR');
     });
+
+    it('NotFoundErrorを直接スローした場合は404を返す', async () => {
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: undefined, // アイテムが見つからない
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_notfound',
+        pathParameters: {
+          execution_id: 'exec_notfound',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(404);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('NOT_FOUND');
+    });
+
+    it('エラーにdetailsプロパティがある場合も正しく処理できる', async () => {
+      const errorWithDetails: any = new Error('Validation failed');
+      errorWithDetails.name = 'ValidationError';
+      errorWithDetails.details = { field: 'execution_id', reason: 'invalid format' };
+
+      dynamoMock.on(GetItemCommand).rejects(errorWithDetails);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+      const body = JSON.parse(result.body);
+      expect(body.error.details).toBeDefined();
+    });
   });
 });

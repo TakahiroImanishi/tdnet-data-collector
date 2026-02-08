@@ -8,7 +8,7 @@ import {
   Box,
   Alert,
   Chip,
-  Grid,
+  Stack,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -206,33 +206,43 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         )}
 
         {/* 統計情報 */}
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 6, sm: 3 }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            flexWrap: 'wrap',
+            '& > *': {
+              flex: { xs: '0 0 calc(50% - 8px)', sm: '0 0 calc(25% - 12px)' },
+              minWidth: 0,
+            },
+          }}
+        >
+          <Box>
             <Typography variant="body2" color="text.secondary">
               総件数
             </Typography>
             <Typography variant="h6">{totalItems}</Typography>
-          </Grid>
+          </Box>
           
-          <Grid size={{ xs: 6, sm: 3 }}>
+          <Box>
             <Typography variant="body2" color="text.secondary">
               処理済み
             </Typography>
             <Typography variant="h6" color="primary">
               {processedItems}
             </Typography>
-          </Grid>
+          </Box>
           
-          <Grid size={{ xs: 6, sm: 3 }}>
+          <Box>
             <Typography variant="body2" color="text.secondary">
               失敗
             </Typography>
             <Typography variant="h6" color="error">
               {failedItems}
             </Typography>
-          </Grid>
+          </Box>
           
-          <Grid size={{ xs: 6, sm: 3 }}>
+          <Box>
             <Typography variant="body2" color="text.secondary">
               成功率
             </Typography>
@@ -241,8 +251,8 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
                 ? `${Math.round(((processedItems - failedItems) / totalItems) * 100)}%`
                 : '0%'}
             </Typography>
-          </Grid>
-        </Grid>
+          </Box>
+        </Stack>
 
         {/* タイムスタンプ */}
         <Box sx={{ mt: 2 }}>
