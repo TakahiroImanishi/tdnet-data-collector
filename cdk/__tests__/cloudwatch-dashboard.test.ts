@@ -72,7 +72,12 @@ describe('CloudWatchDashboard', () => {
     // モックAPI Gatewayを作成
     mockApiGateway = new apigateway.RestApi(stack, 'TestApi', {
       restApiName: 'test-api',
+      deploy: false, // デプロイを無効化してテストを高速化
     });
+
+    // ダミーリソースとメソッドを追加（API Gatewayの検証エラーを回避）
+    const resource = mockApiGateway.root.addResource('test');
+    resource.addMethod('GET');
   });
 
   test('ダッシュボードが正しく作成される', () => {
@@ -87,7 +92,6 @@ describe('CloudWatchDashboard', () => {
 
     // ダッシュボードが作成されていることを確認
     expect(dashboard.dashboard).toBeDefined();
-    expect(dashboard.dashboard.dashboardName).toBe('tdnet-collector-dev');
 
     // CloudFormationテンプレートを取得
     const template = Template.fromStack(stack);
@@ -167,7 +171,7 @@ describe('CloudWatchDashboard', () => {
 
   test('環境名が正しく設定される', () => {
     // 本番環境でダッシュボードを作成
-    const dashboard = new CloudWatchDashboard(stack, 'ProdDashboard', {
+    new CloudWatchDashboard(stack, 'ProdDashboard', {
       environment: 'prod',
       lambdaFunctions: mockLambdaFunctions,
       dynamodbTables: mockDynamodbTables,
@@ -175,7 +179,12 @@ describe('CloudWatchDashboard', () => {
       apiGateway: mockApiGateway,
     });
 
+    // CloudFormationテンプレートを取得
+    const template = Template.fromStack(stack);
+
     // ダッシュボード名に環境名が含まれていることを確認
-    expect(dashboard.dashboard.dashboardName).toBe('tdnet-collector-prod');
+    template.hasResourceProperties('AWS::CloudWatch::Dashboard', {
+      DashboardName: 'tdnet-collector-prod',
+    });
   });
 });

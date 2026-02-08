@@ -1188,12 +1188,14 @@
   - _テスト結果: 全27テスト合格（新規9テスト追加）_
   - _作業記録: work-log-20260208-204443-task16-2-custom-metrics.md_
 
-- [ ] 16.3 CloudWatch Alarmsの設定
+- [x] 16.3 CloudWatch Alarmsの設定
   - Lambda Error Rate > 10%でCritical
   - Lambda Duration > 14分でWarning
   - CollectionSuccessRate < 95%でWarning
   - SNS Topicへの通知設定
   - _Requirements: 要件12.2（アラート）_
+  - _完了: 2026-02-08, 12テスト成功, 7個のLambda関数を監視_
+  - _作業記録: work-log-20260208-204449-task16-3-cloudwatch-alarms.md_
 
 - [ ] 16.4 CloudWatch Dashboardの作成
   - Lambda実行メトリクス（Invocations、Errors、Duration）
