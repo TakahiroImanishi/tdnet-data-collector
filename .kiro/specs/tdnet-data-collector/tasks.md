@@ -1585,7 +1585,7 @@
     - _完了: 2026-02-08 23:00, Grid v1をStackコンポーネントに移行（Grid2は未提供）_
     - _成果物: SearchFilter.tsx, ExecutionStatus.tsx（Stackコンポーネント使用）_
     - _作業記録: work-log-20260208-230043-task19-2-3-grid-v2-migration.md_
-  - [ ] 19.2.4 `act()`警告の解消
+  - [-] 19.2.4 `act()`警告の解消
     - SearchFilter、ExportDialog、ExecutionStatusコンポーネント
     - 状態更新を`act()`でラップ
 
