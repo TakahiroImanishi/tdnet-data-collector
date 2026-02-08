@@ -764,13 +764,16 @@
   - _成果物: task-15.7-improvement-1-20260208-120515.md_
   - _Phase 3移行判断: ⚠️ Go（条件付き）- E2Eテスト実行環境の整備が必要_
 
-- [ ] 15.8 Phase 2 Critical/High改善の実施
+- [x] 15.8 Phase 2 Critical/High改善の実施
   - タスク15.7で特定されたCritical/High優先度の問題を修正
-  - 修正後のテスト実行と検証
-  - 改善記録の更新
-  - _Requirements: 全要件_
+  - LocalStack環境のセットアップとE2Eテストの実行
+  - エラーレスポンス形式をAPI設計ガイドラインに統一
+  - _Requirements: 要件14.4（E2Eテスト）_
   - _優先度: 🔴 Critical_
-  - _推定工数: 変動（問題の数と複雑さに依存）_
+  - _推定工数: 2-3時間_
+  - _関連: task-15.7-improvement-1-20260208-120515.md, work-log-20260208-172631-task15-8-e2e-environment-setup.md_
+  - _完了: 2026-02-08, 28テスト中28テスト成功（100%）_
+  - _注意: Query Lambda E2EテストをAPI設計ガイドラインに準拠した形式に更新_
 
 - [x] 15.9 Phase 2テスト失敗の大部分を修正
   - プロパティテストのモック設定を修正（3件）

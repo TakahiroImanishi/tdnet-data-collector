@@ -153,8 +153,9 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Assert
       expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('UNAUTHORIZED');
-      expect(body.message).toContain('Invalid API key');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Invalid API key');
       expect(body.request_id).toBe(mockContext.awsRequestId);
 
       // CORSヘッダーの確認
@@ -171,8 +172,9 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Assert
       expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('UNAUTHORIZED');
-      expect(body.message).toContain('API key is required');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('API key is required');
       expect(body.request_id).toBe(mockContext.awsRequestId);
 
       // CORSヘッダーの確認
@@ -191,8 +193,9 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Assert
       expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('UNAUTHORIZED');
-      expect(body.message).toContain('Invalid API key');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Invalid API key');
     });
   });
 
@@ -300,8 +303,9 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Assert
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid company_code');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid company_code');
     });
 
     it('有効なAPIキーでも不正な日付形式は400エラーを返す', async () => {
@@ -319,8 +323,9 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Assert
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid start_date format');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid start_date format');
     });
 
     it('有効なAPIキーでも開始日が終了日より後の場合は400エラーを返す', async () => {
@@ -339,10 +344,11 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Assert
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('start_date');
-      expect(body.message).toContain('must be before or equal to');
-      expect(body.message).toContain('end_date');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('start_date');
+      expect(body.error.message).toContain('must be before or equal to');
+      expect(body.error.message).toContain('end_date');
     });
   });
 
@@ -384,11 +390,14 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
 
       // Assert
       const body = JSON.parse(result.body);
-      expect(body).toHaveProperty('error_code');
-      expect(body).toHaveProperty('message');
+      expect(body).toHaveProperty('status');
+      expect(body).toHaveProperty('error');
       expect(body).toHaveProperty('request_id');
-      expect(typeof body.error_code).toBe('string');
-      expect(typeof body.message).toBe('string');
+      expect(body.status).toBe('error');
+      expect(body.error).toHaveProperty('code');
+      expect(body.error).toHaveProperty('message');
+      expect(typeof body.error.code).toBe('string');
+      expect(typeof body.error.message).toBe('string');
       expect(typeof body.request_id).toBe('string');
     });
   });
