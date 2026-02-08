@@ -223,10 +223,11 @@ async function invokeCollector(
   });
 
   try {
-    // Lambda Collectorを非同期で呼び出し（InvocationType: Event）
+    // Lambda Collectorを同期で呼び出し（InvocationType: RequestResponse）
+    // これにより、Collectorが生成した実際のexecution_idを取得できます
     const command = new InvokeCommand({
       FunctionName: COLLECTOR_FUNCTION_NAME,
-      InvocationType: 'Event', // 非同期呼び出し
+      InvocationType: 'RequestResponse', // 同期呼び出し
       Payload: Buffer.from(JSON.stringify(collectorEvent)),
     });
 
@@ -237,14 +238,26 @@ async function invokeCollector(
       statusCode: response.StatusCode,
     });
 
-    // 実行IDを生成（Lambda Collectorが生成するexecution_idとは異なる）
-    // Lambda Collectorのレスポンスは非同期呼び出しでは取得できないため、
-    // ここで一時的な実行IDを生成し、後でLambda Collectorが生成した
-    // execution_idに置き換える必要があります。
-    //
-    // 改善案: Lambda Collectorの実行IDをDynamoDBに保存し、
-    // GET /collect/{execution_id} で取得できるようにする。
-    const execution_id = generateExecutionId(context);
+    // Lambda Collectorのレスポンスをパース
+    if (!response.Payload) {
+      throw new Error('Lambda Collector returned empty response');
+    }
+
+    const payloadString = Buffer.from(response.Payload).toString('utf-8');
+    const collectorResponse = JSON.parse(payloadString);
+
+    // Lambda Collectorが生成した実際のexecution_idを使用
+    const execution_id = collectorResponse.execution_id;
+
+    if (!execution_id) {
+      throw new Error('Lambda Collector did not return execution_id');
+    }
+
+    logger.info('Received execution_id from Lambda Collector', {
+      requestId: context.requestId,
+      execution_id,
+      status: collectorResponse.status,
+    });
 
     return execution_id;
   } catch (error) {
@@ -257,18 +270,6 @@ async function invokeCollector(
     );
     throw new Error('Failed to start data collection');
   }
-}
-
-/**
- * 実行IDを生成
- *
- * @param context Lambda Context
- * @returns 実行ID
- */
-function generateExecutionId(context: Context): string {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
-  return `exec_${timestamp}_${random}_${context.awsRequestId.substring(0, 8)}`;
 }
 
 /**

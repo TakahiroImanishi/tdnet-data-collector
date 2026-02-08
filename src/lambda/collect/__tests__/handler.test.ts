@@ -42,9 +42,18 @@ describe('POST /collect Handler', () => {
 
   describe('正常系', () => {
     it('有効なリクエストで200を返す', async () => {
-      // Lambda Collectorの呼び出しをモック
+      // Lambda Collectorの呼び出しをモック（同期呼び出し）
+      const mockCollectorResponse = {
+        execution_id: 'exec_1234567890_abc123_test1234',
+        status: 'success',
+        message: 'Collection started',
+        collected_count: 0,
+        failed_count: 0,
+      };
+
       lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 202,
+        StatusCode: 200,
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
       });
 
       const event: APIGatewayProxyEvent = {
@@ -79,9 +88,18 @@ describe('POST /collect Handler', () => {
       expect(body.data).toHaveProperty('started_at');
     });
 
-    it('execution_idが生成される', async () => {
+    it('Lambda Collectorから返されたexecution_idを使用する', async () => {
+      const mockCollectorResponse = {
+        execution_id: 'exec_1234567890_abc123_test1234',
+        status: 'success',
+        message: 'Collection started',
+        collected_count: 0,
+        failed_count: 0,
+      };
+
       lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 202,
+        StatusCode: 200,
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
       });
 
       const event: APIGatewayProxyEvent = {
@@ -105,7 +123,49 @@ describe('POST /collect Handler', () => {
       const result = await handler(event, mockContext);
       const body = JSON.parse(result.body);
 
-      expect(body.data.execution_id).toMatch(/^exec_\d+_[a-z0-9]{6}_[a-z0-9]{8}$/);
+      // Lambda Collectorから返されたexecution_idが使用されていることを確認
+      expect(body.data.execution_id).toBe('exec_1234567890_abc123_test1234');
+    });
+
+    it('Lambda呼び出しがRequestResponseモードで実行される', async () => {
+      const mockCollectorResponse = {
+        execution_id: 'exec_1234567890_abc123_test1234',
+        status: 'success',
+        message: 'Collection started',
+        collected_count: 0,
+        failed_count: 0,
+      };
+
+      lambdaMock.on(InvokeCommand).resolves({
+        StatusCode: 200,
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: JSON.stringify({
+          start_date: '2024-01-15',
+          end_date: '2024-01-20',
+        }),
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'POST',
+        isBase64Encoded: false,
+        path: '/collect',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      await handler(event, mockContext);
+
+      // InvokeCommandが正しいパラメータで呼ばれたことを確認
+      const calls = lambdaMock.commandCalls(InvokeCommand);
+      expect(calls.length).toBe(1);
+      expect(calls[0].args[0].input.InvocationType).toBe('RequestResponse');
+      expect(calls[0].args[0].input.FunctionName).toBe('tdnet-collector');
     });
   });
 
@@ -360,6 +420,78 @@ describe('POST /collect Handler', () => {
       expect(body.status).toBe('error');
       expect(body.error.code).toBe('INTERNAL_ERROR');
       expect(body.error.message).toContain('Failed to start data collection');
+    });
+
+    it('Lambda Collectorが空のPayloadを返した場合は500を返す', async () => {
+      lambdaMock.on(InvokeCommand).resolves({
+        StatusCode: 200,
+        Payload: undefined,
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: JSON.stringify({
+          start_date: '2024-01-15',
+          end_date: '2024-01-20',
+        }),
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'POST',
+        isBase64Encoded: false,
+        path: '/collect',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('Lambda Collectorがexecution_idを返さない場合は500を返す', async () => {
+      const mockCollectorResponse = {
+        status: 'success',
+        message: 'Collection started',
+        collected_count: 0,
+        failed_count: 0,
+        // execution_idがない
+      };
+
+      lambdaMock.on(InvokeCommand).resolves({
+        StatusCode: 200,
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: JSON.stringify({
+          start_date: '2024-01-15',
+          end_date: '2024-01-20',
+        }),
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'POST',
+        isBase64Encoded: false,
+        path: '/collect',
+        pathParameters: null,
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
     });
   });
 });

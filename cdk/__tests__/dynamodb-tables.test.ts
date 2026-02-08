@@ -285,9 +285,12 @@ describe('DynamoDB Tables', () => {
   });
 
   describe('Table Count', () => {
-    it('should have exactly 2 DynamoDB tables', () => {
-      // DynamoDBテーブルが正確に2つ存在することを確認
-      template.resourceCountIs('AWS::DynamoDB::Table', 2);
+    it('should have exactly 3 DynamoDB tables', () => {
+      // DynamoDBテーブルが正確に3つ存在することを確認
+      // 1. tdnet_disclosures
+      // 2. tdnet_executions
+      // 3. tdnet_export_status
+      template.resourceCountIs('AWS::DynamoDB::Table', 3);
     });
   });
 });

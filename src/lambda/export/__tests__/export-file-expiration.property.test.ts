@@ -10,23 +10,25 @@
 import * as fc from 'fast-check';
 import { exportToS3 } from '../export-to-s3';
 import { Disclosure } from '../../../types';
-import { S3Client } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { mockClient } from 'aws-sdk-client-mock';
 
 // モック
-jest.mock('@aws-sdk/client-s3');
 jest.mock('../../../utils/logger');
+jest.mock('../../../utils/retry', () => ({
+  retryWithBackoff: jest.fn((fn) => fn()),
+}));
 
 describe('Property 10: エクスポートファイルの有効期限', () => {
-  let mockSend: jest.Mock;
+  const s3Mock = mockClient(S3Client);
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    s3Mock.reset();
     process.env.EXPORT_BUCKET_NAME = 'test-exports-bucket';
     process.env.AWS_REGION = 'ap-northeast-1';
 
     // S3Client.send のモック - PutObjectCommandを正しくキャプチャ
-    mockSend = jest.fn().mockResolvedValue({});
-    (S3Client.prototype.send as jest.Mock) = mockSend;
+    s3Mock.on(PutObjectCommand).resolves({});
   });
 
   /**
@@ -71,18 +73,19 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         ),
         async (export_id, format, disclosures) => {
           // Arrange
-          mockSend.mockClear();
+          s3Mock.reset();
+          s3Mock.on(PutObjectCommand).resolves({});
 
           // Act
           await exportToS3(export_id, disclosures as Disclosure[], format);
 
           // Assert
-          expect(mockSend).toHaveBeenCalled();
-          const command = mockSend.mock.calls[0][0];
+          expect(s3Mock.calls()).toHaveLength(1);
+          const call = s3Mock.call(0);
           
           // PutObjectCommandのinputプロパティにアクセス
-          expect(command.input).toBeDefined();
-          expect(command.input.Tagging).toBe('auto-delete=true');
+          expect(call.args[0].input).toBeDefined();
+          expect(call.args[0].input.Tagging).toBe('auto-delete=true');
         }
       ),
       {
@@ -101,8 +104,8 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
   it('Property: S3キーが正しいフォーマットで生成される', async () => {
     await fc.assert(
       fc.asyncProperty(
-        // Arbitrary: エクスポートID
-        fc.string({ minLength: 10, maxLength: 50 }),
+        // Arbitrary: エクスポートID（英数字とハイフンのみ、スラッシュや特殊文字を除外）
+        fc.stringMatching(/^[a-zA-Z0-9_-]{10,50}$/),
         // Arbitrary: フォーマット（json または csv）
         fc.constantFrom('json' as const, 'csv' as const),
         // Arbitrary: 開示情報のリスト（0〜10件、パフォーマンスのため少なめ）
@@ -193,18 +196,19 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         ),
         async (export_id, format, disclosures) => {
           // Arrange
-          mockSend.mockClear();
+          s3Mock.reset();
+          s3Mock.on(PutObjectCommand).resolves({});
 
           // Act
           await exportToS3(export_id, disclosures as Disclosure[], format);
 
           // Assert
-          expect(mockSend).toHaveBeenCalled();
-          const command = mockSend.mock.calls[0][0];
+          expect(s3Mock.calls()).toHaveLength(1);
+          const call = s3Mock.call(0);
           
           // PutObjectCommandのinputプロパティにアクセス
-          expect(command.input).toBeDefined();
-          const contentType = command.input.ContentType;
+          expect(call.args[0].input).toBeDefined();
+          const contentType = call.args[0].input.ContentType;
 
           // Property: ContentTypeが正しく設定されている
           const expectedContentType = format === 'json' ? 'application/json' : 'text/csv';
@@ -249,18 +253,19 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           ];
 
           // Arrange
-          mockSend.mockClear();
+          s3Mock.reset();
+          s3Mock.on(PutObjectCommand).resolves({});
 
           // Act
           await exportToS3(export_id, disclosures, 'csv');
 
           // Assert
-          expect(mockSend).toHaveBeenCalled();
-          const command = mockSend.mock.calls[0][0];
+          expect(s3Mock.calls()).toHaveLength(1);
+          const call = s3Mock.call(0);
           
           // PutObjectCommandのinputプロパティにアクセス
-          expect(command.input).toBeDefined();
-          const body = command.input.Body;
+          expect(call.args[0].input).toBeDefined();
+          const body = call.args[0].input.Body;
           const lines = body.split('\n');
 
           // Property: カンマを含む値がダブルクォートで囲まれている

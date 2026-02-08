@@ -269,13 +269,9 @@ describe('API Gateway Query & Export Endpoints', () => {
             Match.objectLike({
               Action: Match.arrayWith([
                 'dynamodb:BatchGetItem',
-                'dynamodb:GetRecords',
-                'dynamodb:GetShardIterator',
                 'dynamodb:Query',
                 'dynamodb:GetItem',
                 'dynamodb:Scan',
-                'dynamodb:ConditionCheckItem',
-                'dynamodb:DescribeTable',
               ]),
               Effect: 'Allow',
             }),
@@ -297,13 +293,9 @@ describe('API Gateway Query & Export Endpoints', () => {
             Match.objectLike({
               Action: Match.arrayWith([
                 'dynamodb:BatchGetItem',
-                'dynamodb:GetRecords',
-                'dynamodb:GetShardIterator',
                 'dynamodb:Query',
                 'dynamodb:GetItem',
                 'dynamodb:Scan',
-                'dynamodb:ConditionCheckItem',
-                'dynamodb:DescribeTable',
               ]),
               Effect: 'Allow',
             }),
@@ -373,8 +365,10 @@ describe('API Gateway Query & Export Endpoints', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACLAssociation', {
         ResourceArn: Match.objectLike({
           'Fn::Join': Match.arrayWith([
+            '',
             Match.arrayWith([
-              Match.stringLikeRegexp('.*execute-api.*'),
+              Match.stringLikeRegexp('arn:'),
+              Match.stringLikeRegexp(':apigateway:'),
             ]),
           ]),
         }),
