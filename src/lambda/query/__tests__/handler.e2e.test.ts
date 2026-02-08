@@ -158,7 +158,7 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       expect(body.request_id).toBe(mockContext.awsRequestId);
 
       // CORSヘッダーの確認
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
     });
 
     it('APIキーが未設定の場合は401エラーを返す', async () => {
@@ -176,7 +176,7 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       expect(body.request_id).toBe(mockContext.awsRequestId);
 
       // CORSヘッダーの確認
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
     });
 
     it('大文字小文字が異なるヘッダー名でも認証が機能する', async () => {
