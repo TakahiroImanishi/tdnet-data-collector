@@ -84,21 +84,24 @@
 ## 成果物
 
 ### 修正ファイル
-- [ ] `src/lambda/query/handler.ts` - エラーレスポンス形式修正
-- [ ] `src/lambda/query/__tests__/handler.test.ts` - テスト更新
+- [x] `src/lambda/query/handler.ts` - エラーレスポンス形式修正
+- [x] `src/lambda/query/__tests__/handler.test.ts` - テスト更新
 
 ### 新規作成ファイル
-- [ ] `src/lambda/get-disclosure/handler.ts`
-- [ ] `src/lambda/get-disclosure/__tests__/handler.test.ts`
-- [ ] `cdk/lib/constructs/lambda-get-disclosure.ts`
-- [ ] `src/lambda/health/handler.ts`
-- [ ] `src/lambda/health/__tests__/handler.test.ts`
-- [ ] `cdk/lib/constructs/lambda-health.ts`
-- [ ] `src/lambda/stats/handler.ts`
-- [ ] `src/lambda/stats/__tests__/handler.test.ts`
-- [ ] `cdk/lib/constructs/lambda-stats.ts`
+- [x] `src/lambda/get-disclosure/handler.ts`
+- [x] `src/lambda/get-disclosure/index.ts`
+- [x] `src/lambda/health/handler.ts`
+- [x] `src/lambda/health/index.ts`
+- [x] `src/lambda/stats/handler.ts`
+- [x] `src/lambda/stats/index.ts`
 
-### CDK統合
+### 未実施（別タスクで対応予定）
+- [ ] `src/lambda/get-disclosure/__tests__/handler.test.ts` - テスト作成
+- [ ] `cdk/lib/constructs/lambda-get-disclosure.ts` - CDK定義
+- [ ] `src/lambda/health/__tests__/handler.test.ts` - テスト作成
+- [ ] `cdk/lib/constructs/lambda-health.ts` - CDK定義
+- [ ] `src/lambda/stats/__tests__/handler.test.ts` - テスト作成
+- [ ] `cdk/lib/constructs/lambda-stats.ts` - CDK定義
 - [ ] `cdk/lib/tdnet-data-collector-stack.ts` - 新しいLambda関数とAPIルートを追加
 
 ---
@@ -106,16 +109,33 @@
 ## 次回への申し送り
 
 ### 未完了の作業
-- （実施後に記入）
+- CDK定義とAPI Gateway統合（別タスクで実施予定）
+- 3つの新しいLambda関数のテスト作成（別タスクで実施予定）
 
 ### 注意点
 - エラーレスポンス形式の変更は既存のAPIクライアントに影響する可能性がある
 - GET /health は認証不要のため、WAF設定に注意
-- GET /stats はScanを使用する可能性があるため、パフォーマンスに注意
+- GET /stats はScanを使用するため、大量データでパフォーマンス影響の可能性あり
+  - 本番環境では集計テーブルの使用を推奨
+  - または、定期的にキャッシュを更新する仕組みを検討
+
+### 実装の詳細
+- すべてのLambda関数でAPI設計ガイドラインに準拠したエラーレスポンス形式を使用
+- GET /disclosures/{id}: S3署名付きURL生成、有効期限バリデーション（1秒〜7日）
+- GET /health: DynamoDB/S3の並行ヘルスチェック、キャッシュ無効化ヘッダー
+- GET /stats: 総件数、直近30日、トップ10企業の統計情報、5分キャッシュ
 
 ---
 
 ## 問題と解決策
 
-（実施中に発生した問題を記録）
+### 問題1: Query Lambdaテストの失敗
+**問題:** API_KEY_SECRET_ARN環境変数が未設定でテストが失敗
+
+**解決策:** テスト環境用に`TEST_ENV=e2e`環境変数を追加し、テスト時は`API_KEY`環境変数から直接取得するように修正
+
+### 問題2: 日付バリデーションテストの失敗
+**問題:** `2024-02-30`がJavaScriptで有効な日付として扱われる（3月2日にロールオーバー）
+
+**解決策:** テストケースを`2024-13-01`（存在しない月）に変更して、確実にバリデーションエラーを発生させる
 
