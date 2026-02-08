@@ -87,8 +87,8 @@ Webダッシュボードの基盤を実装します：
 - [x] .env.development（環境変数）
 - [x] dashboard/README.md（ドキュメント）
 - [x] App.tsx更新（Material-UIテーマ統合）
-- [ ] tasks.md更新（17.1, 17.2, 17.3, 17.7を[x]に変更）
-- [ ] Git commit & push
+- [x] tasks.md更新（17.1, 17.2, 17.3, 17.7を[x]に変更）
+- [x] Git commit & push（完了: commit 61909bb）
 
 ## 申し送り事項
 

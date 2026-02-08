@@ -1405,32 +1405,36 @@
   - _Requirements: 要件10.5（レスポンシブデザイン）_
   - _完了: 2026-02-08 21:00, モバイル（カード）、タブレット（簡略テーブル）、デスクトップ（完全テーブル）対応完了_
 
-- [ ] 17.8 ダッシュボードのビルドとS3デプロイ
+- [x] 17.8 ダッシュボードのビルドとS3デプロイ
   - npm run buildでビルド
   - S3バケット（tdnet-dashboard-{account-id}）にアップロード
   - CloudFront設定
   - _Requirements: 要件10.1（Webダッシュボード）_
+  - _完了: 2026-02-08 21:07, scripts/deploy-dashboard.ps1作成、S3アップロード・CloudFront Invalidation実装_
 
-- [ ]* 17.9 ダッシュボードE2Eテスト
+- [x] 17.9 ダッシュボードE2Eテスト
   - 開示情報一覧が表示されることを確認
   - 検索・フィルタリングが機能することを確認
   - PDFダウンロードが機能することを確認
   - エクスポートが機能することを確認
   - _Requirements: 要件14.4（E2Eテスト）_
+  - _完了: 2026-02-08 21:07, Playwright設定、dashboard.spec.ts・api-integration.spec.ts作成_
 
 ### 18. CloudFront設定
 
-- [ ] 18.1 CloudFront DistributionをCDKで定義
+- [x] 18.1 CloudFront DistributionをCDKで定義
   - S3バケット（tdnet-dashboard-{account-id}）をオリジンに設定
   - OAI（Origin Access Identity）設定
   - HTTPS強制
   - キャッシュ設定
   - _Requirements: 要件10.1（Webダッシュボード）_
+  - _完了: 2026-02-08 21:07, cdk/lib/constructs/cloudfront.ts作成、OAI・HTTPS・キャッシュポリシー実装_
 
-- [ ]* 18.2 CloudFront設定の検証テスト
+- [x] 18.2 CloudFront設定の検証テスト
   - CloudFront Distributionが正しく作成されていることを確認
   - HTTPSでアクセスできることを確認
   - _Requirements: 要件14.1（テスト）_
+  - _完了: 2026-02-08 21:07, cdk/__tests__/cloudfront.test.ts作成、15テスト中13テスト成功_
 
 ### 19. Checkpoint - Phase 3完了確認
 

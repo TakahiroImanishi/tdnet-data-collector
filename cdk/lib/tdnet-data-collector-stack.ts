@@ -9,6 +9,7 @@ import { Construct } from 'constructs';
 import { Environment, getEnvironmentConfig } from './config/environment-config';
 import { CloudWatchAlarms } from './constructs/cloudwatch-alarms';
 import { CloudWatchDashboard } from './constructs/cloudwatch-dashboard';
+import { DashboardCloudFront } from './constructs/cloudfront';
 
 /**
  * Stack properties with environment configuration
@@ -281,6 +282,16 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       value: this.cloudtrailLogsBucket.bucketName,
       description: 'S3 bucket name for CloudTrail logs',
       exportName: 'TdnetCloudTrailLogsBucketName',
+    });
+
+    // ========================================
+    // Phase 1.5: CloudFront Distribution
+    // ========================================
+
+    // CloudFront Distribution for Dashboard
+    const dashboardCloudFront = new DashboardCloudFront(this, 'DashboardCloudFront', {
+      dashboardBucket: this.dashboardBucket,
+      environment: this.deploymentEnvironment,
     });
 
     // ========================================
