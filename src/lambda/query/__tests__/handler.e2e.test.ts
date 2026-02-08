@@ -13,7 +13,12 @@ import { Context, APIGatewayProxyEvent } from 'aws-lambda';
 import { handler } from '../handler';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+import { mockClient } from 'aws-sdk-client-mock';
 import { Disclosure } from '../../../types';
+
+// Secrets Managerモック
+const secretsManagerMock = mockClient(SecretsManagerClient);
 
 // LocalStack環境設定
 const isLocalStack = process.env.AWS_ENDPOINT_URL !== undefined;
@@ -41,6 +46,10 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
   const tableName = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
 
   beforeAll(async () => {
+    // Secrets Managerモックのセットアップ
+    secretsManagerMock.on(GetSecretValueCommand).resolves({
+      SecretString: 'test-api-key-e2e',
+    });
     // テストデータをDynamoDBに挿入
     const testDisclosure: Disclosure = {
       disclosure_id: 'TD20240115001',
@@ -70,6 +79,12 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
   });
 
   beforeEach(() => {
+    // Secrets Managerモックのリセット
+    secretsManagerMock.reset();
+    secretsManagerMock.on(GetSecretValueCommand).resolves({
+      SecretString: 'test-api-key-e2e',
+    });
+
     // モックコンテキスト
     mockContext = {
       awsRequestId: 'test-request-id-e2e',

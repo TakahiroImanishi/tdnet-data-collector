@@ -7,12 +7,14 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../pdf-download/handler';
 
 // モック
 const dynamoMock = mockClient(DynamoDBClient);
 const s3Mock = mockClient(S3Client);
+const secretsManagerMock = mockClient(SecretsManagerClient);
 
 // getSignedUrlのモック
 jest.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -39,6 +41,10 @@ describe('PDF Download Lambda Handler', () => {
   beforeEach(() => {
     dynamoMock.reset();
     s3Mock.reset();
+    secretsManagerMock.reset();
+    secretsManagerMock.on(GetSecretValueCommand).resolves({
+      SecretString: 'test-api-key',
+    });
     process.env.DYNAMODB_TABLE_NAME = 'tdnet_disclosures';
     process.env.S3_BUCKET_NAME = 'tdnet-data-collector-pdfs';
     process.env.API_KEY = 'test-api-key';

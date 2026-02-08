@@ -6,11 +6,13 @@
 
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../export-status/handler';
 
 // モック
 const dynamoMock = mockClient(DynamoDBClient);
+const secretsManagerMock = mockClient(SecretsManagerClient);
 
 // テスト用のContext
 const mockContext: Context = {
@@ -31,6 +33,10 @@ const mockContext: Context = {
 describe('Export Status Lambda Handler', () => {
   beforeEach(() => {
     dynamoMock.reset();
+    secretsManagerMock.reset();
+    secretsManagerMock.on(GetSecretValueCommand).resolves({
+      SecretString: 'test-api-key',
+    });
     process.env.EXPORT_STATUS_TABLE_NAME = 'tdnet_export_status';
     process.env.API_KEY = 'test-api-key';
     process.env.AWS_REGION = 'ap-northeast-1';

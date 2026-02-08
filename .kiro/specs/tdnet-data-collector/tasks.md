@@ -1025,7 +1025,7 @@
   - _完了: 2026-02-08, 14/14テスト成功（100%）_
   - _注意: PowerShell正規表現でエンコーディング破損、Node.jsスクリプトで修正_
 
-- [ ] 15.22.4 残存テスト失敗の修正（112件）
+- [x] 15.22.4 残存テスト失敗の修正（112件）
   - 失敗しているテストファイルを特定（9ファイル）
   - 各テストファイルにSecrets Managerモックを追加
   - APIキーヘッダーを全テストケースに追加
@@ -1036,15 +1036,15 @@
   - _関連: work-log-20260208-175100-task15-22-1-collect-handler-test-fix.md_
   
   **失敗テストファイル一覧:**
-  - [ ] 15.22.4.1 `src/lambda/query/__tests__/handler.e2e.test.ts` - Query Lambda E2Eテスト
-  - [ ] 15.22.4.2 `src/lambda/query/__tests__/date-range-validation.property.test.ts` - Query Lambda プロパティテスト
-  - [ ] 15.22.4.3 `src/lambda/export/__tests__/handler.e2e.test.ts` - Export Lambda E2Eテスト
-  - [ ] 15.22.4.4 `src/lambda/export/__tests__/export-to-s3.test.ts` - Export Lambda ユニットテスト
-  - [ ] 15.22.4.5 `src/lambda/export/__tests__/handler.test.ts` - Export Lambda ハンドラーテスト
-  - [ ] 15.22.4.6 `src/lambda/api/__tests__/pdf-download.test.ts` - PDF Download Lambda テスト
-  - [ ] 15.22.4.7 `src/lambda/api/__tests__/export-status.test.ts` - Export Status Lambda テスト
-  - [ ] 15.22.4.8 `src/models/__tests__/disclosure.test.ts` - Disclosure モデルテスト
-  - [ ] 15.22.4.9 `src/__tests__/type-definitions.test.ts` - 型定義テスト
+  - [x] 15.22.4.1 `src/lambda/query/__tests__/handler.e2e.test.ts` - Query Lambda E2Eテスト
+  - [x] 15.22.4.2 `src/lambda/query/__tests__/date-range-validation.property.test.ts` - Query Lambda プロパティテスト
+  - [x] 15.22.4.3 `src/lambda/export/__tests__/handler.e2e.test.ts` - Export Lambda E2Eテスト
+  - [x] 15.22.4.4 `src/lambda/export/__tests__/export-to-s3.test.ts` - Export Lambda ユニットテスト
+  - [x] 15.22.4.5 `src/lambda/export/__tests__/handler.test.ts` - Export Lambda ハンドラーテスト
+  - [x] 15.22.4.6 `src/lambda/api/__tests__/pdf-download.test.ts` - PDF Download Lambda テスト
+  - [x] 15.22.4.7 `src/lambda/api/__tests__/export-status.test.ts` - Export Status Lambda テスト
+  - [x] 15.22.4.8 `src/models/__tests__/disclosure.test.ts` - Disclosure モデルテスト
+  - [x] 15.22.4.9 `src/__tests__/type-definitions.test.ts` - 型定義テスト
 
 - [ ] 15.22.2 プロパティテストの成功率確認
   - プロパティテストのみを実行: `npm test -- --testNamePattern="Property"`
