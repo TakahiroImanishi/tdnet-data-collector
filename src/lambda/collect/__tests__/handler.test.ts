@@ -5,7 +5,7 @@
  */
 
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
-import { handler } from '../handler';
+import { handler, clearApiKeyCache } from '../handler';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
@@ -91,6 +91,9 @@ describe('POST /collect Handler', () => {
   beforeEach(() => {
     lambdaMock.reset();
     secretsMock.reset();
+    
+    // APIキーキャッシュをクリア
+    clearApiKeyCache();
     
     // Secrets Managerのモック設定（APIキーを返す）
     secretsMock.on(GetSecretValueCommand).resolves({
@@ -790,41 +793,51 @@ describe('POST /collect Handler', () => {
     });
 
     it('キャッシュが有効な場合はSecrets Managerを呼ばない', async () => {
-      // 最初のリクエスト（キャッシュミス）
-      const mockCollectorResponse = {
-        execution_id: 'exec_1234567890_abc123_test1234',
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-      };
+      // テスト環境でキャッシュを有効化するため、NODE_ENVを一時的に変更
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      
+      try {
+        // 最初のリクエスト（キャッシュミス）
+        const mockCollectorResponse = {
+          execution_id: 'exec_1234567890_abc123_test1234',
+          status: 'success',
+          message: 'Collection started',
+          collected_count: 0,
+          failed_count: 0,
+        };
 
-      lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
-      });
+        lambdaMock.on(InvokeCommand).resolves({
+          StatusCode: 200,
+          Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        });
 
-      const testDates = getTestDates();
-      const event1 = createTestEvent(testDates, 'test-api-key-12345');
+        const testDates = getTestDates();
+        const event1 = createTestEvent(testDates, 'test-api-key-12345');
 
-      await handler(event1, mockContext);
+        await handler(event1, mockContext);
 
-      // Secrets Managerが1回呼ばれたことを確認
-      let secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
-      expect(secretsCalls.length).toBe(1);
+        // Secrets Managerが1回呼ばれたことを確認
+        let secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
+        expect(secretsCalls.length).toBe(1);
 
-      // 2回目のリクエスト（キャッシュヒット）
-      secretsMock.reset();
-      secretsMock.on(GetSecretValueCommand).resolves({
-        SecretString: 'test-api-key-12345',
-      });
+        // 2回目のリクエスト（キャッシュヒット）
+        // モックをリセットして、呼ばれないことを確認
+        secretsMock.reset();
+        secretsMock.on(GetSecretValueCommand).resolves({
+          SecretString: 'test-api-key-12345',
+        });
 
-      const event2 = createTestEvent(testDates, 'test-api-key-12345');
-      await handler(event2, mockContext);
+        const event2 = createTestEvent(testDates, 'test-api-key-12345');
+        await handler(event2, mockContext);
 
-      // Secrets Managerが呼ばれていないことを確認（キャッシュから取得）
-      secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
-      expect(secretsCalls.length).toBe(0);
+        // Secrets Managerが呼ばれていないことを確認（キャッシュから取得）
+        secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
+        expect(secretsCalls.length).toBe(0);
+      } finally {
+        // NODE_ENVを元に戻す
+        process.env.NODE_ENV = originalNodeEnv;
+      }
     });
   });
 });

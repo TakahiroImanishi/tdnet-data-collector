@@ -1643,18 +1643,20 @@
 
 ### 19.5. 全量テスト失敗ケース解消
 
-- [ ] 19.5 APIキーキャッシュロジック修正
+- [x] 19.5 APIキーキャッシュロジック修正
   - **ファイル**: `src/lambda/collect/__tests__/handler.test.ts:827`
   - **失敗内容**: キャッシュが有効な場合でもSecrets Managerが1回呼ばれている
-  - **原因**: キャッシュロジックが正しく動作していない、またはモックの設定が不適切
+  - **原因**: テスト環境（`NODE_ENV=test`）ではキャッシュが無効化されているため、毎回Secrets Managerが呼ばれる
   - **対応内容**:
-    - `src/lambda/collect/handler.ts` のキャッシュロジックを確認
-    - キャッシュが有効な場合にSecrets Managerを呼ばないように修正
-    - テストのモック設定を確認・修正
+    - `src/lambda/collect/handler.ts` に`clearApiKeyCache()`関数を追加
+    - テストの`beforeEach`でキャッシュをクリア
+    - テストケース内で`NODE_ENV`を一時的に`production`に変更し、キャッシュを有効化
   - _Requirements: 要件11.1（API認証）_
   - _優先度: 🟡 Medium_
   - _推定工数: 2-3時間_
   - _関連: work-log-20260209-070746-full-test-analysis.md_
+  - _完了: 2026-02-09 07:13:09, 全テスト29/29成功（100%）_
+  - _作業記録: work-log-20260209-071035-task19-5-api-key-cache-fix.md_
 
 - [ ] 19.6 CloudFront ViewerCertificate設定追加
   - **ファイル**: `cdk/lib/constructs/dashboard-cloudfront.ts`
