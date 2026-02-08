@@ -380,7 +380,7 @@
   - API Gatewayへの関連付け
   - _Requirements: 要件13.1（WAF保護）_
 
-- [ ]* 10.3 API Gateway構造の検証テスト
+- [ ] 10.3 API Gateway構造の検証テスト
   - API Gatewayが正しく作成されていることを確認
   - APIキー認証が有効化されていることを確認
   - WAFが関連付けられていることを確認

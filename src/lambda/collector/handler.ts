@@ -421,21 +421,31 @@ function generateExecutionId(context: Context): string {
 /**
  * 前日の日付を取得（JST基準）
  *
- * @returns 前日のDateオブジェクト
+ * JST（日本標準時、UTC+9）基準で前日の日付を計算します。
+ * 例: 現在時刻が 2024-01-15 00:30 JST の場合、2024-01-14 を返します。
+ *
+ * @returns 前日の日付文字列（YYYY-MM-DD形式）
  */
 function getYesterday(): Date {
   const now = new Date();
   // JSTに変換（UTC+9時間）
   const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  // 前日
-  jstNow.setDate(jstNow.getDate() - 1);
-  return jstNow;
+  
+  // JST基準で前日を計算
+  const jstYesterday = new Date(jstNow);
+  jstYesterday.setUTCDate(jstYesterday.getUTCDate() - 1);
+  
+  return jstYesterday;
 }
 
 /**
  * DateオブジェクトをYYYY-MM-DD形式にフォーマット
  *
- * @param date Dateオブジェクト
+ * JST変換済みのDateオブジェクトをYYYY-MM-DD形式の文字列に変換します。
+ * getUTCFullYear(), getUTCMonth(), getUTCDate()を使用することで、
+ * JST変換後の日付を正しく抽出します。
+ *
+ * @param date JST変換済みのDateオブジェクト
  * @returns YYYY-MM-DD形式の文字列
  */
 function formatDate(date: Date): string {
@@ -448,18 +458,31 @@ function formatDate(date: Date): string {
 /**
  * 日付範囲を生成
  *
+ * YYYY-MM-DD形式の開始日と終了日から、その間のすべての日付を生成します。
+ * 日付の比較と増分はUTC基準で行われます。
+ *
  * @param start_date 開始日（YYYY-MM-DD）
  * @param end_date 終了日（YYYY-MM-DD）
  * @returns 日付の配列（YYYY-MM-DD形式）
+ *
+ * @example
+ * generateDateRange('2024-01-15', '2024-01-17')
+ * // => ['2024-01-15', '2024-01-16', '2024-01-17']
  */
 function generateDateRange(start_date: string, end_date: string): string[] {
   const dates: string[] = [];
-  const current = new Date(start_date);
-  const end = new Date(end_date);
+  const current = new Date(start_date + 'T00:00:00Z'); // UTC midnight
+  const end = new Date(end_date + 'T00:00:00Z'); // UTC midnight
 
   while (current <= end) {
-    dates.push(formatDate(current));
-    current.setDate(current.getDate() + 1);
+    // YYYY-MM-DD形式で日付を抽出
+    const year = current.getUTCFullYear();
+    const month = String(current.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(current.getUTCDate()).padStart(2, '0');
+    dates.push(`${year}-${month}-${day}`);
+    
+    // 次の日に進む（UTC基準）
+    current.setUTCDate(current.getUTCDate() + 1);
   }
 
   return dates;
