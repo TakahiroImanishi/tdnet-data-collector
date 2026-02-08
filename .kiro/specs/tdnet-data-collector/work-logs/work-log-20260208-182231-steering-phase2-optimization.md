@@ -139,6 +139,13 @@ IMPROVEMENT-PLAN.mdに基づき、Phase 2（development/配下）の最優先3�
 2. **lambda-implementation.md** - 50%削減目標（約3,800トークン → 1,900トークン）
 3. **error-handling-enforcement.md** - 60%削減目標（約3,500トークン → 1,400トークン）
 
+### 追加完了タスク
+- [x] **15.25 testing-strategy.mdへのSecrets Managerモックパターン追加**
+  - aws-sdk-client-mockを使用したSecrets Managerモックパターンを追加
+  - GetSecretValueCommandのモック例を追加
+  - エラーハンドリングテストパターンを追加
+  - _完了: 2026-02-08_
+
 ### Phase 3（優先度: 中）
 1. **deployment-checklist.md** - 50%削減目標
 2. **performance-optimization.md** - 60%削減目標

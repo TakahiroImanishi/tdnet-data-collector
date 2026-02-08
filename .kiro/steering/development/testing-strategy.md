@@ -64,6 +64,33 @@ describe('DynamoDB Integration', () => {
         expect(retrieved).toMatchObject(disclosure);
     });
 });
+
+// Secrets Managerモック
+import { mockClient } from 'aws-sdk-client-mock';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+describe('Secrets Manager Integration', () => {
+    const secretsManagerMock = mockClient(SecretsManagerClient);
+    
+    beforeEach(() => {
+        secretsManagerMock.reset();
+    });
+    
+    it('APIキーを取得できる', async () => {
+        secretsManagerMock.on(GetSecretValueCommand).resolves({
+            SecretString: JSON.stringify({ apiKey: 'test-api-key-12345' }),
+        });
+        
+        const secret = await getSecret('tdnet-api-key');
+        expect(secret.apiKey).toBe('test-api-key-12345');
+    });
+    
+    it('シークレット取得失敗時にエラーをスローする', async () => {
+        secretsManagerMock.on(GetSecretValueCommand).rejects(new Error('ResourceNotFoundException'));
+        
+        await expect(getSecret('invalid-secret')).rejects.toThrow('ResourceNotFoundException');
+    });
+});
 ```
 
 ### E2Eテスト

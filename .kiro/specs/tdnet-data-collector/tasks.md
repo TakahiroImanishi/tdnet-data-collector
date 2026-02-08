@@ -1060,9 +1060,10 @@
   - _推定工数: 3-4時間_
   - _関連: タスク15.23の残存問題_
 
-- [ ] 15.25 testing-strategy.mdへのSecrets Managerモックパターン追加
+- [x] 15.25 testing-strategy.mdへのSecrets Managerモックパターン追加
   - Lambda handlerテストでのSecrets Managerモック必須化を明記
   - aws-sdk-client-mockの使用パターンを追加
+  - _完了: 2026-02-08, Secrets Managerモックパターン追加完了_
   - TEST_ENV=e2e環境変数の設定方法を追加
   - APIキーヘッダー設定の必須化を明記
   - 新規テスト作成時のチェックリストを追加

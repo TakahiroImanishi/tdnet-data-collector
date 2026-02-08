@@ -56,8 +56,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   
-  // セットアップファイル（必要に応じて）
-  // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  // セットアップファイル
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   
   // グローバル設定
   globals: {

@@ -4,13 +4,27 @@
  * Requirements: 要件14.1（ユニットテスト）
  */
 
+// モック設定（importより前に定義）
+const mockSend = jest.fn();
+
+jest.mock('@aws-sdk/client-s3', () => {
+  const actualModule = jest.requireActual('@aws-sdk/client-s3');
+  return {
+    ...actualModule,
+    S3Client: jest.fn().mockImplementation(() => ({
+      send: mockSend,
+    })),
+  };
+});
+
+jest.mock('../../../utils/logger');
+jest.mock('../../../utils/retry', () => ({
+  retryWithBackoff: jest.fn((fn) => fn()), // retryをバイパス
+}));
+
 import { exportToS3 } from '../export-to-s3';
 import { Disclosure } from '../../../types';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-
-// モック
-jest.mock('@aws-sdk/client-s3');
-jest.mock('../../../utils/logger');
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 describe('exportToS3', () => {
   const mockDisclosures: Disclosure[] = [
@@ -42,11 +56,14 @@ describe('exportToS3', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSend.mockClear();
+    mockSend.mockResolvedValue({
+      $metadata: { httpStatusCode: 200 },
+      ETag: '"mock-etag"',
+    });
+    
     process.env.EXPORT_BUCKET_NAME = 'test-exports-bucket';
     process.env.AWS_REGION = 'ap-northeast-1';
-
-    // S3Client.send のモック
-    (S3Client.prototype.send as jest.Mock) = jest.fn().mockResolvedValue({});
   });
 
   describe('JSON形式のエクスポート', () => {
@@ -60,16 +77,14 @@ describe('exportToS3', () => {
 
       // Assert
       expect(s3_key).toMatch(/^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.json$/);
-      expect(S3Client.prototype.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          input: expect.objectContaining({
-            Bucket: 'test-exports-bucket',
-            Key: s3_key,
-            ContentType: 'application/json',
-            Tagging: 'auto-delete=true',
-          }),
-        })
-      );
+      
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      expect(command.input.Bucket).toBe('test-exports-bucket');
+      expect(command.input.Key).toBe(s3_key);
+      expect(command.input.ContentType).toBe('application/json');
+      expect(command.input.Tagging).toBe('auto-delete=true');
     });
 
     it('JSONに件数とデータが含まれる', async () => {
@@ -81,8 +96,8 @@ describe('exportToS3', () => {
       await exportToS3(export_id, mockDisclosures, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      const body = sendCall.input.Body;
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      const body = command.input.Body as string;
       const parsed = JSON.parse(body);
 
       expect(parsed).toHaveProperty('count', 2);
@@ -103,16 +118,12 @@ describe('exportToS3', () => {
 
       // Assert
       expect(s3_key).toMatch(/^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.csv$/);
-      expect(S3Client.prototype.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          input: expect.objectContaining({
-            Bucket: 'test-exports-bucket',
-            Key: s3_key,
-            ContentType: 'text/csv',
-            Tagging: 'auto-delete=true',
-          }),
-        })
-      );
+      
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      expect(command.input.Bucket).toBe('test-exports-bucket');
+      expect(command.input.Key).toBe(s3_key);
+      expect(command.input.ContentType).toBe('text/csv');
+      expect(command.input.Tagging).toBe('auto-delete=true');
     });
 
     it('CSVヘッダーが正しく出力される', async () => {
@@ -124,8 +135,8 @@ describe('exportToS3', () => {
       await exportToS3(export_id, mockDisclosures, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      const body = sendCall.input.Body;
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      const body = command.input.Body as string;
       const lines = body.split('\n');
 
       expect(lines[0]).toBe(
@@ -142,8 +153,8 @@ describe('exportToS3', () => {
       await exportToS3(export_id, mockDisclosures, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      const body = sendCall.input.Body;
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      const body = command.input.Body as string;
       const lines = body.split('\n');
 
       expect(lines[1]).toBe(
@@ -169,8 +180,8 @@ describe('exportToS3', () => {
       await exportToS3(export_id, disclosuresWithComma, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      const body = sendCall.input.Body;
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      const body = command.input.Body as string;
       const lines = body.split('\n');
 
       expect(lines[1]).toContain('"タイトル, カンマ含む"');
@@ -191,8 +202,8 @@ describe('exportToS3', () => {
       await exportToS3(export_id, disclosuresWithQuote, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      const body = sendCall.input.Body;
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      const body = command.input.Body as string;
       const lines = body.split('\n');
 
       expect(lines[1]).toContain('"タイトル""引用符""含む"');
@@ -213,12 +224,11 @@ describe('exportToS3', () => {
       await exportToS3(export_id, disclosuresWithNewline, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      const body = sendCall.input.Body;
-      const lines = body.split('\n');
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      const body = command.input.Body as string;
 
       // 改行を含む値はダブルクォートで囲まれる
-      expect(lines[1]).toContain('"タイトル\n改行含む"');
+      expect(body).toContain('"タイトル\n改行含む"');
     });
   });
 
@@ -247,8 +257,8 @@ describe('exportToS3', () => {
       await exportToS3(export_id, mockDisclosures, format);
 
       // Assert
-      const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-      expect(sendCall.input.Tagging).toBe('auto-delete=true');
+      const command = mockSend.mock.calls[0][0] as PutObjectCommand;
+      expect(command.input.Tagging).toBe('auto-delete=true');
     });
   });
 });
