@@ -32,6 +32,13 @@
     "test:e2e:debug": "playwright test --debug",
     "eject": "react-scripts eject"
   },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)",
+      "!**/__tests__/e2e/**"
+    ]
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

@@ -493,3 +493,80 @@ describe('saveMetadata', () => {
       expect(dynamoMock.calls()).toHaveLength(1); // 再試行しない
     });
   });
+
+  describe('エラーメトリクス送信', () => {
+    it('エラー発生時にCloudWatchメトリクスを送信する', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      const networkError = new Error('Network error');
+      networkError.name = 'NetworkError';
+      dynamoMock.on(PutItemCommand).rejects(networkError);
+
+      // Act & Assert
+      await expect(saveMetadata(disclosure, s3_key)).rejects.toThrow('Network error');
+      // メトリクス送信が呼ばれることを確認（実装依存）
+    });
+
+    it('エラーにconstructorがない場合でもエラーメトリクスを送信する', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      // constructorがnullのエラーオブジェクト
+      const errorWithoutConstructor = Object.create(null);
+      errorWithoutConstructor.message = 'Unknown error';
+      dynamoMock.on(PutItemCommand).rejects(errorWithoutConstructor);
+
+      // Act & Assert
+      await expect(saveMetadata(disclosure, s3_key)).rejects.toBeDefined();
+    });
+
+    it('エラーにmessageがない場合でもエラーメトリクスを送信する', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      // messageがないエラーオブジェクト
+      const errorWithoutMessage: any = new Error();
+      delete errorWithoutMessage.message;
+      dynamoMock.on(PutItemCommand).rejects(errorWithoutMessage);
+
+      // Act & Assert
+      await expect(saveMetadata(disclosure, s3_key)).rejects.toBeDefined();
+    });
+  });

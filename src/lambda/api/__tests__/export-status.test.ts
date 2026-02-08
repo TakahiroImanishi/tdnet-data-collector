@@ -319,4 +319,265 @@ describe('Export Status Lambda Handler', () => {
       expect(result.headers).toHaveProperty('Access-Control-Allow-Headers');
     });
   });
+
+  describe('APIキーキャッシング', () => {
+    beforeEach(() => {
+      // キャッシュをクリアするため、環境変数を変更
+      delete process.env.TEST_ENV;
+      delete process.env.API_KEY;
+      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:api-key';
+    });
+
+    it('Secrets ManagerからAPIキーを取得する（本番環境）', async () => {
+      // Arrange
+      secretsManagerMock.reset();
+      secretsManagerMock.on(GetSecretValueCommand).resolves({
+        SecretString: 'production-api-key',
+      });
+
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'production-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-xyz789' },
+          status: { S: 'completed' },
+          progress: { N: '100' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:05:00Z' },
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      expect(secretsManagerMock.calls()).toHaveLength(1);
+    });
+
+    it('API_KEY_SECRET_ARNが未設定の場合エラーを返す', async () => {
+      // Arrange
+      delete process.env.API_KEY_SECRET_ARN;
+      delete process.env.API_KEY;
+      delete process.env.TEST_ENV;
+
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'test-key' },
+      };
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('Secrets ManagerのSecretStringが空の場合エラーを返す', async () => {
+      // Arrange
+      secretsManagerMock.reset();
+      secretsManagerMock.on(GetSecretValueCommand).resolves({
+        SecretString: undefined,
+      });
+
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'test-key' },
+      };
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+    });
+
+    it('Secrets Manager取得エラー時にエラーを返す', async () => {
+      // Arrange
+      secretsManagerMock.reset();
+      secretsManagerMock.on(GetSecretValueCommand).rejects(new Error('Secrets Manager error'));
+
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'test-key' },
+      };
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+    });
+  });
+
+  describe('エクスポート状態の各ステータス', () => {
+    it('pending状態のエクスポートを取得できる', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-pending' },
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-pending' },
+          status: { S: 'pending' },
+          progress: { N: '0' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.status).toBe('pending');
+      expect(body.data.progress).toBe(0);
+    });
+
+    it('X-Api-Key（大文字）ヘッダーでも認証できる', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'X-Api-Key': 'test-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-xyz789' },
+          status: { S: 'completed' },
+          progress: { N: '100' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:05:00Z' },
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+    });
+
+    it('export_countとfile_sizeがnullの場合も正しく処理できる', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-processing' },
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-processing' },
+          status: { S: 'processing' },
+          progress: { N: '50' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          // export_count, file_size, download_url, expires_at, error_message は未設定
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.export_count).toBeNull();
+      expect(body.data.file_size).toBeNull();
+      expect(body.data.download_url).toBeNull();
+      expect(body.data.expires_at).toBeNull();
+      expect(body.data.error_message).toBeNull();
+    });
+
+    it('completed_atがnullの場合も正しく処理できる', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-processing2' },
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-processing2' },
+          status: { S: 'processing' },
+          progress: { N: '75' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          // completed_at は未設定
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.completed_at).toBeNull();
+    });
+
+    it('download_urlとexpires_atが設定されている場合も正しく処理できる', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-complete' },
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-complete' },
+          status: { S: 'completed' },
+          progress: { N: '100' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:05:00Z' },
+          export_count: { N: '200' },
+          file_size: { N: '2048000' },
+          download_url: { S: 'https://s3.amazonaws.com/exports/file2.csv' },
+          expires_at: { S: '2024-01-22T10:05:00Z' },
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.download_url).toBe('https://s3.amazonaws.com/exports/file2.csv');
+      expect(body.data.expires_at).toBe('2024-01-22T10:05:00Z');
+    });
+
+    it('error_messageが設定されている場合も正しく処理できる', async () => {
+      // Arrange
+      const event: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-failed2' },
+        headers: { 'x-api-key': 'test-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-failed2' },
+          status: { S: 'failed' },
+          progress: { N: '10' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:01:00Z' },
+          error_message: { S: 'S3 upload failed' },
+        },
+      });
+
+      // Act
+      const result = await handler(event as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.error_message).toBe('S3 upload failed');
+    });
+  });
 });

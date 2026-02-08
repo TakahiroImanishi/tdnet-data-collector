@@ -1,0 +1,89 @@
+b0703a0bdb06fb4785ac31ecb5e2fb95
+"use strict";
+/**
+ * Generate Presigned URL
+ *
+ * S3署名付きURLを生成します。
+ * PDFファイルのダウンロード用に使用されます。
+ *
+ * Requirements: 要件4.4（PDFダウンロード）
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generatePresignedUrl = generatePresignedUrl;
+exports.generatePresignedUrls = generatePresignedUrls;
+const client_s3_1 = require("@aws-sdk/client-s3");
+const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
+const logger_1 = require("../../utils/logger");
+// S3クライアント（グローバルスコープで初期化）
+const s3Client = new client_s3_1.S3Client({
+    region: process.env.AWS_REGION || 'ap-northeast-1',
+});
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'tdnet-data-collector-pdfs';
+const URL_EXPIRATION_SECONDS = 3600; // 1時間
+/**
+ * S3署名付きURLを生成
+ *
+ * @param s3Key S3キー（PDFファイルのパス）
+ * @param expiresIn 有効期限（秒）デフォルト: 3600秒（1時間）
+ * @returns 署名付きURL
+ *
+ * @example
+ * ```typescript
+ * const url = await generatePresignedUrl('2024/01/15/TD20240115001_7203.pdf');
+ * // => "https://tdnet-pdfs.s3.amazonaws.com/2024/01/15/TD20240115001_7203.pdf?X-Amz-..."
+ * ```
+ */
+async function generatePresignedUrl(s3Key, expiresIn = URL_EXPIRATION_SECONDS) {
+    try {
+        logger_1.logger.info('Generating presigned URL', {
+            s3_key: s3Key,
+            bucket: BUCKET_NAME,
+            expires_in: expiresIn,
+        });
+        const command = new client_s3_1.GetObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: s3Key,
+        });
+        const url = await (0, s3_request_presigner_1.getSignedUrl)(s3Client, command, {
+            expiresIn,
+        });
+        logger_1.logger.info('Presigned URL generated successfully', {
+            s3_key: s3Key,
+            url_length: url.length,
+        });
+        return url;
+    }
+    catch (error) {
+        logger_1.logger.error('Failed to generate presigned URL', {
+            s3_key: s3Key,
+            bucket: BUCKET_NAME,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+    }
+}
+/**
+ * 複数のS3署名付きURLを一括生成
+ *
+ * @param s3Keys S3キーのリスト
+ * @param expiresIn 有効期限（秒）デフォルト: 3600秒（1時間）
+ * @returns 署名付きURLのマップ（キー: S3キー、値: 署名付きURL）
+ */
+async function generatePresignedUrls(s3Keys, expiresIn = URL_EXPIRATION_SECONDS) {
+    const urlMap = new Map();
+    await Promise.all(s3Keys.map(async (s3Key) => {
+        try {
+            const url = await generatePresignedUrl(s3Key, expiresIn);
+            urlMap.set(s3Key, url);
+        }
+        catch (error) {
+            logger_1.logger.error('Failed to generate presigned URL for key', {
+                s3_key: s3Key,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            // エラーが発生してもスキップして継続
+        }
+    }));
+    return urlMap;
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxsYW1iZGFcXHF1ZXJ5XFxnZW5lcmF0ZS1wcmVzaWduZWQtdXJsLnRzIiwibWFwcGluZ3MiOiI7QUFBQTs7Ozs7OztHQU9HOztBQTJCSCxvREFrQ0M7QUFTRCxzREFzQkM7QUExRkQsa0RBQWdFO0FBQ2hFLHdFQUE2RDtBQUM3RCwrQ0FBNEM7QUFFNUMsMEJBQTBCO0FBQzFCLE1BQU0sUUFBUSxHQUFHLElBQUksb0JBQVEsQ0FBQztJQUM1QixNQUFNLEVBQUUsT0FBTyxDQUFDLEdBQUcsQ0FBQyxVQUFVLElBQUksZ0JBQWdCO0NBQ25ELENBQUMsQ0FBQztBQUVILE1BQU0sV0FBVyxHQUFHLE9BQU8sQ0FBQyxHQUFHLENBQUMsY0FBYyxJQUFJLDJCQUEyQixDQUFDO0FBQzlFLE1BQU0sc0JBQXNCLEdBQUcsSUFBSSxDQUFDLENBQUMsTUFBTTtBQUUzQzs7Ozs7Ozs7Ozs7O0dBWUc7QUFDSSxLQUFLLFVBQVUsb0JBQW9CLENBQ3hDLEtBQWEsRUFDYixZQUFvQixzQkFBc0I7SUFFMUMsSUFBSSxDQUFDO1FBQ0gsZUFBTSxDQUFDLElBQUksQ0FBQywwQkFBMEIsRUFBRTtZQUN0QyxNQUFNLEVBQUUsS0FBSztZQUNiLE1BQU0sRUFBRSxXQUFXO1lBQ25CLFVBQVUsRUFBRSxTQUFTO1NBQ3RCLENBQUMsQ0FBQztRQUVILE1BQU0sT0FBTyxHQUFHLElBQUksNEJBQWdCLENBQUM7WUFDbkMsTUFBTSxFQUFFLFdBQVc7WUFDbkIsR0FBRyxFQUFFLEtBQUs7U0FDWCxDQUFDLENBQUM7UUFFSCxNQUFNLEdBQUcsR0FBRyxNQUFNLElBQUEsbUNBQVksRUFBQyxRQUFRLEVBQUUsT0FBTyxFQUFFO1lBQ2hELFNBQVM7U0FDVixDQUFDLENBQUM7UUFFSCxlQUFNLENBQUMsSUFBSSxDQUFDLHNDQUFzQyxFQUFFO1lBQ2xELE1BQU0sRUFBRSxLQUFLO1lBQ2IsVUFBVSxFQUFFLEdBQUcsQ0FBQyxNQUFNO1NBQ3ZCLENBQUMsQ0FBQztRQUVILE9BQU8sR0FBRyxDQUFDO0lBQ2IsQ0FBQztJQUFDLE9BQU8sS0FBSyxFQUFFLENBQUM7UUFDZixlQUFNLENBQUMsS0FBSyxDQUFDLGtDQUFrQyxFQUFFO1lBQy9DLE1BQU0sRUFBRSxLQUFLO1lBQ2IsTUFBTSxFQUFFLFdBQVc7WUFDbkIsS0FBSyxFQUFFLEtBQUssWUFBWSxLQUFLLENBQUMsQ0FBQyxDQUFDLEtBQUssQ0FBQyxPQUFPLENBQUMsQ0FBQyxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUM7U0FDOUQsQ0FBQyxDQUFDO1FBQ0gsTUFBTSxLQUFLLENBQUM7SUFDZCxDQUFDO0FBQ0gsQ0FBQztBQUVEOzs7Ozs7R0FNRztBQUNJLEtBQUssVUFBVSxxQkFBcUIsQ0FDekMsTUFBZ0IsRUFDaEIsWUFBb0Isc0JBQXNCO0lBRTFDLE1BQU0sTUFBTSxHQUFHLElBQUksR0FBRyxFQUFrQixDQUFDO0lBRXpDLE1BQU0sT0FBTyxDQUFDLEdBQUcsQ0FDZixNQUFNLENBQUMsR0FBRyxDQUFDLEtBQUssRUFBRSxLQUFLLEVBQUUsRUFBRTtRQUN6QixJQUFJLENBQUM7WUFDSCxNQUFNLEdBQUcsR0FBRyxNQUFNLG9CQUFvQixDQUFDLEtBQUssRUFBRSxTQUFTLENBQUMsQ0FBQztZQUN6RCxNQUFNLENBQUMsR0FBRyxDQUFDLEtBQUssRUFBRSxHQUFHLENBQUMsQ0FBQztRQUN6QixDQUFDO1FBQUMsT0FBTyxLQUFLLEVBQUUsQ0FBQztZQUNmLGVBQU0sQ0FBQyxLQUFLLENBQUMsMENBQTBDLEVBQUU7Z0JBQ3ZELE1BQU0sRUFBRSxLQUFLO2dCQUNiLEtBQUssRUFBRSxLQUFLLFlBQVksS0FBSyxDQUFDLENBQUMsQ0FBQyxLQUFLLENBQUMsT0FBTyxDQUFDLENBQUMsQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDO2FBQzlELENBQUMsQ0FBQztZQUNILG9CQUFvQjtRQUN0QixDQUFDO0lBQ0gsQ0FBQyxDQUFDLENBQ0gsQ0FBQztJQUVGLE9BQU8sTUFBTSxDQUFDO0FBQ2hCLENBQUMiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxsYW1iZGFcXHF1ZXJ5XFxnZW5lcmF0ZS1wcmVzaWduZWQtdXJsLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBHZW5lcmF0ZSBQcmVzaWduZWQgVVJMXHJcbiAqXHJcbiAqIFMz572y5ZCN5LuY44GNVVJM44KS55Sf5oiQ44GX44G+44GZ44CCXHJcbiAqIFBERuODleOCoeOCpOODq+OBruODgOOCpuODs+ODreODvOODieeUqOOBq+S9v+eUqOOBleOCjOOBvuOBmeOAglxyXG4gKlxyXG4gKiBSZXF1aXJlbWVudHM6IOimgeS7tjQuNO+8iFBERuODgOOCpuODs+ODreODvOODie+8iVxyXG4gKi9cclxuXHJcbmltcG9ydCB7IFMzQ2xpZW50LCBHZXRPYmplY3RDb21tYW5kIH0gZnJvbSAnQGF3cy1zZGsvY2xpZW50LXMzJztcclxuaW1wb3J0IHsgZ2V0U2lnbmVkVXJsIH0gZnJvbSAnQGF3cy1zZGsvczMtcmVxdWVzdC1wcmVzaWduZXInO1xyXG5pbXBvcnQgeyBsb2dnZXIgfSBmcm9tICcuLi8uLi91dGlscy9sb2dnZXInO1xyXG5cclxuLy8gUzPjgq/jg6njgqTjgqLjg7Pjg4jvvIjjgrDjg63jg7zjg5Djg6vjgrnjgrPjg7zjg5fjgafliJ3mnJ/ljJbvvIlcclxuY29uc3QgczNDbGllbnQgPSBuZXcgUzNDbGllbnQoe1xyXG4gIHJlZ2lvbjogcHJvY2Vzcy5lbnYuQVdTX1JFR0lPTiB8fCAnYXAtbm9ydGhlYXN0LTEnLFxyXG59KTtcclxuXHJcbmNvbnN0IEJVQ0tFVF9OQU1FID0gcHJvY2Vzcy5lbnYuUzNfQlVDS0VUX05BTUUgfHwgJ3RkbmV0LWRhdGEtY29sbGVjdG9yLXBkZnMnO1xyXG5jb25zdCBVUkxfRVhQSVJBVElPTl9TRUNPTkRTID0gMzYwMDsgLy8gMeaZgumWk1xyXG5cclxuLyoqXHJcbiAqIFMz572y5ZCN5LuY44GNVVJM44KS55Sf5oiQXHJcbiAqXHJcbiAqIEBwYXJhbSBzM0tleSBTM+OCreODvO+8iFBERuODleOCoeOCpOODq+OBruODkeOCue+8iVxyXG4gKiBAcGFyYW0gZXhwaXJlc0luIOacieWKueacn+mZkO+8iOenku+8ieODh+ODleOCqeODq+ODiDogMzYwMOenku+8iDHmmYLplpPvvIlcclxuICogQHJldHVybnMg572y5ZCN5LuY44GNVVJMXHJcbiAqXHJcbiAqIEBleGFtcGxlXHJcbiAqIGBgYHR5cGVzY3JpcHRcclxuICogY29uc3QgdXJsID0gYXdhaXQgZ2VuZXJhdGVQcmVzaWduZWRVcmwoJzIwMjQvMDEvMTUvVEQyMDI0MDExNTAwMV83MjAzLnBkZicpO1xyXG4gKiAvLyA9PiBcImh0dHBzOi8vdGRuZXQtcGRmcy5zMy5hbWF6b25hd3MuY29tLzIwMjQvMDEvMTUvVEQyMDI0MDExNTAwMV83MjAzLnBkZj9YLUFtei0uLi5cIlxyXG4gKiBgYGBcclxuICovXHJcbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBnZW5lcmF0ZVByZXNpZ25lZFVybChcclxuICBzM0tleTogc3RyaW5nLFxyXG4gIGV4cGlyZXNJbjogbnVtYmVyID0gVVJMX0VYUElSQVRJT05fU0VDT05EU1xyXG4pOiBQcm9taXNlPHN0cmluZz4ge1xyXG4gIHRyeSB7XHJcbiAgICBsb2dnZXIuaW5mbygnR2VuZXJhdGluZyBwcmVzaWduZWQgVVJMJywge1xyXG4gICAgICBzM19rZXk6IHMzS2V5LFxyXG4gICAgICBidWNrZXQ6IEJVQ0tFVF9OQU1FLFxyXG4gICAgICBleHBpcmVzX2luOiBleHBpcmVzSW4sXHJcbiAgICB9KTtcclxuXHJcbiAgICBjb25zdCBjb21tYW5kID0gbmV3IEdldE9iamVjdENvbW1hbmQoe1xyXG4gICAgICBCdWNrZXQ6IEJVQ0tFVF9OQU1FLFxyXG4gICAgICBLZXk6IHMzS2V5LFxyXG4gICAgfSk7XHJcblxyXG4gICAgY29uc3QgdXJsID0gYXdhaXQgZ2V0U2lnbmVkVXJsKHMzQ2xpZW50LCBjb21tYW5kLCB7XHJcbiAgICAgIGV4cGlyZXNJbixcclxuICAgIH0pO1xyXG5cclxuICAgIGxvZ2dlci5pbmZvKCdQcmVzaWduZWQgVVJMIGdlbmVyYXRlZCBzdWNjZXNzZnVsbHknLCB7XHJcbiAgICAgIHMzX2tleTogczNLZXksXHJcbiAgICAgIHVybF9sZW5ndGg6IHVybC5sZW5ndGgsXHJcbiAgICB9KTtcclxuXHJcbiAgICByZXR1cm4gdXJsO1xyXG4gIH0gY2F0Y2ggKGVycm9yKSB7XHJcbiAgICBsb2dnZXIuZXJyb3IoJ0ZhaWxlZCB0byBnZW5lcmF0ZSBwcmVzaWduZWQgVVJMJywge1xyXG4gICAgICBzM19rZXk6IHMzS2V5LFxyXG4gICAgICBidWNrZXQ6IEJVQ0tFVF9OQU1FLFxyXG4gICAgICBlcnJvcjogZXJyb3IgaW5zdGFuY2VvZiBFcnJvciA/IGVycm9yLm1lc3NhZ2UgOiBTdHJpbmcoZXJyb3IpLFxyXG4gICAgfSk7XHJcbiAgICB0aHJvdyBlcnJvcjtcclxuICB9XHJcbn1cclxuXHJcbi8qKlxyXG4gKiDopIfmlbDjga5TM+e9suWQjeS7mOOBjVVSTOOCkuS4gOaLrOeUn+aIkFxyXG4gKlxyXG4gKiBAcGFyYW0gczNLZXlzIFMz44Kt44O844Gu44Oq44K544OIXHJcbiAqIEBwYXJhbSBleHBpcmVzSW4g5pyJ5Yq55pyf6ZmQ77yI56eS77yJ44OH44OV44Kp44Or44OIOiAzNjAw56eS77yIMeaZgumWk++8iVxyXG4gKiBAcmV0dXJucyDnvbLlkI3ku5jjgY1VUkzjga7jg57jg4Pjg5fvvIjjgq3jg7w6IFMz44Kt44O844CB5YCkOiDnvbLlkI3ku5jjgY1VUkzvvIlcclxuICovXHJcbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBnZW5lcmF0ZVByZXNpZ25lZFVybHMoXHJcbiAgczNLZXlzOiBzdHJpbmdbXSxcclxuICBleHBpcmVzSW46IG51bWJlciA9IFVSTF9FWFBJUkFUSU9OX1NFQ09ORFNcclxuKTogUHJvbWlzZTxNYXA8c3RyaW5nLCBzdHJpbmc+PiB7XHJcbiAgY29uc3QgdXJsTWFwID0gbmV3IE1hcDxzdHJpbmcsIHN0cmluZz4oKTtcclxuXHJcbiAgYXdhaXQgUHJvbWlzZS5hbGwoXHJcbiAgICBzM0tleXMubWFwKGFzeW5jIChzM0tleSkgPT4ge1xyXG4gICAgICB0cnkge1xyXG4gICAgICAgIGNvbnN0IHVybCA9IGF3YWl0IGdlbmVyYXRlUHJlc2lnbmVkVXJsKHMzS2V5LCBleHBpcmVzSW4pO1xyXG4gICAgICAgIHVybE1hcC5zZXQoczNLZXksIHVybCk7XHJcbiAgICAgIH0gY2F0Y2ggKGVycm9yKSB7XHJcbiAgICAgICAgbG9nZ2VyLmVycm9yKCdGYWlsZWQgdG8gZ2VuZXJhdGUgcHJlc2lnbmVkIFVSTCBmb3Iga2V5Jywge1xyXG4gICAgICAgICAgczNfa2V5OiBzM0tleSxcclxuICAgICAgICAgIGVycm9yOiBlcnJvciBpbnN0YW5jZW9mIEVycm9yID8gZXJyb3IubWVzc2FnZSA6IFN0cmluZyhlcnJvciksXHJcbiAgICAgICAgfSk7XHJcbiAgICAgICAgLy8g44Ko44Op44O844GM55m655Sf44GX44Gm44KC44K544Kt44OD44OX44GX44Gm57aZ57aaXHJcbiAgICAgIH1cclxuICAgIH0pXHJcbiAgKTtcclxuXHJcbiAgcmV0dXJuIHVybE1hcDtcclxufVxyXG4iXSwidmVyc2lvbiI6M30=

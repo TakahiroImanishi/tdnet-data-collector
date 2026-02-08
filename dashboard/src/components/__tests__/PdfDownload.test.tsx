@@ -33,13 +33,19 @@ describe('PdfDownload', () => {
 
     // リンククリックをモック
     const mockClick = jest.fn();
-    const mockCreateElement = jest.spyOn(document, 'createElement');
-    mockCreateElement.mockReturnValue({
+    const mockAppendChild = jest.fn();
+    const mockRemoveChild = jest.fn();
+    const mockLink = {
       click: mockClick,
       href: '',
       download: '',
       target: '',
-    } as any);
+      style: {},
+    };
+    
+    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    jest.spyOn(document.body, 'appendChild').mockImplementation(mockAppendChild);
+    jest.spyOn(document.body, 'removeChild').mockImplementation(mockRemoveChild);
 
     render(<PdfDownload disclosureId={mockDisclosureId} fileName={mockFileName} />);
     
@@ -49,13 +55,24 @@ describe('PdfDownload', () => {
     await waitFor(() => {
       expect(mockGetPdfDownloadUrl).toHaveBeenCalledWith(mockDisclosureId);
       expect(mockClick).toHaveBeenCalled();
+      expect(mockAppendChild).toHaveBeenCalledWith(mockLink);
+      expect(mockRemoveChild).toHaveBeenCalledWith(mockLink);
     });
   });
 
   it('ダウンロード中はボタンが無効化される', async () => {
-    jest.spyOn(api, 'getPdfDownloadUrl').mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
-    );
+    let resolvePromise: any;
+    const mockPromise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+    
+    jest.spyOn(api, 'getPdfDownloadUrl').mockReturnValue(mockPromise as any);
+    
+    // DOM操作をモック
+    const mockLink = { click: jest.fn(), href: '', download: '', target: '', style: {} };
+    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
+    jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
 
     render(<PdfDownload disclosureId={mockDisclosureId} />);
     
@@ -63,13 +80,24 @@ describe('PdfDownload', () => {
     fireEvent.click(button);
 
     // ダウンロード中
-    expect(button).toBeDisabled();
-    expect(screen.getByText(/ダウンロード中/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(button).toBeDisabled();
+      expect(screen.getByText(/ダウンロード中/i)).toBeInTheDocument();
+    });
+    
+    // プロミスを解決
+    resolvePromise({ success: true, data: { url: 'http://test.com/file.pdf', expires_in: 3600 } });
   });
 
   it('エラー時にエラーメッセージを表示する', async () => {
     const errorMessage = 'PDFの取得に失敗しました';
     jest.spyOn(api, 'getPdfDownloadUrl').mockRejectedValue(new Error(errorMessage));
+    
+    // DOM操作をモック
+    const mockLink = { click: jest.fn(), href: '', download: '', target: '', style: {} };
+    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
+    jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
 
     render(<PdfDownload disclosureId={mockDisclosureId} />);
     
@@ -86,6 +114,12 @@ describe('PdfDownload', () => {
       success: false,
       data: { url: '', expires_in: 0 },
     });
+    
+    // DOM操作をモック
+    const mockLink = { click: jest.fn(), href: '', download: '', target: '', style: {} };
+    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
+    jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
 
     render(<PdfDownload disclosureId={mockDisclosureId} />);
     

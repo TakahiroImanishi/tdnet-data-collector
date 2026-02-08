@@ -8,8 +8,8 @@ import {
   Box,
   Alert,
   Chip,
+  Grid,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';

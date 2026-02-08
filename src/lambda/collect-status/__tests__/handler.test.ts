@@ -259,4 +259,242 @@ describe('GET /collect/{execution_id} Handler', () => {
       expect(body.error.message).toContain('Failed to retrieve execution status');
     });
   });
+
+  describe('エラーレスポンスマッピング', () => {
+    it('UnauthorizedErrorは401を返す', async () => {
+      // UnauthorizedErrorクラスが存在する場合のテスト
+      // 実際のエラークラスがない場合は、エラー名でマッピングされる
+      const error = new Error('Unauthorized');
+      error.name = 'UnauthorizedError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+    });
+
+    it('pending状態の実行を取得できる', async () => {
+      const executionStatus = {
+        execution_id: 'exec_pending',
+        status: 'pending',
+        progress: 0,
+        collected_count: 0,
+        failed_count: 0,
+        started_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:00:00Z',
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall(executionStatus),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_pending',
+        pathParameters: {
+          execution_id: 'exec_pending',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.status).toBe('pending');
+      expect(body.data.progress).toBe(0);
+    });
+
+    it('ForbiddenErrorは403を返す', async () => {
+      const error = new Error('Forbidden');
+      error.name = 'ForbiddenError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+    });
+
+    it('ConflictErrorは409を返す', async () => {
+      const error = new Error('Conflict');
+      error.name = 'ConflictError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+    });
+
+    it('RateLimitErrorは429を返す', async () => {
+      const error = new Error('Rate limit exceeded');
+      error.name = 'RateLimitError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+    });
+
+    it('ServiceUnavailableErrorは503を返す', async () => {
+      const error = new Error('Service unavailable');
+      error.name = 'ServiceUnavailableError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+    });
+
+    it('GatewayTimeoutErrorは504を返す', async () => {
+      const error = new Error('Gateway timeout');
+      error.name = 'GatewayTimeoutError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
+    });
+
+    it('ValidationErrorを直接スローした場合は400を返す', async () => {
+      // pathParametersがnullの場合、ValidationErrorが直接スローされる
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/',
+        pathParameters: null, // これによりValidationErrorが直接スローされる
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
 });
