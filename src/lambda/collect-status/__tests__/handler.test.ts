@@ -32,113 +32,13 @@ const mockContext: Context = {
 describe('GET /collect/{execution_id} Handler', () => {
   beforeEach(() => {
     dynamoMock.reset();
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'tdnet_executions';
+    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
     process.env.AWS_REGION = 'ap-northeast-1';
   });
 
   afterEach(() => {
     delete process.env.DYNAMODB_EXECUTIONS_TABLE;
     delete process.env.AWS_REGION;
-  });
-
-  describe('環境変数のデフォルト値', () => {
-    it('AWS_REGIONが未設定の場合はap-northeast-1を使用する', async () => {
-      // 環境変数を削除してデフォルト値をテスト
-      delete process.env.AWS_REGION;
-      
-      // モジュールを再読み込みしてデフォルト値を適用
-      jest.resetModules();
-      const { handler: freshHandler } = require('../handler');
-      
-      const executionStatus = {
-        execution_id: 'exec_test',
-        status: 'running',
-        progress: 50,
-        collected_count: 25,
-        failed_count: 0,
-        started_at: '2024-01-15T10:00:00Z',
-        updated_at: '2024-01-15T10:05:00Z',
-      };
-
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: marshall(executionStatus),
-      });
-
-      const event: APIGatewayProxyEvent = {
-        body: null,
-        headers: {},
-        multiValueHeaders: {},
-        httpMethod: 'GET',
-        isBase64Encoded: false,
-        path: '/collect/exec_test',
-        pathParameters: {
-          execution_id: 'exec_test',
-        },
-        queryStringParameters: null,
-        multiValueQueryStringParameters: null,
-        stageVariables: null,
-        requestContext: {} as any,
-        resource: '',
-      };
-
-      const result = await freshHandler(event, mockContext);
-
-      expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.data.execution_id).toBe('exec_test');
-      
-      // 環境変数を元に戻す
-      process.env.AWS_REGION = 'ap-northeast-1';
-    });
-
-    it('DYNAMODB_EXECUTIONS_TABLEが未設定の場合はtdnet_executionsを使用する', async () => {
-      // 環境変数を削除してデフォルト値をテスト
-      delete process.env.DYNAMODB_EXECUTIONS_TABLE;
-      
-      // モジュールを再読み込みしてデフォルト値を適用
-      jest.resetModules();
-      const { handler: freshHandler } = require('../handler');
-      
-      const executionStatus = {
-        execution_id: 'exec_test',
-        status: 'running',
-        progress: 50,
-        collected_count: 25,
-        failed_count: 0,
-        started_at: '2024-01-15T10:00:00Z',
-        updated_at: '2024-01-15T10:05:00Z',
-      };
-
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: marshall(executionStatus),
-      });
-
-      const event: APIGatewayProxyEvent = {
-        body: null,
-        headers: {},
-        multiValueHeaders: {},
-        httpMethod: 'GET',
-        isBase64Encoded: false,
-        path: '/collect/exec_test',
-        pathParameters: {
-          execution_id: 'exec_test',
-        },
-        queryStringParameters: null,
-        multiValueQueryStringParameters: null,
-        stageVariables: null,
-        requestContext: {} as any,
-        resource: '',
-      };
-
-      const result = await freshHandler(event, mockContext);
-
-      expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.data.execution_id).toBe('exec_test');
-      
-      // 環境変数を元に戻す
-      process.env.DYNAMODB_EXECUTIONS_TABLE = 'tdnet_executions';
-    });
   });
 
   describe('正常系', () => {
@@ -766,6 +666,101 @@ describe('GET /collect/{execution_id} Handler', () => {
       expect(result.statusCode).toBe(500);
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+  });
+
+  describe('環境変数デフォルト値', () => {
+    it('AWS_REGIONが未設定の場合もハンドラーが正常に動作する', async () => {
+      // AWS_REGIONを削除してデフォルト値（ap-northeast-1）を使用
+      delete process.env.AWS_REGION;
+
+      const executionStatus = {
+        execution_id: 'exec_default_region',
+        status: 'completed',
+        progress: 100,
+        collected_count: 10,
+        failed_count: 0,
+        started_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:05:00Z',
+        completed_at: '2024-01-15T10:05:00Z',
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall(executionStatus),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_default_region',
+        pathParameters: {
+          execution_id: 'exec_default_region',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('success');
+      expect(body.data.execution_id).toBe('exec_default_region');
+
+      // AWS_REGIONを元に戻す
+      process.env.AWS_REGION = 'ap-northeast-1';
+    });
+
+    it('DYNAMODB_EXECUTIONS_TABLEが未設定の場合もハンドラーが正常に動作する', async () => {
+      // DYNAMODB_EXECUTIONS_TABLEを削除してデフォルト値（tdnet_executions）を使用
+      delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+
+      const executionStatus = {
+        execution_id: 'exec_default_table',
+        status: 'running',
+        progress: 50,
+        collected_count: 5,
+        failed_count: 0,
+        started_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:02:00Z',
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall(executionStatus),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_default_table',
+        pathParameters: {
+          execution_id: 'exec_default_table',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('success');
+      expect(body.data.execution_id).toBe('exec_default_table');
+
+      // DYNAMODB_EXECUTIONS_TABLEを元に戻す
+      process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
     });
   });
 });

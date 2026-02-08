@@ -1,6 +1,6 @@
 // PDFダウンロードコンポーネントのテスト
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PdfDownload from '../PdfDownload';
 import * as api from '../../services/api';
@@ -14,6 +14,14 @@ describe('PdfDownload', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // DOM環境のセットアップ
+    document.body.innerHTML = '<div id="root"></div>';
+  });
+
+  afterEach(() => {
+    // クリーンアップ
+    document.body.innerHTML = '';
   });
 
   it('正常にレンダリングされる', () => {
