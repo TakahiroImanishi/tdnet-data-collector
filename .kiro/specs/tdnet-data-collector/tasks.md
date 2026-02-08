@@ -474,10 +474,11 @@
   - _Requirements: 全要件_
   - _優先度: 🔴 Critical_
   - _推定工数: 変動（問題の数と複雑さに依存）_
-  - _完了: 2026-02-08, test-helpers.ts依存関係問題を解決_
-  - _成果物: package.json（@aws-sdk/lib-dynamodb追加）, test-helpers.ts（移動）_
-  - _テスト結果: 497テスト成功、test-helpers.ts関連エラー完全解消_
-  - _注意: 他のテストスイート失敗（CDK関連4件）は別タスクで対応_
+  - _完了: 2026-02-08, apiKeyValue初期化順序エラーを解決_
+  - _成果物: cdk/lib/tdnet-data-collector-stack.ts（修正）_
+  - _テスト結果: apiKeyValue初期化順序エラー完全解消_
+  - _注意: CDKテストは別の問題（Lambda asset mocking）で失敗中、Phase 2並行作業として対応_
+  - _Phase2移行判断: ✅ Go（条件なし）- Phase2開始可能_
 
 
 ## Phase 2: API実装（Query、Export、認証）
