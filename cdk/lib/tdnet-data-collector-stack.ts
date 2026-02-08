@@ -2,6 +2,9 @@ import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 
 export class TdnetDataCollectorStack extends cdk.Stack {
@@ -12,6 +15,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
   public readonly exportsBucket: s3.Bucket;
   public readonly dashboardBucket: s3.Bucket;
   public readonly cloudtrailLogsBucket: s3.Bucket;
+  public readonly api: apigateway.RestApi;
+  public readonly apiKey: apigateway.ApiKey;
+  public readonly webAcl: wafv2.CfnWebACL;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -261,9 +267,230 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       exportName: 'TdnetCollectorFunctionArn',
     });
 
+    // ========================================
+    // Phase 2: Lambda Query Function
+    // ========================================
+
+    // Lambda Query Function
+    const queryFunction = new lambda.Function(this, 'QueryFunction', {
+      functionName: 'tdnet-query',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/src/lambda/query'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
+        S3_BUCKET_NAME: this.pdfsBucket.bucketName,
+        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+    });
+
+    // IAM権限の付与
+    // DynamoDB: disclosuresテーブルへの読み取り権限
+    this.disclosuresTable.grantReadData(queryFunction);
+
+    // S3: PDFバケットへの読み取り権限（署名付きURL生成用）
+    this.pdfsBucket.grantRead(queryFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    queryFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'QueryFunctionName', {
+      value: queryFunction.functionName,
+      description: 'Lambda Query function name',
+      exportName: 'TdnetQueryFunctionName',
+    });
+
+    new cdk.CfnOutput(this, 'QueryFunctionArn', {
+      value: queryFunction.functionArn,
+      description: 'Lambda Query function ARN',
+      exportName: 'TdnetQueryFunctionArn',
+    });
+
     // Stack resources will be added here in subsequent tasks
-    // Phase 2: API Gateway, Lambda Query/Export functions
+    // Phase 2: Lambda Export function, API Gateway integration
     // Phase 3: EventBridge rules, SNS topics, CloudWatch monitoring
-    // Phase 4: CloudTrail, WAF, security configurations
+    // Phase 4: CloudTrail, security configurations
+
+    // ========================================
+    // Phase 2: API Gateway + WAF
+    // ========================================
+
+    // 1. API Gateway REST API
+    this.api = new apigateway.RestApi(this, 'TdnetApi', {
+      restApiName: 'tdnet-data-collector-api',
+      description: 'TDnet Data Collector REST API',
+      deployOptions: {
+        stageName: 'prod',
+        throttlingRateLimit: 100, // リクエスト/秒
+        throttlingBurstLimit: 200, // バーストリクエスト数
+        loggingLevel: apigateway.MethodLoggingLevel.INFO,
+        dataTraceEnabled: true,
+        metricsEnabled: true,
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS, // 本番環境では特定のオリジンに制限
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: [
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+          'X-Amz-Security-Token',
+        ],
+        allowCredentials: true,
+      },
+      cloudWatchRole: true, // CloudWatch Logsへのログ出力を有効化
+    });
+
+    // 2. API Key生成とSecrets Managerへの保存
+    const apiKeyValue = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'ApiKeySecret',
+      '/tdnet/api-key'
+    );
+
+    this.apiKey = new apigateway.ApiKey(this, 'TdnetApiKey', {
+      apiKeyName: 'tdnet-api-key',
+      description: 'API Key for TDnet Data Collector',
+      enabled: true,
+      value: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
+    });
+
+    // 3. Usage Plan設定
+    const usagePlan = this.api.addUsagePlan('TdnetUsagePlan', {
+      name: 'tdnet-usage-plan',
+      description: 'Usage plan for TDnet Data Collector API',
+      throttle: {
+        rateLimit: 100, // リクエスト/秒
+        burstLimit: 200, // バーストリクエスト数
+      },
+      quota: {
+        limit: 10000, // 月間リクエスト数上限
+        period: apigateway.Period.MONTH,
+      },
+    });
+
+    usagePlan.addApiKey(this.apiKey);
+    usagePlan.addApiStage({
+      stage: this.api.deploymentStage,
+    });
+
+    // 4. AWS WAF Web ACL設定
+    this.webAcl = new wafv2.CfnWebACL(this, 'TdnetWebAcl', {
+      name: 'tdnet-web-acl',
+      scope: 'REGIONAL', // API Gatewayは REGIONAL
+      defaultAction: { allow: {} },
+      description: 'Web ACL for TDnet Data Collector API',
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: 'TdnetWebAcl',
+      },
+      rules: [
+        // ルール1: レート制限（2000リクエスト/5分）
+        {
+          name: 'RateLimitRule',
+          priority: 1,
+          statement: {
+            rateBasedStatement: {
+              limit: 2000, // 5分間のリクエスト数上限
+              aggregateKeyType: 'IP',
+            },
+          },
+          action: {
+            block: {
+              customResponse: {
+                responseCode: 429,
+                customResponseBodyKey: 'RateLimitExceeded',
+              },
+            },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'RateLimitRule',
+          },
+        },
+        // ルール2: AWSマネージドルール - Common Rule Set
+        {
+          name: 'AWSManagedRulesCommonRuleSet',
+          priority: 2,
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesCommonRuleSet',
+            },
+          },
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWSManagedRulesCommonRuleSet',
+          },
+        },
+        // ルール3: AWSマネージドルール - Known Bad Inputs
+        {
+          name: 'AWSManagedRulesKnownBadInputsRuleSet',
+          priority: 3,
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesKnownBadInputsRuleSet',
+            },
+          },
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AWSManagedRulesKnownBadInputsRuleSet',
+          },
+        },
+      ],
+      customResponseBodies: {
+        RateLimitExceeded: {
+          contentType: 'APPLICATION_JSON',
+          content: JSON.stringify({
+            error_code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests. Please try again later.',
+          }),
+        },
+      },
+    });
+
+    // 5. WAFとAPI Gatewayの関連付け
+    new wafv2.CfnWebACLAssociation(this, 'TdnetWebAclAssociation', {
+      resourceArn: this.api.deploymentStage.stageArn,
+      webAclArn: this.webAcl.attrArn,
+    });
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'ApiEndpoint', {
+      value: this.api.url,
+      description: 'API Gateway endpoint URL',
+      exportName: 'TdnetApiEndpoint',
+    });
+
+    new cdk.CfnOutput(this, 'ApiKeyId', {
+      value: this.apiKey.keyId,
+      description: 'API Key ID',
+      exportName: 'TdnetApiKeyId',
+    });
+
+    new cdk.CfnOutput(this, 'WebAclArn', {
+      value: this.webAcl.attrArn,
+      description: 'WAF Web ACL ARN',
+      exportName: 'TdnetWebAclArn',
+    });
   }
 }

@@ -481,23 +481,27 @@
 
 ### 10. API Gateway構築
 
-- [ ] 10.1 API GatewayをCDKで定義
+- [x] 10.1 API GatewayをCDKで定義
   - REST API作成
   - 使用量プランとAPIキー設定
   - CORS設定
   - _Requirements: 要件11.1, 11.2（API認証）_
+  - _完了: 2026-02-08, 23テスト成功_
 
-- [ ] 10.2 AWS WAFの設定
+- [x] 10.2 AWS WAFの設定
   - Web ACL作成（レート制限ルール: 2000リクエスト/5分）
   - AWSマネージドルールセット適用（Common Rule Set）
   - API Gatewayへの関連付け
   - _Requirements: 要件13.1（WAF保護）_
+  - _完了: 2026-02-08, 23テスト成功_
 
-- [ ] 10.3 API Gateway構造の検証テスト
+- [x] 10.3 API Gateway構造の検証テスト
   - API Gatewayが正しく作成されていることを確認
   - APIキー認証が有効化されていることを確認
   - WAFが関連付けられていることを確認
   - _Requirements: 要件14.1（テスト）_
+  - _完了: 2026-02-08, 23テスト成功_
+  - _注意: デプロイ前に /tdnet/api-key シークレットを作成する必要あり_
 
 ### 11. Lambda Query実装
 

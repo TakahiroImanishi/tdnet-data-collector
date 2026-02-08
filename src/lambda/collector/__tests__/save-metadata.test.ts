@@ -374,3 +374,118 @@ describe('saveMetadata', () => {
     });
   });
 });
+
+  describe('再試行ロジック', () => {
+    it('ProvisionedThroughputExceededExceptionで再試行する', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      const throughputError = new Error('ProvisionedThroughputExceededException');
+      throughputError.name = 'ProvisionedThroughputExceededException';
+
+      // 最初の2回は失敗、3回目は成功
+      dynamoMock
+        .on(PutItemCommand)
+        .rejectsOnce(throughputError)
+        .rejectsOnce(throughputError)
+        .resolvesOnce({});
+
+      // Act
+      await saveMetadata(disclosure, s3_key);
+
+      // Assert
+      expect(dynamoMock.calls()).toHaveLength(3); // 初回 + 2回再試行
+    });
+
+    it('ProvisionedThroughputExceededExceptionで最大再試行回数後に失敗する', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      const throughputError = new Error('ProvisionedThroughputExceededException');
+      throughputError.name = 'ProvisionedThroughputExceededException';
+
+      dynamoMock.on(PutItemCommand).rejects(throughputError);
+
+      // Act & Assert
+      await expect(saveMetadata(disclosure, s3_key)).rejects.toThrow(
+        'ProvisionedThroughputExceededException'
+      );
+      expect(dynamoMock.calls()).toHaveLength(4); // 初回 + 3回再試行
+    });
+
+    it('ConditionalCheckFailedExceptionは再試行しない', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      const conditionalCheckError = new Error('ConditionalCheckFailedException');
+      conditionalCheckError.name = 'ConditionalCheckFailedException';
+      dynamoMock.on(PutItemCommand).rejects(conditionalCheckError);
+
+      // Act
+      await saveMetadata(disclosure, s3_key);
+
+      // Assert
+      expect(dynamoMock.calls()).toHaveLength(1); // 再試行しない
+    });
+
+    it('その他のDynamoDBエラーは再試行しない', async () => {
+      // Arrange
+      const disclosure: Disclosure = {
+        disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosure_type: '決算短信',
+        title: '2024年3月期 第3四半期決算短信',
+        disclosed_at: '2024-01-15T10:30:00Z',
+        pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
+        s3_key: '',
+        collected_at: '',
+        date_partition: '',
+      };
+      const s3_key = '2024/01/15/TD20240115001.pdf';
+
+      const validationError = new Error('ValidationException');
+      validationError.name = 'ValidationException';
+      dynamoMock.on(PutItemCommand).rejects(validationError);
+
+      // Act & Assert
+      await expect(saveMetadata(disclosure, s3_key)).rejects.toThrow('ValidationException');
+      expect(dynamoMock.calls()).toHaveLength(1); // 再試行しない
+    });
+  });
