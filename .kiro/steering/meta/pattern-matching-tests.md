@@ -400,6 +400,58 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ---
 
+## development/lambda-implementation.md
+
+### fileMatchPattern
+```text
+**/lambda/**/*.ts
+```
+
+### マッチすべきファイル ✅
+- `src/lambda/collector/handler.ts`
+- `src/lambda/collector/index.ts`
+- `src/lambda/collector/scrape-tdnet-list.ts`
+- `src/lambda/query/handler.ts`
+- `src/lambda/export/handler.ts`
+- `lambda/collector/handler.ts`
+- `lambda/api/handler.ts`
+- `src/lambda/stats/handler.ts`
+- `src/lambda/health/handler.ts`
+- `src/lambda/get-disclosure/handler.ts`
+
+### マッチすべきでないファイル ❌
+- `src/api/handler.ts` (lambdaフォルダ外)
+- `cdk/lib/lambda-stack.ts` (CDKファイル、Lambda関数コードではない)
+- `cdk/lib/constructs/lambda-collector.ts` (CDK Construct、Lambda関数コードではない)
+- `src/utils/lambda-helper.ts` (lambdaフォルダ外)
+- `README.md`
+
+**注:** テストファイル（`**/*.test.ts`, `**/*.spec.ts`）も技術的にはマッチするが、`testing-strategy.md`が優先的に適用される
+
+---
+
+## パターンマッチングのルール
+
+### ワイルドカード
+
+- `*`: 単一レベルのワイルドカード（ディレクトリ区切りを含まない）
+  - 例: `*.ts` → `file.ts` にマッチ、`dir/file.ts` にマッチしない
+- `**`: 再帰的ワイルドカード（すべてのサブディレクトリを含む）
+  - 例: `**/*.ts` → `file.ts`, `dir/file.ts`, `dir/sub/file.ts` すべてにマッチ
+
+### OR条件
+
+- `|`: 複数パターンのいずれかにマッチ
+  - 例: `**/*.test.ts|**/*.spec.ts` → `.test.ts` または `.spec.ts` で終わるファイル
+
+### 注意点
+
+1. **パターンは相対パス**: ワークスペースルートからの相対パスでマッチング
+2. **大文字小文字**: 通常は区別される（OSに依存）
+3. **複数マッチ**: 複数のsteeringファイルのパターンにマッチする場合、すべて読み込まれる
+
+---
+
 ## テスト実行方法
 
 ### 手動テスト（推奨）

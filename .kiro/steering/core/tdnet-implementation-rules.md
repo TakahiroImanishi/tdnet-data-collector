@@ -1,8 +1,3 @@
----
-inclusion: always
-description: "TDnet Data Collectorプロジェクトの基本実装原則"
----
-
 # TDnet Data Collector - 実装ルール
 
 TDnetから上場企業の開示情報を自動収集するAWSサーバーレスシステムの実装原則。

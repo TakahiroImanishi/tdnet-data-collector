@@ -14,6 +14,8 @@
 - **data-validation.md** - データバリデーションルールとパターン
 - **tdnet-scraping-patterns.md** - TDnetスクレイピングのパターンとベストプラクティス
 - **error-handling-implementation.md** - エラーハンドリングの詳細実装
+- **error-handling-enforcement.md** - エラーハンドリングの強制化（DLQ必須化、Alarms自動設定）
+- **lambda-implementation.md** - Lambda実装ガイドライン
 - **tdnet-file-naming.md** - ファイル・フォルダ命名規則
 - **workflow-guidelines.md** - ワークフローガイドライン
 - **documentation-standards.md** - ドキュメント標準
@@ -83,7 +85,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 | `**/utils/retry*.ts` | `development/error-handling-implementation.md` | リトライユーティリティ |
 | `**/utils/logger*.ts` | `development/error-handling-implementation.md` | ロガー |
 | `**/utils/rate-limiter*.ts` | `development/tdnet-scraping-patterns.md` | レート制限 |
-| `**/lambda/**/*.ts` | `development/error-handling-implementation.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md`<br>`development/tdnet-scraping-patterns.md` | Lambda関数全般 |
+| `**/lambda/**/*.ts` | `development/lambda-implementation.md`<br>`development/error-handling-implementation.md`<br>`development/error-handling-enforcement.md`<br>`infrastructure/environment-variables.md`<br>`infrastructure/performance-optimization.md`<br>`development/mcp-server-guidelines.md`<br>`development/tdnet-scraping-patterns.md` | Lambda関数全般 |
 
 ### API関連
 
@@ -168,13 +170,13 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 **core/tdnet-data-collector.md** - タスク実行ルール
 ```text
-├─→ core/tdnet-implementation-rules.md
 ├─→ core/error-handling-patterns.md
 ├─→ development/workflow-guidelines.md
 ├─→ development/documentation-standards.md
 ├─→ ../../specs/tdnet-data-collector/work-logs/README.md
 └─→ ../../specs/tdnet-data-collector/improvements/README.md
 ```
+**注:** 循環参照を解消するため、tdnet-implementation-rules.mdへの参照を削除
 
 **core/error-handling-patterns.md** - エラーハンドリングの基本原則
 ```text
@@ -202,6 +204,14 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 **development/tdnet-scraping-patterns.md** - スクレイピングパターン
 ```text
 └─→ core/error-handling-patterns.md
+```
+
+**development/lambda-implementation.md** - Lambda実装ガイドライン
+```text
+├─→ core/error-handling-patterns.md
+├─→ development/error-handling-implementation.md
+├─→ infrastructure/performance-optimization.md
+└─→ infrastructure/environment-variables.md
 ```
 
 **development/lambda-implementation.md** - Lambda実装ガイドライン

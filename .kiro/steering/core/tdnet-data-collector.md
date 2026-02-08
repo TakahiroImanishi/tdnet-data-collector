@@ -1,8 +1,3 @@
----
-inclusion: always
-description: "タスク実行の3ステップと作業記録ルール"
----
-
 # TDnet Data Collector - タスク実行ルール
 
 ## タスク実行の3ステップ
@@ -78,4 +73,4 @@ work-log-[YYYYMMDD-HHMMSS]-[作業概要].md
 
 **メインエージェントの責任**: サブエージェント作業記録確認、メイン記録にリンク追加、Git コミット、tasks.md更新確認
 
-詳細: `../development/workflow-guidelines.md`, `tdnet-implementation-rules.md`, `error-handling-patterns.md`
+詳細: `../development/workflow-guidelines.md`, `error-handling-patterns.md`

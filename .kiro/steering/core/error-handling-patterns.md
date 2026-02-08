@@ -1,9 +1,4 @@
----
-inclusion: always
-description: "エラーハンドリングの基本原則とエラー分類"
----
-
-# Error Handling Patterns
+# エラーハンドリングパターン
 
 エラーハンドリングの基本原則。詳細実装: `../development/error-handling-implementation.md`, APIエラーコード: `../api/error-codes.md`
 
