@@ -8,7 +8,9 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '\\.improved\\.ts$',
-  ],
+    // E2Eテストはローカル環境ではスキップ（CI/CD環境でのみ実行）
+    process.env.RUN_E2E_TESTS !== 'true' ? '\\.e2e\\.test\\.ts$' : '',
+  ].filter(Boolean),
   
   transform: {
     '^.+\\.ts$': ['ts-jest', {

@@ -360,6 +360,18 @@ function validateDateFormat(date: string, fieldName: string): void {
       `Invalid ${fieldName}: ${date}. Date does not exist.`
     );
   }
+
+  // 日付の整合性チェック（例: 2023-02-29は2023-03-01に変換されるため検出）
+  const [year, month, day] = date.split('-').map(Number);
+  if (
+    parsedDate.getFullYear() !== year ||
+    parsedDate.getMonth() + 1 !== month ||
+    parsedDate.getDate() !== day
+  ) {
+    throw new ValidationError(
+      `Invalid ${fieldName}: ${date}. Date does not exist.`
+    );
+  }
 }
 
 /**

@@ -1,7 +1,7 @@
 /**
  * Lambda Collect Handler Tests
  *
- * POST /collect エンド�Eイント�EユニットテスチE
+ * POST /collect エンド�Eイント�EユニットテスチE
  */
 
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
@@ -31,8 +31,8 @@ const mockContext: Context = {
 };
 
 /**
- * チE��ト用の日付を動的に生�E
- * 現在日から相対皁E��日付を返すことで、テストが常に有効な日付篁E��を使用できるようにする
+ * チE��ト用の日付を動的に生�E
+ * 現在日から相対皁E��日付を返すことで、テストが常に有効な日付篁E��を使用できるようにする
  */
 const getTestDates = () => {
   const today = new Date();
@@ -48,7 +48,7 @@ const getTestDates = () => {
 };
 
 /**
- * 持E��日数前�E日付を取征E
+ * 持E��日数前�E日付を取征E
  */
 const getDaysAgo = (days: number): string => {
   const date = new Date();
@@ -57,7 +57,7 @@ const getDaysAgo = (days: number): string => {
 };
 
 /**
- * 持E��日数後�E日付を取征E
+ * 持E��日数後�E日付を取征E
  */
 const getDaysLater = (days: number): string => {
   const date = new Date();
@@ -66,11 +66,11 @@ const getDaysLater = (days: number): string => {
 };
 
 /**
- * チE��ト用のAPIGatewayProxyEventを作�E
+ * テスト用のAPIGatewayProxyEventを作成
  */
 const createTestEvent = (body: any, apiKey: string = 'test-api-key-12345'): APIGatewayProxyEvent => {
   return {
-    body: JSON.stringify(body),
+    body: body === null ? null : JSON.stringify(body),
     headers: {
       'x-api-key': apiKey,
     },
@@ -90,18 +90,27 @@ const createTestEvent = (body: any, apiKey: string = 'test-api-key-12345'): APIG
 describe('POST /collect Handler', () => {
   beforeEach(() => {
     lambdaMock.reset();
+    secretsMock.reset();
+    
+    // Secrets Managerのモック設定（APIキーを返す）
+    secretsMock.on(GetSecretValueCommand).resolves({
+      SecretString: 'test-api-key-12345',
+    });
+    
     process.env.COLLECTOR_FUNCTION_NAME = 'tdnet-collector';
     process.env.AWS_REGION = 'ap-northeast-1';
+    process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:tdnet-api-key';
   });
 
   afterEach(() => {
     delete process.env.COLLECTOR_FUNCTION_NAME;
     delete process.env.AWS_REGION;
+    delete process.env.API_KEY_SECRET_ARN;
   });
 
   describe('正常系', () => {
     it('有効なリクエストで200を返す', async () => {
-      // Lambda Collectorの呼び出しをモチE���E�同期呼び出し！E
+      // Lambda Collectorの呼び出しをモチE���E�同期呼び出し！E
       const mockCollectorResponse = {
         execution_id: 'exec_1234567890_abc123_test1234',
         status: 'success',
@@ -152,7 +161,7 @@ describe('POST /collect Handler', () => {
       const result = await handler(event, mockContext);
       const body = JSON.parse(result.body);
 
-      // Lambda Collectorから返されたexecution_idが使用されてぁE��ことを確誁E
+      // Lambda Collectorから返されたexecution_idが使用されてぁE��ことを確誁E
       expect(body.data.execution_id).toBe('exec_1234567890_abc123_test1234');
     });
 
@@ -175,16 +184,16 @@ describe('POST /collect Handler', () => {
 
       await handler(event, mockContext);
 
-      // InvokeCommandが正しいパラメータで呼ばれたことを確誁E
+      // InvokeCommandが正しいパラメータで呼ばれたことを確認
       const calls = lambdaMock.commandCalls(InvokeCommand);
       expect(calls.length).toBe(1);
       expect(calls[0].args[0].input.InvocationType).toBe('RequestResponse');
-      expect(calls[0].args[0].input.FunctionName).toBe('tdnet-collector');
+      expect(calls[0].args[0].input.FunctionName).toBe(process.env.COLLECTOR_FUNCTION_NAME || 'tdnet-collector');
     });
   });
 
-  describe('バリチE�Eションエラー', () => {
-    it('リクエスト�EチE��がなぁE��合�E400を返す', async () => {
+  describe('バリチE�Eションエラー', () => {
+    it('リクエスト�EチE��がなぁE��合�E400を返す', async () => {
       const event = createTestEvent(null);
 
       const result = await handler(event, mockContext);
@@ -196,12 +205,14 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('Request body is required');
     });
 
-    it('start_dateがなぁE��合�E400を返す', async () => {
+    it('start_dateがなぁE��合�E400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           end_date: getDaysAgo(2),
         }),
-        headers: {},
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -222,12 +233,14 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('start_date is required');
     });
 
-    it('end_dateがなぁE��合�E400を返す', async () => {
+    it('end_dateがなぁE��合�E400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: getDaysAgo(7),
         }),
-        headers: {},
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -248,13 +261,15 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('end_date is required');
     });
 
-    it('start_dateのフォーマットが不正な場合�E400を返す', async () => {
+    it('start_dateのフォーマットが不正な場合�E400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: '2024/01/15', // 不正なフォーマッチE
           end_date: getDaysAgo(2),
         }),
-        headers: {},
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -275,9 +290,9 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('Invalid start_date format');
     });
 
-    it('start_dateが存在しなぁE��付�E場合�E400を返す', async () => {
-      // 存在しなぁE��付を使用�E�E朁E0日は存在しなぁE��E
-      // ただし、E年以冁E�E日付を使用する忁E��がある
+    it('start_dateが存在しなぁE��付�E場合�E400を返す', async () => {
+      // 存在しなぁE��付を使用�E�E朁E0日は存在しなぁE��E
+      // ただし、E年以冁E�E日付を使用する忁E��がある
       const today = new Date();
       const year = today.getFullYear();
       const month = today.getMonth() + 1; // 現在の朁E
@@ -292,17 +307,19 @@ describe('POST /collect Handler', () => {
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('VALIDATION_ERROR');
-      // 日付�E整合性チェチE��で無効な日付を検�E
+      // 日付�E整合性チェチE��で無効な日付を検�E
       expect(body.error.message).toContain('Invalid start_date');
     });
 
-    it('start_dateがend_dateより後�E場合�E400を返す', async () => {
+    it('start_dateがend_dateより後�E場合�E400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: getDaysAgo(2),
           end_date: getDaysAgo(7),
         }),
-        headers: {},
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -323,7 +340,7 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('must be before or equal to');
     });
 
-    it('start_dateぁE年以上前の場合�E400を返す', async () => {
+    it('start_dateぁE年以上前の場合�E400を返す', async () => {
       const twoYearsAgo = getDaysAgo(730); // 2年剁E
 
       const event: APIGatewayProxyEvent = {
@@ -331,7 +348,9 @@ describe('POST /collect Handler', () => {
           start_date: twoYearsAgo,
           end_date: getDaysAgo(2),
         }),
-        headers: {},
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -352,7 +371,7 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('too old');
     });
 
-    it('end_dateが未来日の場合�E400を返す', async () => {
+    it('end_dateが未来日の場合�E400を返す', async () => {
       const twoDaysLater = getDaysLater(2); // 2日征E
 
       const event: APIGatewayProxyEvent = {
@@ -360,7 +379,9 @@ describe('POST /collect Handler', () => {
           start_date: getDaysAgo(7),
           end_date: twoDaysLater,
         }),
-        headers: {},
+        headers: {
+          'x-api-key': 'test-api-key-12345',
+        },
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -383,7 +404,7 @@ describe('POST /collect Handler', () => {
   });
 
   describe('Lambda呼び出しエラー', () => {
-    it('Lambda Collectorの呼び出しに失敗した場合�E500を返す', async () => {
+    it('Lambda Collectorの呼び出しに失敗した場合�E500を返す', async () => {
       lambdaMock.on(InvokeCommand).rejects(new Error('Lambda invocation failed'));
 
       const testDates = getTestDates();
@@ -398,7 +419,7 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('Failed to start data collection');
     });
 
-    it('Lambda Collectorが空のPayloadを返した場合�E500を返す', async () => {
+    it('Lambda Collectorが空のPayloadを返した場合�E500を返す', async () => {
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
         Payload: undefined,
@@ -415,7 +436,7 @@ describe('POST /collect Handler', () => {
       expect(body.error.code).toBe('INTERNAL_ERROR');
     });
 
-    it('Lambda Collectorがexecution_idを返さなぁE��合�E500を返す', async () => {
+    it('Lambda Collectorがexecution_idを返さなぁE��合�E500を返す', async () => {
       const mockCollectorResponse = {
         status: 'success',
         message: 'Collection started',
