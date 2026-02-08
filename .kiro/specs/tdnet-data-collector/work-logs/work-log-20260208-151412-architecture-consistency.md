@@ -258,3 +258,339 @@ CDK構成と設計書の整合性を確認し、Lambda/DynamoDB/S3の実装が�
 **🔴 セキュリティリスク（1カテゴリ）:**
 1. 環境変数へのシークレット値直接設定（unsafeUnwrap()）
 
+
+
+## 成果物
+
+### 整合性確認結果レポート
+
+**確認日時:** 2026-02-08 15:14
+
+**確認対象:**
+- CDK構成: `cdk/lib/tdnet-data-collector-stack.ts`
+- 設計書: `.kiro/specs/tdnet-data-collector/docs/design.md`
+
+**整合性スコア:**
+- ✅ 完全一致: 9カテゴリ（60%）
+- ⚠️ 部分的不一致: 3カテゴリ（20%）
+- ❌ 未実装: 2カテゴリ（13%）
+- 🔴 セキュリティリスク: 1カテゴリ（7%）
+
+### 改善提案（優先度順）
+
+#### 🔴 Critical（即座に対応が必要）
+
+**1. Secrets Managerの環境変数使用を修正**
+
+**問題:**
+- Query LambdaとExport Lambdaで`unsafeUnwrap()`を使用してシークレット値を環境変数に直接設定
+- 環境変数はCloudWatch Logsに記録される可能性があり、セキュリティリスク
+
+**推奨対応:**
+```typescript
+// ❌ 現在の実装（セキュリティリスク）
+environment: {
+    API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
+}
+
+// ✅ 推奨実装
+environment: {
+    API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
+}
+
+// Lambda関数内でシークレット値を取得
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+const secretsManager = new SecretsManagerClient({ region: 'ap-northeast-1' });
+const secretArn = process.env.API_KEY_SECRET_ARN!;
+
+const response = await secretsManager.send(new GetSecretValueCommand({
+    SecretId: secretArn,
+}));
+
+const apiKey = JSON.parse(response.SecretString!).apiKey;
+```
+
+**影響範囲:**
+- `cdk/lib/tdnet-data-collector-stack.ts`: Query Lambda、Export Lambda
+- `src/lambda/query/index.ts`: シークレット取得ロジック追加
+- `src/lambda/export/index.ts`: シークレット取得ロジック追加
+
+**工数:** 2時間
+
+---
+
+#### 🟠 High（早急に対応すべき）
+
+**2. 監視・アラート機能の実装**
+
+**問題:**
+- CloudWatch Logs、Metrics、Alarms、Dashboard、SNS、CloudTrailが全く実装されていない
+- 本番運用時にトラブルシューティングが困難
+
+**推奨対応:**
+
+**Phase 1: CloudWatch Logs（優先度: 最高）**
+```typescript
+import * as logs from 'aws-cdk-lib/aws-logs';
+
+const collectorLogGroup = new logs.LogGroup(this, 'CollectorLogGroup', {
+    logGroupName: `/aws/lambda/${collectorFunction.functionName}`,
+    retention: logs.RetentionDays.THREE_MONTHS,
+    removalPolicy: cdk.RemovalPolicy.RETAIN,
+});
+```
+
+**Phase 2: CloudWatch Alarms（優先度: 高）**
+```typescript
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatch_actions from 'aws-cdk-lib/aws-cloudwatch-actions';
+
+const errorAlarm = new cloudwatch.Alarm(this, 'CollectorErrorAlarm', {
+    metric: collectorFunction.metricErrors({
+        statistic: 'Sum',
+        period: cdk.Duration.minutes(5),
+    }),
+    threshold: 5,
+    evaluationPeriods: 2,
+    alarmDescription: 'Collector function error rate is too high',
+});
+```
+
+**Phase 3: SNS Topic（優先度: 高）**
+```typescript
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+
+const alertTopic = new sns.Topic(this, 'AlertTopic', {
+    topicName: 'tdnet-alerts',
+    displayName: 'TDnet Data Collector Alerts',
+});
+
+alertTopic.addSubscription(
+    new subscriptions.EmailSubscription(process.env.ALERT_EMAIL!)
+);
+
+errorAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alertTopic));
+```
+
+**Phase 4: CloudTrail（優先度: 中）**
+```typescript
+import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
+
+const trail = new cloudtrail.Trail(this, 'TdnetTrail', {
+    trailName: 'tdnet-audit-trail',
+    bucket: this.cloudtrailLogsBucket,
+    sendToCloudWatchLogs: true,
+    includeGlobalServiceEvents: true,
+    managementEvents: cloudtrail.ReadWriteType.ALL,
+});
+
+trail.addS3EventSelector([{ bucket: this.pdfsBucket }], {
+    readWriteType: cloudtrail.ReadWriteType.ALL,
+});
+```
+
+**影響範囲:**
+- `cdk/lib/tdnet-data-collector-stack.ts`: 監視リソース追加
+- 環境変数: `ALERT_EMAIL`追加
+
+**工数:** 8時間
+
+---
+
+**3. 環境分離の実装**
+
+**問題:**
+- 開発環境と本番環境で同じ設定を使用
+- 設計書では環境ごとに異なるタイムアウト、メモリ、ログレベルを推奨
+
+**推奨対応:**
+```typescript
+export interface TdnetStackProps extends cdk.StackProps {
+    environment: 'dev' | 'prod';
+}
+
+export class TdnetDataCollectorStack extends cdk.Stack {
+    constructor(scope: Construct, id: string, props: TdnetStackProps) {
+        super(scope, id, props);
+        
+        const config = this.getConfig(props.environment);
+        
+        const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
+            timeout: config.collectorTimeout,
+            memorySize: config.lambdaMemory,
+            environment: {
+                LOG_LEVEL: config.logLevel,
+            },
+        });
+    }
+    
+    private getConfig(env: 'dev' | 'prod') {
+        const configs = {
+            dev: {
+                collectorTimeout: cdk.Duration.minutes(5),
+                lambdaMemory: 256,
+                logLevel: 'DEBUG',
+            },
+            prod: {
+                collectorTimeout: cdk.Duration.minutes(15),
+                lambdaMemory: 512,
+                logLevel: 'INFO',
+            },
+        };
+        return configs[env];
+    }
+}
+```
+
+**影響範囲:**
+- `cdk/lib/tdnet-data-collector-stack.ts`: 環境分離ロジック追加
+- `cdk/bin/tdnet-data-collector.ts`: 環境パラメータ追加
+
+**工数:** 3時間
+
+---
+
+#### 🟡 Medium（計画的に対応）
+
+**4. CloudFront OAIの実装**
+
+**問題:**
+- ダッシュボードバケットにCloudFront OAIが設定されていない
+- 設計書ではCloudFront経由でのみアクセスを推奨
+
+**推奨対応:**
+```typescript
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+
+const oai = new cloudfront.OriginAccessIdentity(this, 'DashboardOAI', {
+    comment: 'OAI for TDnet Dashboard',
+});
+
+this.dashboardBucket.grantRead(oai);
+
+const distribution = new cloudfront.Distribution(this, 'DashboardDistribution', {
+    defaultBehavior: {
+        origin: new origins.S3Origin(this.dashboardBucket, {
+            originAccessIdentity: oai,
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+    },
+    defaultRootObject: 'index.html',
+});
+```
+
+**影響範囲:**
+- `cdk/lib/tdnet-data-collector-stack.ts`: CloudFront追加
+
+**工数:** 2時間
+
+---
+
+**5. CORS設定の環境別制限**
+
+**問題:**
+- 本番環境でもCORSが`ALL_ORIGINS`に設定されている
+- セキュリティリスク
+
+**推奨対応:**
+```typescript
+defaultCorsPreflightOptions: {
+    allowOrigins: props.environment === 'prod' 
+        ? ['https://your-domain.com'] 
+        : apigateway.Cors.ALL_ORIGINS,
+    allowMethods: apigateway.Cors.ALL_METHODS,
+    allowHeaders: [
+        'Content-Type',
+        'X-Amz-Date',
+        'Authorization',
+        'X-Api-Key',
+        'X-Amz-Security-Token',
+    ],
+    allowCredentials: true,
+}
+```
+
+**影響範囲:**
+- `cdk/lib/tdnet-data-collector-stack.ts`: CORS設定修正
+
+**工数:** 1時間
+
+---
+
+**6. Secrets Manager自動ローテーションの実装**
+
+**問題:**
+- 設計書では90日ごとの自動ローテーションを推奨しているが、未実装
+
+**推奨対応:**
+```typescript
+// Phase 4で実装予定
+const rotationFunction = new lambda.Function(this, 'ApiKeyRotationFunction', {
+    runtime: lambda.Runtime.NODEJS_20_X,
+    handler: 'index.handler',
+    code: lambda.Code.fromAsset('dist/src/lambda/rotation'),
+    timeout: cdk.Duration.minutes(5),
+});
+
+apiKeyValue.addRotationSchedule('RotationSchedule', {
+    rotationLambda: rotationFunction,
+    automaticallyAfter: cdk.Duration.days(90),
+});
+```
+
+**影響範囲:**
+- `cdk/lib/constructs/secrets-manager.ts`: ローテーション設定追加
+- `src/lambda/rotation/index.ts`: ローテーションLambda実装
+
+**工数:** 4時間
+
+---
+
+### 改善実施計画
+
+**Phase 1（即座に対応）: セキュリティリスク解消**
+- [ ] 1. Secrets Managerの環境変数使用を修正（2時間）
+
+**Phase 2（1週間以内）: 監視機能実装**
+- [ ] 2-1. CloudWatch Logs実装（2時間）
+- [ ] 2-2. CloudWatch Alarms実装（2時間）
+- [ ] 2-3. SNS Topic実装（2時間）
+- [ ] 3. 環境分離の実装（3時間）
+
+**Phase 3（2週間以内）: 運用改善**
+- [ ] 2-4. CloudTrail実装（2時間）
+- [ ] 4. CloudFront OAI実装（2時間）
+- [ ] 5. CORS設定の環境別制限（1時間）
+
+**Phase 4（1ヶ月以内）: 長期的改善**
+- [ ] 6. Secrets Manager自動ローテーション（4時間）
+
+**総工数:** 約20時間
+
+---
+
+## 次回への申し送り
+
+### 未完了の作業
+
+なし（レビュー完了）
+
+### 注意点
+
+1. **セキュリティリスク**: Secrets Managerの環境変数使用は最優先で修正すること
+2. **監視機能**: 本番運用前に必ずCloudWatch Logs/Alarms/SNSを実装すること
+3. **環境分離**: 開発環境と本番環境で異なる設定を使用すること
+4. **CloudTrail**: 監査ログは法令遵守のため、本番環境では必須
+
+### 推奨される次のタスク
+
+1. **Phase 1実装**: Secrets Managerの環境変数使用修正
+2. **Phase 2実装**: 監視機能（CloudWatch Logs/Alarms/SNS）
+3. **Phase 3実装**: 環境分離、CloudFront OAI、CORS設定
+
+---
+
+**作業完了日時:** 2026-02-08 15:14

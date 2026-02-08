@@ -174,3 +174,285 @@ context.awsRequestId  // ✅ 正しいプロパティ
 **評価:** Steering要件に完全準拠。
 
 ### ステップ3: 整合性確認結果のまとめ
+
+
+## 整合性確認結果
+
+### ✅ 準拠項目
+
+#### 1. カスタムエラークラス（src/errors/index.ts）
+- ✅ すべての必須エラークラスが定義されている
+- ✅ `TDnetError`を基底クラスとした統一的な階層構造
+- ✅ `cause`プロパティでエラーチェーンをサポート
+
+#### 2. 再試行ロジック（src/utils/retry.ts）
+- ✅ `retryWithBackoff`が指数バックオフで実装されている
+- ✅ ジッター（ランダム遅延）が実装されている
+- ✅ `isRetryableError`でエラー分類が実装されている
+- ✅ カスタム再試行判定関数（shouldRetry）をサポート
+
+#### 3. 構造化ログ（src/utils/logger.ts）
+- ✅ Winston使用で構造化ログを実装
+- ✅ `createErrorContext`でSteering準拠のログフォーマット
+  - `error_type`, `error_message`, `stack_trace`を含む
+- ✅ `logLambdaError`でLambda実行コンテキストを含むエラーログ
+- ✅ JSON形式でCloudWatch Logsに出力
+
+#### 4. Lambda関数のエラーハンドリング
+
+**src/lambda/collector/handler.ts:**
+- ✅ try-catchブロックでトップレベルのエラーをキャッチ
+- ✅ `createErrorContext`で構造化ログ
+- ✅ `sendErrorMetric`でCloudWatchにエラーメトリクスを送信
+- ✅ `validateEvent`で入力バリデーション
+- ✅ `Promise.allSettled`で部分的失敗を処理
+- ✅ 適切なエラーレスポンスを返却
+
+**src/lambda/query/handler.ts:**
+- ✅ try-catchブロック
+- ✅ `createErrorContext`で構造化ログ
+- ✅ `sendErrorMetric`でエラーメトリクス送信
+- ✅ `validateApiKey`でAPIキー認証
+- ✅ `handleError`で適切なHTTPステータスコード
+- ✅ 本番環境ではスタックトレースを除外
+
+**src/lambda/export/handler.ts:**
+- ✅ try-catchブロック
+- ✅ `createErrorContext`で構造化ログ
+- ✅ `sendErrorMetric`でエラーメトリクス送信
+- ✅ `validateApiKey`でAPIキー認証
+- ✅ `handleError`で適切なHTTPステータスコード
+- ✅ 非同期処理のエラーハンドリング
+
+---
+
+### ❌ 非準拠項目
+
+#### src/lambda/collect/handler.ts
+
+**問題: `context.requestId`の誤用（8箇所）**
+
+Lambda Contextオブジェクトには`requestId`プロパティは存在せず、正しくは`awsRequestId`です。
+
+**影響範囲:**
+- TypeScriptコンパイルエラー（8箇所）
+- ログに`undefined`が記録される可能性
+
+**該当箇所:**
+
+1. **Line 48-50** - Lambda invoked ログ
+```typescript
+logger.info('POST /collect invoked', {
+  requestId: context.requestId,  // ❌
+  functionName: context.functionName,
+});
+```
+
+2. **Line 82** - POST /collect completed ログ
+```typescript
+logger.info('POST /collect completed', {
+  requestId: context.requestId,  // ❌
+  execution_id,
+});
+```
+
+3. **Line 97-100** - POST /collect failed ログ
+```typescript
+logger.error(
+  'POST /collect failed',
+  createErrorContext(error as Error, {
+    requestId: context.requestId,  // ❌
+    event,
+  })
+);
+```
+
+4. **Line 177-180** - Invoking Lambda Collector ログ
+```typescript
+logger.info('Invoking Lambda Collector', {
+  requestId: context.requestId,  // ❌
+  functionName: COLLECTOR_FUNCTION_NAME,
+  event: collectorEvent,
+});
+```
+
+5. **Line 192** - Lambda Collector invoked successfully ログ
+```typescript
+logger.info('Lambda Collector invoked successfully', {
+  requestId: context.requestId,  // ❌
+  statusCode: response.StatusCode,
+});
+```
+
+6. **Line 210** - Received execution_id ログ
+```typescript
+logger.info('Received execution_id from Lambda Collector', {
+  requestId: context.requestId,  // ❌
+  execution_id,
+  status: collectorResponse.status,
+});
+```
+
+7. **Line 216-220** - Failed to invoke Lambda Collector ログ
+```typescript
+logger.error(
+  'Failed to invoke Lambda Collector',
+  createErrorContext(error as Error, {
+    requestId: context.requestId,  // ❌
+    functionName: COLLECTOR_FUNCTION_NAME,
+  })
+);
+```
+
+8. **Line 234** - toErrorResponse関数の呼び出し
+```typescript
+return toErrorResponse(error as Error, context.requestId);  // ❌
+```
+
+**修正方法:**
+すべての`context.requestId`を`context.awsRequestId`に置換する。
+
+```typescript
+// 修正前
+requestId: context.requestId
+
+// 修正後
+requestId: context.awsRequestId
+```
+
+---
+
+## 改善提案
+
+### 🔴 優先度: Critical
+
+#### 1. src/lambda/collect/handler.ts の修正
+
+**問題:** `context.requestId`の誤用（8箇所）
+
+**修正内容:**
+```typescript
+// すべての箇所で以下のように修正
+context.requestId → context.awsRequestId
+```
+
+**影響:**
+- TypeScriptコンパイルエラーの解消
+- ログに正しいリクエストIDが記録される
+
+**修正ファイル:**
+- `src/lambda/collect/handler.ts`
+
+**修正箇所:**
+- Line 48, 82, 97, 177, 192, 210, 216, 234（計8箇所）
+
+---
+
+### 🟢 優先度: Low（推奨事項）
+
+#### 1. エラーレスポンス変換の統一
+
+**現状:**
+- `src/lambda/collect/handler.ts`: `toErrorResponse`関数を独自実装
+- `src/lambda/query/handler.ts`: `handleError`関数を独自実装
+- `src/lambda/export/handler.ts`: `handleError`関数を独自実装
+
+**推奨:**
+- `src/utils/error-response.ts`を作成し、共通の`toErrorResponse`関数を実装
+- すべてのLambda関数で共通関数を使用
+
+**メリット:**
+- コードの重複を削減
+- エラーレスポンス形式の統一
+- 保守性の向上
+
+**参考実装:**
+`lambda-implementation.md`の「エラーレスポンス変換」セクションを参照。
+
+#### 2. DLQの実装
+
+**現状:**
+- DLQの設定が確認できない（CDKコードを確認していないため）
+
+**推奨:**
+- Lambda関数にDLQを設定
+- DLQプロセッサーLambdaを実装してアラート送信
+
+**参考実装:**
+`error-handling-implementation.md`の「Dead Letter Queue（DLQ）の設定と処理」セクションを参照。
+
+---
+
+## 成果物
+
+### 確認済みファイル
+
+1. **Steeringファイル:**
+   - `.kiro/steering/core/error-handling-patterns.md`
+   - `.kiro/steering/development/error-handling-implementation.md`
+   - `.kiro/steering/development/lambda-implementation.md`
+
+2. **実装ファイル:**
+   - `src/errors/index.ts` - ✅ 準拠
+   - `src/utils/retry.ts` - ✅ 準拠
+   - `src/utils/logger.ts` - ✅ 準拠
+   - `src/lambda/collector/handler.ts` - ✅ 準拠
+   - `src/lambda/collect/handler.ts` - ❌ 非準拠（8箇所の修正が必要）
+   - `src/lambda/query/handler.ts` - ✅ 準拠
+   - `src/lambda/export/handler.ts` - ✅ 準拠
+
+### 整合性確認結果サマリー
+
+| カテゴリ | 準拠状況 | 詳細 |
+|---------|---------|------|
+| **カスタムエラークラス** | ✅ 準拠 | すべての必須エラークラスが定義されている |
+| **再試行ロジック** | ✅ 準拠 | 指数バックオフとジッターが実装されている |
+| **構造化ログ** | ✅ 準拠 | Steering準拠のログフォーマットが実装されている |
+| **Lambda: collector** | ✅ 準拠 | すべての要件を満たしている |
+| **Lambda: collect** | ❌ 非準拠 | `context.requestId`の誤用（8箇所） |
+| **Lambda: query** | ✅ 準拠 | すべての要件を満たしている |
+| **Lambda: export** | ✅ 準拠 | すべての要件を満たしている |
+
+**総合評価:**
+- **準拠率**: 6/7（約86%）
+- **Critical問題**: 1件（`context.requestId`の誤用）
+- **推奨改善**: 2件（エラーレスポンス統一、DLQ実装）
+
+---
+
+## 次回への申し送り
+
+### 必須対応
+
+1. **src/lambda/collect/handler.ts の修正**
+   - `context.requestId` → `context.awsRequestId`（8箇所）
+   - TypeScriptコンパイルエラーの解消
+   - 優先度: 🔴 Critical
+
+### 推奨対応
+
+1. **エラーレスポンス変換の統一**
+   - `src/utils/error-response.ts`を作成
+   - すべてのLambda関数で共通関数を使用
+   - 優先度: 🟢 Low
+
+2. **DLQの実装確認**
+   - CDKコードでDLQ設定を確認
+   - 必要に応じてDLQプロセッサーを実装
+   - 優先度: 🟢 Low
+
+### 確認済み項目
+
+- ✅ カスタムエラークラスの定義と使用
+- ✅ 再試行ロジックの実装（指数バックオフ、ジッター）
+- ✅ 構造化ログの実装（Winston、標準フォーマット）
+- ✅ Lambda関数のエラーハンドリング（try-catch、メトリクス送信）
+- ✅ バリデーションの実装
+- ✅ 部分的失敗の処理（Promise.allSettled）
+
+---
+
+**作業完了日時:** 2026-02-08 15:14:16  
+**レビュー対象:** 7ファイル  
+**発見された問題:** 1件（Critical）  
+**推奨改善:** 2件（Low）

@@ -66,7 +66,7 @@ export async function handler(
 ): Promise<APIGatewayProxyResult> {
   try {
     logger.info('POST /collect invoked', {
-      requestId: context.requestId,
+      requestId: context.awsRequestId,
       functionName: context.functionName,
     });
 
@@ -95,7 +95,7 @@ export async function handler(
     };
 
     logger.info('POST /collect completed', {
-      requestId: context.requestId,
+      requestId: context.awsRequestId,
       execution_id,
     });
 
