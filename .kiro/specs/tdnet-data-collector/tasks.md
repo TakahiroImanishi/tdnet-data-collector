@@ -366,7 +366,7 @@
   - _注意: 統合テストファイル作成時にファイルシステムの問題が発生、手動対応が必要_
   - _注意: 統合テストコードは INTEGRATION-TEST-CODE.md に保存済み（11テストケース）_
 
-- [ ] 9.7 エラーハンドリングの完全性検証
+- [x] 9.7 エラーハンドリングの完全性検証
   - すべてのLambda関数でtry-catchブロックが実装されていることを確認
   - Retryable/Non-Retryable Errorsの分類が正しいことを確認
   - カスタムエラークラスが適切に使用されていることを確認
@@ -375,8 +375,10 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 3-4時間_
   - _関連: steering/core/error-handling-patterns.md, steering/development/error-handling-implementation.md_
+  - _完了: 2026-02-08, すべての検証項目で合格_
+  - _注意: 軽微な改善提案あり（createErrorContextの一貫使用）、優先度低_
 
-- [ ] 9.8 データ整合性の完全性検証
+- [x] 9.8 データ整合性の完全性検証
   - DynamoDB保存時のConditionExpressionによる重複チェックが実装されていることを確認
   - date_partitionが正しく生成されていることを確認（JST基準、バリデーション含む）
   - メタデータとPDFファイルの対応関係が保証されていることを確認
@@ -385,6 +387,7 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _関連: steering/core/tdnet-implementation-rules.md, steering/development/data-validation.md_
+  - _完了: 2026-02-08, すべての検証項目で合格_
 
 - [x] 9.9 レート制限の完全性検証
   - RateLimiterがすべてのTDnetリクエストで使用されていることを確認
