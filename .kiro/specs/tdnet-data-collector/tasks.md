@@ -541,14 +541,14 @@
   - _Requirements: 要件12.1, 12.3（コスト最適化）_
   - _完了: 2026-02-08, CDK定義追加完了_
 
-- [x]* 11.6 Lambda Queryユニットテスト
+- [x] 11.6 Lambda Queryユニットテスト
   - クエリパラメータのバリデーション
   - フィルタリングロジックの検証
   - CSV変換の検証
   - _Requirements: 要件14.1（ユニットテスト）_
   - _完了: 2026-02-08, 37テスト成功（handler: 26件、format-csv: 11件）_
 
-- [x]* 11.7 日付範囲バリデーションのプロパティテスト
+- [x] 11.7 日付範囲バリデーションのプロパティテスト
   - **Property 8: 日付範囲の順序性**
   - **Validates: Requirements 5.2**
   - 開始日が終了日より後の場合はバリデーションエラーを返すことを検証
@@ -626,17 +626,21 @@
   - レスポンス形式の統一
   - _Requirements: 要件6.1（実行状態確認）_
 
-- [ ] 13.3 GET /disclosures エンドポイントの実装
+- [x] 13.3 GET /disclosures エンドポイントの実装
   - Lambda Queryを呼び出し
   - クエリパラメータのバリデーション
   - レスポンス形式の統一（JSON/CSV）
   - _Requirements: 要件4.1（検索API）_
+  - _完了: 2026-02-08, CDK統合完了、25テスト作成_
+  - _注意: Lambda Queryは既に実装済み、API Gateway統合のみ追加_
 
-- [ ] 13.4 POST /exports エンドポイントの実装
+- [x] 13.4 POST /exports エンドポイントの実装
   - Lambda Exportを呼び出し
   - リクエストボディのバリデーション
   - レスポンス形式の統一
   - _Requirements: 要件5.1（エクスポート）_
+  - _完了: 2026-02-08, CDK統合完了、25テスト作成_
+  - _注意: Lambda Exportは既に実装済み、API Gateway統合のみ追加_
 
 - [ ] 13.5 GET /exports/{export_id} エンドポイントの実装
   - エクスポート状態をDynamoDBから取得
@@ -657,16 +661,22 @@
 
 ### 14. Secrets Manager設定
 
-- [ ] 14.1 Secrets ManagerをCDKで定義
+- [x] 14.1 Secrets ManagerをCDKで定義
   - /tdnet/api-key シークレット作成
   - 自動ローテーション設定（90日ごと）
   - Lambda関数へのアクセス権限付与
   - _Requirements: 要件11.4, 13.4（APIキー管理、シークレット管理）_
+  - _完了: 2026-02-08, 10テスト成功_
+  - _成果物: cdk/lib/constructs/secrets-manager.ts_
+  - _注意: 自動ローテーションはPhase 4で実装予定（ローテーション用Lambda関数が必要）_
 
-- [ ]* 14.2 Secrets Manager設定の検証テスト
+- [x] 14.2 Secrets Manager設定の検証テスト
   - シークレットが正しく作成されていることを確認
   - Lambda関数がシークレットにアクセスできることを確認
   - _Requirements: 要件14.1（テスト）_
+  - _完了: 2026-02-08, 10テスト成功_
+  - _成果物: cdk/__tests__/secrets-manager.test.ts_
+  - _注意: デプロイ前に /tdnet/api-key シークレットを手動作成する必要あり_
 
 ### 15. Checkpoint - Phase 2完了確認
 

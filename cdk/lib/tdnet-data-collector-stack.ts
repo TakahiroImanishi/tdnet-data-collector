@@ -590,9 +590,82 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Phase 2: API Gateway Integrations
     // ========================================
 
-    // 1. /export エンドポイント
-    const exportResource = this.api.root.addResource('export');
-    const exportIntegration = new apigateway.LambdaIntegration(exportFunction, {
+    // 1. GET /disclosures エンドポイント
+    const disclosuresResource = this.api.root.addResource('disclosures');
+    const disclosuresIntegration = new apigateway.LambdaIntegration(queryFunction, {
+      proxy: true,
+      integrationResponses: [
+        {
+          statusCode: '200', // Success
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+            'method.response.header.Content-Type': "'application/json'",
+          },
+        },
+        {
+          statusCode: '400', // Bad Request
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '401', // Unauthorized
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '500', // Internal Server Error
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+      ],
+    });
+
+    disclosuresResource.addMethod('GET', disclosuresIntegration, {
+      apiKeyRequired: true, // APIキー認証必須
+      requestParameters: {
+        'method.request.querystring.company_code': false,
+        'method.request.querystring.start_date': false,
+        'method.request.querystring.end_date': false,
+        'method.request.querystring.disclosure_type': false,
+        'method.request.querystring.format': false,
+        'method.request.querystring.limit': false,
+        'method.request.querystring.offset': false,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+            'method.response.header.Content-Type': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // 2. POST /exports エンドポイント
+    const exportsResource = this.api.root.addResource('exports');
+    const exportsIntegration = new apigateway.LambdaIntegration(exportFunction, {
       proxy: true,
       integrationResponses: [
         {
@@ -622,7 +695,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       ],
     });
 
-    exportResource.addMethod('POST', exportIntegration, {
+    exportsResource.addMethod('POST', exportsIntegration, {
       apiKeyRequired: true, // APIキー認証必須
       methodResponses: [
         {
@@ -652,11 +725,229 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       ],
     });
 
+    // ========================================
+    // Phase 2: Lambda Collect Functions
+    // ========================================
+
+    // Lambda Collect Function (POST /collect)
+    const collectFunction = new lambda.Function(this, 'CollectFunction', {
+      functionName: 'tdnet-collect',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/src/lambda/collect'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        COLLECTOR_FUNCTION_NAME: collectorFunction.functionName,
+        AWS_REGION: this.region,
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+    });
+
+    // IAM権限の付与
+    // Lambda Collectorを呼び出す権限
+    collectorFunction.grantInvoke(collectFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    collectFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // Lambda Collect Status Function (GET /collect/{execution_id})
+    const collectStatusFunction = new lambda.Function(this, 'CollectStatusFunction', {
+      functionName: 'tdnet-collect-status',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/src/lambda/collect-status'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        DYNAMODB_EXECUTIONS_TABLE: this.executionsTable.tableName,
+        AWS_REGION: this.region,
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+    });
+
+    // IAM権限の付与
+    // DynamoDB: executionsテーブルへの読み取り権限
+    this.executionsTable.grantReadData(collectStatusFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    collectStatusFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // ========================================
+    // Phase 2: /collect API Gateway Integrations
+    // ========================================
+
+    // 1. /collect エンドポイント
+    const collectResource = this.api.root.addResource('collect');
+
+    // POST /collect
+    const collectIntegration = new apigateway.LambdaIntegration(collectFunction, {
+      proxy: true,
+      integrationResponses: [
+        {
+          statusCode: '200', // Success
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '400', // Bad Request
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '401', // Unauthorized
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '500', // Internal Server Error
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+      ],
+    });
+
+    collectResource.addMethod('POST', collectIntegration, {
+      apiKeyRequired: true, // APIキー認証必須
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // 2. /collect/{execution_id} エンドポイント
+    const collectStatusResource = collectResource.addResource('{execution_id}');
+
+    // GET /collect/{execution_id}
+    const collectStatusIntegration = new apigateway.LambdaIntegration(collectStatusFunction, {
+      proxy: true,
+      integrationResponses: [
+        {
+          statusCode: '200', // Success
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '401', // Unauthorized
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '404', // Not Found
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '500', // Internal Server Error
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+      ],
+    });
+
+    collectStatusResource.addMethod('GET', collectStatusIntegration, {
+      apiKeyRequired: true, // APIキー認証必須
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
     // CloudFormation Outputs
-    new cdk.CfnOutput(this, 'ExportEndpoint', {
-      value: `${this.api.url}export`,
+    new cdk.CfnOutput(this, 'CollectFunctionName', {
+      value: collectFunction.functionName,
+      description: 'Lambda Collect function name',
+      exportName: 'TdnetCollectFunctionName',
+    });
+
+    new cdk.CfnOutput(this, 'CollectStatusFunctionName', {
+      value: collectStatusFunction.functionName,
+      description: 'Lambda Collect Status function name',
+      exportName: 'TdnetCollectStatusFunctionName',
+    });
+
+    new cdk.CfnOutput(this, 'DisclosuresEndpoint', {
+      value: `${this.api.url}disclosures`,
+      description: 'Disclosures query API endpoint URL',
+      exportName: 'TdnetDisclosuresEndpoint',
+    });
+
+    new cdk.CfnOutput(this, 'ExportsEndpoint', {
+      value: `${this.api.url}exports`,
       description: 'Export API endpoint URL',
-      exportName: 'TdnetExportEndpoint',
+      exportName: 'TdnetExportsEndpoint',
+    });
+
+    new cdk.CfnOutput(this, 'CollectEndpoint', {
+      value: `${this.api.url}collect`,
+      description: 'Collect API endpoint URL',
+      exportName: 'TdnetCollectEndpoint',
     });
   }
 }
