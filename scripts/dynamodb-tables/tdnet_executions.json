@@ -1,0 +1,41 @@
+{
+  "TableName": "tdnet_executions",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "execution_id",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "started_at",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "execution_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "StartedAtIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "started_at",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      },
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+      }
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 5,
+    "WriteCapacityUnits": 5
+  }
+}

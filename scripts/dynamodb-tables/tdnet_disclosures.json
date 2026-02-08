@@ -1,0 +1,49 @@
+{
+  "TableName": "tdnet_disclosures",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "disclosure_id",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "date_partition",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "disclosed_at",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "disclosure_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "DatePartitionIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "date_partition",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "disclosed_at",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      },
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+      }
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 5,
+    "WriteCapacityUnits": 5
+  }
+}

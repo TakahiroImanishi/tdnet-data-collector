@@ -796,19 +796,69 @@
   - _成果物: 日付バリデーションロジック改善、テスト成功率96.1%_
 
 - [x] 15.11 LocalStack環境のセットアップ
-  - Docker Composeファイルの作成（docker-compose.yml）
-  - LocalStackサービスの設定（DynamoDB、S3、CloudWatch）
-  - セットアップスクリプトの作成（scripts/localstack-setup.ps1）
-  - テーブルとバケットの自動作成スクリプト
-  - 環境変数ファイルの作成（.env.local）
-  - LocalStack起動・停止手順のドキュメント化
   - _Requirements: 要件14.4（E2Eテスト環境）_
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _関連: docs/localstack-setup.md, docs/e2e-test-guide.md_
-  - _完了: 2026-02-08, Docker Compose、セットアップスクリプト、環境変数ファイル作成完了_
-  - _成果物: docker-compose.yml, scripts/localstack-setup.ps1, .env.local, 更新されたドキュメント_
-  - _注意: Docker Desktopのインストールが必要、AWS CLI v2が必要_
+  - _状態: 完了（9/9サブタスク完了、100%）_
+  - _完了: 2026-02-08_
+  - _成果物: DynamoDBテーブル定義JSONファイル、LocalStack環境構築完了_
+
+  - [x] 15.11.1 Docker Composeファイルの作成
+    - docker-compose.yml作成
+    - LocalStackサービス設定（DynamoDB、S3、CloudWatch、API Gateway、Lambda）
+    - ボリューム設定、ネットワーク設定、ヘルスチェック設定
+    - _完了: 2026-02-08_
+
+  - [x] 15.11.2 セットアップスクリプトの作成
+    - scripts/localstack-setup.ps1作成
+    - DynamoDBテーブル自動作成（tdnet_disclosures、tdnet_executions）
+    - S3バケット自動作成（pdfs-local、exports-local）
+    - ヘルスチェック機能
+    - _完了: 2026-02-08_
+
+  - [x] 15.11.3 環境変数ファイルの作成
+    - .env.local作成
+    - LocalStack用環境変数設定
+    - _完了: 2026-02-08_
+
+  - [x] 15.11.4 ドキュメント化
+    - docs/localstack-setup.md更新
+    - docs/e2e-test-guide.md更新
+    - _完了: 2026-02-08_
+
+  - [x] 15.11.5 Docker Desktopのインストール
+    - Docker Desktop インストール完了
+    - Docker Engine 起動確認
+    - _完了: 2026-02-08_
+    - _作業記録: work-log-20260208-124133-docker-desktop-installation.md_
+
+  - [x] 15.11.6 LocalStackコンテナの起動
+    - docker compose up -d 実行成功
+    - コンテナ起動確認
+    - docker-compose.yml修正（DATA_DIR、LAMBDA_EXECUTOR、PERSISTENCE設定変更）
+    - _完了: 2026-02-08_
+
+  - [x] 15.11.7 AWS CLI v2のパス設定
+    - AWS CLI v2が既にインストール済みであることを確認
+    - 環境変数PATHに追加（ユーザー環境変数として永続化）
+    - インストール確認: aws --version（aws-cli/2.33.17）
+    - _完了: 2026-02-08_
+    - _注意: AWS CLI v2は既にインストール済み、パス設定のみ実施_
+
+  - [x] 15.11.8 LocalStackセットアップ（DynamoDBテーブル作成）
+    - JSONファイルベースでテーブル定義を作成
+    - scripts/dynamodb-tables/tdnet_disclosures.json 作成
+    - scripts/dynamodb-tables/tdnet_executions.json 作成
+    - aws dynamodb create-table でテーブル作成成功
+    - _完了: 2026-02-08, 2テーブル作成成功_
+    - _注意: PowerShellのJSON文字列エスケープ問題を解決_
+
+  - [x] 15.11.9 LocalStack環境の動作確認
+    - ヘルスチェック: StatusCode 200 OK
+    - テーブル確認: tdnet_disclosures, tdnet_executions（両方ACTIVE）
+    - バケット確認: tdnet-data-collector-pdfs-local, tdnet-data-collector-exports-local
+    - _完了: 2026-02-08, すべてのリソースが正常動作_
 
 - [ ] 15.12 E2Eテストの実行と検証
   - LocalStack環境の起動確認

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   localstack:
     image: localstack/localstack:latest
@@ -13,17 +11,17 @@ services:
       # Debug mode
       - DEBUG=1
       # Data directory
-      - DATA_DIR=/tmp/localstack/data
+      - DATA_DIR=/var/lib/localstack
       # Docker configuration
       - DOCKER_HOST=unix:///var/run/docker.sock
       # Lambda executor
-      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_EXECUTOR=local
       - LAMBDA_REMOTE_DOCKER=false
       # Persistence
-      - PERSISTENCE=1
+      - PERSISTENCE=0
     volumes:
       # Persist LocalStack data
-      - "./localstack-data:/tmp/localstack"
+      - "localstack-data:/var/lib/localstack"
       # Docker socket for Lambda execution
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
@@ -34,6 +32,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+volumes:
+  localstack-data:
 
 networks:
   tdnet-network:
