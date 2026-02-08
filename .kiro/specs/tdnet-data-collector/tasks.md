@@ -658,7 +658,7 @@
   - _完了: 2026-02-08, 15テスト成功_
   - _Requirements: 要件4.4（PDFダウンロード）_
 
-- [ ]* 13.7 APIエンドポイントE2Eテスト
+- [ ] 13.7 APIエンドポイントE2Eテスト
   - **Property 9: APIキー認証の必須性**
   - **Validates: Requirements 11.1, 11.3**
   - 無効なAPIキーで401 Unauthorizedが返されることを検証
