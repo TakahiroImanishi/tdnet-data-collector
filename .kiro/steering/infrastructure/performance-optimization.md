@@ -5,8 +5,6 @@ fileMatchPattern: '**/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*func
 
 # パフォーマンス最適化
 
-TDnet Data Collectorプロジェクトのパフォーマンス最適化戦略。
-
 ## Lambda関数の最適化
 
 ### メモリとタイムアウトの設定
@@ -22,25 +20,15 @@ TDnet Data Collectorプロジェクトのパフォーマンス最適化戦略。
 
 ### コールドスタート対策
 
-**1. 依存関係の最小化**
 ```typescript
 // ❌ 悪い例: 全体をインポート
 import * as AWS from 'aws-sdk';
-import _ from 'lodash';
 
 // ✅ 良い例: 必要な部分のみ
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import pick from 'lodash/pick';
-```
 
-**2. 初期化の最適化**
-```typescript
 // グローバルスコープで初期化（再利用される）
 const dynamoClient = new DynamoDBClient({ region: 'ap-northeast-1' });
-const docClient = DynamoDBDocumentClient.from(dynamoClient);
-const s3Client = new S3Client({ region: 'ap-northeast-1' });
-
-// 環境変数も事前に読み込み
 const config = {
     tableName: process.env.DYNAMODB_TABLE_NAME!,
     bucketName: process.env.S3_BUCKET_NAME!,
@@ -48,23 +36,17 @@ const config = {
 
 export const handler = async (event: any): Promise<any> => {
     // ハンドラー内では初期化済みのクライアントを使用
-    const result = await docClient.send(new GetCommand({
-        TableName: config.tableName,
-        Key: { disclosure_id: event.id },
-    }));
-    return result.Item;
 };
 ```
 
-**3. バンドルサイズの最適化**
+### バンドルサイズの最適化
+
 ```typescript
 const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
     bundling: {
         minify: true,
-        sourceMap: true,
         target: 'es2022',
         externalModules: ['@aws-sdk/*'], // AWS SDK v3は含めない
-        nodeModules: ['cheerio', 'axios'], // 必要なモジュールのみ
     },
 });
 ```
@@ -83,24 +65,11 @@ const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
 
 ### クエリの最適化
 
-**1. GSI（Global Secondary Index）の設計**
-```typescript
-// date_partitionでのクエリを最適化
-table.addGlobalSecondaryIndex({
-    indexName: 'GSI_DatePartition',
-    partitionKey: { name: 'date_partition', type: dynamodb.AttributeType.STRING },
-    sortKey: { name: 'disclosed_at', type: dynamodb.AttributeType.STRING },
-    projectionType: dynamodb.ProjectionType.ALL,
-});
-```
-
-**2. 効率的なクエリパターン**
 ```typescript
 // ❌ 悪い例: Scan（全テーブルスキャン）
 const badResult = await docClient.send(new ScanCommand({
     TableName: tableName,
     FilterExpression: 'company_code = :code',
-    ExpressionAttributeValues: { ':code': '7203' },
 }));
 
 // ✅ 良い例: Query（GSI使用）
@@ -113,7 +82,8 @@ const goodResult = await docClient.send(new QueryCommand({
 }));
 ```
 
-**3. date_partitionを使った効率的なクエリ**
+### date_partitionを使った効率的なクエリ
+
 ```typescript
 // 月次データの取得
 async function getDisclosuresByMonth(yearMonth: string): Promise<Disclosure[]> {
@@ -128,28 +98,8 @@ async function getDisclosuresByMonth(yearMonth: string): Promise<Disclosure[]> {
 }
 ```
 
-**4. バッチ操作**
-```typescript
-// BatchGetItem（最大100件）
-async function batchGetDisclosures(ids: string[]): Promise<Disclosure[]> {
-    const chunks = chunkArray(ids, 100);
-    const results = await Promise.all(
-        chunks.map(async (chunk) => {
-            const result = await docClient.send(new BatchGetCommand({
-                RequestItems: {
-                    [tableName]: { Keys: chunk.map(id => ({ disclosure_id: id })) },
-                },
-            }));
-            return result.Responses?.[tableName] || [];
-        })
-    );
-    return results.flat() as Disclosure[];
-}
-```
-
 ## 並行処理の最適化
 
-### Promise.allSettled（部分的失敗を許容）
 ```typescript
 // ❌ 悪い例: 1つでも失敗すると全体が失敗
 const results = await Promise.all(disclosures.map(d => processDisclosure(d)));
@@ -161,6 +111,7 @@ const failed = results.filter(r => r.status === 'rejected');
 ```
 
 ### 並行度の制御
+
 ```typescript
 import pLimit from 'p-limit';
 
@@ -179,6 +130,7 @@ async function processDisclosuresWithLimit(
 ## コスト最適化
 
 ### Lambda実行時間の削減
+
 ```typescript
 // ❌ 悪い例: 逐次処理
 for (const disclosure of disclosures) {
@@ -190,6 +142,7 @@ await Promise.allSettled(disclosures.map(d => processDisclosure(d)));
 ```
 
 ### DynamoDBのコスト削減
+
 ```typescript
 // Projection Expressionで必要な属性のみ取得
 const result = await docClient.send(new GetCommand({
@@ -199,20 +152,6 @@ const result = await docClient.send(new GetCommand({
 }));
 ```
 
-### S3のライフサイクル管理
-```typescript
-const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
-    lifecycleRules: [
-        {
-            transitions: [
-                { storageClass: s3.StorageClass.INFREQUENT_ACCESS, transitionAfter: cdk.Duration.days(90) },
-                { storageClass: s3.StorageClass.GLACIER, transitionAfter: cdk.Duration.days(365) },
-            ],
-        },
-    ],
-});
-```
-
 ## パフォーマンス最適化チェックリスト
 
 - [ ] Lambda メモリサイズを実測値の1.5倍に設定
@@ -220,7 +159,6 @@ const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
 - [ ] DynamoDB GSIを適切に設計（date_partition活用）
 - [ ] バッチ操作を使用（BatchGet/BatchWrite）
 - [ ] 並行処理の制御（p-limit使用）
-- [ ] キャッシング戦略の実装
 - [ ] カスタムメトリクスで継続的監視
 
 ## 目標パフォーマンス指標
