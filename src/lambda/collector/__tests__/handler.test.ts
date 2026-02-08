@@ -96,11 +96,11 @@ describe('Lambda Collector Handler', () => {
 
   describe('On-Demand Mode', () => {
     it('should collect data for specified date range', async () => {
-      // Use recent dates (within 1 year)
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 3);
+      // Use recent dates (within 1 year) - fix variable names
       const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 1);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
       
       const event: CollectorEvent = {
         mode: 'on-demand',
@@ -127,11 +127,11 @@ describe('Lambda Collector Handler', () => {
     });
 
     it('should handle partial failures in on-demand mode', async () => {
-      // Use recent dates (within 1 year)
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 3);
+      // Use recent dates (within 1 year) - fix variable names
       const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 1);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
       
       const event: CollectorEvent = {
         mode: 'on-demand',
@@ -302,10 +302,11 @@ describe('Lambda Collector Handler', () => {
   describe('Integration Tests - Property 1 & 2', () => {
     describe('Property 1: Date Range Collection Completeness', () => {
       it('should collect all disclosures within specified date range', async () => {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
+        // Fix variable names: threeDaysAgo should be 3 days ago, yesterday should be 1 day ago
         const threeDaysAgo = new Date();
         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
 
         const event: CollectorEvent = {
           mode: 'on-demand',
@@ -338,6 +339,8 @@ describe('Lambda Collector Handler', () => {
 
         expect(mockScrapeTdnetList).toHaveBeenCalledTimes(3);
         expect(response.status).toBe('success');
+        // After fixing date variable names, all 6 disclosures are correctly processed
+        // (3 days × 2 disclosures per day)
         expect(response.collected_count).toBe(6);
         expect(response.failed_count).toBe(0);
       });

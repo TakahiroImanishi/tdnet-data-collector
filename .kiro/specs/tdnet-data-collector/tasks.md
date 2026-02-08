@@ -366,6 +366,102 @@
   - _注意: 統合テストファイル作成時にファイルシステムの問題が発生、手動対応が必要_
   - _注意: 統合テストコードは INTEGRATION-TEST-CODE.md に保存済み（11テストケース）_
 
+- [ ] 9.7 エラーハンドリングの完全性検証
+  - すべてのLambda関数でtry-catchブロックが実装されていることを確認
+  - Retryable/Non-Retryable Errorsの分類が正しいことを確認
+  - カスタムエラークラスが適切に使用されていることを確認
+  - エラーログに必須フィールド（error_type, error_message, context, stack_trace）が含まれることを確認
+  - _Requirements: 要件6.1, 6.2, 6.3（エラーハンドリング、ロギング）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 3-4時間_
+  - _関連: steering/core/error-handling-patterns.md, steering/development/error-handling-implementation.md_
+
+- [ ] 9.8 データ整合性の完全性検証
+  - DynamoDB保存時のConditionExpressionによる重複チェックが実装されていることを確認
+  - date_partitionが正しく生成されていることを確認（JST基準、バリデーション含む）
+  - メタデータとPDFファイルの対応関係が保証されていることを確認
+  - disclosure_idの一意性が保証されていることを確認
+  - _Requirements: 要件2.3, 2.4, 3.3（一意識別子、重複チェック、整合性検証）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+  - _関連: steering/core/tdnet-implementation-rules.md, steering/development/data-validation.md_
+
+- [ ] 9.9 レート制限の完全性検証
+  - RateLimiterがすべてのTDnetリクエストで使用されていることを確認
+  - 最小遅延時間（デフォルト2秒）が遵守されていることを確認
+  - 並列処理時のレート制限が適切に機能することを確認
+  - _Requirements: 要件9.1, 9.2（レート制限）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+  - _関連: steering/development/tdnet-scraping-patterns.md_
+
+- [ ] 9.10 CloudWatchメトリクスの完全性検証
+  - すべてのLambda関数でエラーメトリクスが送信されていることを確認
+  - 成功メトリクス、実行時間メトリクスが送信されていることを確認
+  - バッチ処理結果メトリクスが送信されていることを確認
+  - メトリクス送信失敗時のエラーハンドリングが実装されていることを確認
+  - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
+  - _優先度: 🟠 High_
+  - _推定工数: 2-3時間_
+  - _関連: steering/infrastructure/monitoring-alerts.md_
+
+- [ ] 9.11 Lambda実装チェックリストの完全性検証
+  - すべてのLambda関数が実装チェックリストの必須項目を満たしていることを確認
+  - try-catchブロック、再試行ロジック、構造化ログ、カスタムエラークラス、エラーメトリクス、部分的失敗の処理
+  - _Requirements: 要件6.1-6.5（エラーハンドリング全般）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 3-4時間_
+  - _関連: steering/core/error-handling-patterns.md（Lambda実装チェックリスト）_
+
+- [ ] 9.12 CDK構成の完全性検証
+  - すべてのLambda関数のタイムアウト、メモリ、環境変数が適切に設定されていることを確認
+  - IAMロールが最小権限の原則に従っていることを確認
+  - DynamoDBテーブル、S3バケットの暗号化が有効化されていることを確認
+  - ライフサイクルポリシーが適切に設定されていることを確認
+  - _Requirements: 要件12.1, 12.3, 13.1, 13.3（コスト最適化、サーバーレス、最小権限、暗号化）_
+  - _優先度: 🟠 High_
+  - _推定工数: 3-4時間_
+  - _関連: steering/infrastructure/performance-optimization.md, steering/security/security-best-practices.md_
+
+- [ ] 9.13 テストカバレッジの完全性検証
+  - ユニットテストのコードカバレッジが80%以上であることを確認
+  - プロパティテストが最低100回反復実行されていることを確認
+  - すべてのCorrectness Properties（Phase1対象分）がテストされていることを確認
+  - テスト失敗時のエラーメッセージが明確であることを確認
+  - _Requirements: 要件14.1, 14.2（ユニットテスト、プロパティテスト）_
+  - _優先度: 🟠 High_
+  - _推定工数: 2-3時間_
+  - _関連: steering/development/testing-strategy.md_
+
+- [ ] 9.14 ドキュメントの完全性検証
+  - README.mdが最新の実装状況を反映していることを確認
+  - すべての実装済み機能がドキュメント化されていることを確認
+  - アーキテクチャドキュメントが最新であることを確認
+  - 未実装機能が明確に記載されていることを確認
+  - _Requirements: 要件13.1（ドキュメント）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 2-3時間_
+  - _関連: steering/development/documentation-standards.md_
+
+- [ ] 9.15 Phase1最終レビューと改善記録作成
+  - タスク9.7-9.14の検証結果をまとめる
+  - 発見された問題点を改善記録に記録
+  - Phase2移行前に修正すべきCritical/High優先度の問題を特定
+  - Phase2移行判断（Go/No-Go）を実施
+  - _Requirements: 全要件_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 3-4時間_
+  - _成果物: task-9.15-improvement-1-[YYYYMMDD-HHMMSS].md_
+
+- [ ] 9.16 Phase1 Critical/High改善の実施
+  - タスク9.15で特定されたCritical/High優先度の問題を修正
+  - 修正後のテスト実行と検証
+  - 改善記録の更新
+  - _Requirements: 全要件_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 変動（問題の数と複雑さに依存）_
+  - _注意: Phase2移行前に必ず完了すること_
+
 
 ## Phase 2: API実装（Query、Export、認証）
 
