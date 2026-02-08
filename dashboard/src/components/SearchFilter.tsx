@@ -38,9 +38,16 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
     const fetchDisclosureTypes = async () => {
       try {
         const types = await getDisclosureTypes();
-        setDisclosureTypes(types);
+        // typesが配列であることを確認
+        if (Array.isArray(types)) {
+          setDisclosureTypes(types);
+        } else {
+          console.warn('開示種類の取得結果が配列ではありません:', types);
+          setDisclosureTypes([]);
+        }
       } catch (error) {
         console.error('開示種類の取得に失敗しました:', error);
+        setDisclosureTypes([]);
       }
     };
     

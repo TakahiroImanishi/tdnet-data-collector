@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from './App';
 
@@ -15,15 +15,14 @@ jest.mock('./services/api', () => ({
       items_per_page: 20,
     },
   }),
-  getDisclosureTypes: jest.fn().mockResolvedValue({
-    success: true,
-    data: [],
-  }),
+  getDisclosureTypes: jest.fn().mockResolvedValue([]),
 }));
 
 describe('App', () => {
   it('TDnetダッシュボードのタイトルが表示される', async () => {
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+    });
     
     // タイトルが表示されるまで待機
     await waitFor(() => {
@@ -33,7 +32,9 @@ describe('App', () => {
   });
 
   it('検索フィルターが表示される', async () => {
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+    });
     
     // 検索ボタンが表示されるまで待機
     await waitFor(() => {
