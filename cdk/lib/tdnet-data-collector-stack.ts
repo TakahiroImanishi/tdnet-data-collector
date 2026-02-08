@@ -7,6 +7,26 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 
+/**
+ * Environment configuration for TDnet Data Collector Stack
+ */
+export interface EnvironmentConfig {
+  /**
+   * Environment name: 'dev' for development, 'prod' for production
+   */
+  environment: 'dev' | 'prod';
+}
+
+/**
+ * Stack properties with environment configuration
+ */
+export interface TdnetDataCollectorStackProps extends cdk.StackProps {
+  /**
+   * Environment configuration (optional, defaults to 'dev')
+   */
+  environmentConfig?: EnvironmentConfig;
+}
+
 export class TdnetDataCollectorStack extends cdk.Stack {
   // Public properties for cross-stack references
   public readonly disclosuresTable: dynamodb.Table;
@@ -20,8 +40,24 @@ export class TdnetDataCollectorStack extends cdk.Stack {
   public readonly apiKey: apigateway.ApiKey;
   public readonly webAcl: wafv2.CfnWebACL;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  // Environment configuration
+  private readonly environment: 'dev' | 'prod';
+
+  constructor(scope: Construct, id: string, props?: TdnetDataCollectorStackProps) {
     super(scope, id, props);
+
+    // Extract environment configuration (default to 'dev')
+    this.environment = props?.environmentConfig?.environment ?? 'dev';
+
+    // Helper function to generate environment-specific resource names
+    const getResourceName = (baseName: string): string => {
+      return `${baseName}_${this.environment}`;
+    };
+
+    // Helper function to generate environment-specific bucket names
+    const getBucketName = (baseName: string): string => {
+      return `${baseName}-${this.environment}-${this.account}`;
+    };
 
     // ========================================
     // Phase 1: DynamoDB Tables
@@ -29,7 +65,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 1. tdnet_disclosures - 開示情報メタデータテーブル
     this.disclosuresTable = new dynamodb.Table(this, 'DisclosuresTable', {
-      tableName: 'tdnet_disclosures',
+      tableName: getResourceName('tdnet_disclosures'),
       partitionKey: {
         name: 'disclosure_id',
         type: dynamodb.AttributeType.STRING,
@@ -70,7 +106,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 2. tdnet_executions - 実行状態管理テーブル
     this.executionsTable = new dynamodb.Table(this, 'ExecutionsTable', {
-      tableName: 'tdnet_executions',
+      tableName: getResourceName('tdnet_executions'),
       partitionKey: {
         name: 'execution_id',
         type: dynamodb.AttributeType.STRING,
@@ -98,7 +134,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 3. tdnet_export_status - エクスポート状態管理テーブル
     this.exportStatusTable = new dynamodb.Table(this, 'ExportStatusTable', {
-      tableName: 'tdnet_export_status',
+      tableName: getResourceName('tdnet_export_status'),
       partitionKey: {
         name: 'export_id',
         type: dynamodb.AttributeType.STRING,
@@ -149,7 +185,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 1. PDFバケット - TDnetからダウンロードしたPDFファイルの長期保存
     this.pdfsBucket = new s3.Bucket(this, 'PdfsBucket', {
-      bucketName: `tdnet-data-collector-pdfs-${this.account}`,
+      bucketName: getBucketName('tdnet-data-collector-pdfs'),
       encryption: s3.BucketEncryption.S3_MANAGED, // S3マネージドキーで暗号化
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, // パブリックアクセスブロック
       versioned: true, // バージョニング有効化
@@ -175,7 +211,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 2. エクスポートバケット - ユーザーがエクスポートしたCSV/JSONファイルの一時保存
     this.exportsBucket = new s3.Bucket(this, 'ExportsBucket', {
-      bucketName: `tdnet-data-collector-exports-${this.account}`,
+      bucketName: getBucketName('tdnet-data-collector-exports'),
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       versioned: true,
@@ -192,7 +228,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 3. ダッシュボードバケット - Webダッシュボードの静的ファイルホスティング
     this.dashboardBucket = new s3.Bucket(this, 'DashboardBucket', {
-      bucketName: `tdnet-dashboard-${this.account}`,
+      bucketName: getBucketName('tdnet-dashboard'),
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, // CloudFront OAI経由でのみアクセス
       versioned: true,
