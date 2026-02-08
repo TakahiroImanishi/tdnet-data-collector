@@ -15,14 +15,20 @@
 指数バックオフを使用:
 
 ```typescript
+import { retryWithBackoff } from '../utils/retry';
+
 await retryWithBackoff(async () => await operation(), {
     maxRetries: 3, initialDelay: 2000, backoffMultiplier: 2, jitter: true
 });
 ```
 
+**完全な実装:** `../development/error-handling-implementation.md` を参照
+
 ## ログ構造
 
 ```typescript
+import { logger } from '../utils/logger';
+
 logger.error('Operation failed', {
     error_type: 'NetworkError',
     error_message: error.message,
@@ -31,9 +37,12 @@ logger.error('Operation failed', {
 });
 ```
 
+**ロガー実装:** `../development/error-handling-implementation.md` を参照
+
 ## ベストプラクティス
 
 1. **エラー伝播**: カスタムエラークラス使用（RetryableError, ValidationError, NotFoundError等）
+   - **実装:** `src/errors/index.ts` を参照
 2. **Graceful Degradation**: バッチ処理で個別失敗を記録して継続
 3. **構造化ログ**: error_type, error_message, context, stack_traceを含む
 

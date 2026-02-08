@@ -233,6 +233,13 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 └─→ api/error-codes.md
 ```
 
+**development/error-handling-enforcement.md** - エラーハンドリング強制化
+```text
+├─→ core/error-handling-patterns.md
+├─→ development/error-handling-implementation.md
+└─→ infrastructure/monitoring-alerts.md
+```
+
 **api/api-design-guidelines.md** - API設計ガイドライン
 ```text
 ├─→ development/data-validation.md
@@ -267,7 +274,7 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 - **レベル1**: 特定の技術領域に特化したファイル。必要最小限の参照のみ
 - **レベル0**: 基盤となる詳細な実装ガイドライン。他のファイルから参照される
 
-**注意:** この参照関係は2026年2月7日時点のものです。steeringファイルの追加・変更時は、この図も更新してください。
+**注意:** この参照関係は2026年2月8日時点のものです。steeringファイルの追加・変更時は、この図も更新してください。
 
 ## 関連リンク
 

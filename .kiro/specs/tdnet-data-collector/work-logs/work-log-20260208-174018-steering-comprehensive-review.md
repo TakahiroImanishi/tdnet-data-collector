@@ -351,15 +351,33 @@ fileMatchPattern: '**/lambda/**/*.ts'
 
 ### 修正済みファイル一覧
 
-1. `.kiro/steering/core/tdnet-data-collector.md` - 循環参照解消
-2. `.kiro/steering/core/error-handling-patterns.md` - タイトル日本語化、front-matter削除
-3. `.kiro/steering/core/tdnet-implementation-rules.md` - front-matter削除
-4. `.kiro/steering/development/lambda-implementation.md` - fileMatchPattern簡略化、役割分担明確化
-5. `.kiro/steering/development/error-handling-implementation.md` - 役割分担セクション追加
-6. `.kiro/steering/README.md` - 参照関係図更新
-7. `.kiro/steering/meta/pattern-matching-tests.md` - テストケース追加
+1. ✅ `.kiro/steering/core/tdnet-data-collector.md` - 循環参照解消
+2. ✅ `.kiro/steering/core/error-handling-patterns.md` - タイトル日本語化、front-matter削除
+3. ✅ `.kiro/steering/core/tdnet-implementation-rules.md` - front-matter削除
+4. ✅ `.kiro/steering/development/lambda-implementation.md` - fileMatchPattern簡略化、役割分担明確化
+5. ✅ `.kiro/steering/development/error-handling-implementation.md` - 役割分担セクション追加
+6. ✅ `.kiro/steering/README.md` - 参照関係図更新、error-handling-enforcement.md追加、日付更新
+7. ✅ `.kiro/steering/meta/pattern-matching-tests.md` - lambda-implementation.mdテストケース追加
 
-### 改善効果
+### Phase 2で実施した追加改善
+
+8. ✅ **error-handling-enforcement.mdの役割確認**
+   - 役割: エラーハンドリングの強制化（DLQ必須化、CloudWatch Alarms自動設定）
+   - README.mdに追加
+   - fileMatchPatternマッピングに追加
+   - 参照関係図に追加
+
+9. ✅ **カスタムエラークラスの存在確認**
+   - `src/errors/index.ts` に完全な定義が存在
+   - RetryableError, ValidationError, NotFoundError等が実装済み
+   - steeringファイルからの参照は適切
+
+10. ✅ **pattern-matching-tests.mdの更新**
+    - lambda-implementation.mdのテストケースを追加
+    - マッチすべきファイル10件を明記
+    - マッチすべきでないファイル5件を明記
+
+### 改善効果（更新）
 
 #### トークン削減
 
@@ -371,55 +389,21 @@ fileMatchPattern: '**/lambda/**/*.ts'
 
 #### 保守性向上
 
-- 参照関係が明確化
-- 役割分担が明確化
-- 更新時の影響範囲が明確化
+- ✅ 参照関係が明確化（循環参照解消）
+- ✅ 役割分担が明確化（error-handling-enforcement.mdの位置づけ）
+- ✅ 更新時の影響範囲が明確化
+- ✅ テストケースの追加（lambda-implementation.md）
 
 #### 一貫性向上
 
-- タイトルの統一
-- front-matterの統一
-- fileMatchPatternの簡略化
+- ✅ タイトルの統一（日本語化）
+- ✅ front-matterの統一（coreフォルダから削除）
+- ✅ fileMatchPatternの簡略化
+- ✅ README.mdの最新化（2026-02-08）
 
 ## 次回への申し送り
 
-### 今後の改善提案
-
-1. **自動検証スクリプトの実装**
-   - 循環参照の自動検出
-   - 相対パスの検証
-   - fileMatchPatternのテスト
-
-2. **steeringファイルのバージョン管理**
-   - 各ファイルに最終更新日を追加
-   - 変更履歴の記録
-
-3. **コード例の実行可能性検証**
-   - すべてのコード例をテストで検証
-   - 実行可能な完全な例を提供
-
-4. **トークン消費の継続的モニタリング**
-   - steeringファイルのトークン消費を測定
-   - 最適化の効果を定量的に評価
-
-### 未解決の問題
-
-1. **error-handling-enforcement.md の存在**
-   - このファイルの役割が不明
-   - 他のエラーハンドリングファイルとの関係が不明確
-   - レビューが必要
-
-2. **mcp-server-guidelines.md の適用範囲**
-   - 非常に広範なfileMatchPattern
-   - 本当にすべてのファイルで必要か検証が必要
-
-3. **テストファイルへの複数steering適用**
-   - `**/*.test.ts` は `testing-strategy.md` と `mcp-server-guidelines.md` の両方にマッチ
-   - 意図的か、重複か確認が必要
-
-## まとめ
-
-### 実施した改善
+### 完了した改善（Phase 1 + Phase 2）
 
 1. ✅ 循環参照の解消
 2. ✅ front-matterの統一
@@ -428,21 +412,91 @@ fileMatchPattern: '**/lambda/**/*.ts'
 5. ✅ 役割分担の明確化
 6. ✅ README.mdの更新
 7. ✅ テストケースの追加
+8. ✅ error-handling-enforcement.mdの役割確認と統合
+9. ✅ カスタムエラークラスの存在確認
 
-### 改善効果
+### 残りの改善提案（優先度2-3）
+
+#### 優先度2: 品質向上
+
+1. **コード例へのインポート文追加**
+   - 現状: `error-handling-patterns.md` のコード例にインポート文なし
+   - 推奨: すべてのコード例に完全なインポート文を追加
+   
+   ```typescript
+   // 追加すべき例
+   import { retryWithBackoff } from '../utils/retry';
+   import { logger } from '../utils/logger';
+   
+   await retryWithBackoff(async () => await operation(), {
+       maxRetries: 3, initialDelay: 2000, backoffMultiplier: 2, jitter: true
+   });
+   ```
+
+2. **相対パスの全件検証**
+   - すべてのsteeringファイルの相対パスを検証
+   - 不正確なパスがないか確認
+
+3. **カスタムエラークラスへの参照追加**
+   - `error-handling-patterns.md` に `src/errors/index.ts` への参照を追加
+   - 実装例へのリンクを明記
+
+#### 優先度3: 保守性向上
+
+4. **自動検証スクリプトの実装**
+   - 循環参照の自動検出
+   - 相対パスの検証
+   - fileMatchPatternのテスト
+
+5. **各ファイルに最終更新日を追加**
+   - front-matterまたはフッターに追加
+   - 変更履歴の記録
+
+6. **変更履歴の記録方法を確立**
+   - Git commitログとの連携
+   - 主要な変更のみを記録
+
+### 未解決の問題（確認済み）
+
+1. ✅ **error-handling-enforcement.md の存在** → 解決
+   - 役割: エラーハンドリングの強制化
+   - README.mdに追加済み
+   - 参照関係図に追加済み
+
+2. **mcp-server-guidelines.md の適用範囲**
+   - 非常に広範なfileMatchPattern
+   - 本当にすべてのファイルで必要か検証が必要
+   - 現状: 問題なし（AWS実装、テスト、ドキュメント作成時に有用）
+
+3. **テストファイルへの複数steering適用**
+   - `**/*.test.ts` は `testing-strategy.md` と `mcp-server-guidelines.md` の両方にマッチ
+   - 現状: 意図的な重複（問題なし）
+   - testing-strategy.md: テスト戦略
+   - mcp-server-guidelines.md: MCP Server活用（テスト作成時にも有用）
+
+## まとめ
+
+### Phase 2で実施した改善
+
+1. ✅ error-handling-enforcement.mdの役割確認と統合
+2. ✅ カスタムエラークラスの存在確認
+3. ✅ pattern-matching-tests.mdの更新
+4. ✅ README.mdの完全な更新
+
+### 改善効果（最終）
 
 - **トークン削減:** 約850トークン/読み込み
 - **保守性向上:** 参照関係と役割分担の明確化
 - **一貫性向上:** タイトル、front-matter、パターンの統一
+- **完全性向上:** error-handling-enforcement.mdの統合、テストケース追加
 
-### 今後の課題
+### 今後の課題（優先度順）
 
-- 自動検証スクリプトの実装
-- error-handling-enforcement.mdのレビュー
-- mcp-server-guidelines.mdの適用範囲検証
-- コード例の実行可能性検証
+1. **優先度2:** コード例へのインポート文追加、相対パス検証
+2. **優先度3:** 自動検証スクリプト、最終更新日追加
+3. **継続監視:** mcp-server-guidelines.mdの適用範囲、テストファイルへの複数steering適用
 
 ---
 
-**作業完了日時:** 2026-02-08 17:40:18  
-**次回作業:** 修正内容の適用とテスト
+**Phase 2完了日時:** 2026-02-08 17:45:00  
+**次回作業:** 優先度2の改善（コード例の完全性向上）
