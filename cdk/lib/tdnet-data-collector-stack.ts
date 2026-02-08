@@ -6,16 +6,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
-
-/**
- * Environment configuration for TDnet Data Collector Stack
- */
-export interface EnvironmentConfig {
-  /**
-   * Environment name: 'dev' for development, 'prod' for production
-   */
-  environment: 'dev' | 'prod';
-}
+import { Environment, getEnvironmentConfig } from './config/environment-config';
 
 /**
  * Stack properties with environment configuration
@@ -24,7 +15,9 @@ export interface TdnetDataCollectorStackProps extends cdk.StackProps {
   /**
    * Environment configuration (optional, defaults to 'dev')
    */
-  environmentConfig?: EnvironmentConfig;
+  environmentConfig?: {
+    environment: Environment;
+  };
 }
 
 export class TdnetDataCollectorStack extends cdk.Stack {
@@ -40,14 +33,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
   public readonly apiKey: apigateway.ApiKey;
   public readonly webAcl: wafv2.CfnWebACL;
 
-  // Environment configuration
-  private readonly environment: 'dev' | 'prod';
+  // Environment configuration (renamed to avoid conflict with base class)
+  private readonly deploymentEnvironment: Environment;
 
   constructor(scope: Construct, id: string, props?: TdnetDataCollectorStackProps) {
     super(scope, id, props);
 
     // Extract environment configuration (default to 'dev')
-    this.environment = props?.environmentConfig?.environment ?? 'dev';
+    this.deploymentEnvironment = props?.environmentConfig?.environment ?? 'dev';
+
+    // Get environment-specific Lambda configurations
+    const envConfig = getEnvironmentConfig(this.deploymentEnvironment);
 
     // Helper function to generate environment-specific resource names
     const getResourceName = (baseName: string): string => {
@@ -56,7 +52,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Helper function to generate environment-specific bucket names
     const getBucketName = (baseName: string): string => {
-      return `${baseName}-${this.environment}-${this.account}`;
+      return `${baseName}-${this.environment}-${cdk.Aws.ACCOUNT_ID}`;
     };
 
     // ========================================
@@ -307,13 +303,14 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collector'),
-      timeout: cdk.Duration.minutes(15),
-      memorySize: 512,
+      timeout: cdk.Duration.seconds(envConfig.collector.timeout),
+      memorySize: envConfig.collector.memorySize,
       environment: {
         DYNAMODB_TABLE: this.disclosuresTable.tableName,
         DYNAMODB_EXECUTIONS_TABLE: this.executionsTable.tableName,
         S3_BUCKET: this.pdfsBucket.bucketName,
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.collector.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
       reservedConcurrentExecutions: 1, // 同時実行数を1に制限（レート制限のため）
@@ -360,13 +357,14 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/query'),
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
+      timeout: cdk.Duration.seconds(envConfig.query.timeout),
+      memorySize: envConfig.query.memorySize,
       environment: {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         S3_BUCKET_NAME: this.pdfsBucket.bucketName,
         API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.query.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
     });
@@ -413,14 +411,15 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/export'),
-      timeout: cdk.Duration.minutes(5),
-      memorySize: 512,
+      timeout: cdk.Duration.seconds(envConfig.export.timeout),
+      memorySize: envConfig.export.memorySize,
       environment: {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
         EXPORT_BUCKET_NAME: this.exportsBucket.bucketName,
         API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.export.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
         // AWS_REGION is automatically set by Lambda runtime
       },
@@ -777,11 +776,12 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collect'),
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
+      timeout: cdk.Duration.seconds(envConfig.collect.timeout),
+      memorySize: envConfig.collect.memorySize,
       environment: {
         COLLECTOR_FUNCTION_NAME: collectorFunction.functionName,
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.collect.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
     });
@@ -805,11 +805,12 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collect-status'),
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
+      timeout: cdk.Duration.seconds(envConfig.collectStatus.timeout),
+      memorySize: envConfig.collectStatus.memorySize,
       environment: {
         DYNAMODB_EXECUTIONS_TABLE: this.executionsTable.tableName,
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.collectStatus.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
     });
@@ -969,12 +970,13 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/api/export-status'),
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
+      timeout: cdk.Duration.seconds(envConfig.exportStatus.timeout),
+      memorySize: envConfig.exportStatus.memorySize,
       environment: {
         EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
         API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.exportStatus.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
     });

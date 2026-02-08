@@ -21,7 +21,10 @@ describe('Environment Parameterization', () => {
     beforeAll(() => {
       const app = new cdk.App();
       const stack = new TdnetDataCollectorStack(app, 'TestStack-dev', {
-        env: { account: testAccount, region: testRegion },
+        env: { 
+          account: testAccount, 
+          region: testRegion 
+        },
         environmentConfig: { environment: 'dev' },
       });
       template = Template.fromStack(stack);
