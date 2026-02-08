@@ -1029,11 +1029,13 @@
   - 失敗しているテストファイルを特定（9ファイル）
   - 各テストファイルにSecrets Managerモックを追加
   - APIキーヘッダーを全テストケースに追加
-  - テスト再実行: 756/756テスト成功を確認（100%）
+  - テスト再実行: 644/756テスト成功を確認（85.2%）
   - _Requirements: 要件11.1（API認証）_
   - _優先度: 🔴 Critical_
   - _推定工数: 4-6時間_
-  - _関連: work-log-20260208-175100-task15-22-1-collect-handler-test-fix.md_
+  - _完了: 2026-02-08, Lambda handlerテスト100%成功_
+  - _関連: work-log-20260208-181455-task15-22-4-remaining-test-failures.md_
+  - _注意: 残存112件はCDK環境変数設定の問題（タスク15.23で対応）_
   
   **失敗テストファイル一覧:**
   - [x] 15.22.4.1 `src/lambda/query/__tests__/handler.e2e.test.ts` - Query Lambda E2Eテスト
@@ -1045,6 +1047,28 @@
   - [x] 15.22.4.7 `src/lambda/api/__tests__/export-status.test.ts` - Export Status Lambda テスト
   - [x] 15.22.4.8 `src/models/__tests__/disclosure.test.ts` - Disclosure モデルテスト
   - [x] 15.22.4.9 `src/__tests__/type-definitions.test.ts` - 型定義テスト
+
+- [ ] 15.23 CDK環境変数設定の修正（残存112件のテスト失敗解消）
+  - CDKテストで失敗している環境変数設定を特定
+  - CollectStatusFunctionの環境変数不足を修正（S3_BUCKET未定義）
+  - FunctionName不一致を修正（期待値: tdnet-collector-dev、実際: tdnet-collect-status-dev）
+  - 環境パラメータ化テストの修正
+  - テスト再実行: 756/756テスト成功を確認（100%）
+  - _Requirements: 要件8.1（設定管理）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 3-4時間_
+  - _関連: タスク15.22.4の残存問題_
+
+- [ ] 15.24 testing-strategy.mdへのSecrets Managerモックパターン追加
+  - Lambda handlerテストでのSecrets Managerモック必須化を明記
+  - aws-sdk-client-mockの使用パターンを追加
+  - TEST_ENV=e2e環境変数の設定方法を追加
+  - APIキーヘッダー設定の必須化を明記
+  - 新規テスト作成時のチェックリストを追加
+  - _Requirements: 要件14.1（テスト戦略）_
+  - _優先度: 🟠 High_
+  - _推定工数: 1-2時間_
+  - _関連: タスク15.22.4の知見を反映_
 
 - [ ] 15.22.2 プロパティテストの成功率確認
   - プロパティテストのみを実行: `npm test -- --testNamePattern="Property"`
