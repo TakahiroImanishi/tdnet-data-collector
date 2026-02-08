@@ -1461,6 +1461,54 @@
   - _作業記録: work-log-20260208-214728-task19-1-phase3-verification.md_
   - _注意: ダッシュボードテスト12/23成功（52.2%）、テストコード改善はPhase 4並行作業_
 
+### 19.2. Phase 3残課題（並行作業）
+
+- [ ] 19.2 ダッシュボードテストの修正
+  - Reactテストコードの`act()`ラッピング追加
+  - Material-UI Grid v2への移行（非推奨警告解消）
+  - タイマーモックの改善
+  - テスト成功率を100%に改善
+  - _Requirements: 要件14.1（テスト）_
+  - _優先度: 🟠 High_
+  - _推定工数: 4-6時間_
+  - _関連: work-log-20260208-214728-task19-1-phase3-verification.md_
+  
+  **失敗テスト一覧（11件）:**
+  - [ ] 19.2.1 `dashboard/src/components/__tests__/ExportDialog.test.tsx` - 3件失敗
+    - エクスポートジョブ作成とポーリング開始
+    - エクスポート完了時のダウンロードリンク表示
+    - エクスポート失敗時のエラーメッセージ表示
+    - 問題: `act()`ラッピング不足、タイマーモック問題
+  - [ ] 19.2.2 `dashboard/src/App.test.tsx` - 1件失敗
+    - "learn react"テキスト検索失敗
+    - 問題: テストが実際のアプリ構造と不一致
+  - [ ] 19.2.3 Material-UI Grid v2移行
+    - `item`, `xs`, `sm`, `md`プロパティの非推奨警告解消
+    - Grid2コンポーネントへの移行
+  - [ ] 19.2.4 `act()`警告の解消
+    - SearchFilter、ExportDialog、ExecutionStatusコンポーネント
+    - 状態更新を`act()`でラップ
+
+- [ ] 19.3 ダッシュボードE2Eテストの実行
+  - Playwrightテストの実行環境構築
+  - `dashboard/src/__tests__/e2e/dashboard.spec.ts` 実行
+  - `dashboard/src/__tests__/e2e/api-integration.spec.ts` 実行
+  - LocalStack環境またはデプロイ済み環境での実行
+  - _Requirements: 要件14.4（E2Eテスト）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 2-3時間_
+  - _関連: dashboard/playwright.config.ts_
+
+- [ ] 19.4 ダッシュボードのビルドとデプロイ検証
+  - `npm run build`でビルド成功を確認
+  - S3バケットへのアップロード検証
+  - CloudFront Invalidation実行検証
+  - デプロイスクリプト（scripts/deploy-dashboard.ps1）の動作確認
+  - _Requirements: 要件10.1（Webダッシュボード）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 1-2時間_
+  - _関連: scripts/deploy-dashboard.ps1_
+
 
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
 
