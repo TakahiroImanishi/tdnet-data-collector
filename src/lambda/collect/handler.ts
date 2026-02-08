@@ -172,6 +172,19 @@ function validateRequest(request: CollectRequest): void {
     );
   }
 
+  // 日付の整合性チェック（パースした日付が入力と一致するか）
+  // 例: '2024-02-30' は '2024-03-02' にパースされるため、不一致となる
+  if (startDate.toISOString().split('T')[0] !== request.start_date) {
+    throw new ValidationError(
+      `Invalid start_date: ${request.start_date}. Date does not exist.`
+    );
+  }
+  if (endDate.toISOString().split('T')[0] !== request.end_date) {
+    throw new ValidationError(
+      `Invalid end_date: ${request.end_date}. Date does not exist.`
+    );
+  }
+
   // 日付順序チェック
   if (startDate > endDate) {
     throw new ValidationError(
