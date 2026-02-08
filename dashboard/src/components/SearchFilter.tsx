@@ -4,12 +4,12 @@ import {
   Box,
   TextField,
   Button,
-  Grid,
   MenuItem,
   Paper,
   Typography,
   Collapse,
   IconButton,
+  Grid,
 } from '@mui/material';
 import { Search as SearchIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import { SearchParams } from '../types/disclosure';
@@ -150,7 +150,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
               label="開示日（開始）"
               value={formData.start_date}
               onChange={handleChange('start_date')}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               disabled={loading}
             />
           </Grid>
@@ -161,7 +161,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
               label="開示日（終了）"
               value={formData.end_date}
               onChange={handleChange('end_date')}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               disabled={loading}
             />
           </Grid>

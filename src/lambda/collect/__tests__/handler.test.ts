@@ -621,5 +621,112 @@ describe('POST /collect Handler', () => {
       expect(body.error.code).toBe('VALIDATION_ERROR');
       expect(body.error.message).toContain('Invalid end_date');
     });
+
+    it('start_dateが無効な日付（NaN）の場合は400を返す', async () => {
+      const event = createTestEvent({
+        start_date: '2024-13-01', // 13月は存在しない
+        end_date: getDaysAgo(2),
+      });
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid start_date');
+    });
+  });
+
+  describe('APIキー認証（追加）', () => {
+    it('X-Api-Key（大文字）ヘッダーでも認証できる', async () => {
+      const mockCollectorResponse = {
+        execution_id: 'exec_1234567890_abc123_test1234',
+        status: 'success',
+        message: 'Collection started',
+        collected_count: 0,
+        failed_count: 0,
+      };
+
+      lambdaMock.on(InvokeCommand).resolves({
+        StatusCode: 200,
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+      });
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+      // x-api-keyを削除してX-Api-Keyを設定
+      delete event.headers['x-api-key'];
+      event.headers['X-Api-Key'] = 'test-api-key-12345';
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('success');
+    });
+  });
+
+  describe('Secrets Managerエラーハンドリング', () => {
+    beforeEach(() => {
+      // TEST_ENV環境変数を削除（本番環境モード）
+      delete process.env.TEST_ENV;
+      delete process.env.API_KEY;
+      
+      // API_KEY_SECRET_ARNを設定
+      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:tdnet-api-key';
+    });
+
+    afterEach(() => {
+      // 環境変数を復元
+      process.env.TEST_ENV = 'e2e';
+      process.env.API_KEY = 'test-api-key-12345';
+    });
+
+    it('SecretStringが空の場合は401エラーを返す', async () => {
+      secretsMock.on(GetSecretValueCommand).resolves({
+        SecretString: '', // 空文字列
+      });
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(401);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Failed to retrieve API key');
+    });
+
+    it('Secrets Manager取得エラーの場合は401エラーを返す', async () => {
+      secretsMock.on(GetSecretValueCommand).rejects(
+        new Error('AccessDeniedException: User is not authorized')
+      );
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(401);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Failed to retrieve API key');
+    });
+
+    it('Secrets Managerネットワークエラーの場合は401エラーを返す', async () => {
+      secretsMock.on(GetSecretValueCommand).rejects(
+        new Error('NetworkingError: Connection timeout')
+      );
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(401);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('UNAUTHORIZED');
+    });
   });
 });

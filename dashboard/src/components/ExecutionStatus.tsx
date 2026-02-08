@@ -8,8 +8,8 @@ import {
   Box,
   Alert,
   Chip,
-  Grid,
 } from '@mui/material';
+import Grid from '@mui/material/PigmentGrid';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
@@ -207,14 +207,14 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
 
         {/* 統計情報 */}
         <Grid container spacing={2}>
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <Typography variant="body2" color="text.secondary">
               総件数
             </Typography>
             <Typography variant="h6">{totalItems}</Typography>
           </Grid>
           
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <Typography variant="body2" color="text.secondary">
               処理済み
             </Typography>
@@ -223,7 +223,7 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
             </Typography>
           </Grid>
           
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <Typography variant="body2" color="text.secondary">
               失敗
             </Typography>
@@ -232,7 +232,7 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
             </Typography>
           </Grid>
           
-          <Grid item xs={6} sm={3}>
+          <Grid size={{ xs: 6, sm: 3 }}>
             <Typography variant="body2" color="text.secondary">
               成功率
             </Typography>

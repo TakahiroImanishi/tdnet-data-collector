@@ -1,6 +1,6 @@
 // エクスポートダイアログコンポーネントのテスト
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ExportDialog from '../ExportDialog';
 import * as api from '../../services/api';
@@ -17,7 +17,9 @@ describe('ExportDialog', () => {
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     jest.useRealTimers();
   });
 
@@ -85,8 +87,15 @@ describe('ExportDialog', () => {
       });
     });
 
-    // ポーリング開始を確認
-    jest.advanceTimersByTime(5000);
+    // ポーリング開始を確認（act()でラップし、複数回Promiseをフラッシュ）
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+      // 複数回Promiseをフラッシュしてマイクロタスクキューを完全に処理
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    
     await waitFor(() => {
       expect(mockGetExportStatus).toHaveBeenCalledWith(mockExportId);
     });
@@ -123,8 +132,14 @@ describe('ExportDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
 
-    // ポーリング実行
-    jest.advanceTimersByTime(5000);
+    // ポーリング実行（act()でラップし、複数回Promiseをフラッシュ）
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+      // 複数回Promiseをフラッシュしてマイクロタスクキューを完全に処理
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/エクスポートが完了しました/i)).toBeInTheDocument();
@@ -162,8 +177,11 @@ describe('ExportDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
 
-    // ポーリング実行
-    jest.advanceTimersByTime(5000);
+    // ポーリング実行（act()でラップし、Promiseをフラッシュ）
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve(); // マイクロタスクキューをフラッシュ
+    });
 
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();

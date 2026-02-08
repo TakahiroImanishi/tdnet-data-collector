@@ -2,8 +2,26 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+// APIモックの設定
+jest.mock('./services/api', () => ({
+  searchDisclosures: jest.fn().mockResolvedValue({
+    success: true,
+    data: [],
+    pagination: {
+      current_page: 1,
+      total_pages: 0,
+      total_items: 0,
+      items_per_page: 20,
+    },
+  }),
+  getDisclosureTypes: jest.fn().mockResolvedValue({
+    success: true,
+    data: [],
+  }),
+}));
+
+test('renders TDnet dashboard title', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const titleElement = screen.getByText(/TDnet 開示情報ダッシュボード/i);
+  expect(titleElement).toBeInTheDocument();
 });
