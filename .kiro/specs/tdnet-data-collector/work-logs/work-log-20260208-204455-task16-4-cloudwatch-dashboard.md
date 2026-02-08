@@ -95,3 +95,93 @@ CloudWatch Dashboardを作成し、以下のメトリクスを可視化する：
 ## テスト結果
 
 テストを実行します。
+
+
+```
+npm test -- cloudwatch-dashboard.test.ts
+```
+
+**結果**: ✅ すべてのテスト成功（3/3 passed）
+
+### テストケース
+1. ✅ ダッシュボードが正しく作成される
+2. ✅ すべてのウィジェットが含まれている
+3. ✅ 環境名が正しく設定される
+
+### テスト修正内容
+- CDK TokenのためdashboardNameの直接比較を削除
+- API Gatewayにダミーリソース/メソッドを追加（検証エラー回避）
+- DashboardBodyのJSON.parse削除（CDK Tokenのため）
+- CloudFormationテンプレートベースの検証に変更
+
+## 成果物
+
+### 1. 新規ファイル
+- `cdk/lib/constructs/cloudwatch-dashboard.ts` - CloudWatch Dashboard Construct
+- `cdk/__tests__/cloudwatch-dashboard.test.ts` - ユニットテスト
+
+### 2. 変更ファイル
+- `cdk/lib/tdnet-data-collector-stack.ts` - ダッシュボード統合
+
+### 3. 実装内容
+- **Lambda実行メトリクス**: Invocations、Errors、Duration、Throttles（7関数）
+- **DynamoDBメトリクス**: Consumed Capacity、Errors、Throttles（3テーブル）
+- **ビジネスメトリクス**: 収集件数、失敗件数、成功率（計算式）
+- **API Gatewayメトリクス**: Requests、Errors、Latency
+- **S3ストレージメトリクス**: Bucket Size、Number of Objects、Requests
+
+### 4. ダッシュボード構成
+- **合計ウィジェット数**: 13個
+- **監視対象Lambda関数**: 7個
+- **監視対象DynamoDBテーブル**: 3個
+- **監視対象S3バケット**: 2個
+- **監視対象API Gateway**: 1個
+
+## 技術的な特徴
+
+### 1. 環境別ダッシュボード
+- ダッシュボード名: `tdnet-collector-{environment}`
+- 環境ごとに独立したダッシュボード
+
+### 2. 計算メトリクス
+- Collection Success Rate: `(collected / (collected + failed)) * 100`
+- MathExpressionを使用
+
+### 3. 適切な期間設定
+- Lambda/DynamoDB/API Gateway: 5分間隔
+- S3: 1日間隔
+- ビジネスメトリクス: 1時間間隔
+
+### 4. 包括的な監視
+- すべての主要AWSサービスを網羅
+- ビジネスメトリクスも含む
+
+## 申し送り事項
+
+### 1. デプロイ後の確認
+- CloudWatch Consoleでダッシュボードを確認
+- すべてのウィジェットが正しく表示されることを確認
+- メトリクスデータが収集されていることを確認
+
+### 2. カスタマイズ推奨
+- ウィジェットのレイアウト調整
+- 閾値の調整（環境に応じて）
+- 追加メトリクスの検討
+
+### 3. 今後の改善
+- アラーム状態の可視化
+- コスト関連メトリクスの追加
+- カスタムメトリクスの拡充
+
+## 関連タスク
+
+- ✅ タスク16.1: CloudWatch Logs設定（完了）
+- ✅ タスク16.2: CloudWatch Alarms設定（完了）
+- ✅ タスク16.3: カスタムメトリクス実装（完了）
+- ✅ タスク16.4: CloudWatch Dashboard作成（本タスク）
+
+## 参考資料
+
+- `steering/infrastructure/monitoring-alerts.md` - 監視とアラート設定
+- AWS CloudWatch Dashboard公式ドキュメント
+- CDK CloudWatch Construct API Reference

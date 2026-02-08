@@ -1197,13 +1197,15 @@
   - _完了: 2026-02-08, 12テスト成功, 7個のLambda関数を監視_
   - _作業記録: work-log-20260208-204449-task16-3-cloudwatch-alarms.md_
 
-- [ ] 16.4 CloudWatch Dashboardの作成
+- [x] 16.4 CloudWatch Dashboardの作成
   - Lambda実行メトリクス（Invocations、Errors、Duration）
   - DynamoDB読み書きメトリクス
   - ビジネスメトリクス（日次収集件数、失敗件数）
   - API Gatewayメトリクス
   - S3ストレージメトリクス
   - _Requirements: 要件12.1（監視）_
+  - _完了: 2026-02-08, 3テスト成功（ダッシュボード作成、ウィジェット検証、環境名設定）_
+  - _作業記録: work-log-20260208-204455-task16-4-cloudwatch-dashboard.md_
 
 - [ ]* 16.5 CloudWatch設定の検証テスト
   - カスタムメトリクスが送信されることを確認
