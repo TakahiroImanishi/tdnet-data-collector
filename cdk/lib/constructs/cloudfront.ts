@@ -172,14 +172,14 @@ export class DashboardCloudFront extends Construct {
 
     // CDK Nag抑制: AwsSolutions-CFR4
     // デフォルトのCloudFront証明書を使用する場合、TLS 1.2を強制できない制限がある
-    // カスタムドメインがない環境では、デフォルト証明書を使用せざるを得ない
-    // minimumProtocolVersionの設定は、将来ACM証明書に移行する際に有効
+    // カスタムドメインとACM証明書を使用する場合は、minimumProtocolVersionでTLS 1.2を強制可能
+    // 本番環境では、Route 53 + ACM証明書の使用を推奨
     NagSuppressions.addResourceSuppressions(
       this.distribution,
       [
         {
           id: 'AwsSolutions-CFR4',
-          reason: 'デフォルトのCloudFront証明書を使用。カスタムドメインがない環境では、ACM証明書を使用できないため、デフォルト証明書を使用。minimumProtocolVersionは将来のACM証明書移行時に有効。',
+          reason: 'デフォルトのCloudFront証明書を使用。カスタムドメインがない環境では、ACM証明書を使用できないため、デフォルト証明書を使用。本番環境では、Route 53 + ACM証明書でTLS 1.2を強制することを推奨。',
         },
       ],
       true

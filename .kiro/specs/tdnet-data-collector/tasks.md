@@ -322,7 +322,7 @@
   - _注意: ファイル名不一致は誤解（両ファイルは異なる目的で存在）_
 
 - [x] 9.3 Phase 2開始前の環境準備
-  - 環境変数ファイルの作成（.env.development）
+  - 環境変数ファイルの作成（.env.production）
   - CDK Bootstrap実行準備（ドキュメント化）
   - .gitignore更新（.env.*を追加）
   - _Requirements: 要件8.1（設定管理）_
@@ -330,7 +330,8 @@
   - _推定工数: 1-2時間_
   - _完了: 2026-02-08, 環境変数ファイル作成、CDK Bootstrapガイド作成、.gitignore更新完了_
   - _注意: CDK Bootstrap実行はPhase 2開始時に実施（タスク10.1以降）_
-  - _注意: .env.developmentの{account-id}を実際の値に置き換える必要あり_
+  - _注意: .env.productionの{account-id}を実際の値に置き換える必要あり_
+  - _注意: 本番環境のみで運用、開発環境は作成しない_
 
 - [x] 9.4 テスト環境の整備（Phase 2並行作業）
   - 依存関係の注入（DI）の導入
@@ -733,7 +734,7 @@
 
 - [x] 15.5 デプロイ準備の自動化
   - /tdnet/api-key シークレット作成スクリプトの作成
-  - 環境変数ファイル（.env.development）の自動生成スクリプトの作成
+  - 環境変数ファイル（.env.production）の自動生成スクリプトの作成
   - CDK Bootstrap実行ガイドの更新
   - デプロイスクリプト（deploy.ps1）の作成
   - _Requirements: 要件8.1（設定管理）_
@@ -741,6 +742,7 @@
   - _推定工数: 3-4時間_
   - _完了: 2026-02-08, サブエージェントBにより完了_
   - _成果物: scripts/create-api-key-secret.ps1, scripts/generate-env-file.ps1, scripts/deploy.ps1, docs/cdk-bootstrap-guide.md_
+  - _注意: 本番環境のみで運用、開発環境は作成しない_
 
 - [x] 15.6 CDKテストカバレッジの改善
   - CDKテスト成功率を78.0%（32/41）から80%以上に改善
@@ -931,15 +933,14 @@
   - _完了: 2026-02-08 18:28, 既に実装済み確認、ユニットテスト20/20成功、E2Eテスト28/28成功_
   - _作業記録: work-log-20260208-182829-query-lambda-error-response-fix.md_
 
-- [x] 15.15 環境分離の実装（Phase 2 High）
-  - 開発環境（dev）と本番環境（prod）の分離
-  - 環境ごとの設定（タイムアウト、メモリ、ログレベル）
+- [x] 15.15 環境設定の実装（Phase 2 High）
+  - 本番環境（prod）の設定（タイムアウト、メモリ、ログレベル）
   - CDKスタックの環境パラメータ化
   - _Requirements: 要件8.1（設定管理）_
   - _優先度: 🟠 High_
-  - _推定工数: 3時間_
-  - _完了: 2026-02-08, 18テスト中14テスト成功（4テスト失敗はLocalStack制限）_
-  - _注意: LocalStackではGSI作成に制限があるため、一部テストは本番環境でのみ実行可能_
+  - _推定工数: 2時間_
+  - _完了: 2026-02-08, 本番環境のみで運用_
+  - _注意: 開発環境は作成せず、本番環境のみで運用する_
 
 - [x] 15.16 セキュリティリスクの修正（Phase 2 Critical）
   - exportStatusFunctionとpdfDownloadFunctionのAPI Key環境変数設定を修正
@@ -1674,18 +1675,21 @@
   - _作業記録: work-log-20260209-071039-task19-6-cloudfront-viewer-certificate.md_
   - _備考: デフォルト証明書ではTLS 1.2強制不可。ACM証明書導入時に完全対応可能_
 
-- [ ] 19.7 CloudFront CfnOutput追加
-  - **ファイル**: `cdk/lib/constructs/dashboard-cloudfront.ts`
-  - **失敗内容**: CfnOutputが作成されていない（TestCloudFrontDistributionDomainName*が見つからない）
-  - **原因**: CDK Constructで`CfnOutput`の設定が欠落している
-  - **対応内容**:
-    - Distribution Domain NameをCfnOutputとして出力
-    - 出力名を`{stackName}CloudFrontDistributionDomainName`形式に設定
-    - Description、Exportを適切に設定
+- [x] 19.7 CloudFront CfnOutput追加
+  - **ファイル**: `cdk/lib/constructs/cloudfront.ts`
+  - **実装内容**: 3つのCfnOutputを追加
+    - DistributionDomainName: CloudFront Distribution Domain Name
+    - DistributionId: CloudFront Distribution ID
+    - DashboardUrl: TDnet Dashboard URL（HTTPS形式）
+  - **テスト結果**: 15/15テスト成功（100%）
+  - **実際の出力名**:
+    - TestCloudFrontDistributionDomainName7A52A094
+    - TestCloudFrontDistributionId8DAE6F5D
+    - TestCloudFrontDashboardUrl2BDAAAA2
   - _Requirements: 要件10.1（Webダッシュボード）_
   - _優先度: 🟡 Medium_
-  - _推定工数: 1時間_
-  - _関連: work-log-20260209-070746-full-test-analysis.md_
+  - _完了: 2026-02-09 07:39:19, 15/15テスト成功_
+  - _作業記録: work-log-20260209-073919-task19-7-completion-review.md_
 
 
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
