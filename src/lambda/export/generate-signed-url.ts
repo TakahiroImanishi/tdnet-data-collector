@@ -9,6 +9,7 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from '../../utils/logger';
+import { RetryableError } from '../../errors';
 
 // S3クライアント（グローバルスコープで初期化）
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'ap-northeast-1' });
@@ -22,29 +23,45 @@ const EXPORT_BUCKET = process.env.EXPORT_BUCKET_NAME || 'tdnet-exports';
  * @param s3_key S3キー
  * @param expiresIn 有効期限（秒）
  * @returns 署名付きURL
+ * @throws {RetryableError} S3アクセスエラー時
  */
 export async function generateSignedUrl(
   s3_key: string,
   expiresIn: number = 7 * 24 * 60 * 60 // デフォルト: 7日間
 ): Promise<string> {
-  logger.info('Generating signed URL', {
-    s3_key,
-    expires_in: expiresIn,
-  });
+  try {
+    logger.info('Generating signed URL', {
+      s3_key,
+      expires_in: expiresIn,
+    });
 
-  // GetObjectCommandを作成
-  const command = new GetObjectCommand({
-    Bucket: EXPORT_BUCKET,
-    Key: s3_key,
-  });
+    // GetObjectCommandを作成
+    const command = new GetObjectCommand({
+      Bucket: EXPORT_BUCKET,
+      Key: s3_key,
+    });
 
-  // 署名付きURLを生成
-  const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+    // 署名付きURLを生成
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
 
-  logger.info('Signed URL generated successfully', {
-    s3_key,
-    signed_url: signedUrl,
-  });
+    logger.info('Signed URL generated successfully', {
+      s3_key,
+      signed_url: signedUrl,
+    });
 
-  return signedUrl;
+    return signedUrl;
+  } catch (error) {
+    logger.error('Failed to generate signed URL', {
+      error_type: error.name,
+      error_message: error.message,
+      context: { s3_key, expires_in: expiresIn },
+      stack_trace: error.stack,
+    });
+
+    // S3エラーは再試行可能
+    throw new RetryableError('Failed to generate signed URL', {
+      cause: error,
+      context: { s3_key, expires_in: expiresIn },
+    });
+  }
 }
