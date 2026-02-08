@@ -11,6 +11,9 @@ import { ValidationError } from '../errors';
 import { generateDatePartition, validateDisclosedAt } from '../utils/date-partition';
 import { generateDisclosureId } from '../utils/disclosure-id';
 
+// Re-export for convenience
+export { generateDisclosureId };
+
 /**
  * Disclosureの必須フィールドをバリデーション
  *

@@ -38,8 +38,8 @@ export function generateDisclosureId(
     throw new ValidationError(`Invalid companyCode: ${companyCode}`);
   }
 
-  if (sequence < 0 || sequence > 999) {
-    throw new ValidationError(`Invalid sequence: ${sequence} (must be 0-999)`);
+  if (!Number.isInteger(sequence) || sequence < 0 || sequence > 999) {
+    throw new ValidationError(`Invalid sequence: ${sequence} (must be an integer between 0-999)`);
   }
 
   // UTCからJSTに変換（UTC+9時間）してから日付を抽出

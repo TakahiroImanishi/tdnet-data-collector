@@ -184,11 +184,11 @@ describe('POST /collect Handler', () => {
 
       await handler(event, mockContext);
 
-      // InvokeCommandが正しいパラメータで呼ばれたことを確誁E
+      // InvokeCommandが正しいパラメータで呼ばれたことを確認
       const calls = lambdaMock.commandCalls(InvokeCommand);
       expect(calls.length).toBe(1);
       expect(calls[0].args[0].input.InvocationType).toBe('RequestResponse');
-      expect(calls[0].args[0].input.FunctionName).toBe('tdnet-collector');
+      expect(calls[0].args[0].input.FunctionName).toBe(process.env.COLLECTOR_FUNCTION_NAME || 'tdnet-collector');
     });
   });
 

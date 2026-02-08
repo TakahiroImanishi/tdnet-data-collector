@@ -144,10 +144,10 @@ describe('Property 8: 日付範囲の順序性', () => {
         expect(result.statusCode).toBe(400);
 
         const body = JSON.parse(result.body);
-        expect(body.error_code).toBe('VALIDATION_ERROR');
-        expect(body.message).toContain('start_date');
-        expect(body.message).toContain('must be before or equal to');
-        expect(body.message).toContain('end_date');
+        expect(body.error.code).toBe('VALIDATION_ERROR');
+        expect(body.error.message).toContain('start_date');
+        expect(body.error.message).toContain('must be before or equal to');
+        expect(body.error.message).toContain('end_date');
 
         return true;
       }),
@@ -264,8 +264,8 @@ describe('Property 8: 日付範囲の順序性', () => {
       // バリデーションエラー（存在しない日付）
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Date does not exist');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Date does not exist');
     });
   });
 });
