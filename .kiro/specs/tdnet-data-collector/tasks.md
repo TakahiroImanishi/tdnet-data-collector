@@ -686,7 +686,7 @@
 
 ### 15. Checkpoint - Phase 2完了確認
 
-- [ ] 15.1 Phase 2の動作確認
+- [x] 15.1 Phase 2の動作確認
   - すべてのAPIエンドポイントが正常に動作することを確認
   - APIキー認証が機能することを確認
   - Query/Export Lambda が正常に動作することを確認

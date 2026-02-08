@@ -242,7 +242,7 @@ describe('Property 8: 日付範囲の順序性', () => {
     it('非うるう年の2月29日はバリデーションエラー', async () => {
       const event = {
         ...baseEvent,
-        queryStringParameters = {
+        queryStringParameters: {
           start_date: '2023-02-29', // 非うるう年
           end_date: '2023-03-01',
         },

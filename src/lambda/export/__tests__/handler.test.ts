@@ -13,8 +13,8 @@ import * as processExport from '../process-export';
 // モック
 jest.mock('../create-export-job');
 jest.mock('../process-export');
-jest.mock('../../utils/logger');
-jest.mock('../../utils/cloudwatch-metrics');
+jest.mock('../../../utils/logger');
+jest.mock('../../../utils/cloudwatch-metrics');
 
 describe('Lambda Export Handler', () => {
   const mockContext: Context = {

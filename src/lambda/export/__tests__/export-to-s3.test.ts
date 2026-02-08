@@ -10,7 +10,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // モック
 jest.mock('@aws-sdk/client-s3');
-jest.mock('../../utils/logger');
+jest.mock('../../../utils/logger');
 
 describe('exportToS3', () => {
   const mockDisclosures: Disclosure[] = [

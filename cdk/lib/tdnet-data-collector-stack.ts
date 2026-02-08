@@ -383,7 +383,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
         API_KEY: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
-        AWS_REGION: this.region,
+        // AWS_REGION is automatically set by Lambda runtime
       },
     });
 

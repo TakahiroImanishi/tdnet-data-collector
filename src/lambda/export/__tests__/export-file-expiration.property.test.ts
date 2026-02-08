@@ -14,7 +14,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 
 // モック
 jest.mock('@aws-sdk/client-s3');
-jest.mock('../../utils/logger');
+jest.mock('../../../utils/logger');
 
 describe('Property 10: エクスポートファイルの有効期限', () => {
   beforeEach(() => {
