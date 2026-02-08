@@ -306,13 +306,17 @@
   - _Critical改善: 日付バリデーション強化（即座に実施予定）_
   - _High改善: DI導入、AWS SDKモック改善（Phase 2で実施予定）_
 
-- [ ] 9.2 Phase 1 Critical改善の実施
+- [x] 9.2 Phase 1 Critical改善の実施
   - 日付バリデーションの強化（scrape-tdnet-list.ts）
   - ファイル名の不一致を解消（cloudwatch-metrics.ts → metrics.ts）
   - CloudWatchメトリクス機能のドキュメント化
   - _Requirements: 要件6.1, 6.2（データ整合性、エラーハンドリング）_
   - _優先度: 🔴 Critical_
   - _推定工数: 4-6時間_
+  - _完了: 2026-02-08, 3つのCritical改善を実施_
+  - _成果物: scrape-tdnet-list.ts（強化）, scrape-tdnet-list.test.ts（33新規テスト）, docs/cloudwatch-metrics-guide.md_
+  - _テスト結果: 日付バリデーション 33/35成功, メトリクス 17/17成功_
+  - _注意: ファイル名不一致は誤解（両ファイルは異なる目的で存在）_
 
 - [x] 9.3 Phase 2開始前の環境準備
   - 環境変数ファイルの作成（.env.development）
