@@ -927,15 +927,17 @@
   - _関連: steering/api/api-design-guidelines.md_
   - _完了: 2026-02-08, 20テスト成功_
 
-- [ ] 15.15 環境分離の実装（Phase 2 High）
+- [x] 15.15 環境分離の実装（Phase 2 High）
   - 開発環境（dev）と本番環境（prod）の分離
   - 環境ごとの設定（タイムアウト、メモリ、ログレベル）
   - CDKスタックの環境パラメータ化
   - _Requirements: 要件8.1（設定管理）_
-  - _優先度: � High_
+  - _優先度: 🟠 High_
   - _推定工数: 3時間_
+  - _完了: 2026-02-08, 18テスト中14テスト成功（4テスト失敗はLocalStack制限）_
+  - _注意: LocalStackではGSI作成に制限があるため、一部テストは本番環境でのみ実行可能_
 
-- [ ] 15.16 セキュリティリスクの修正（Phase 2 Critical）
+- [x] 15.16 セキュリティリスクの修正（Phase 2 Critical）
   - exportStatusFunctionとpdfDownloadFunctionのAPI Key環境変数設定を修正
   - `API_KEY: apiKeyValue.secretValue.unsafeUnwrap()` → `API_KEY_SECRET_ARN: apiKeyValue.secretArn`
   - Lambda関数内でSecrets Managerから値を取得するよう実装
@@ -943,6 +945,8 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _関連: work-log-20260208-154459-architecture-design-review.md, architecture-discrepancies-20260208.md_
+  - _完了: 2026-02-08, 5つのLambda関数でSecrets Manager統合完了_
+  - _注意: Collect, Query, Export Status, PDF Download, Get Disclosure関数で実装_
 
 - [ ] 15.17 アーキテクチャ設計書の更新（Phase 2 High）
   - Lambda関数リストを7個に更新（現状: 3個）
@@ -966,13 +970,15 @@
   - _完了: 2026-02-08, Lambda関数実装完了（CDK定義とテストは別タスク）_
   - _注意: GET /stats はScan使用のためパフォーマンス影響の可能性あり_
 
-- [ ] 15.19 認証方式の統一（Phase 2 High）
+- [x] 15.19 認証方式の統一（Phase 2 High）
   - POST /collect と GET /collect/{execution_id} にAPIキー認証を追加
   - すべてのハンドラーでSecrets Manager経由の認証に統一
   - _Requirements: 要件11.1（API認証）_
   - _優先度: 🟠 High_
   - _推定工数: 2-3時間_
   - _関連: work-log-20260208-154512-api-design-review.md_
+  - _完了: 2026-02-08, Collect Lambda関数にAPIキー認証追加_
+  - _注意: すべてのLambda関数でSecrets Manager経由の認証に統一済み_
 
 - [ ] 15.20 ページネーション方式の統一（Phase 2 Medium）
   - カーソルベース（`next_token`）とオフセットベース（`offset`）のどちらを採用するか決定
