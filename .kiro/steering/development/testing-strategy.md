@@ -113,6 +113,8 @@ describe('API E2E', () => {
 
 ## テスト実行
 
+### 基本コマンド
+
 ```bash
 npm test                    # すべて
 npm run test:unit           # ユニットのみ
@@ -121,9 +123,33 @@ npm run test:e2e            # E2Eのみ
 npm run test:coverage       # カバレッジ付き
 ```
 
-### 対話コマンド禁止
+### CI/CD・自動化用コマンド
 
-**重要**: テストは完全に自動化され、対話的な入力を求めてはいけません。
+**必須**: テストは対話モードで停止せず、完全に自動実行されること。
+
+```bash
+# watch mode無効化（対話停止を防止）
+npm test -- --watchAll=false
+
+# 特定のテストのみ実行
+npm test -- --testPathPattern="TestName" --watchAll=false --no-coverage
+
+# カバレッジ付き（CI/CD推奨）
+npm test -- --watchAll=false --coverage
+
+# 失敗時に即座に終了
+npm test -- --watchAll=false --bail
+```
+
+### テスト実行ルール
+
+#### 1. 対話モード禁止
+
+- ❌ `jest --watch` や `npm test`（デフォルト）は対話モードで停止する
+- ✅ `--watchAll=false`を必ず指定してCI/CD環境で実行可能にする
+- ✅ テスト完了後は自動的に終了すること
+
+#### 2. 対話的入力禁止
 
 - ❌ `readline`、`prompt`、`inquirer`などの対話的入力
 - ❌ ユーザー入力待ちのテスト
@@ -131,6 +157,30 @@ npm run test:coverage       # カバレッジ付き
 - ✅ すべてのテストデータはコード内で定義
 - ✅ モック、スタブ、フィクスチャを使用
 - ✅ CI/CD環境で無人実行可能
+
+#### 3. タイムアウト設定
+
+```typescript
+// 長時間実行テストにはタイムアウトを設定
+it('長時間処理のテスト', async () => {
+    // ...
+}, 30000); // 30秒タイムアウト
+
+// グローバル設定（jest.config.js）
+module.exports = {
+    testTimeout: 10000, // デフォルト10秒
+};
+```
+
+#### 4. 並列実行制御
+
+```bash
+# 並列実行数を制限（メモリ不足対策）
+npm test -- --maxWorkers=2 --watchAll=false
+
+# シーケンシャル実行（統合テスト推奨）
+npm test -- --runInBand --watchAll=false
+```
 
 ## ベストプラクティス
 

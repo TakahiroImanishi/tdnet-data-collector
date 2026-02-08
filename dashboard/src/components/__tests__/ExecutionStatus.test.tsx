@@ -35,9 +35,7 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} />);
 
     await waitFor(() => {
       expect(screen.getByText('収集実行状態')).toBeInTheDocument();
@@ -59,9 +57,7 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} />);
 
     await waitFor(() => {
       expect(screen.getByText('進捗')).toBeInTheDocument();
@@ -83,9 +79,7 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} />);
 
     await waitFor(() => {
       expect(screen.getByText('200')).toBeInTheDocument(); // 総件数
@@ -113,11 +107,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(
-        <ExecutionStatus executionId={mockExecutionId} onComplete={mockOnComplete} />
-      );
-    });
+    render(
+      <ExecutionStatus executionId={mockExecutionId} onComplete={mockOnComplete} />
+    );
 
     await waitFor(() => {
       expect(screen.getByText('完了')).toBeInTheDocument();
@@ -143,12 +135,14 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
 
     await waitFor(() => {
-      expect(screen.getByText('失敗')).toBeInTheDocument();
+      // Chipの「失敗」を確認
+      const chip = screen.getByText((content, element) => {
+        return element?.classList.contains('MuiChip-label') && content === '失敗';
+      });
+      expect(chip).toBeInTheDocument();
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
       expect(mockOnError).toHaveBeenCalledWith(errorMessage);
     });
@@ -185,9 +179,7 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} />);
 
     // 初回呼び出し
     await waitFor(() => {
@@ -197,7 +189,6 @@ describe('ExecutionStatus', () => {
     // 5秒後のポーリング
     await act(async () => {
       jest.advanceTimersByTime(5000);
-      await Promise.resolve(); // マイクロタスクキューをフラッシュ
     });
 
     await waitFor(() => {
@@ -237,9 +228,7 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} />);
 
     // 初回呼び出し
     await waitFor(() => {
@@ -249,7 +238,6 @@ describe('ExecutionStatus', () => {
     // 5秒後のポーリング（完了状態になる）
     await act(async () => {
       jest.advanceTimersByTime(5000);
-      await Promise.resolve(); // マイクロタスクキューをフラッシュ
     });
 
     await waitFor(() => {
@@ -259,7 +247,6 @@ describe('ExecutionStatus', () => {
     // さらに5秒後（ポーリング停止を確認）
     await act(async () => {
       jest.advanceTimersByTime(5000);
-      await Promise.resolve(); // マイクロタスクキューをフラッシュ
     });
 
     await waitFor(() => {
@@ -273,9 +260,7 @@ describe('ExecutionStatus', () => {
       new Error('API呼び出しに失敗しました')
     );
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
 
     await waitFor(() => {
       expect(screen.getByText(/実行状態の取得に失敗しました/i)).toBeInTheDocument();
@@ -298,9 +283,7 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    await act(async () => {
-      render(<ExecutionStatus executionId={mockExecutionId} />);
-    });
+    render(<ExecutionStatus executionId={mockExecutionId} />);
 
     await waitFor(() => {
       expect(screen.getByText(/開始時刻:/i)).toBeInTheDocument();

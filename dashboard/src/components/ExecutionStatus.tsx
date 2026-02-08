@@ -44,13 +44,26 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
 
   // ポーリング処理
   useEffect(() => {
-    if (!executionId || status === 'completed' || status === 'failed') {
+    if (!executionId) {
       return;
     }
 
-    const pollInterval = setInterval(async () => {
+    let pollInterval: NodeJS.Timeout | null = null;
+    let isMounted = true;
+    let inFlight = false; // 二重呼び出し防止
+
+    const fetchStatus = async () => {
+      // 二重呼び出し防止
+      if (inFlight) {
+        return;
+      }
+      
+      inFlight = true;
+      
       try {
         const response = await getCollectionStatus(executionId);
+        
+        if (!isMounted) return;
         
         if (response.success) {
           const data = response.data;
@@ -65,58 +78,57 @@ const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
           setErrorMessage(data.error_message || null);
           setLoading(false);
 
-          // 完了時のコールバック
-          if (data.status === 'completed') {
-            clearInterval(pollInterval);
-            if (onComplete) {
-              onComplete();
+          // 完了時にインターバルをクリア
+          if (data.status === 'completed' || data.status === 'failed') {
+            if (pollInterval) {
+              clearInterval(pollInterval);
+              pollInterval = null;
             }
-          } else if (data.status === 'failed') {
-            clearInterval(pollInterval);
-            if (onError) {
+            
+            // コールバック実行
+            if (data.status === 'completed' && onComplete) {
+              onComplete();
+            } else if (data.status === 'failed' && onError) {
               onError(data.error_message || '収集に失敗しました');
             }
           }
         }
       } catch (err) {
-        console.error('Collection status polling error:', err);
+        if (!isMounted) return;
+        
+        console.error('Collection status fetch error:', err);
         setErrorMessage('実行状態の取得に失敗しました');
         setStatus('failed');
         setLoading(false);
-        clearInterval(pollInterval);
+        
+        // エラー時もインターバルをクリア
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
         
         if (onError) {
           onError('実行状態の取得に失敗しました');
         }
+      } finally {
+        inFlight = false;
       }
-    }, 5000); // 5秒間隔でポーリング
+    };
 
     // 初回実行
-    (async () => {
-      try {
-        const response = await getCollectionStatus(executionId);
-        if (response.success) {
-          const data = response.data;
-          setStatus(data.status);
-          setProgress(data.progress);
-          setTotalItems(data.total_items);
-          setProcessedItems(data.processed_items);
-          setFailedItems(data.failed_items);
-          setStartedAt(data.started_at);
-          setCompletedAt(data.completed_at || null);
-          setErrorMessage(data.error_message || null);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Initial collection status fetch error:', err);
-        setErrorMessage('実行状態の取得に失敗しました');
-        setStatus('failed');
-        setLoading(false);
-      }
-    })();
+    fetchStatus();
 
-    return () => clearInterval(pollInterval);
-  }, [executionId, status, onComplete, onError]);
+    // ポーリング開始
+    pollInterval = setInterval(fetchStatus, 5000); // 5秒間隔でポーリング
+
+    return () => {
+      isMounted = false;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    };
+  }, [executionId, onComplete, onError]); // statusを依存配列から削除
 
   // ステータスアイコンとカラー
   const getStatusIcon = () => {
