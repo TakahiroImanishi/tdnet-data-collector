@@ -26,16 +26,12 @@ fileMatchPattern: '**/validators/**/*.ts|**/models/**/*.ts|**/types/**/*.ts|**/u
 import { ValidationError } from './errors';
 
 function validateCompanyCode(code: string): void {
-    if (!code || code.trim().length === 0) {
-        throw new ValidationError('company_code is required', 'company_code');
+    if (!code || !/^\d{4}$/.test(code)) {
+        throw new ValidationError('Invalid company_code', 'company_code');
     }
-    const pattern = /^\d{4}$/;
-    if (!pattern.test(code)) {
-        throw new ValidationError('company_code must be a 4-digit number', 'company_code');
-    }
-    const codeNum = parseInt(code, 10);
-    if (codeNum < 1000 || codeNum > 9999) {
-        throw new ValidationError('company_code must be between 1000 and 9999', 'company_code');
+    const num = parseInt(code, 10);
+    if (num < 1000 || num > 9999) {
+        throw new ValidationError('company_code out of range', 'company_code');
     }
 }
 ```
@@ -44,23 +40,20 @@ function validateCompanyCode(code: string): void {
 
 ```typescript
 function generateDatePartition(disclosedAt: string): string {
-    if (!disclosedAt || disclosedAt.length < 7) {
-        throw new ValidationError('Invalid disclosed_at format', 'disclosed_at');
-    }
     const partition = disclosedAt.substring(0, 7); // YYYY-MM
-    validateDatePartition(partition);
+    if (!/^\d{4}-\d{2}$/.test(partition)) {
+        throw new ValidationError('Invalid date_partition', 'disclosed_at');
+    }
     return partition;
 }
 
 // DynamoDBクエリ
 async function queryByDatePartition(yearMonth: string): Promise<Disclosure[]> {
-    validateDatePartition(yearMonth);
     const result = await docClient.send(new QueryCommand({
         TableName: tableName,
         IndexName: 'GSI_DatePartition',
         KeyConditionExpression: 'date_partition = :partition',
         ExpressionAttributeValues: { ':partition': yearMonth },
-        ScanIndexForward: false,
     }));
     return result.Items as Disclosure[];
 }
@@ -71,7 +64,6 @@ async function queryByDatePartition(yearMonth: string): Promise<Disclosure[]> {
 | 項目 | ルール |
 |------|--------|
 | Content-Type | `application/pdf` |
-| 拡張子 | `.pdf` |
 | サイズ | 10KB-50MB |
 | ヘッダー | `%PDF-` で開始 |
 
@@ -86,64 +78,12 @@ function validatePDFIntegrity(buffer: Buffer): void {
 }
 ```
 
-## 日付範囲バリデーション
+## 必須ルール
 
-```typescript
-function validateDateRange(startDate: string, endDate: string): void {
-    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-    if (!datePattern.test(startDate) || !datePattern.test(endDate)) {
-        throw new ValidationError('Invalid date format', 'date_range');
-    }
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (start > end) {
-        throw new ValidationError('start_date must be before end_date', 'start_date');
-    }
-    if (start > new Date() || end > new Date()) {
-        throw new ValidationError('Dates cannot be in the future', 'date_range');
-    }
-}
-```
-
-## 複合バリデーション
-
-```typescript
-interface DisclosureInput {
-    disclosure_id: string;
-    company_code: string;
-    company_name: string;
-    disclosure_type: string;
-    title: string;
-    disclosed_at: string;
-    pdf_s3_key: string;
-    date_partition?: string;
-}
-
-function validateAndEnrichDisclosure(input: DisclosureInput): DisclosureInput {
-    validateDisclosure(input);
-    if (!input.date_partition) {
-        input.date_partition = generateDatePartition(input.disclosed_at);
-    }
-    return input;
-}
-```
-
-## ベストプラクティス
-
-1. **早期バリデーション**: 入力受け取り直後に実行
-2. **詳細なエラーメッセージ**: 問題箇所を明確に
-3. **サニタイゼーション**: バリデーション前にtrim()
-4. **テスト**: すべてのルールにテストを作成
-
-```typescript
-// Lambda関数での使用例
-export const handler = async (event: any): Promise<any> => {
-    const input = JSON.parse(event.body);
-    validateDisclosure(input); // 最初にバリデーション
-    const result = await processDisclosure(input);
-    return { statusCode: 200, body: JSON.stringify(result) };
-};
-```
+- [ ] 早期バリデーション（入力受け取り直後）
+- [ ] 詳細なエラーメッセージ（問題箇所を明確に）
+- [ ] サニタイゼーション（バリデーション前にtrim()）
+- [ ] すべてのルールにテストを作成
 
 ## 関連ドキュメント
 
