@@ -160,16 +160,26 @@ export async function handler(
 }
 
 /**
+ * 認証エラークラス
+ */
+class UnauthorizedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+/**
  * APIキー認証の検証
  *
  * @param event API Gateway Proxy Event
- * @throws ValidationError APIキーが無効な場合
+ * @throws UnauthorizedError APIキーが無効な場合
  */
 function validateApiKey(event: QueryEvent): void {
   const apiKey = event.headers['x-api-key'] || event.headers['X-Api-Key'];
 
   if (!apiKey) {
-    throw new ValidationError('API key is required. Please provide x-api-key header.');
+    throw new UnauthorizedError('API key is required. Please provide x-api-key header.');
   }
 
   // APIキーの検証（実際の実装ではSecrets Managerから取得した値と比較）
@@ -182,7 +192,7 @@ function validateApiKey(event: QueryEvent): void {
   }
 
   if (apiKey !== validApiKey) {
-    throw new ValidationError('Invalid API key');
+    throw new UnauthorizedError('Invalid API key');
   }
 }
 
@@ -320,6 +330,9 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
   } else if (error instanceof NotFoundError) {
     statusCode = 404;
     errorCode = 'NOT_FOUND';
+  } else if (error instanceof UnauthorizedError) {
+    statusCode = 401;
+    errorCode = 'UNAUTHORIZED';
   } else if (error.message.includes('API key')) {
     statusCode = 401;
     errorCode = 'UNAUTHORIZED';

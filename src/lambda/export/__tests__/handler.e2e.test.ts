@@ -202,8 +202,8 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
       expect(body).toHaveProperty('message');
       expect(body).toHaveProperty('progress');
 
-      // エクスポートIDの形式確認
-      expect(body.export_id).toMatch(/^export_\d+_[a-f0-9]+_[a-f0-9]+$/);
+      // エクスポートIDの形式確認（base36形式: 数字とa-zの小文字）
+      expect(body.export_id).toMatch(/^export_\d+_[a-z0-9]+_[a-z0-9]+$/);
       expect(body.status).toBe('pending');
       expect(body.message).toContain('Export job created successfully');
       expect(body.progress).toBe(0);

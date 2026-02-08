@@ -209,6 +209,12 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       // Act
       const result = await handler(mockEvent, mockContext);
 
+      // Debug: Log error if status is not 200
+      if (result.statusCode !== 200) {
+        console.error('Test failed with status:', result.statusCode);
+        console.error('Response body:', result.body);
+      }
+
       // Assert
       expect(result.statusCode).toBe(200);
       expect(result.headers?.['Content-Type']).toBe('application/json');

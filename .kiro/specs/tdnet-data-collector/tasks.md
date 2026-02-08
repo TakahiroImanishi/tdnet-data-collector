@@ -884,7 +884,7 @@
   - _作業記録: work-log-20260208-132153-ci-cd-integration.md_
   - _注意: 既存のci.ymlとは別に、詳細レポートとアーティファクト管理に特化したワークフローを作成_
 
-- [ ] 15.12.1 E2Eテスト環境変数読み込み問題の解決
+- [x] 15.12.1 E2Eテスト環境変数読み込み問題の解決
   - jest.config.e2e.jsで.env.localを明示的に読み込む設定を追加
   - setupFilesまたはsetupFilesAfterEnvでdotenv.config()を実行
   - テストのbeforeAll/beforeEachで環境変数が正しく設定されているか確認
@@ -896,6 +896,8 @@
   - _前提条件: タスク15.12完了_
   - _問題: LocalStackにはリソースが作成済みだが、テスト実行時に環境変数が未定義_
   - _解決策: jest.config.e2e.jsのsetupFilesで require('dotenv').config({ path: '.env.local' }) を追加_
+  - _完了: 2026-02-08, 24/28テスト成功（85.7%）_
+  - _注意: 環境変数読み込み問題は完全に解決。残り4件の500エラーはGSI未作成が原因（別タスクで対応）_
 
 - [ ] 15.14 Phase 2完了確認（最終）
   - すべてのE2Eテストが成功することを確認
