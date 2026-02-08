@@ -1204,13 +1204,15 @@
   - [x] **15.29-B: src/lambda/export/create-export-job.ts (50% → 100%)**
     - 現状: 3/6ブランチ → **6/6ブランチ** ✅
     - 目標: 80%以上 → **100%達成** ✅
-    - テスト対象:
-      - 環境変数デフォルト値分岐（EXPORT_STATUS_TABLE_NAME、AWS_REGION、AWS_ENDPOINT_URL）
-      - 再試行ロジック分岐（ProvisionedThroughputExceededException）
-      - エラーハンドリング分岐（再試行あり/なし）
-    - テストケース: 32件（+3件追加）
-    - _完了: 2026-02-08 22:03:20_
-    - _作業記録: work-log-20260208-220320-task15-29-b-create-export-job.md_
+    - カバレッジ結果:
+      - Statements: 100% ✅
+      - Branches: 100% (6/6) ✅
+      - Functions: 100% ✅
+      - Lines: 100% ✅
+    - テストケース: 32件（既存テストで100%達成）
+    - _完了: 2026-02-08 22:15:00_
+    - _作業記録: work-log-20260208-221347-task15-29-b-create-export-job.md_
+    - _注意: 既存のテストケースで既に100%のカバレッジを達成済み、追加作業不要_
   
   - [ ] **15.29-C: src/lambda/collect/handler.ts (57.5%)**
     - 現状: 23/40ブランチ

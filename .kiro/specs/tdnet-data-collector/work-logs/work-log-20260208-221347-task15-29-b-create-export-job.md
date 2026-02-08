@@ -99,3 +99,11 @@ Tests:       32 passed, 32 total
 create-export-job.tsは既に完璧なテストカバレッジを達成しており、追加作業は不要でした。既存の32件のテストケースがすべてのブランチ、ステートメント、関数、ラインをカバーしています。
 
 **作業完了日時**: 2026-02-08 22:15:00
+
+## Git Commit
+
+```bash
+git add .
+git commit -m "[test] タスク15.29-B完了 - create-export-job.ts ブランチカバレッジ100%達成（既存テストで目標達成済み）"
+git push
+```
