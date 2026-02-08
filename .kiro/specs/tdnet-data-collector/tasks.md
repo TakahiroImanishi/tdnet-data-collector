@@ -948,7 +948,7 @@
   - _完了: 2026-02-08, 5つのLambda関数でSecrets Manager統合完了_
   - _注意: Collect, Query, Export Status, PDF Download, Get Disclosure関数で実装_
 
-- [ ] 15.17 アーキテクチャ設計書の更新（Phase 2 High）
+- [x] 15.17 アーキテクチャ設計書の更新（Phase 2 High）
   - Lambda関数リストを7個に更新（現状: 3個）
   - date_partitionの形式を`YYYY-MM`に統一（現状: YYYY-MM-DD）
   - DynamoDB GSI名を`GSI_DatePartition`に修正（現状: GSI_DateRange）
@@ -958,6 +958,7 @@
   - _優先度: 🟠 High_
   - _推定工数: 2-3時間_
   - _関連: work-log-20260208-154459-architecture-design-review.md, architecture-discrepancies-20260208.md_
+  - _完了: 2026-02-08, 5つの不整合をすべて修正_
 
 - [x] 15.18 未実装エンドポイントの実装（Phase 2 High）
   - GET /disclosures/{id} - 開示情報詳細取得

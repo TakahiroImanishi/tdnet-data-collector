@@ -2463,6 +2463,135 @@ new codedeploy.LambdaDeploymentGroup(this, 'DeploymentGroup', {
 });
 ```
 
+### CloudFormation Outputs
+
+デプロイ後、以下の情報がCloudFormation Outputsとして出力されます。これらの値は、アプリケーションの設定やCI/CDパイプラインで使用されます。
+
+```typescript
+// CDK実装例
+import * as cdk from 'aws-cdk-lib';
+
+// API Gateway URL
+new cdk.CfnOutput(this, 'ApiEndpoint', {
+    value: api.url,
+    description: 'API Gateway endpoint URL',
+    exportName: `${props.environment}-tdnet-api-endpoint`,
+});
+
+// DynamoDB Table Names
+new cdk.CfnOutput(this, 'DisclosuresTableName', {
+    value: disclosuresTable.tableName,
+    description: 'DynamoDB table name for disclosures',
+    exportName: `${props.environment}-tdnet-disclosures-table`,
+});
+
+new cdk.CfnOutput(this, 'ExecutionsTableName', {
+    value: executionsTable.tableName,
+    description: 'DynamoDB table name for executions',
+    exportName: `${props.environment}-tdnet-executions-table`,
+});
+
+// S3 Bucket Names
+new cdk.CfnOutput(this, 'PdfBucketName', {
+    value: pdfBucket.bucketName,
+    description: 'S3 bucket name for PDF files',
+    exportName: `${props.environment}-tdnet-pdf-bucket`,
+});
+
+new cdk.CfnOutput(this, 'ExportBucketName', {
+    value: exportBucket.bucketName,
+    description: 'S3 bucket name for export files',
+    exportName: `${props.environment}-tdnet-export-bucket`,
+});
+
+new cdk.CfnOutput(this, 'DashboardBucketName', {
+    value: dashboardBucket.bucketName,
+    description: 'S3 bucket name for dashboard',
+    exportName: `${props.environment}-tdnet-dashboard-bucket`,
+});
+
+// Lambda Function Names and ARNs
+new cdk.CfnOutput(this, 'CollectorFunctionName', {
+    value: collectorFunction.functionName,
+    description: 'Lambda function name for collector',
+    exportName: `${props.environment}-tdnet-collector-function`,
+});
+
+new cdk.CfnOutput(this, 'CollectorFunctionArn', {
+    value: collectorFunction.functionArn,
+    description: 'Lambda function ARN for collector',
+});
+
+new cdk.CfnOutput(this, 'QueryFunctionName', {
+    value: queryFunction.functionName,
+    description: 'Lambda function name for query',
+    exportName: `${props.environment}-tdnet-query-function`,
+});
+
+new cdk.CfnOutput(this, 'ExportFunctionName', {
+    value: exportFunction.functionName,
+    description: 'Lambda function name for export',
+    exportName: `${props.environment}-tdnet-export-function`,
+});
+
+// CloudFront Distribution
+new cdk.CfnOutput(this, 'CloudFrontUrl', {
+    value: `https://${distribution.distributionDomainName}`,
+    description: 'CloudFront distribution URL for dashboard',
+    exportName: `${props.environment}-tdnet-cloudfront-url`,
+});
+
+// API Key Secret ARN
+new cdk.CfnOutput(this, 'ApiKeySecretArn', {
+    value: apiKeySecret.secretArn,
+    description: 'Secrets Manager ARN for API key',
+    exportName: `${props.environment}-tdnet-api-key-secret-arn`,
+});
+
+// CloudWatch Dashboard URL
+new cdk.CfnOutput(this, 'DashboardUrl', {
+    value: `https://console.aws.amazon.com/cloudwatch/home?region=${this.region}#dashboards:name=${dashboard.dashboardName}`,
+    description: 'CloudWatch dashboard URL',
+});
+```
+
+**Outputs一覧:**
+
+| Output名 | 説明 | 用途 |
+|---------|------|------|
+| ApiEndpoint | API Gateway URL | フロントエンド設定、スモークテスト |
+| DisclosuresTableName | 開示情報テーブル名 | Lambda環境変数、バックアップスクリプト |
+| ExecutionsTableName | 実行状態テーブル名 | Lambda環境変数、監視スクリプト |
+| PdfBucketName | PDFバケット名 | Lambda環境変数、バックアップスクリプト |
+| ExportBucketName | エクスポートバケット名 | Lambda環境変数 |
+| DashboardBucketName | ダッシュボードバケット名 | デプロイスクリプト |
+| CollectorFunctionName | Collector関数名 | 手動実行、ログ確認 |
+| CollectorFunctionArn | Collector関数ARN | EventBridge設定、IAMポリシー |
+| QueryFunctionName | Query関数名 | ログ確認、パフォーマンステスト |
+| ExportFunctionName | Export関数名 | ログ確認、パフォーマンステスト |
+| CloudFrontUrl | CloudFront URL | ダッシュボードアクセス |
+| ApiKeySecretArn | APIキーシークレットARN | Lambda環境変数、ローテーションスクリプト |
+| DashboardUrl | CloudWatchダッシュボードURL | 監視、トラブルシューティング |
+
+**Outputsの取得方法:**
+
+```bash
+# AWS CLI
+aws cloudformation describe-stacks \
+  --stack-name tdnet-data-collector-dev \
+  --query 'Stacks[0].Outputs' \
+  --output table
+
+# CDK CLI
+cdk deploy --outputs-file outputs.json
+
+# 特定のOutputを取得
+aws cloudformation describe-stacks \
+  --stack-name tdnet-data-collector-dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' \
+  --output text
+```
+
 ### スモークテスト
 
 ```typescript
