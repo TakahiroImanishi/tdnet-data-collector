@@ -467,14 +467,17 @@
   - _Phase2移行判断: ✅ Go（条件付き）- Criticalブロッカーなし、High優先度問題はPhase2並行作業可能_
   - _発見された問題: ブランチカバレッジ74.81%（目標80%に5.19%不足）、test-helpers.ts依存関係問題_
 
-- [ ] 9.16 Phase1 Critical/High改善の実施
+- [x] 9.16 Phase1 Critical/High改善の実施
   - タスク9.15で特定されたCritical/High優先度の問題を修正
   - 修正後のテスト実行と検証
   - 改善記録の更新
   - _Requirements: 全要件_
   - _優先度: 🔴 Critical_
   - _推定工数: 変動（問題の数と複雑さに依存）_
-  - _注意: Phase2移行前に必ず完了すること_
+  - _完了: 2026-02-08, test-helpers.ts依存関係問題を解決_
+  - _成果物: package.json（@aws-sdk/lib-dynamodb追加）, test-helpers.ts（移動）_
+  - _テスト結果: 497テスト成功、test-helpers.ts関連エラー完全解消_
+  - _注意: 他のテストスイート失敗（CDK関連4件）は別タスクで対応_
 
 
 ## Phase 2: API実装（Query、Export、認証）
@@ -505,44 +508,51 @@
 
 ### 11. Lambda Query実装
 
-- [ ] 11.1 Lambda Queryハンドラーの実装
+- [x] 11.1 Lambda Queryハンドラーの実装
   - イベント型定義（QueryEvent、APIGatewayProxyResult）
   - クエリパラメータのパース（company_code、start_date、end_date、disclosure_type、format、limit、offset）
   - APIキー認証の検証
   - _Requirements: 要件4.1, 4.3, 11.1（検索API、認証）_
+  - _完了: 2026-02-08, handler.ts実装完了_
 
-- [ ] 11.2 queryDisclosures関数の実装
+- [x] 11.2 queryDisclosures関数の実装
   - DynamoDBクエリ（GSI使用）
   - フィルタリングとソート（開示日降順）
   - ページネーション（limit、offset）
   - _Requirements: 要件4.1（検索）_
+  - _完了: 2026-02-08, query-disclosures.ts実装完了_
 
-- [ ] 11.3 generatePresignedUrl関数の実装
+- [x] 11.3 generatePresignedUrl関数の実装
   - S3署名付きURL生成（有効期限1時間）
   - _Requirements: 要件4.4（PDFダウンロード）_
+  - _完了: 2026-02-08, generate-presigned-url.ts実装完了_
 
-- [ ] 11.4 formatAsCsv関数の実装
+- [x] 11.4 formatAsCsv関数の実装
   - 開示情報リストをCSV形式に変換
   - _Requirements: 要件5.2（CSV形式）_
+  - _完了: 2026-02-08, format-csv.ts実装完了_
 
-- [ ] 11.5 Lambda QueryのCDK定義
+- [x] 11.5 Lambda QueryのCDK定義
   - NodejsFunction構成（タイムアウト30秒、メモリ256MB）
   - 環境変数設定
   - IAMロール設定
   - API Gatewayとの統合
   - _Requirements: 要件12.1, 12.3（コスト最適化）_
+  - _完了: 2026-02-08, CDK定義追加完了_
 
-- [ ]* 11.6 Lambda Queryユニットテスト
+- [x]* 11.6 Lambda Queryユニットテスト
   - クエリパラメータのバリデーション
   - フィルタリングロジックの検証
   - CSV変換の検証
   - _Requirements: 要件14.1（ユニットテスト）_
+  - _完了: 2026-02-08, 37テスト成功（handler: 26件、format-csv: 11件）_
 
-- [ ]* 11.7 日付範囲バリデーションのプロパティテスト
+- [x]* 11.7 日付範囲バリデーションのプロパティテスト
   - **Property 8: 日付範囲の順序性**
   - **Validates: Requirements 5.2**
   - 開始日が終了日より後の場合はバリデーションエラーを返すことを検証
   - _Requirements: 要件14.2（プロパティテスト）_
+  - _完了: 2026-02-08, 7テスト成功（各100回反復）_
 
 ### 12. Lambda Export実装
 
