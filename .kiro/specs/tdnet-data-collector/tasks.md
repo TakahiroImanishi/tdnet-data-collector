@@ -1207,11 +1207,14 @@
   - _完了: 2026-02-08, 3テスト成功（ダッシュボード作成、ウィジェット検証、環境名設定）_
   - _作業記録: work-log-20260208-204455-task16-4-cloudwatch-dashboard.md_
 
-- [ ]* 16.5 CloudWatch設定の検証テスト
+- [x] 16.5 CloudWatch設定の検証テスト
   - カスタムメトリクスが送信されることを確認
   - アラームが正しく設定されていることを確認
   - ダッシュボードが表示されることを確認
   - _Requirements: 要件14.1（テスト）_
+  - _完了: 2026-02-08, 15テスト成功（100%）_
+  - _成果物: cdk/__tests__/cloudwatch-integration.test.ts_
+  - _作業記録: work-log-20260208-205310-task16-5-cloudwatch-verification.md_
 
 ### 17. Webダッシュボード実装
 
