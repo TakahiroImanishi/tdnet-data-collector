@@ -47,27 +47,37 @@
 
 ### Phase 2: 未実装エンドポイント実装（Task 15.18）
 
-#### 1. GET /disclosures/{id} - 開示情報詳細取得
+#### 1. GET /disclosures/{id} - 開示情報詳細取得 ✅
 - Lambda関数作成: `src/lambda/get-disclosure/handler.ts`
-- DynamoDBから開示情報を取得
-- 署名付きPDF URLを生成
-- CDK定義追加: `cdk/lib/constructs/lambda-get-disclosure.ts`
-- API Gateway統合
-- テスト作成: `src/lambda/get-disclosure/__tests__/handler.test.ts`
+- DynamoDBから開示情報を取得（disclosure_idで検索）
+- 署名付きPDF URLを生成（S3 getSignedUrl使用）
+- エントリーポイント作成: `src/lambda/get-disclosure/index.ts`
+- API設計ガイドラインに準拠したエラーレスポンス形式
+- 有効期限のバリデーション（1秒〜7日）
 
-#### 2. GET /health - ヘルスチェック
+#### 2. GET /health - ヘルスチェック ✅
 - Lambda関数作成: `src/lambda/health/handler.ts`
-- DynamoDB/S3接続確認
-- CDK定義追加: `cdk/lib/constructs/lambda-health.ts`
-- API Gateway統合（認証不要）
-- テスト作成: `src/lambda/health/__tests__/handler.test.ts`
+- DynamoDB接続確認（DescribeTableコマンド）
+- S3接続確認（HeadBucketコマンド）
+- 並行実行でパフォーマンス最適化
+- レスポンス: `{ status, timestamp, services: { dynamodb, s3 }, details }`
+- エントリーポイント作成: `src/lambda/health/index.ts`
+- キャッシュ無効化ヘッダー設定
 
-#### 3. GET /stats - 統計情報取得
+#### 3. GET /stats - 統計情報取得 ✅
 - Lambda関数作成: `src/lambda/stats/handler.ts`
 - DynamoDBから統計情報を取得
-- CDK定義追加: `cdk/lib/constructs/lambda-stats.ts`
-- API Gateway統合
-- テスト作成: `src/lambda/stats/__tests__/handler.test.ts`
+  - 総開示情報件数（Scanを使用）
+  - 直近30日の収集件数（GSI_DatePartitionを使用）
+  - 企業別件数トップ10（Scanで集計）
+- レスポンス: `{ total_disclosures, last_30_days, top_companies }`
+- エントリーポイント作成: `src/lambda/stats/index.ts`
+- 5分キャッシュ設定
+
+**注意事項:**
+- CDK定義とAPI Gateway統合は別タスクで実施予定
+- テストファイルは別タスクで作成予定
+- GET /stats のScan操作は大量データでパフォーマンス影響の可能性あり（本番環境では集計テーブル推奨）
 
 ---
 
