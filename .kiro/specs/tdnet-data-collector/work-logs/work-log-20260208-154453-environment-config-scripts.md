@@ -78,7 +78,17 @@ docs/deployment-guide.md を作成し、環境別デプロイ手順を記載し�
 
 ### 5. .gitignore更新
 
-.env.production を追加し、本番環境の機密情報を保護するようにしました。
+.gitignore を確認しました。`.env.production` は既に追加されており、本番環境の機密情報が保護されています。
+
+---
+
+## 問題と解決策
+
+### 問題1: .gitignoreの重複確認
+
+**問題**: .env.production が既に .gitignore に含まれているか確認が必要
+
+**解決策**: .gitignore を確認し、`.env.production` が既に含まれていることを確認しました。追加の変更は不要です。
 
 ---
 
@@ -92,8 +102,40 @@ docs/deployment-guide.md を作成し、環境別デプロイ手順を記載し�
 5. `docs/deployment-guide.md` - デプロイガイドドキュメント
 
 ### 更新したファイル
-1. `cdk.json` - environment context パラメータを追加
-2. `.gitignore` - .env.production を追加
+1. `cdk.json` - environment context パラメータを追加（デフォルト値: dev）
+2. `.gitignore` - 確認済み（.env.production は既に追加済み）
+
+---
+
+## テスト結果
+
+### 手動テスト
+
+#### 1. ファイル存在確認
+- ✅ `.env.development` が作成されている
+- ✅ `.env.production` が作成されている
+- ✅ `scripts/deploy-dev.ps1` が作成されている
+- ✅ `scripts/deploy-prod.ps1` が作成されている
+- ✅ `docs/deployment-guide.md` が作成されている
+
+#### 2. 設定ファイルの内容確認
+- ✅ `.env.development` に開発環境用の設定が含まれている
+- ✅ `.env.production` に本番環境用の設定が含まれている
+- ✅ 環境変数の形式が正しい（KEY=VALUE）
+
+#### 3. デプロイスクリプトの確認
+- ✅ `deploy-dev.ps1` に環境変数読み込みロジックが含まれている
+- ✅ `deploy-prod.ps1` に確認プロンプトが含まれている
+- ✅ エラーハンドリングが実装されている
+
+#### 4. CDK設定の確認
+- ✅ `cdk.json` に environment パラメータが追加されている
+- ✅ デフォルト値が "dev" に設定されている
+
+#### 5. ドキュメントの確認
+- ✅ `docs/deployment-guide.md` にデプロイ手順が記載されている
+- ✅ 開発環境・本番環境の両方の手順が含まれている
+- ✅ トラブルシューティングセクションが含まれている
 
 ---
 
@@ -115,3 +157,28 @@ docs/deployment-guide.md を作成し、環境別デプロイ手順を記載し�
 1. CI/CDパイプラインの構築（GitHub Actionsなど）
 2. 環境別のリソース設定（Lambda メモリ、タイムアウトなど）をCDKスタックに反映
 3. デプロイ前のバリデーションスクリプトの追加
+
+---
+
+## タスク完了確認
+
+### チェックリスト
+- ✅ `.env.development` を作成（開発環境設定）
+- ✅ `.env.production` を作成（本番環境設定テンプレート）
+- ✅ `scripts/deploy-dev.ps1` を作成（開発環境デプロイスクリプト）
+- ✅ `scripts/deploy-prod.ps1` を作成（本番環境デプロイスクリプト、確認プロンプト付き）
+- ✅ `cdk.json` を更新（environment context パラメータを追加）
+- ✅ `docs/deployment-guide.md` を作成（デプロイ手順ドキュメント）
+- ✅ `.gitignore` を確認（.env.production は既に追加済み）
+
+### 要件との対応
+- ✅ 要件8.1（設定管理）: 環境別の設定ファイルを作成
+- ✅ steering/infrastructure/deployment-checklist.md: デプロイ手順を文書化
+- ✅ steering/infrastructure/environment-variables.md: 環境変数を適切に管理
+
+### 成果物の品質確認
+- ✅ PowerShellスクリプトにエラーハンドリングを実装
+- ✅ 本番環境デプロイに二重確認プロンプトを実装
+- ✅ 環境変数の形式が正しい（KEY=VALUE）
+- ✅ ドキュメントに開発・本番両環境の手順を記載
+- ✅ トラブルシューティングセクションを含む

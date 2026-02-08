@@ -162,20 +162,96 @@
 
 ## 成果物
 
-- [ ] 更新されたアーキテクチャ設計書: `.kiro/specs/tdnet-data-collector/design/architecture.md`
+- [x] 差分レポート: `.kiro/specs/tdnet-data-collector/work-logs/architecture-discrepancies-20260208.md`
+- [x] 作業記録: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260208-154459-architecture-design-review.md`
+- [ ] 設計書の更新: `.kiro/specs/tdnet-data-collector/docs/design.md` (次のステップ)
+
+### 主要な発見事項
+
+1. **date_partitionの形式を確認**
+   - 実装: `YYYY-MM`形式（月単位）
+   - 実装ファイル: `src/utils/date-partition.ts`
+   - 設計書の記述が不正確（`YYYY-MM-DD`と記載されている箇所がある）
+
+2. **セキュリティリスクを発見**
+   - `exportStatusFunction`と`pdfDownloadFunction`でAPIキーを環境変数に直接展開
+   - `unsafeUnwrap()`の使用はセキュリティベストプラクティス違反
+   - 推奨: すべての関数で`API_KEY_SECRET_ARN`を使用
+
+3. **Lambda関数の数**
+   - 設計書: 3個
+   - 実装: 7個
+   - 差分: 4個の関数が設計書に記載されていない
+
+4. **DynamoDB GSI名**
+   - 設計書: `GSI_DateRange`
+   - 実装: `GSI_DatePartition`
+
+5. **API Gatewayエンドポイント**
+   - 実装: 6個のエンドポイント
+   - 設計書: 一部のエンドポイントの記載が不完全
 
 ---
 
 ## 次回への申し送り
 
 ### 残課題
-（完了時に記録）
+
+1. **設計書の更新（優先度: High）**
+   - Lambda関数リストを7個に更新
+   - date_partitionの形式を`YYYY-MM`に統一
+   - API Keyのセキュリティベストプラクティスを明記
+   - DynamoDB GSI名を`GSI_DatePartition`に修正
+   - API Gatewayエンドポイントの完全なリストを追加
+
+2. **実装の修正（優先度: High - セキュリティ）**
+   - `exportStatusFunction`と`pdfDownloadFunction`の環境変数設定を修正
+   - `API_KEY: apiKeyValue.secretValue.unsafeUnwrap()` → `API_KEY_SECRET_ARN: apiKeyValue.secretArn`
+   - Lambda関数内でSecrets Managerから値を取得するよう実装
+
+3. **タスク指示の修正（優先度: Medium）**
+   - 設計書のパスを正しい場所に修正
+   - `.kiro/specs/tdnet-data-collector/design/architecture.md` → `.kiro/specs/tdnet-data-collector/docs/design.md`
 
 ### 注意点
-（完了時に記録）
+
+- 設計書は3106行と非常に長いため、更新時は該当セクションのみを修正すること
+- セキュリティリスクのある実装は早急に修正が必要
+- date_partitionの形式は実装とテストで`YYYY-MM`が確認されているため、設計書を実装に合わせること
 
 ---
 
 ## 問題と解決策
 
-（問題が発生した場合に記録）
+### 問題1: 設計書のファイルパスが不正確
+
+**問題:**
+- タスク指示では`.kiro/specs/tdnet-data-collector/design/architecture.md`を参照するよう指示されていた
+- 実際には`design/`ディレクトリは存在せず、`.kiro/specs/tdnet-data-collector/docs/design.md`に設計書が存在
+
+**解決策:**
+- `fileSearch`ツールで設計書を検索し、正しい場所を特定
+- 今後のタスク指示では正しいパスを使用するよう修正が必要
+
+### 問題2: date_partitionの形式が不明確
+
+**問題:**
+- 設計書では`YYYY-MM-DD`形式と記載されている箇所がある
+- CDKのコメントでは`YYYY-MM`形式と記載
+- 実際の実装を確認する必要があった
+
+**解決策:**
+- `grepSearch`で`generateDatePartition`関数を検索
+- `src/utils/date-partition.ts`を確認し、`YYYY-MM`形式であることを確認
+- テストファイルでも`YYYY-MM`形式が使用されていることを確認
+
+### 問題3: セキュリティリスクの発見
+
+**問題:**
+- 一部のLambda関数で`unsafeUnwrap()`を使用してAPIキーを環境変数に直接展開
+- CloudWatch Logsやコンソールで露出するリスク
+
+**解決策:**
+- 差分レポートにセキュリティリスクとして明記
+- 実装修正の推奨事項を記載
+- すべての関数で`API_KEY_SECRET_ARN`を使用し、Lambda関数内でSecrets Managerから取得するよう推奨
