@@ -11,7 +11,7 @@ Material-UI Gridの非推奨警告を解消するため、Grid v2に移行する
 ## 問題
 
 - `item`, `xs`, `sm`, `md`プロパティの非推奨警告
-- Grid2コンポーネントへの移行が必要
+- MUI v7では`size`プロパティを使用する新しいAPI
 
 ## 実施内容
 
@@ -30,36 +30,68 @@ Material-UI Gridの非推奨警告を解消するため、Grid v2に移行する
 
 ### 3. 変更内容
 
+#### MUI v7のGrid API
+- `item`プロパティは不要（削除）
+- `xs={12}` → `size={{ xs: 12 }}`
+- `xs={12} sm={6} md={4}` → `size={{ xs: 12, sm: 6, md: 4 }}`
+
 #### SearchFilter.tsx
-- インポート変更: `Grid` → `Grid2` from `@mui/material/Unstable_Grid2`
-- `<Grid item xs={12} sm={6} md={4}>` → `<Grid xs={12} sm={6} md={4}>`
+- `<Grid item xs={12} sm={6} md={4}>` → `<Grid size={{ xs: 12, sm: 6, md: 4 }}>`
 - `item`プロパティを削除
+- レスポンシブサイズを`size`オブジェクトに統合
 
 #### ExecutionStatus.tsx
-- インポート変更: `Grid` → `Grid2` from `@mui/material/Unstable_Grid2`
-- `<Grid item xs={6} sm={3}>` → `<Grid xs={6} sm={3}>`
+- `<Grid item xs={6} sm={3}>` → `<Grid size={{ xs: 6, sm: 3 }}>`
 - `item`プロパティを削除
+
+### 4. 試行錯誤
+
+1. **Grid2インポート試行**: `@mui/material/Grid2` → モジュールが見つからない
+2. **PigmentGrid試行**: `@mui/material/PigmentGrid` → テスト環境で依存関係エラー
+3. **最終アプローチ**: 既存のGridコンポーネントで新しい`size`プロパティを使用
 
 ## 変更ファイル一覧
 
-- [ ] `dashboard/src/components/SearchFilter.tsx`
-- [ ] `dashboard/src/components/ExecutionStatus.tsx`
+- [x] `dashboard/src/components/SearchFilter.tsx` - 完了
+- [x] `dashboard/src/components/ExecutionStatus.tsx` - 完了
 
 ## テスト結果
 
-- [ ] `npm test` 実行
+- [x] TypeScript診断: エラーなし
+- [ ] `npm test` 実行（次のステップ）
 - [ ] 非推奨警告の解消確認
 - [ ] ビルド成功確認
 
 ## 問題と解決策
 
-（実施中に記録）
+### 問題1: Grid2モジュールが見つからない
+- **原因**: MUI v7では`Grid2`は別パッケージではなく、既存のGridが新APIをサポート
+- **解決**: 既存のGridコンポーネントを使用し、`size`プロパティに移行
+
+### 問題2: PigmentGridのテストエラー
+- **原因**: `@mui/material-pigment-css/Grid`依存関係が見つからない
+- **解決**: PigmentGridは使用せず、標準Gridの新APIを使用
 
 ## 成果物
 
-- Grid v2に移行した2つのコンポーネント
-- 非推奨警告の解消
+- [x] Grid v2 APIに移行した2つのコンポーネント
+  - SearchFilter.tsx: 5箇所のGrid要素を更新
+  - ExecutionStatus.tsx: 4箇所のGrid要素を更新
+- [x] TypeScript診断エラーなし
+- [ ] 非推奨警告の解消（テスト実行で確認予定）
 
 ## 申し送り事項
 
-（完了時に記録）
+### 完了した作業
+1. ✅ SearchFilter.tsxのGrid使用箇所を`size`プロパティに変更
+   - `item`プロパティを削除
+   - `xs={12} sm={6} md={4}` → `size={{ xs: 12, sm: 6, md: 4 }}`
+2. ✅ ExecutionStatus.tsxのGrid使用箇所を`size`プロパティに変更
+   - `item`プロパティを削除
+   - `xs={6} sm={3}` → `size={{ xs: 6, sm: 3 }}`
+3. ✅ TypeScript診断でエラーなしを確認
+
+### 次のステップ
+1. テスト実行して非推奨警告が解消されたことを確認
+2. ビルドが成功することを確認
+3. tasks.mdを更新してタスク完了をマーク

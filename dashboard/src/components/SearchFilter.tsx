@@ -101,7 +101,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
 
       {/* 基本検索フィールド */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
             fullWidth
             label="企業名"
@@ -111,7 +111,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
             disabled={loading}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
             fullWidth
             label="企業コード"
@@ -121,7 +121,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
             disabled={loading}
           />
         </Grid>
-        <Grid item xs={12} sm={12} md={4}>
+        <Grid size={{ xs: 12, sm: 12, md: 4 }}>
           <TextField
             fullWidth
             select
@@ -143,7 +143,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
       {/* 詳細フィルター（折りたたみ可能） */}
       <Collapse in={expanded}>
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               type="date"
@@ -154,7 +154,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, loading = false }
               disabled={loading}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               type="date"

@@ -101,3 +101,26 @@ act()警告は解消されたが、3件のテストは依然として失敗:
 
 ## ステップ4: 複数回のPromiseフラッシュ
 
+
+
+### 最終的な問題分析
+
+複数回の`await Promise.resolve()`でも失敗。根本的な問題は、`jest.advanceTimersByTime()`がsetIntervalのコールバックを実行しても、その中の非同期処理（`await getExportStatus()`）が完了していないこと。
+
+**最終的な解決策**:
+Jest 27以降では、非同期タイマーのために`jest.advanceTimersToNextTimerAsync()`または`jest.runOnlyPendingTimersAsync()`を使用する必要がある。
+
+ただし、React Testing Libraryでは、`waitFor()`が自動的にタイマーを進めることができる。そのため、`waitFor()`内でアサーションを行い、タイマーの進行を`waitFor()`に任せる方が良い。
+
+## ステップ5: waitFor内でのタイマー進行
+
+
+
+### 最終的な解決策
+
+`jest.useFakeTimers()`と非同期setIntervalの組み合わせが問題の根本原因。fake timersは同期的なタイマーには有効だが、setInterval内の非同期処理（Promise）を正しく処理できない。
+
+**解決策**: ポーリングをテストする3つのテストでは、fake timersを使用せず、real timersを使用する。
+
+## ステップ6: Real Timersの使用
+

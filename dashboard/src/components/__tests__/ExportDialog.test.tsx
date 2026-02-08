@@ -17,9 +17,6 @@ describe('ExportDialog', () => {
   });
 
   afterEach(() => {
-    act(() => {
-      jest.runOnlyPendingTimers();
-    });
     jest.useRealTimers();
   });
 
@@ -49,6 +46,10 @@ describe('ExportDialog', () => {
   });
 
   it('エクスポートジョブを作成し、ポーリングを開始する', async () => {
+    // このテストではreal timersを使用（ポーリングの非同期処理をテストするため）
+    jest.useRealTimers();
+    jest.setTimeout(10000); // 10秒のタイムアウト
+    
     const mockExportId = 'export-123';
     const mockCreateExportJob = jest.spyOn(api, 'createExportJob').mockResolvedValue({
       success: true,
@@ -87,21 +88,23 @@ describe('ExportDialog', () => {
       });
     });
 
-    // ポーリング開始を確認（act()でラップし、複数回Promiseをフラッシュ）
-    await act(async () => {
-      jest.advanceTimersByTime(5000);
-      // 複数回Promiseをフラッシュしてマイクロタスクキューを完全に処理
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    // ポーリング開始を確認（real timersなので実際に5秒待つ）
+    await waitFor(
+      () => {
+        expect(mockGetExportStatus).toHaveBeenCalledWith(mockExportId);
+      },
+      { timeout: 6000 } // 5秒のポーリング間隔 + 余裕
+    );
     
-    await waitFor(() => {
-      expect(mockGetExportStatus).toHaveBeenCalledWith(mockExportId);
-    });
+    // テスト終了後、fake timersに戻す
+    jest.useFakeTimers();
   });
 
   it('エクスポート完了時にダウンロードリンクを表示する', async () => {
+    // このテストではreal timersを使用（ポーリングの非同期処理をテストするため）
+    jest.useRealTimers();
+    jest.setTimeout(10000); // 10秒のタイムアウト
+    
     const mockExportId = 'export-123';
     const mockDownloadUrl = 'https://s3.amazonaws.com/exports/file.csv';
 
@@ -132,22 +135,24 @@ describe('ExportDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
 
-    // ポーリング実行（act()でラップし、複数回Promiseをフラッシュ）
-    await act(async () => {
-      jest.advanceTimersByTime(5000);
-      // 複数回Promiseをフラッシュしてマイクロタスクキューを完全に処理
-      await Promise.resolve();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/エクスポートが完了しました/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /ダウンロード/i })).toBeInTheDocument();
-    });
+    // ポーリング実行（real timersなので実際に5秒待つ）
+    await waitFor(
+      () => {
+        expect(screen.getByText(/エクスポートが完了しました/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /ダウンロード/i })).toBeInTheDocument();
+      },
+      { timeout: 6000 } // 5秒のポーリング間隔 + 余裕
+    );
+    
+    // テスト終了後、fake timersに戻す
+    jest.useFakeTimers();
   });
 
   it('エクスポート失敗時にエラーメッセージを表示する', async () => {
+    // このテストではreal timersを使用（ポーリングの非同期処理をテストするため）
+    jest.useRealTimers();
+    jest.setTimeout(10000); // 10秒のタイムアウト
+    
     const mockExportId = 'export-123';
     const errorMessage = 'エクスポート処理に失敗しました';
 
@@ -177,15 +182,16 @@ describe('ExportDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
 
-    // ポーリング実行（act()でラップし、Promiseをフラッシュ）
-    await act(async () => {
-      jest.advanceTimersByTime(5000);
-      await Promise.resolve(); // マイクロタスクキューをフラッシュ
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
-    });
+    // ポーリング実行（real timersなので実際に5秒待つ）
+    await waitFor(
+      () => {
+        expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      },
+      { timeout: 6000 } // 5秒のポーリング間隔 + 余裕
+    );
+    
+    // テスト終了後、fake timersに戻す
+    jest.useFakeTimers();
   });
 
   it('キャンセルボタンでダイアログを閉じる', () => {

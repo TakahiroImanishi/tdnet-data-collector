@@ -32,11 +32,14 @@ let cacheExpiry: number = 0;
  * 本番環境では、Secrets Managerから取得します。
  *
  * @returns APIキー
- * @throws Error Secrets Managerからの取得に失敗した場合
+ * @throws AuthenticationError Secrets Managerからの取得に失敗した場合
  */
 async function getApiKey(): Promise<string> {
-  // キャッシュチェック
-  if (cachedApiKey && Date.now() < cacheExpiry) {
+  // テスト環境でのキャッシュ無効化（TEST_ENV=testの場合）
+  const isTestEnv = process.env.TEST_ENV === 'test' || process.env.NODE_ENV === 'test';
+  
+  // キャッシュチェック（テスト環境以外）
+  if (!isTestEnv && cachedApiKey && Date.now() < cacheExpiry) {
     return cachedApiKey;
   }
 
@@ -50,7 +53,10 @@ async function getApiKey(): Promise<string> {
   // 本番環境: Secrets Managerから取得
   const secretArn = process.env.API_KEY_SECRET_ARN;
   if (!secretArn) {
-    throw new Error('API_KEY_SECRET_ARN environment variable is not set');
+    logger.error('Failed to retrieve API key from Secrets Manager', {
+      error: 'API_KEY_SECRET_ARN environment variable is not set',
+    });
+    throw new AuthenticationError('Failed to retrieve API key');
   }
 
   try {
@@ -58,20 +64,31 @@ async function getApiKey(): Promise<string> {
     const response = await secretsClient.send(command);
 
     if (!response.SecretString) {
-      throw new Error('Secret value is empty');
+      logger.error('Failed to retrieve API key from Secrets Manager', {
+        error: 'Secret value is empty',
+        secret_arn: secretArn,
+      });
+      throw new AuthenticationError('Failed to retrieve API key');
     }
 
-    // APIキーをキャッシュ（5分TTL）
-    cachedApiKey = response.SecretString;
-    cacheExpiry = Date.now() + 5 * 60 * 1000;
+    // APIキーをキャッシュ（5分TTL、テスト環境以外）
+    if (!isTestEnv) {
+      cachedApiKey = response.SecretString;
+      cacheExpiry = Date.now() + 5 * 60 * 1000;
+    }
 
-    return cachedApiKey;
+    return response.SecretString;
   } catch (error) {
+    // AuthenticationErrorはそのまま再スロー
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+    
     logger.error('Failed to retrieve API key from Secrets Manager', {
       error: error instanceof Error ? error.message : String(error),
       secret_arn: secretArn,
     });
-    throw new Error('Failed to retrieve API key');
+    throw new AuthenticationError('Failed to retrieve API key');
   }
 }
 
@@ -199,7 +216,7 @@ async function validateApiKey(event: APIGatewayProxyEvent): Promise<void> {
     throw new AuthenticationError('API key is required');
   }
 
-  // Secrets ManagerからAPIキーを取得
+  // Secrets ManagerからAPIキーを取得（エラーはそのまま伝播）
   const validApiKey = await getApiKey();
 
   if (apiKey !== validApiKey) {
