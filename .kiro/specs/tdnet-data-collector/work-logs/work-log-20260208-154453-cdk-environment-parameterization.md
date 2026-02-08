@@ -108,3 +108,54 @@ CDKが `env` プロパティの値を AWS環境仕様（aws://account/region形�
 **解決策（実施中）:**
 テストコードとスタック定義を見直し、環境パラメータの渡し方を修正する必要がある。
 
+
+
+**根本原因:**
+テーブル名が `tdnet_executions_aws://123456789012/ap-northeast-1` のようになっている。これは、`this.environment` が正しく設定されていないことを示している。
+
+デバッグが必要な箇所：
+1. `props?.environmentConfig?.environment ?? 'dev'` の評価結果
+2. `getResourceName` 関数が受け取る `this.environment` の値
+
+**次のステップ:**
+1. スタックのコンストラクタで環境値を正しく取得・設定
+2. テストを再実行して検証
+3. すべてのリソース名が正しく環境サフィックスを持つことを確認
+
+---
+
+## 成果物
+
+### 作成したファイル
+1. `cdk/__tests__/environment-parameterization.test.ts` - 環境パラメータ化の包括的なテスト
+
+### 変更したファイル
+1. `cdk/lib/tdnet-data-collector-stack.ts` - 環境パラメータ化の実装（未完成）
+   - EnvironmentConfig インターフェース追加
+   - TdnetDataCollectorStackProps インターフェース追加
+   - 環境別リソース名生成ヘルパー関数追加
+   - DynamoDBテーブル名、S3バケット名、Lambda関数名、API Gateway/WAFリソース名を環境別に更新
+
+2. `cdk/bin/tdnet-data-collector.ts` - 環境設定の追加
+   - 環境変数またはコンテキストから環境を取得
+   - 環境検証ロジック追加
+   - スタック名に環境サフィックスを追加
+
+---
+
+## 次回への申し送り
+
+### 未完了の作業
+1. **環境パラメータの正しい取得・設定** - `this.environment` が正しい値（'dev' または 'prod'）を持つように修正が必要
+2. **テストの修正と検証** - すべてのテストが成功することを確認
+3. **既存テストの更新** - 既存のテストファイルが新しいスタック構造で動作することを確認
+
+### 注意点
+- `this.account` の代わりに `cdk.Aws.ACCOUNT_ID` を使用する必要がある（S3バケット名で修正済み）
+- 環境パラメータのデフォルト値が正しく適用されるようにする
+- テーブル名に AWS環境仕様文字列が含まれないようにする
+
+### 推奨される次のアクション
+1. スタックのコンストラクタで `this.environment` の設定をデバッグ
+2. `getResourceName` 関数が正しい環境値を受け取ることを確認
+3. テストを再実行して、すべてのリソース名が正しい形式（`{base_name}_{environment}`）になることを確認

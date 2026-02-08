@@ -47,12 +47,12 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Helper function to generate environment-specific resource names
     const getResourceName = (baseName: string): string => {
-      return `${baseName}_${this.environment}`;
+      return `${baseName}_${this.deploymentEnvironment}`;
     };
 
     // Helper function to generate environment-specific bucket names
     const getBucketName = (baseName: string): string => {
-      return `${baseName}-${this.environment}-${cdk.Aws.ACCOUNT_ID}`;
+      return `${baseName}-${this.deploymentEnvironment}-${cdk.Aws.ACCOUNT_ID}`;
     };
 
     // ========================================
