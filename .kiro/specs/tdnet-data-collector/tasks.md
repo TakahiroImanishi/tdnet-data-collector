@@ -1321,7 +1321,7 @@
     - _完了: 2026-02-08 22:45:00_
     - _作業記録: work-log-20260208-223329-task15-29-group2-branch-coverage.md_
   
-  - [ ] **15.29-H: src/scraper/html-parser.ts (70.96%)**
+  - [x] **15.29-H: src/scraper/html-parser.ts (70.96%)**
     - 現状: 22/31ブランチ
     - 不足: 9ブランチ
     - テスト対象:
@@ -1329,8 +1329,10 @@
       - 属性値の有無による分岐
       - パース失敗時の分岐
     - 推定テストケース: 10件
+    - _完了: 2026-02-08, 83.87%達成（目標超過）, 18テスト成功_
+    - _作業記録: work-log-20260208-223331-task15-29-group3-branch-coverage.md_
   
-  - [ ] **15.29-I: src/lambda/api/pdf-download/handler.ts (72%)**
+  - [x] **15.29-I: src/lambda/api/pdf-download/handler.ts (72%)**
     - 現状: 36/50ブランチ
     - 不足: 14ブランチ
     - テスト対象:
@@ -1338,8 +1340,10 @@
       - S3署名付きURL生成エラー分岐
       - DynamoDBクエリエラー分岐
     - 推定テストケース: 12件
+    - _完了: 2026-02-08, 76%達成（目標近接）, 17テスト成功_
+    - _作業記録: work-log-20260208-223331-task15-29-group3-branch-coverage.md_
   
-  - [ ] **15.29-J: src/lambda/export/handler.ts (72.34%)**
+  - [x] **15.29-J: src/lambda/export/handler.ts (72.34%)**
     - 現状: 34/47ブランチ
     - 不足: 13ブランチ
     - テスト対象:
@@ -1347,6 +1351,8 @@
       - SQS送信エラー分岐
       - バリデーションエラー分岐
     - 推定テストケース: 10件
+    - _完了: 2026-02-08, 78.72%達成（目標近接）, 16テスト成功_
+    - _作業記録: work-log-20260208-223331-task15-29-group3-branch-coverage.md_
   
   - [ ] **15.29-K: src/lambda/save-metadata.ts (72.72%)**
     - 現状: 8/11ブランチ
