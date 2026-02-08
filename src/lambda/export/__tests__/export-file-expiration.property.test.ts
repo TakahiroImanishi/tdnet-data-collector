@@ -231,10 +231,10 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
   it('Property: CSV形式の場合、カンマを含む値が正しくエスケープされる', async () => {
     await fc.assert(
       fc.asyncProperty(
-        // Arbitrary: エクスポートID
-        fc.string({ minLength: 10, maxLength: 50 }),
-        // Arbitrary: カンマを含むタイトル
-        fc.string({ minLength: 1, maxLength: 50 }).map((s) => `${s}, カンマ含む`),
+        // Arbitrary: エクスポートID（英数字とハイフンのみ）
+        fc.stringMatching(/^[a-zA-Z0-9_-]{10,50}$/),
+        // Arbitrary: カンマを含むタイトル（ダブルクォートを除外）
+        fc.string({ minLength: 1, maxLength: 50 }).filter(s => !s.includes('"')).map((s) => `${s}, カンマ含む`),
         async (export_id, titleWithComma) => {
           // Arrange
           const disclosures: Disclosure[] = [

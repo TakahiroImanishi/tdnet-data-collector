@@ -10,8 +10,8 @@ import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
-import { RateLimiter } from '../../../utils/rate-limiter';
-import { CollectorDependencies, setDependencies, resetDependencies } from '../dependencies';
+import { RateLimiter } from '../../utils/rate-limiter';
+import { CollectorDependencies, setDependencies, resetDependencies } from './dependencies';
 
 /**
  * AWS SDKモッククライアント
