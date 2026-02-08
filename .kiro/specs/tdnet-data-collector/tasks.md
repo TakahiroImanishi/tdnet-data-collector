@@ -386,7 +386,7 @@
   - _推定工数: 2-3時間_
   - _関連: steering/core/tdnet-implementation-rules.md, steering/development/data-validation.md_
 
-- [ ] 9.9 レート制限の完全性検証
+- [x] 9.9 レート制限の完全性検証
   - RateLimiterがすべてのTDnetリクエストで使用されていることを確認
   - 最小遅延時間（デフォルト2秒）が遵守されていることを確認
   - 並列処理時のレート制限が適切に機能することを確認
@@ -394,6 +394,7 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _関連: steering/development/tdnet-scraping-patterns.md_
+  - _完了: 2026-02-08, すべての検証項目で合格_
 
 - [ ] 9.10 CloudWatchメトリクスの完全性検証
   - すべてのLambda関数でエラーメトリクスが送信されていることを確認
@@ -405,13 +406,14 @@
   - _推定工数: 2-3時間_
   - _関連: steering/infrastructure/monitoring-alerts.md_
 
-- [ ] 9.11 Lambda実装チェックリストの完全性検証
+- [x] 9.11 Lambda実装チェックリストの完全性検証
   - すべてのLambda関数が実装チェックリストの必須項目を満たしていることを確認
   - try-catchブロック、再試行ロジック、構造化ログ、カスタムエラークラス、エラーメトリクス、部分的失敗の処理
   - _Requirements: 要件6.1-6.5（エラーハンドリング全般）_
   - _優先度: 🔴 Critical_
   - _推定工数: 3-4時間_
   - _関連: steering/core/error-handling-patterns.md（Lambda実装チェックリスト）_
+  - _完了: 2026-02-08, すべての必須項目で合格_
 
 - [ ] 9.12 CDK構成の完全性検証
   - すべてのLambda関数のタイムアウト、メモリ、環境変数が適切に設定されていることを確認
