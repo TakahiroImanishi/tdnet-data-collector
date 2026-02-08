@@ -739,7 +739,6 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         COLLECTOR_FUNCTION_NAME: collectorFunction.functionName,
-        AWS_REGION: this.region,
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
       },
@@ -768,7 +767,6 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         DYNAMODB_EXECUTIONS_TABLE: this.executionsTable.tableName,
-        AWS_REGION: this.region,
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
       },
@@ -934,7 +932,6 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       environment: {
         EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
         API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
-        AWS_REGION: this.region,
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
       },
@@ -965,7 +962,6 @@ export class TdnetDataCollectorStack extends cdk.Stack {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         S3_BUCKET_NAME: this.pdfsBucket.bucketName,
         API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
-        AWS_REGION: this.region,
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
       },

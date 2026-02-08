@@ -17,13 +17,16 @@ jest.mock('@aws-sdk/client-s3');
 jest.mock('../../../utils/logger');
 
 describe('Property 10: エクスポートファイルの有効期限', () => {
+  let mockSend: jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.EXPORT_BUCKET_NAME = 'test-exports-bucket';
     process.env.AWS_REGION = 'ap-northeast-1';
 
-    // S3Client.send のモック
-    (S3Client.prototype.send as jest.Mock) = jest.fn().mockResolvedValue({});
+    // S3Client.send のモック - PutObjectCommandを正しくキャプチャ
+    mockSend = jest.fn().mockResolvedValue({});
+    (S3Client.prototype.send as jest.Mock) = mockSend;
   });
 
   /**
@@ -67,15 +70,19 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           { minLength: 0, maxLength: 100 }
         ),
         async (export_id, format, disclosures) => {
+          // Arrange
+          mockSend.mockClear();
+
           // Act
           await exportToS3(export_id, disclosures as Disclosure[], format);
 
           // Assert
-          const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-          const tagging = sendCall.input.Tagging;
-
-          // Property: auto-delete=true タグが設定されている
-          expect(tagging).toBe('auto-delete=true');
+          expect(mockSend).toHaveBeenCalled();
+          const command = mockSend.mock.calls[0][0];
+          
+          // PutObjectCommandのinputプロパティにアクセス
+          expect(command.input).toBeDefined();
+          expect(command.input.Tagging).toBe('auto-delete=true');
         }
       ),
       {
@@ -185,12 +192,19 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           { minLength: 0, maxLength: 10 }
         ),
         async (export_id, format, disclosures) => {
+          // Arrange
+          mockSend.mockClear();
+
           // Act
           await exportToS3(export_id, disclosures as Disclosure[], format);
 
           // Assert
-          const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-          const contentType = sendCall.input.ContentType;
+          expect(mockSend).toHaveBeenCalled();
+          const command = mockSend.mock.calls[0][0];
+          
+          // PutObjectCommandのinputプロパティにアクセス
+          expect(command.input).toBeDefined();
+          const contentType = command.input.ContentType;
 
           // Property: ContentTypeが正しく設定されている
           const expectedContentType = format === 'json' ? 'application/json' : 'text/csv';
@@ -234,12 +248,19 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
             },
           ];
 
+          // Arrange
+          mockSend.mockClear();
+
           // Act
           await exportToS3(export_id, disclosures, 'csv');
 
           // Assert
-          const sendCall = (S3Client.prototype.send as jest.Mock).mock.calls[0][0];
-          const body = sendCall.input.Body;
+          expect(mockSend).toHaveBeenCalled();
+          const command = mockSend.mock.calls[0][0];
+          
+          // PutObjectCommandのinputプロパティにアクセス
+          expect(command.input).toBeDefined();
+          const body = command.input.Body;
           const lines = body.split('\n');
 
           // Property: カンマを含む値がダブルクォートで囲まれている

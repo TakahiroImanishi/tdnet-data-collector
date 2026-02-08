@@ -691,6 +691,81 @@
   - APIキー認証が機能することを確認
   - Query/Export Lambda が正常に動作することを確認
   - エクスポートファイルがS3に保存されることを確認
+  - _完了: 2026-02-08, テスト成功率84.1%（585/696）_
+  - _注意: E2Eテスト未実施、execution_id不一致問題あり_
+
+- [ ] 15.2 execution_id不一致問題の解決
+  - POST /collectとLambda Collectorで異なるexecution_idを生成している問題を修正
+  - POST /collectでLambda Collectorが返すexecution_idを使用するように変更
+  - GET /collect/{execution_id}との連携を確認
+  - _Requirements: 要件6.1（実行状態確認）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+
+- [ ] 15.3 プロパティテストのモック問題修正
+  - export-file-expiration.property.test.ts の2テスト失敗を修正
+  - aws-sdk-client-mock ライブラリの導入検討
+  - S3Client.send のモック設定を改善
+  - Property 10（エクスポートファイルの有効期限）を完全に検証
+  - _Requirements: 要件14.2（プロパティテスト）_
+  - _優先度: 🟠 High_
+  - _推定工数: 3-4時間_
+
+- [ ] 15.4 E2Eテストの実施（タスク13.7）
+  - **Property 9: APIキー認証の必須性**
+  - **Validates: Requirements 11.1, 11.3**
+  - 無効なAPIキーで401 Unauthorizedが返されることを検証
+  - 有効なAPIキーで正常にレスポンスが返されることを検証
+  - LocalStack環境でのE2Eテスト実施
+  - または開発環境へのデプロイ＋スモークテスト実施
+  - _Requirements: 要件14.4（E2Eテスト）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 4-6時間_
+
+- [ ] 15.5 デプロイ準備の自動化
+  - /tdnet/api-key シークレット作成スクリプトの作成
+  - 環境変数ファイル（.env.development）の自動生成スクリプトの作成
+  - CDK Bootstrap実行ガイドの更新
+  - デプロイスクリプト（deploy.sh）の作成
+  - _Requirements: 要件8.1（設定管理）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 3-4時間_
+
+- [ ] 15.6 CDKテストカバレッジの改善
+  - CDKテスト成功率を78.0%（32/41）から80%以上に改善
+  - Lambda asset mockingの問題解決
+  - 失敗している9テストのモック設定改善
+  - _Requirements: 要件14.1（テスト）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 2-3時間_
+
+- [ ] 15.7 Phase 2最終レビューと改善記録作成
+  - タスク15.2-15.6の実施結果をまとめる
+  - 発見された問題点を改善記録に記録
+  - Phase 3移行前に修正すべきCritical/High優先度の問題を特定
+  - Phase 3移行判断（Go/No-Go）を実施
+  - _Requirements: 全要件_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+  - _成果物: task-15.7-improvement-1-[YYYYMMDD-HHMMSS].md_
+
+- [ ] 15.8 Phase 2 Critical/High改善の実施
+  - タスク15.7で特定されたCritical/High優先度の問題を修正
+  - 修正後のテスト実行と検証
+  - 改善記録の更新
+  - _Requirements: 全要件_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 変動（問題の数と複雑さに依存）_
+
+- [ ] 15.9 Phase 2完了確認（最終）
+  - すべてのE2Eテストが成功することを確認
+  - execution_id不一致問題が解決されていることを確認
+  - プロパティテストが100%成功することを確認
+  - デプロイ準備が完了していることを確認
+  - Phase 3移行判断: ✅ Go（条件なし）
+  - _Requirements: 全要件_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 1-2時間_
 
 
 ## Phase 3: 自動化とWebダッシュボード
