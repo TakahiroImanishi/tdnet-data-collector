@@ -118,10 +118,11 @@ GitHub ActionsでLocalStackを使用したE2Eテストの自動実行環境を�
 
 ### 作成ファイル
 - [x] `.github/workflows/e2e-test.yml` - E2Eテストワークフロー（280行）
+- [x] `.kiro/specs/tdnet-data-collector/docs/ci-cd-workflow-guide.md` - CI/CDワークフローガイド
 
 ### 変更ファイル
 - [x] `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260208-132153-ci-cd-integration.md` - 作業記録の更新
-- [ ] `.kiro/specs/tdnet-data-collector/tasks.md` - Task 15.13の進捗更新（次のステップ）
+- [x] `.kiro/specs/tdnet-data-collector/tasks.md` - Task 15.13の進捗更新完了
 
 ---
 

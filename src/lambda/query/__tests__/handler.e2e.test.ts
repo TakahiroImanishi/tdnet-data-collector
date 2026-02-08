@@ -211,8 +211,8 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
 
       // Assert
       expect(result.statusCode).toBe(200);
-      expect(result.headers['Content-Type']).toBe('application/json');
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Content-Type']).toBe('application/json');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
 
       const body = JSON.parse(result.body);
       expect(body).toHaveProperty('disclosures');
@@ -267,9 +267,9 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
 
       // Assert
       expect(result.statusCode).toBe(200);
-      expect(result.headers['Content-Type']).toBe('text/csv');
-      expect(result.headers['Content-Disposition']).toContain('attachment');
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Content-Type']).toBe('text/csv');
+      expect(result.headers?.['Content-Disposition']).toContain('attachment');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
 
       // CSVヘッダーの確認
       expect(result.body).toContain('disclosure_id');
@@ -350,8 +350,8 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
 
       // Assert
       expect(result.statusCode).toBe(401);
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
-      expect(result.headers['Content-Type']).toBe('application/json');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Content-Type']).toBe('application/json');
     });
 
     it('すべてのエラーレスポンスにrequest_idが含まれる', async () => {
