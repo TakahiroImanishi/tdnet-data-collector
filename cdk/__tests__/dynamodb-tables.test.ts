@@ -1,10 +1,10 @@
 /**
  * DynamoDB Table Structure Verification Test
  *
- * Task 3.2: DynamoDBテーブル構造の検証テスト
- * Requirements: 要件2.5, 13.3（データベース、暗号化）
+ * Task 3.2: DynamoDBチE�Eブル構造の検証チE��チE
+ * Requirements: 要件2.5, 13.3�E�データベ�Eス、暗号化！E
  *
- * このテストは、CDKで定義されたDynamoDBテーブルが設計通りに構成されていることを検証します。
+ * こ�EチE��ト�E、CDKで定義されたDynamoDBチE�Eブルが設計通りに構�EされてぁE��ことを検証します、E
  */
 
 import * as cdk from 'aws-cdk-lib';
@@ -24,32 +24,32 @@ describe('DynamoDB Tables', () => {
 
   describe('tdnet_disclosures table', () => {
     it('should be created with correct configuration', () => {
-      // テーブルが存在することを確認
+      // チE�Eブルが存在することを確誁E
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_disclosures',
-        BillingMode: 'PAY_PER_REQUEST', // オンデマンドモード
+        TableName: 'tdnet_disclosures_dev',
+        BillingMode: 'PAY_PER_REQUEST', // オンチE�EンドモーチE
         SSESpecification: {
-          SSEEnabled: true, // 暗号化有効化
+          SSEEnabled: true, // 暗号化有効匁E
         },
         PointInTimeRecoverySpecification: {
-          PointInTimeRecoveryEnabled: true, // ポイントインタイムリカバリ有効化
+          PointInTimeRecoveryEnabled: true, // ポイントインタイムリカバリ有効匁E
         },
       });
     });
 
     it('should have correct partition key', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_disclosures',
+        TableName: 'tdnet_disclosures_dev',
         KeySchema: [
           {
             AttributeName: 'disclosure_id',
-            KeyType: 'HASH', // パーティションキー
+            KeyType: 'HASH', // パ�EチE��ションキー
           },
         ],
         AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'disclosure_id',
-            AttributeType: 'S', // String型
+            AttributeType: 'S', // String垁E
           },
         ]),
       });
@@ -57,14 +57,14 @@ describe('DynamoDB Tables', () => {
 
     it('should have GSI_CompanyCode_DiscloseDate index', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_disclosures',
+        TableName: 'tdnet_disclosures_dev',
         GlobalSecondaryIndexes: Match.arrayWith([
           {
             IndexName: 'GSI_CompanyCode_DiscloseDate',
             KeySchema: [
               {
                 AttributeName: 'company_code',
-                KeyType: 'HASH', // パーティションキー
+                KeyType: 'HASH', // パ�EチE��ションキー
               },
               {
                 AttributeName: 'disclosed_at',
@@ -91,14 +91,14 @@ describe('DynamoDB Tables', () => {
 
     it('should have GSI_DatePartition index', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_disclosures',
+        TableName: 'tdnet_disclosures_dev',
         GlobalSecondaryIndexes: Match.arrayWith([
           {
             IndexName: 'GSI_DatePartition',
             KeySchema: [
               {
                 AttributeName: 'date_partition',
-                KeyType: 'HASH', // パーティションキー
+                KeyType: 'HASH', // パ�EチE��ションキー
               },
               {
                 AttributeName: 'disclosed_at',
@@ -121,7 +121,7 @@ describe('DynamoDB Tables', () => {
 
     it('should have exactly 2 GSIs', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_disclosures',
+        TableName: 'tdnet_disclosures_dev',
         GlobalSecondaryIndexes: Match.arrayWith([
           Match.objectLike({ IndexName: 'GSI_CompanyCode_DiscloseDate' }),
           Match.objectLike({ IndexName: 'GSI_DatePartition' }),
@@ -133,30 +133,30 @@ describe('DynamoDB Tables', () => {
   describe('tdnet_executions table', () => {
     it('should be created with correct configuration', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_executions',
-        BillingMode: 'PAY_PER_REQUEST', // オンデマンドモード
+        TableName: 'tdnet_executions_dev',
+        BillingMode: 'PAY_PER_REQUEST', // オンチE�EンドモーチE
         SSESpecification: {
-          SSEEnabled: true, // 暗号化有効化
+          SSEEnabled: true, // 暗号化有効匁E
         },
         PointInTimeRecoverySpecification: {
-          PointInTimeRecoveryEnabled: true, // ポイントインタイムリカバリ有効化
+          PointInTimeRecoveryEnabled: true, // ポイントインタイムリカバリ有効匁E
         },
       });
     });
 
     it('should have correct partition key', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_executions',
+        TableName: 'tdnet_executions_dev',
         KeySchema: [
           {
             AttributeName: 'execution_id',
-            KeyType: 'HASH', // パーティションキー
+            KeyType: 'HASH', // パ�EチE��ションキー
           },
         ],
         AttributeDefinitions: Match.arrayWith([
           {
             AttributeName: 'execution_id',
-            AttributeType: 'S', // String型
+            AttributeType: 'S', // String垁E
           },
         ]),
       });
@@ -164,24 +164,24 @@ describe('DynamoDB Tables', () => {
 
     it('should have TTL enabled', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_executions',
+        TableName: 'tdnet_executions_dev',
         TimeToLiveSpecification: {
           AttributeName: 'ttl',
-          Enabled: true, // TTL有効化
+          Enabled: true, // TTL有効匁E
         },
       });
     });
 
     it('should have GSI_Status_StartedAt index', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_executions',
+        TableName: 'tdnet_executions_dev',
         GlobalSecondaryIndexes: Match.arrayWith([
           {
             IndexName: 'GSI_Status_StartedAt',
             KeySchema: [
               {
                 AttributeName: 'status',
-                KeyType: 'HASH', // パーティションキー
+                KeyType: 'HASH', // パ�EチE��ションキー
               },
               {
                 AttributeName: 'started_at',
@@ -208,7 +208,7 @@ describe('DynamoDB Tables', () => {
 
     it('should have exactly 1 GSI', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
-        TableName: 'tdnet_executions',
+        TableName: 'tdnet_executions_dev',
         GlobalSecondaryIndexes: [
           Match.objectLike({ IndexName: 'GSI_Status_StartedAt' }),
         ],
@@ -242,7 +242,7 @@ describe('DynamoDB Tables', () => {
 
   describe('Security and Compliance', () => {
     it('should have encryption enabled on all tables', () => {
-      // すべてのDynamoDBテーブルで暗号化が有効化されていることを確認
+      // すべてのDynamoDBチE�Eブルで暗号化が有効化されてぁE��ことを確誁E
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableKeys = Object.keys(tables);
 
@@ -256,7 +256,7 @@ describe('DynamoDB Tables', () => {
     });
 
     it('should have point-in-time recovery enabled on all tables', () => {
-      // すべてのDynamoDBテーブルでポイントインタイムリカバリが有効化されていることを確認
+      // すべてのDynamoDBチE�Eブルでポイントインタイムリカバリが有効化されてぁE��ことを確誁E
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableKeys = Object.keys(tables);
 
@@ -273,7 +273,7 @@ describe('DynamoDB Tables', () => {
     });
 
     it('should use on-demand billing mode for cost optimization', () => {
-      // すべてのDynamoDBテーブルでオンデマンドモードが使用されていることを確認
+      // すべてのDynamoDBチE�EブルでオンチE�Eンドモードが使用されてぁE��ことを確誁E
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableKeys = Object.keys(tables);
 
@@ -286,7 +286,7 @@ describe('DynamoDB Tables', () => {
 
   describe('Table Count', () => {
     it('should have exactly 3 DynamoDB tables', () => {
-      // DynamoDBテーブルが正確に3つ存在することを確認
+      // DynamoDBチE�Eブルが正確に3つ存在することを確誁E
       // 1. tdnet_disclosures
       // 2. tdnet_executions
       // 3. tdnet_export_status

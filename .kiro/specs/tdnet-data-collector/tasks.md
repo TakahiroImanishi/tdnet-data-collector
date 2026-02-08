@@ -1049,7 +1049,7 @@
   - [x] 15.23.8 `src/models/__tests__/disclosure.test.ts` - Disclosure モデルテスト
   - [x] 15.23.9 `src/__tests__/type-definitions.test.ts` - 型定義テスト
 
-- [ ] 15.24 CDK環境変数設定の修正（残存112件のテスト失敗解消）
+- [-] 15.24 CDK環境変数設定の修正（残存112件のテスト失敗解消）
   - CDKテストで失敗している環境変数設定を特定
   - CollectStatusFunctionの環境変数不足を修正（S3_BUCKET未定義）
   - FunctionName不一致を修正（期待値: tdnet-collector-dev、実際: tdnet-collect-status-dev）

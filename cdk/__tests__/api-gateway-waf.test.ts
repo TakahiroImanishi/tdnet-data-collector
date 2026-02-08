@@ -1,20 +1,20 @@
 /**
- * API Gateway + WAF構造の検証テスト
+ * API Gateway + WAF構造の検証チE��チE
  * 
- * このテストは、API GatewayとAWS WAFが正しく設定されていることを検証します。
+ * こ�EチE��ト�E、API GatewayとAWS WAFが正しく設定されてぁE��ことを検証します、E
  * 
  * Requirements:
- * - 要件11.1: API認証（APIキー認証）
- * - 要件11.2: 使用量プラン設定
- * - 要件13.1: WAF保護（レート制限、マネージドルール）
+ * - 要件11.1: API認証�E�EPIキー認証�E�E
+ * - 要件11.2: 使用量�Eラン設宁E
+ * - 要件13.1: WAF保護�E�レート制限、�Eネ�Eジドルール�E�E
  * 
  * Test Coverage:
- * - API Gatewayが正しく作成されていることを確認
- * - APIキー認証が有効化されていることを確認
- * - 使用量プランが設定されていることを確認
- * - CORS設定が正しいことを確認
- * - WAFが関連付けられていることを確認
- * - WAFルールが正しく設定されていることを確認
+ * - API Gatewayが正しく作�EされてぁE��ことを確誁E
+ * - APIキー認証が有効化されてぁE��ことを確誁E
+ * - 使用量�Eランが設定されてぁE��ことを確誁E
+ * - CORS設定が正しいことを確誁E
+ * - WAFが関連付けられてぁE��ことを確誁E
+ * - WAFルールが正しく設定されてぁE��ことを確誁E
  */
 
 import * as cdk from 'aws-cdk-lib';
@@ -36,14 +36,14 @@ describe('API Gateway + WAF構造の検証', () => {
   });
 
   describe('API Gateway REST API', () => {
-    it('REST APIが作成されていること', () => {
+    it('REST APIが作�EされてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
-        Name: 'tdnet-data-collector-api',
+        Name: 'tdnet-data-collector-api-dev',
         Description: 'TDnet Data Collector REST API',
       });
     });
 
-    it('デプロイメント設定が正しいこと', () => {
+    it('チE�Eロイメント設定が正しいこと', () => {
       template.hasResourceProperties('AWS::ApiGateway::Deployment', {
         Description: Match.anyValue(),
       });
@@ -60,8 +60,8 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('CORS設定が有効化されていること', () => {
-      // OPTIONSメソッドが存在することを確認
+    it('CORS設定が有効化されてぁE��こと', () => {
+      // OPTIONSメソチE��が存在することを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'OPTIONS',
         Integration: Match.objectLike({
@@ -79,7 +79,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('CloudWatch Logsロールが設定されていること', () => {
+    it('CloudWatch Logsロールが設定されてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::Account', {
         CloudWatchRoleArn: Match.anyValue(),
       });
@@ -87,17 +87,17 @@ describe('API Gateway + WAF構造の検証', () => {
   });
 
   describe('API Key認証', () => {
-    it('APIキーが作成されていること', () => {
+    it('APIキーが作�EされてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::ApiKey', {
-        Name: 'tdnet-api-key',
+        Name: 'tdnet-api-key-dev',
         Description: 'API Key for TDnet Data Collector',
         Enabled: true,
       });
     });
 
-    it('使用量プランが作成されていること', () => {
+    it('使用量�Eランが作�EされてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
-        UsagePlanName: 'tdnet-usage-plan',
+        UsagePlanName: 'tdnet-usage-plan-dev',
         Description: 'Usage plan for TDnet Data Collector API',
         Throttle: {
           RateLimit: 100,
@@ -110,17 +110,17 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('APIキーが使用量プランに関連付けられていること', () => {
+    it('APIキーが使用量�Eランに関連付けられてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::UsagePlanKey', {
         KeyType: 'API_KEY',
       });
     });
   });
 
-  describe('AWS WAF設定', () => {
-    it('Web ACLが作成されていること', () => {
+  describe('AWS WAF設宁E, () => {
+    it('Web ACLが作�EされてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
-        Name: 'tdnet-web-acl',
+        Name: 'tdnet-web-acl-dev',
         Scope: 'REGIONAL',
         DefaultAction: { Allow: {} },
         Description: 'Web ACL for TDnet Data Collector API',
@@ -132,7 +132,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('レート制限ルールが設定されていること', () => {
+    it('レート制限ルールが設定されてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         Rules: Match.arrayWith([
           Match.objectLike({
@@ -140,7 +140,7 @@ describe('API Gateway + WAF構造の検証', () => {
             Priority: 1,
             Statement: {
               RateBasedStatement: {
-                Limit: 2000, // 5分間で2000リクエスト
+                Limit: 2000, // 5刁E��で2000リクエスチE
                 AggregateKeyType: 'IP',
               },
             },
@@ -162,7 +162,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('AWSマネージドルール（Common Rule Set）が適用されていること', () => {
+    it('AWSマネージドルール�E�Eommon Rule Set�E�が適用されてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         Rules: Match.arrayWith([
           Match.objectLike({
@@ -180,7 +180,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('AWSマネージドルール（Known Bad Inputs）が適用されていること', () => {
+    it('AWSマネージドルール�E�Enown Bad Inputs�E�が適用されてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         Rules: Match.arrayWith([
           Match.objectLike({
@@ -198,7 +198,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('カスタムレスポンスボディが設定されていること', () => {
+    it('カスタムレスポンスボディが設定されてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         CustomResponseBodies: {
           RateLimitExceeded: {
@@ -209,16 +209,16 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('WAFがAPI Gatewayに関連付けられていること', () => {
+    it('WAFがAPI Gatewayに関連付けられてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACLAssociation', {
         ResourceArn: Match.anyValue(),
-        WebACLArn: Match.anyValue(), // 正しいプロパティ名は WebACLArn
+        WebACLArn: Match.anyValue(), // 正しいプロパティ名�E WebACLArn
       });
     });
   });
 
   describe('CloudFormation Outputs', () => {
-    it('API Endpointが出力されていること', () => {
+    it('API Endpointが�E力されてぁE��こと', () => {
       template.hasOutput('ApiEndpoint', {
         Description: 'API Gateway endpoint URL',
         Export: {
@@ -227,7 +227,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('API Key IDが出力されていること', () => {
+    it('API Key IDが�E力されてぁE��こと', () => {
       template.hasOutput('ApiKeyId', {
         Description: 'API Key ID',
         Export: {
@@ -236,7 +236,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('Web ACL ARNが出力されていること', () => {
+    it('Web ACL ARNが�E力されてぁE��こと', () => {
       template.hasOutput('WebAclArn', {
         Description: 'WAF Web ACL ARN',
         Export: {
@@ -246,8 +246,8 @@ describe('API Gateway + WAF構造の検証', () => {
     });
   });
 
-  describe('セキュリティ設定', () => {
-    it('API Gatewayのログが有効化されていること', () => {
+  describe('セキュリチE��設宁E, () => {
+    it('API Gatewayのログが有効化されてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::Stage', {
         MethodSettings: Match.arrayWith([
           Match.objectLike({
@@ -258,8 +258,8 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('スロットリング設定が有効化されていること', () => {
-      // スロットリング設定は使用量プランで管理される
+    it('スロチE��リング設定が有効化されてぁE��こと', () => {
+      // スロチE��リング設定�E使用量�Eランで管琁E��れる
       template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
         Throttle: {
           RateLimit: 100,
@@ -268,7 +268,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('使用量プランにクォータが設定されていること', () => {
+    it('使用量�Eランにクォータが設定されてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
         Quota: {
           Limit: 10000,
@@ -278,8 +278,8 @@ describe('API Gateway + WAF構造の検証', () => {
     });
   });
 
-  describe('パフォーマンス設定', () => {
-    it('API Gatewayメトリクスが有効化されていること', () => {
+  describe('パフォーマンス設宁E, () => {
+    it('API Gatewayメトリクスが有効化されてぁE��こと', () => {
       template.hasResourceProperties('AWS::ApiGateway::Stage', {
         MethodSettings: Match.arrayWith([
           Match.objectLike({
@@ -289,7 +289,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('WAFメトリクスが有効化されていること', () => {
+    it('WAFメトリクスが有効化されてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         VisibilityConfig: {
           CloudWatchMetricsEnabled: true,
@@ -300,7 +300,7 @@ describe('API Gateway + WAF構造の検証', () => {
   });
 
   describe('エラーハンドリング', () => {
-    it('レート制限超過時のカスタムレスポンスが設定されていること', () => {
+    it('レート制限趁E��時�Eカスタムレスポンスが設定されてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         Rules: Match.arrayWith([
           Match.objectLike({
@@ -318,7 +318,7 @@ describe('API Gateway + WAF構造の検証', () => {
       });
     });
 
-    it('カスタムレスポンスにエラーコードが含まれていること', () => {
+    it('カスタムレスポンスにエラーコードが含まれてぁE��こと', () => {
       template.hasResourceProperties('AWS::WAFv2::WebACL', {
         CustomResponseBodies: {
           RateLimitExceeded: {

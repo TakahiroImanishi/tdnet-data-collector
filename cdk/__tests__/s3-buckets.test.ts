@@ -26,13 +26,13 @@ describe('S3 Buckets', () => {
   describe('PDFs Bucket', () => {
     it('should be created with correct name', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-pdfs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
       });
     });
 
     it('should have encryption enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-pdfs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -47,7 +47,7 @@ describe('S3 Buckets', () => {
 
     it('should have public access blocked', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-pdfs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -59,7 +59,7 @@ describe('S3 Buckets', () => {
 
     it('should have versioning enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-pdfs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
         VersioningConfiguration: {
           Status: 'Enabled',
         },
@@ -68,7 +68,7 @@ describe('S3 Buckets', () => {
 
     it('should have lifecycle rules for cost optimization', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-pdfs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
         LifecycleConfiguration: {
           Rules: [
             {
@@ -94,13 +94,13 @@ describe('S3 Buckets', () => {
   describe('Exports Bucket', () => {
     it('should be created with correct name', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-exports-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
       });
     });
 
     it('should have encryption enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-exports-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -115,7 +115,7 @@ describe('S3 Buckets', () => {
 
     it('should have public access blocked', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-exports-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -127,7 +127,7 @@ describe('S3 Buckets', () => {
 
     it('should have versioning enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-exports-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
         VersioningConfiguration: {
           Status: 'Enabled',
         },
@@ -136,7 +136,7 @@ describe('S3 Buckets', () => {
 
     it('should have lifecycle rule to delete after 7 days', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-data-collector-exports-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
         LifecycleConfiguration: {
           Rules: [
             {
@@ -153,13 +153,13 @@ describe('S3 Buckets', () => {
   describe('Dashboard Bucket', () => {
     it('should be created with correct name', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-dashboard-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-dashboard-dev-', { Ref: 'AWS::AccountId' }]] },
       });
     });
 
     it('should have encryption enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-dashboard-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-dashboard-dev-', { Ref: 'AWS::AccountId' }]] },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -174,7 +174,7 @@ describe('S3 Buckets', () => {
 
     it('should have public access blocked', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-dashboard-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-dashboard-dev-', { Ref: 'AWS::AccountId' }]] },
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -186,7 +186,7 @@ describe('S3 Buckets', () => {
 
     it('should have versioning enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-dashboard-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-dashboard-dev-', { Ref: 'AWS::AccountId' }]] },
         VersioningConfiguration: {
           Status: 'Enabled',
         },
@@ -195,17 +195,14 @@ describe('S3 Buckets', () => {
 
     it('should not have lifecycle rules (static files persist)', () => {
       // ダッシュボードバケットはライフサイクルルールを持たない
-      const buckets = template.findResources('AWS::S3::Bucket', {
-        Properties: {
-          BucketName: `tdnet-dashboard-${testAccountId}`,
-        },
-      });
+      const resources = template.toJSON().Resources;
+      const dashboardBucket = Object.values(resources).find(
+        (r: any) => r.Type === 'AWS::S3::Bucket' && 
+        r.Properties?.BucketName?.['Fn::Join']?.[1]?.[0] === 'tdnet-dashboard-dev-'
+      ) as any;
 
-      const bucketKeys = Object.keys(buckets);
-      expect(bucketKeys.length).toBe(1);
-
-      const bucket = buckets[bucketKeys[0]];
-      expect(bucket.Properties.LifecycleConfiguration).toBeUndefined();
+      expect(dashboardBucket).toBeDefined();
+      expect(dashboardBucket.Properties.LifecycleConfiguration).toBeUndefined();
     });
   });
 

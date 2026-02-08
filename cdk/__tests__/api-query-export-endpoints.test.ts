@@ -1,9 +1,9 @@
 /**
  * API Gateway Query & Export Endpoints Tests
  *
- * GET /disclosures および POST /exports エンドポイントの統合テスト
+ * GET /disclosures および POST /exports エンド�Eイント�E統合テスチE
  *
- * Requirements: タスク13.3, 13.4 - API Gateway エンドポイント実装
+ * Requirements: タスク13.3, 13.4 - API Gateway エンド�Eイント実裁E
  */
 
 import * as cdk from 'aws-cdk-lib';
@@ -19,16 +19,16 @@ describe('API Gateway Query & Export Endpoints', () => {
     template = Template.fromStack(stack);
   });
 
-  describe('GET /disclosures エンドポイント', () => {
+  describe('GET /disclosures エンド�EインチE, () => {
     it('should create /disclosures resource', () => {
-      // /disclosures リソースが作成されていることを確認
+      // /disclosures リソースが作�EされてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Resource', {
         PathPart: 'disclosures',
       });
     });
 
     it('should create GET method with API key required', () => {
-      // GET メソッドが作成され、APIキー認証が必須であることを確認
+      // GET メソチE��が作�Eされ、APIキー認証が忁E��であることを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         ApiKeyRequired: true,
@@ -39,7 +39,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure query parameters', () => {
-      // クエリパラメータが設定されていることを確認
+      // クエリパラメータが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         RequestParameters: {
@@ -55,7 +55,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure Lambda integration', () => {
-      // Lambda統合が設定されていることを確認
+      // Lambda統合が設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         Integration: {
@@ -73,7 +73,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure CORS headers', () => {
-      // CORSヘッダーが設定されていることを確認
+      // CORSヘッダーが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         MethodResponses: Match.arrayWith([
@@ -89,7 +89,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure error responses (400, 401, 500)', () => {
-      // エラーレスポンスが設定されていることを確認
+      // エラーレスポンスが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         MethodResponses: Match.arrayWith([
@@ -102,7 +102,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should grant Query Lambda permission to be invoked by API Gateway', () => {
-      // API GatewayがQuery Lambdaを呼び出す権限が付与されていることを確認
+      // API GatewayがQuery Lambdaを呼び出す権限が付与されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::Lambda::Permission', {
         Action: 'lambda:InvokeFunction',
         Principal: 'apigateway.amazonaws.com',
@@ -116,16 +116,16 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
   });
 
-  describe('POST /exports エンドポイント', () => {
+  describe('POST /exports エンド�EインチE, () => {
     it('should create /exports resource', () => {
-      // /exports リソースが作成されていることを確認
+      // /exports リソースが作�EされてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Resource', {
         PathPart: 'exports',
       });
     });
 
     it('should create POST method with API key required', () => {
-      // POST メソッドが作成され、APIキー認証が必須であることを確認
+      // POST メソチE��が作�Eされ、APIキー認証が忁E��であることを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'POST',
         ApiKeyRequired: true,
@@ -136,7 +136,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure Lambda integration', () => {
-      // Lambda統合が設定されていることを確認
+      // Lambda統合が設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'POST',
         Integration: {
@@ -154,7 +154,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure CORS headers', () => {
-      // CORSヘッダーが設定されていることを確認
+      // CORSヘッダーが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'POST',
         MethodResponses: Match.arrayWith([
@@ -169,7 +169,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure success response (202 Accepted)', () => {
-      // 成功レスポンス（202 Accepted）が設定されていることを確認
+      // 成功レスポンス�E�E02 Accepted�E�が設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'POST',
         MethodResponses: Match.arrayWith([
@@ -179,7 +179,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should configure error responses (400, 401, 500)', () => {
-      // エラーレスポンスが設定されていることを確認
+      // エラーレスポンスが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'POST',
         MethodResponses: Match.arrayWith([
@@ -192,7 +192,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should grant Export Lambda permission to be invoked by API Gateway', () => {
-      // API GatewayがExport Lambdaを呼び出す権限が付与されていることを確認
+      // API GatewayがExport Lambdaを呼び出す権限が付与されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::Lambda::Permission', {
         Action: 'lambda:InvokeFunction',
         Principal: 'apigateway.amazonaws.com',
@@ -208,7 +208,7 @@ describe('API Gateway Query & Export Endpoints', () => {
 
   describe('CloudFormation Outputs', () => {
     it('should export Disclosures endpoint URL', () => {
-      // Disclosures エンドポイントURLがエクスポートされていることを確認
+      // Disclosures エンド�EインチERLがエクスポ�EトされてぁE��ことを確誁E
       template.hasOutput('DisclosuresEndpoint', {
         Description: 'Disclosures query API endpoint URL',
         Export: {
@@ -218,7 +218,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should export Exports endpoint URL', () => {
-      // Exports エンドポイントURLがエクスポートされていることを確認
+      // Exports エンド�EインチERLがエクスポ�EトされてぁE��ことを確誁E
       template.hasOutput('ExportsEndpoint', {
         Description: 'Export API endpoint URL',
         Export: {
@@ -228,9 +228,9 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
   });
 
-  describe('API Gateway統合の整合性', () => {
+  describe('API Gateway統合�E整合性', () => {
     it('should have consistent API Gateway configuration', () => {
-      // API Gatewayの基本設定が存在することを確認
+      // API Gatewayの基本設定が存在することを確誁E
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
         Name: 'tdnet-data-collector-api',
         Description: 'TDnet Data Collector REST API',
@@ -238,14 +238,14 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should have deployment stage configured', () => {
-      // デプロイステージが設定されていることを確認
+      // チE�EロイスチE�Eジが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::Stage', {
         StageName: 'prod',
       });
     });
 
     it('should have usage plan with API key', () => {
-      // Usage PlanとAPIキーが設定されていることを確認
+      // Usage PlanとAPIキーが設定されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
         UsagePlanName: 'tdnet-usage-plan',
         Description: 'Usage plan for TDnet Data Collector API',
@@ -253,16 +253,16 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should associate API key with usage plan', () => {
-      // APIキーがUsage Planに関連付けられていることを確認
+      // APIキーがUsage Planに関連付けられてぁE��ことを確誁E
       template.hasResourceProperties('AWS::ApiGateway::UsagePlanKey', {
         KeyType: 'API_KEY',
       });
     });
   });
 
-  describe('Lambda関数の権限', () => {
+  describe('Lambda関数の権陁E, () => {
     it('should grant Query Lambda read access to DynamoDB', () => {
-      // Query LambdaにDynamoDBの読み取り権限が付与されていることを確認
+      // Query LambdaにDynamoDBの読み取り権限が付与されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::IAM::Policy', {
         PolicyDocument: {
           Statement: Match.arrayWith([
@@ -286,7 +286,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should grant Export Lambda read access to DynamoDB', () => {
-      // Export LambdaにDynamoDBの読み取り権限が付与されていることを確認
+      // Export LambdaにDynamoDBの読み取り権限が付与されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::IAM::Policy', {
         PolicyDocument: {
           Statement: Match.arrayWith([
@@ -310,7 +310,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should grant Export Lambda write access to S3 exports bucket', () => {
-      // Export LambdaにS3 exportsバケットへの書き込み権限が付与されていることを確認
+      // Export LambdaにS3 exportsバケチE��への書き込み権限が付与されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::IAM::Policy', {
         PolicyDocument: {
           Statement: Match.arrayWith([
@@ -336,7 +336,7 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
 
     it('should grant Query Lambda read access to S3 PDFs bucket', () => {
-      // Query LambdaにS3 PDFsバケットへの読み取り権限が付与されていることを確認
+      // Query LambdaにS3 PDFsバケチE��への読み取り権限が付与されてぁE��ことを確誁E
       template.hasResourceProperties('AWS::IAM::Policy', {
         PolicyDocument: {
           Statement: Match.arrayWith([
@@ -359,9 +359,9 @@ describe('API Gateway Query & Export Endpoints', () => {
     });
   });
 
-  describe('WAF統合', () => {
+  describe('WAF統吁E, () => {
     it('should associate WAF Web ACL with API Gateway', () => {
-      // WAF Web ACLがAPI Gatewayに関連付けられていることを確認
+      // WAF Web ACLがAPI Gatewayに関連付けられてぁE��ことを確誁E
       template.hasResourceProperties('AWS::WAFv2::WebACLAssociation', {
         ResourceArn: Match.objectLike({
           'Fn::Join': Match.arrayWith([

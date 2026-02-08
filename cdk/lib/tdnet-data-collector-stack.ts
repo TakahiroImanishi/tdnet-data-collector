@@ -772,7 +772,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Collect Function (POST /collect)
     const collectFunction = new lambda.Function(this, 'CollectFunction', {
-      functionName: `tdnet-collect-${this.deploymentEnvironment}`,
+      functionName: `tdnet-collector-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collect'),
@@ -813,6 +813,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       memorySize: envConfig.collectStatus.memorySize,
       environment: {
         DYNAMODB_EXECUTIONS_TABLE: this.executionsTable.tableName,
+        S3_BUCKET: this.pdfsBucket.bucketName, // 追加: S3バケット名
         LOG_LEVEL: envConfig.collectStatus.logLevel,
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
@@ -822,6 +823,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // IAM権限の付与
     // DynamoDB: executionsテーブルへの読み取り権限
     this.executionsTable.grantReadData(collectStatusFunction);
+
+    // S3: PDFバケットへの読み取り権限（追加）
+    this.pdfsBucket.grantRead(collectStatusFunction);
 
     // CloudWatch Metrics: カスタムメトリクス送信権限
     collectStatusFunction.addToRolePolicy(
