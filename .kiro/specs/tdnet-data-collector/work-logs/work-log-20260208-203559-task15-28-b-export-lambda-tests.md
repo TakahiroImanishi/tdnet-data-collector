@@ -162,8 +162,8 @@ npm test -- --coverage --collectCoverageFrom="src/lambda/export/**/*.ts"
 - [x] テストファイル作成: `src/lambda/export/__tests__/process-export.test.ts` (13テスト)
 - [x] テストファイル作成: `src/lambda/export/__tests__/update-export-status.test.ts` (15テスト)
 - [x] テスト実行とカバレッジ確認（全テスト成功、目標達成）
-- [ ] tasks.md 更新
-- [ ] Git commit
+- [x] tasks.md 更新
+- [x] Git commit
 
 ## 申し送り
 

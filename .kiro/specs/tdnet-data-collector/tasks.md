@@ -1093,15 +1093,33 @@
   - _注意: Phase 2実装済み機能のテスト不足（query-disclosures.ts: 9.09%, process-export.ts: 24%）_
 
 - [ ] 15.28 Query/Export Lambda のテスト追加（カバレッジ改善）
-  - **src/lambda/query/query-disclosures.ts のテスト追加**
-    - 現状カバレッジ: 9.09%
-    - 目標カバレッジ: 80%以上
+  - [x] **15.28-A: src/lambda/query/query-disclosures.ts のテスト追加**
+    - 現状カバレッジ: 9.09% → **98.86%** ✅
+    - 目標カバレッジ: 80%以上 → **達成**
     - テスト対象:
-      - DynamoDBクエリ（GSI使用）
-      - フィルタリングとソート（開示日降順）
-      - ページネーション（limit、offset）
-      - エラーハンドリング（DynamoDB例外）
-  - **src/lambda/export/process-export.ts のテスト追加**
+      - DynamoDBクエリ（GSI使用: GSI_CompanyCode_DiscloseDate, GSI_DatePartition）
+      - フィルタリング（company_code, start_date, end_date, disclosure_type）
+      - ソート（開示日降順）
+      - ページネーション（limit、offset、LastEvaluatedKey）
+      - エラーハンドリング（DynamoDB例外、バリデーションエラー）
+    - テストケース: 20件（企業コード4件、日付範囲3件、Scan1件、フィルタ2件、ソート1件、ページネーション3件、DynamoDBページネーション1件、エラー3件、エッジ2件）
+    - _完了: 2026-02-08 20:35:40_
+    - _作業記録: work-log-20260208-203540-task15-28-a-query-lambda-tests.md_
+  - [x] **15.28-A: src/lambda/query/generate-presigned-url.ts のテスト追加**
+    - 現状カバレッジ: 0% → **100%** ✅
+    - 目標カバレッジ: 80%以上 → **達成**
+    - テスト対象:
+      - S3署名付きURL生成（有効期限1時間）
+      - 複数URL一括生成（generatePresignedUrls）
+      - カスタム有効期限指定
+      - 部分的失敗処理
+      - 並行処理
+      - エラーハンドリング（S3例外、非Errorオブジェクト）
+    - テストケース: 20件（generatePresignedUrl13件、generatePresignedUrls7件）
+    - _完了: 2026-02-08 20:35:40_
+    - _作業記録: work-log-20260208-203540-task15-28-a-query-lambda-tests.md_
+  - [x] **15.28-B: src/lambda/export/process-export.ts のテスト追加**
+  - [x] **15.28-B: src/lambda/export/process-export.ts のテスト追加**
     - 現状カバレッジ: 24% → **100%** ✅
     - 目標カバレッジ: 80%以上 → **達成**
     - テスト対象:
@@ -1113,7 +1131,8 @@
     - テストケース: 13件（正常系5件、異常系8件）
     - _完了: 2026-02-08 20:35:59_
     - _作業記録: work-log-20260208-203559-task15-28-b-export-lambda-tests.md_
-  - [x] **src/lambda/export/create-export-job.ts のテスト追加**
+  - [x] **15.28-C: src/lambda/export/create-export-job.ts のテスト追加**
+  - [x] **15.28-C: src/lambda/export/create-export-job.ts のテスト追加**
     - 現状カバレッジ: 30% → 100% (Statements/Functions/Lines)
     - 目標カバレッジ: 80%以上 ✅ 達成
     - テスト対象:
@@ -1125,7 +1144,7 @@
       - エラーハンドリング
     - _完了: 2026-02-08, 29テストケース作成、カバレッジ100%達成_
     - _作業記録: work-log-20260208-203601-task15-28-c-create-export-job-tests.md_
-  - **src/lambda/export/update-export-status.ts のテスト追加**
+  - [x] **15.28-D: src/lambda/export/update-export-status.ts のテスト追加**
     - 現状カバレッジ: 16.66% → **100%** ✅
     - 目標カバレッジ: 80%以上 → **達成**
     - テスト対象:
@@ -1134,18 +1153,13 @@
     - テストケース: 15件（正常系7件、異常系4件、エッジケース4件）
     - _完了: 2026-02-08 20:35:59_
     - _作業記録: work-log-20260208-203559-task15-28-b-export-lambda-tests.md_
-  - **src/lambda/query/generate-presigned-url.ts のテスト追加**
-    - 現状カバレッジ: 0%
-    - 目標カバレッジ: 80%以上
-    - テスト対象:
-      - S3署名付きURL生成（有効期限1時間）
-      - エラーハンドリング
   - テスト実行: `npm test -- --coverage`
   - カバレッジ80%以上を確認
   - _Requirements: 要件14.1（ユニットテスト）_
   - _優先度: 🔴 Critical_
   - _推定工数: 8-12時間_
   - _関連: work-log-20260208-203039-task15-27-final-coverage-verification.md_
+  - _完了: 2026-02-08 20:35:40, 全サブタスク完了（A: query-disclosures.ts 98.86%, generate-presigned-url.ts 100%）_
 
 
 ## Phase 3: Webダッシュボードと監視
