@@ -1000,13 +1000,14 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/api/pdf-download'),
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
+      timeout: cdk.Duration.seconds(envConfig.pdfDownload.timeout),
+      memorySize: envConfig.pdfDownload.memorySize,
       environment: {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         S3_BUCKET_NAME: this.pdfsBucket.bucketName,
         API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
-        LOG_LEVEL: 'info',
+        LOG_LEVEL: envConfig.pdfDownload.logLevel,
+        ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
     });
