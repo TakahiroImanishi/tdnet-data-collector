@@ -133,13 +133,41 @@ await Promise.all([
 
 ## 成果物
 
-- [ ] `src/utils/metrics.ts` - メトリクス送信関数の拡張
-- [ ] `src/lambda/collect/handler.ts` - メトリクス送信の統合
-- [ ] `src/utils/__tests__/metrics.test.ts` - テストの拡張
+- [x] `src/utils/metrics.ts` - メトリクス送信関数の拡張
+  - `sendDisclosuresCollectedMetric()` 追加
+  - `sendDisclosuresFailedMetric()` 追加
+  - `sendCollectionSuccessRateMetric()` 追加
+- [x] `src/lambda/collector/handler.ts` - メトリクス送信の統合
+  - 収集完了時に3つのカスタムメトリクスを送信
+  - 成功率の計算ロジックを実装
+- [x] `src/utils/__tests__/metrics.test.ts` - テストの拡張
+  - 新しいメトリクス関数のテスト追加（9テストケース）
+  - 統合テスト追加（2テストケース）
+  - 全27テスト合格
 
 ## 申し送り事項
 
-（完了時に記載）
+### 実装完了
+- タスク16.2「カスタムメトリクスの実装」を完了
+- 3つのカスタムメトリクス（DisclosuresCollected, DisclosuresFailed, CollectionSuccessRate）を実装
+- Lambda Collectorハンドラーに統合し、収集完了時に自動送信
+- 包括的なユニットテストを追加し、すべて合格
+
+### CloudWatchでの確認方法
+デプロイ後、以下のメトリクスがCloudWatchに記録されます:
+
+**名前空間**: `TDnetDataCollector`
+
+**メトリクス**:
+1. `DisclosuresCollected` - 収集成功件数
+2. `DisclosuresFailed` - 収集失敗件数
+3. `CollectionSuccessRate` - 収集成功率（0-100）
+
+**ディメンション**: `FunctionName` = Lambda関数名
+
+### 次のステップ
+- タスク16.3: CloudWatch Alarmsの設定（カスタムメトリクスに基づくアラーム）
+- タスク16.4: CloudWatch Dashboardの作成（メトリクスの可視化）
 
 ## 参考資料
 

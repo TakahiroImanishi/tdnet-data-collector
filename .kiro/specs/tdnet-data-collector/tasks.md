@@ -1177,12 +1177,16 @@
   - _成果物: CloudWatch Logs Construct実装、テスト9件合格_
   - _作業記録: work-log-20260208-204441-task16-1-cloudwatch-logs-setup.md_
 
-- [ ] 16.2 カスタムメトリクスの実装
+- [x] 16.2 カスタムメトリクスの実装
   - DisclosuresCollected（日次収集件数）
   - DisclosuresFailed（失敗件数）
   - CollectionSuccessRate（成功率）
   - Lambda関数内でメトリクス送信
   - _Requirements: 要件12.1（監視）_
+  - _完了: 2026-02-08_
+  - _成果物: src/utils/metrics.ts（3関数追加）、src/lambda/collector/handler.ts（統合）_
+  - _テスト結果: 全27テスト合格（新規9テスト追加）_
+  - _作業記録: work-log-20260208-204443-task16-2-custom-metrics.md_
 
 - [ ] 16.3 CloudWatch Alarmsの設定
   - Lambda Error Rate > 10%でCritical

@@ -8,6 +8,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { Environment, getEnvironmentConfig } from './config/environment-config';
 import { CloudWatchAlarms } from './constructs/cloudwatch-alarms';
+import { CloudWatchDashboard } from './constructs/cloudwatch-dashboard';
 
 /**
  * Stack properties with environment configuration
@@ -1273,6 +1274,41 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'CloudWatchAlarmsCount', {
       value: cloudwatchAlarms.alarms.length.toString(),
       description: 'Number of CloudWatch Alarms created',
+    });
+
+    // ========================================
+    // Phase 3: CloudWatch Dashboard
+    // ========================================
+
+    // CloudWatch Dashboardを作成
+    const dashboard = new CloudWatchDashboard(this, 'CloudWatchDashboard', {
+      environment: this.deploymentEnvironment,
+      lambdaFunctions: {
+        collector: collectorFunction,
+        query: queryFunction,
+        export: exportFunction,
+        collect: collectFunction,
+        collectStatus: collectStatusFunction,
+        exportStatus: exportStatusFunction,
+        pdfDownload: pdfDownloadFunction,
+      },
+      dynamodbTables: {
+        disclosures: this.disclosuresTable,
+        executions: this.executionsTable,
+        exportStatus: this.exportStatusTable,
+      },
+      s3Buckets: {
+        pdfs: this.pdfsBucket,
+        exports: this.exportsBucket,
+      },
+      apiGateway: this.api,
+    });
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'DashboardName', {
+      value: dashboard.dashboard.dashboardName,
+      description: 'CloudWatch Dashboard name',
+      exportName: 'TdnetDashboardName',
     });
   }
 }
