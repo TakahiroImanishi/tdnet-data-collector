@@ -24,8 +24,10 @@ describe('PdfDownload', () => {
     document.body.innerHTML = '';
   });
 
-  it('正常にレンダリングされる', () => {
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+  it('正常にレンダリングされる', async () => {
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
     expect(button).toBeInTheDocument();
@@ -55,10 +57,15 @@ describe('PdfDownload', () => {
     jest.spyOn(document.body, 'appendChild').mockImplementation(mockAppendChild);
     jest.spyOn(document.body, 'removeChild').mockImplementation(mockRemoveChild);
 
-    render(<PdfDownload disclosureId={mockDisclosureId} fileName={mockFileName} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} fileName={mockFileName} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
-    fireEvent.click(button);
+    
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       expect(mockGetPdfDownloadUrl).toHaveBeenCalledWith(mockDisclosureId);
@@ -82,10 +89,15 @@ describe('PdfDownload', () => {
     jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
     jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
 
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button');
-    fireEvent.click(button);
+    
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     // ダウンロード中
     await waitFor(() => {
@@ -94,7 +106,9 @@ describe('PdfDownload', () => {
     });
     
     // プロミスを解決
-    resolvePromise({ success: true, data: { url: 'http://test.com/file.pdf', expires_in: 3600 } });
+    await act(async () => {
+      resolvePromise({ success: true, data: { url: 'http://test.com/file.pdf', expires_in: 3600 } });
+    });
   });
 
   it('エラー時にエラーメッセージを表示する', async () => {
@@ -107,10 +121,15 @@ describe('PdfDownload', () => {
     jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
     jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
 
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
-    fireEvent.click(button);
+    
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -129,10 +148,15 @@ describe('PdfDownload', () => {
     jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
     jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
 
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
-    fireEvent.click(button);
+    
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/PDFのURLを取得できませんでした/i)).toBeInTheDocument();
