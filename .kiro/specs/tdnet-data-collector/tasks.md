@@ -971,11 +971,74 @@
   - _問題: Query/Export handlerで500エラー（4件）。GSIが作成されていないためクエリが失敗_
   - _解決策: DynamoDBテーブル定義にGSIを追加し、LocalStackで作成_
 
+- [ ] 15.14 Query Lambdaのエラーレスポンス形式修正（Phase 2 High）
+  - 現状: `{ error_code, message, request_id }`
+  - 期待: `{ status: "error", error: { code, message, details }, request_id }`
+  - handleError関数を修正してAPI設計ガイドラインに準拠
+  - _Requirements: 要件4.3（API仕様）_
+  - _優先度: 🟠 High_
+  - _推定工数: 1時間_
+  - _関連: steering/api/api-design-guidelines.md_
+
+- [ ] 15.15 環境分離の実装（Phase 2 High）
+  - 開発環境（dev）と本番環境（prod）の分離
+  - 環境ごとの設定（タイムアウト、メモリ、ログレベル）
+  - CDKスタックの環境パラメータ化
+  - _Requirements: 要件8.1（設定管理）_
+  - _優先度: � High_
+  - _推定工数: 3時間_
+
+- [ ] 15.16 セキュリティリスクの修正（Phase 2 Critical）
+  - exportStatusFunctionとpdfDownloadFunctionのAPI Key環境変数設定を修正
+  - `API_KEY: apiKeyValue.secretValue.unsafeUnwrap()` → `API_KEY_SECRET_ARN: apiKeyValue.secretArn`
+  - Lambda関数内でSecrets Managerから値を取得するよう実装
+  - _Requirements: 要件11.4, 13.4（APIキー管理、シークレット管理）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+  - _関連: work-log-20260208-154459-architecture-design-review.md, architecture-discrepancies-20260208.md_
+
+- [ ] 15.17 アーキテクチャ設計書の更新（Phase 2 High）
+  - Lambda関数リストを7個に更新（現状: 3個）
+  - date_partitionの形式を`YYYY-MM`に統一（現状: YYYY-MM-DD）
+  - DynamoDB GSI名を`GSI_DatePartition`に修正（現状: GSI_DateRange）
+  - API Keyのセキュリティベストプラクティスを明記
+  - CloudFormation Outputsの詳細を追加
+  - _Requirements: 要件13.1（ドキュメント）_
+  - _優先度: 🟠 High_
+  - _推定工数: 2-3時間_
+  - _関連: work-log-20260208-154459-architecture-design-review.md, architecture-discrepancies-20260208.md_
+
+- [ ] 15.18 未実装エンドポイントの実装（Phase 2 High）
+  - GET /disclosures/{id} - 開示情報詳細取得
+  - GET /health - ヘルスチェック
+  - GET /stats - 統計情報取得
+  - _Requirements: 要件4.1, 12.1（API、監視）_
+  - _優先度: 🟠 High_
+  - _推定工数: 4-6時間_
+  - _関連: work-log-20260208-154512-api-design-review.md, design/api-design.md_
+
+- [ ] 15.19 認証方式の統一（Phase 2 High）
+  - POST /collect と GET /collect/{execution_id} にAPIキー認証を追加
+  - すべてのハンドラーでSecrets Manager経由の認証に統一
+  - _Requirements: 要件11.1（API認証）_
+  - _優先度: 🟠 High_
+  - _推定工数: 2-3時間_
+  - _関連: work-log-20260208-154512-api-design-review.md_
+
+- [ ] 15.20 ページネーション方式の統一（Phase 2 Medium）
+  - カーソルベース（`next_token`）とオフセットベース（`offset`）のどちらを採用するか決定
+  - 採用しない方を仕様または実装から削除
+  - _Requirements: 要件4.1（API設計）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 2-3時間_
+  - _関連: work-log-20260208-154512-api-design-review.md_
+
 - [ ] 15.21 Phase 2完了確認（最終）
   - すべてのE2Eテストが成功することを確認
   - execution_id不一致問題が解決されていることを確認
   - プロパティテストが100%成功することを確認
   - 残存テスト失敗が修正されていることを確認（目標: 100%）
+  - セキュリティリスクが修正されていることを確認
   - デプロイ準備が完了していることを確認
   - Phase 3移行判断: ✅ Go（条件なし）
   - _Requirements: 全要件_
