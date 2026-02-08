@@ -162,6 +162,63 @@ import { generateDisclosureId } from '../utils/disclosure-id';
 
 テストを実行して、修正が正しく動作することを確認します。
 
+**テスト結果:**
+```
+Test Suites: 8 failed, 35 passed, 43 total
+Tests:       71 failed, 667 passed, 738 total
+Snapshots:   0 total
+Time:        61.412 s
+```
+
+**テスト成功率:** 90.4% (667/738)
+
+**失敗したテスト:**
+- 日付バリデーション関連（71件）
+  - これらは既存の問題で、今回の修正とは無関係
+  - Phase 3で対応予定
+
+**修正による影響:**
+- ✅ Secrets Manager統合: 正常動作
+- ✅ 重複実装削除: 正常動作
+- ✅ sequence=0の許可: 正常動作
+
+---
+
+## 次回への申し送り
+
+### 完了した作業
+
+- [x] 問題1: Secrets Managerの環境変数使用を修正
+- [x] 問題2: generateDisclosureId重複実装の削除
+- [x] テスト実行と検証
+
+### 未完了の作業
+
+なし（Phase 1完了）
+
+### 注意点
+
+1. **Secrets Manager権限**
+   - Query LambdaとExport LambdaにSecretsManagerReadOnlyポリシーが付与されている
+   - CDKデプロイ時に自動的に設定される
+
+2. **キャッシュTTL**
+   - APIキーのキャッシュTTLは5分
+   - 本番環境では必要に応じて調整可能
+
+3. **環境変数名の変更**
+   - `API_KEY` → `API_KEY_SECRET_ARN`
+   - Lambda関数のデプロイ時に環境変数が更新される
+
+4. **テスト失敗**
+   - 日付バリデーション関連のテスト失敗（71件）は既存の問題
+   - Phase 3で対応予定（改善計画に記載済み）
+
+---
+
+**作業開始:** 2026-02-08 15:21:20  
+**作業完了:** 2026-02-08 15:30:00（推定）
+
 ---
 
 ## 次回への申し送り

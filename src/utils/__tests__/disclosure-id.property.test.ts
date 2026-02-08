@@ -141,7 +141,6 @@ describe('generateDisclosureId - Property Tests', () => {
       const disclosedAt = '2024-01-15T10:30:00Z';
       const companyCode = '1234';
 
-      expect(() => generateDisclosureId(disclosedAt, companyCode, 0)).toThrow(ValidationError); // 0
       expect(() => generateDisclosureId(disclosedAt, companyCode, -1)).toThrow(ValidationError); // 負数
       expect(() => generateDisclosureId(disclosedAt, companyCode, 1000)).toThrow(ValidationError); // 1000以上
     });
