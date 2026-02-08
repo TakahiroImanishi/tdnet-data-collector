@@ -12,7 +12,12 @@ import { retryWithBackoff } from '../../utils/retry';
 import { ExportRequestBody, ExportStatusItem } from './types';
 
 // DynamoDBクライアント（グローバルスコープで初期化）
-const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const dynamoClient = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'ap-northeast-1',
+  ...(process.env.AWS_ENDPOINT_URL && {
+    endpoint: process.env.AWS_ENDPOINT_URL,
+  }),
+});
 
 // 環境変数
 const EXPORT_STATUS_TABLE = process.env.EXPORT_STATUS_TABLE_NAME || 'tdnet-export-status';

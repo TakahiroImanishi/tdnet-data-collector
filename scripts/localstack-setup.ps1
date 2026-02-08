@@ -106,7 +106,30 @@ try {
     Write-Warning-Custom "Failed to create table 'tdnet_executions': $_"
 }
 
-# Wait for tables to be active
+# Table 3: tdnet-export-status
+Write-Info "Creating table: tdnet-export-status"
+try {
+    aws --endpoint-url=$ENDPOINT `
+        --region=$REGION `
+        dynamodb create-table `
+        --table-name tdnet-export-status `
+        --attribute-definitions `
+            AttributeName=export_id,AttributeType=S `
+        --key-schema `
+            AttributeName=export_id,KeyType=HASH `
+        --provisioned-throughput `
+            ReadCapacityUnits=5,WriteCapacityUnits=5 `
+        --no-cli-pager `
+        2>&1 | Out-Null
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "Table 'tdnet-export-status' created successfully"
+    } else {
+        Write-Warning-Custom "Table 'tdnet-export-status' may already exist or creation failed"
+    }
+} catch {
+    Write-Warning-Custom "Failed to create table 'tdnet-export-status': $_"
+}
 Write-Info "Waiting for tables to be active..."
 Start-Sleep -Seconds 2
 
@@ -126,6 +149,12 @@ try {
         Write-Success "Table 'tdnet_executions' verified"
     } else {
         Write-Error-Custom "Table 'tdnet_executions' not found"
+    }
+    
+    if ($tableNames -contains "tdnet-export-status") {
+        Write-Success "Table 'tdnet-export-status' verified"
+    } else {
+        Write-Error-Custom "Table 'tdnet-export-status' not found"
     }
 } catch {
     Write-Error-Custom "Failed to verify tables: $_"
@@ -203,6 +232,7 @@ Write-Host ""
 Write-Info "DynamoDB Tables:"
 Write-Host "  - tdnet_disclosures (with DatePartitionIndex GSI)"
 Write-Host "  - tdnet_executions (with StartedAtIndex GSI)"
+Write-Host "  - tdnet-export-status"
 Write-Host ""
 Write-Info "S3 Buckets:"
 Write-Host "  - tdnet-data-collector-pdfs-local"

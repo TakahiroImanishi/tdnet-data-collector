@@ -13,7 +13,12 @@ import { Disclosure } from '../../types';
 import { generateDatePartition, generateMonthRange } from '../../utils/date-partition';
 
 // DynamoDBクライアント（グローバルスコープで初期化）
-const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const dynamoClient = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'ap-northeast-1',
+  ...(process.env.AWS_ENDPOINT_URL && {
+    endpoint: process.env.AWS_ENDPOINT_URL,
+  }),
+});
 
 // 環境変数
 const DISCLOSURES_TABLE = process.env.DYNAMODB_TABLE_NAME || 'tdnet-disclosures';

@@ -38,7 +38,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient, {
 describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', () => {
   let mockContext: Context;
   let mockEvent: APIGatewayProxyEvent;
-  const tableName = process.env.DYNAMODB_TABLE_NAME || 'tdnet-disclosures-local';
+  const tableName = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
 
   beforeAll(async () => {
     // テストデータをDynamoDBに挿入

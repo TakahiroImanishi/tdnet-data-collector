@@ -24,6 +24,9 @@ import { generateDatePartition } from '../../utils/date-partition';
 const dynamoClient = new DynamoDBClient({
   region: process.env.AWS_REGION || 'ap-northeast-1',
   maxAttempts: 3,
+  ...(process.env.AWS_ENDPOINT_URL && {
+    endpoint: process.env.AWS_ENDPOINT_URL,
+  }),
 });
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
@@ -203,7 +206,7 @@ async function queryByDateRange(params: QueryParams): Promise<Disclosure[]> {
  */
 async function queryByPartition(
   partition: string,
-  params: QueryParams
+  _params: QueryParams
 ): Promise<Disclosure[]> {
   const queryInput: QueryCommandInput = {
     TableName: TABLE_NAME,

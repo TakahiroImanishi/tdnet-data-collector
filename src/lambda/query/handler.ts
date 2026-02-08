@@ -12,7 +12,6 @@ import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
 import { ValidationError, NotFoundError } from '../../errors';
 import { queryDisclosures } from './query-disclosures';
-import { generatePresignedUrl } from './generate-presigned-url';
 import { formatAsCsv } from './format-csv';
 import { Disclosure } from '../../types';
 
