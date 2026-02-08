@@ -23,7 +23,7 @@ fileMatchPattern: '**/scraper/**/*.ts|**/collector/**/*.ts|**/utils/rate-limiter
 - 企業名: `.kjName`
 - タイトル・リンク: `.kjTitle a`
 
-### スクレイピング実装
+### 基本実装
 
 ```typescript
 import * as cheerio from 'cheerio';
@@ -32,7 +32,7 @@ import axios from 'axios';
 async function scrapeTdnetList(date: string): Promise<Disclosure[]> {
     const url = `https://www.release.tdnet.info/inbs/I_list_001_${date.replace(/-/g, '')}.html`;
     const response = await axios.get(url, {
-        headers: { 'User-Agent': 'TDnet-Data-Collector/1.0 (contact@example.com)' },
+        headers: { 'User-Agent': 'TDnet-Data-Collector/1.0' },
         timeout: 30000,
     });
     
@@ -50,38 +50,20 @@ async function scrapeTdnetList(date: string): Promise<Disclosure[]> {
         const title = $link.text().trim();
         const pdfPath = $link.attr('href');
         
-        if (!companyCode || !companyName || !title || !pdfPath) {
-            logger.warn('Incomplete data', { index, companyCode, title });
-            return;
-        }
+        if (!companyCode || !title || !pdfPath) return;
         
         disclosures.push({
             disclosure_id: generateDisclosureId(date, companyCode, index),
             company_code: companyCode,
             company_name: companyName,
-            disclosure_type: extractDisclosureType(title),
             title: title,
             disclosed_at: `${date}T${time}:00+09:00`,
             pdf_url: `https://www.release.tdnet.info${pdfPath}`,
             date_partition: date.substring(0, 7),
-            // ...
         });
     });
     
     return disclosures;
-}
-
-function extractDisclosureType(title: string): string {
-    const patterns = [
-        { pattern: /決算短信/, type: '決算短信' },
-        { pattern: /業績予想/, type: '業績予想修正' },
-        { pattern: /配当/, type: '配当予想修正' },
-        { pattern: /自己株式/, type: '自己株式取得' },
-    ];
-    for (const { pattern, type } of patterns) {
-        if (pattern.test(title)) return type;
-    }
-    return 'その他';
 }
 ```
 
@@ -100,11 +82,18 @@ async function downloadPdf(
         responseType: 'arraybuffer',
         headers: { 'User-Agent': 'TDnet-Data-Collector/1.0' },
         timeout: 60000,
-        maxContentLength: 50 * 1024 * 1024,
+        maxContentLength: 50 * 1024 * 1024, // 50MB
     });
     
     const buffer = Buffer.from(response.data);
-    validatePdfIntegrity(buffer); // 10KB-50MB、%PDF-ヘッダー
+    
+    // PDFバリデーション: 10KB-50MB、%PDF-ヘッダー
+    if (buffer.length < 10 * 1024 || buffer.length > 50 * 1024 * 1024) {
+        throw new Error('Invalid PDF size');
+    }
+    if (!buffer.toString('utf-8', 0, 5).startsWith('%PDF-')) {
+        throw new Error('Invalid PDF header');
+    }
     
     await s3Client.send(new PutObjectCommand({
         Bucket: bucketName,
@@ -135,7 +124,9 @@ class RateLimiter {
         const now = Date.now();
         const timeSinceLastRequest = now - this.lastRequestTime;
         if (timeSinceLastRequest < this.minDelay) {
-            await new Promise(resolve => setTimeout(resolve, this.minDelay - timeSinceLastRequest));
+            await new Promise(resolve => 
+                setTimeout(resolve, this.minDelay - timeSinceLastRequest)
+            );
         }
         this.lastRequestTime = Date.now();
     }
@@ -149,78 +140,25 @@ async function fetchWithRateLimit(url: string): Promise<any> {
 }
 ```
 
-### 適応型レート制限（429エラー対応）
+### 429エラー対応
 
 ```typescript
-class AdaptiveRateLimiter {
-    private currentDelay: number;
-    private readonly minDelay: number;
-    private readonly maxDelay: number;
-    private consecutiveSuccesses: number = 0;
-    
-    constructor(options: { minDelay?: number; maxDelay?: number } = {}) {
-        this.minDelay = options.minDelay ?? 2000;
-        this.maxDelay = options.maxDelay ?? 60000;
-        this.currentDelay = this.minDelay;
-    }
-    
-    handleSuccess(responseTime: number): void {
-        this.consecutiveSuccesses++;
-        if (responseTime > 3000) {
-            this.currentDelay = Math.min(this.currentDelay * 1.2, this.maxDelay);
-        } else if (this.consecutiveSuccesses >= 10) {
-            this.currentDelay = Math.max(this.currentDelay * 0.9, this.minDelay);
-            this.consecutiveSuccesses = 0;
+async function fetchWithRetry(url: string, maxRetries: number = 3): Promise<any> {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            await rateLimiter.waitIfNeeded();
+            return await axios.get(url);
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 429) {
+                const retryAfter = error.response.headers['retry-after'];
+                const delay = retryAfter ? parseInt(retryAfter) * 1000 : 2000 * Math.pow(2, i);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+            throw error;
         }
     }
-    
-    handleRateLimitError(retryAfter?: number): void {
-        this.consecutiveSuccesses = 0;
-        if (retryAfter) {
-            this.currentDelay = Math.min(retryAfter * 1000, this.maxDelay);
-        } else {
-            this.currentDelay = Math.min(this.currentDelay * 2, this.maxDelay);
-        }
-    }
-}
-
-// 使用例
-const adaptiveRateLimiter = new AdaptiveRateLimiter();
-async function fetchWithAdaptiveRateLimit(url: string): Promise<any> {
-    await adaptiveRateLimiter.waitIfNeeded();
-    const startTime = Date.now();
-    try {
-        const response = await axios.get(url);
-        adaptiveRateLimiter.handleSuccess(Date.now() - startTime);
-        return response.data;
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 429) {
-            const retryAfter = error.response.headers['retry-after'];
-            adaptiveRateLimiter.handleRateLimitError(retryAfter ? parseInt(retryAfter) : undefined);
-            await new Promise(resolve => setTimeout(resolve, adaptiveRateLimiter.getCurrentDelay()));
-            return await fetchWithAdaptiveRateLimit(url); // 再試行
-        }
-        throw error;
-    }
-}
-```
-
-## エラーハンドリング
-
-```typescript
-async function scrapeTdnetListWithFallback(date: string): Promise<Disclosure[]> {
-    try {
-        return await scrapeTdnetList(date);
-    } catch (error) {
-        logger.error('Scraping failed', { date, error });
-        // フォールバック: キャッシュから取得
-        const cachedData = await getCachedDisclosures(date);
-        if (cachedData.length > 0) {
-            logger.warn('Using cached data', { date });
-            return cachedData;
-        }
-        return [];
-    }
+    throw new Error('Max retries exceeded');
 }
 ```
 
@@ -230,7 +168,7 @@ async function scrapeTdnetListWithFallback(date: string): Promise<Disclosure[]> 
 2. **タイムアウト**: 30秒（一覧）、60秒（PDF）
 3. **レート制限**: 2秒間隔、429エラー時は指数バックオフ
 4. **PDFバリデーション**: 10KB-50MB、`%PDF-`ヘッダー
-5. **HTML構造変更検知**: 定期的にセレクタの存在確認
+5. **並行処理**: 最大5並列
 
 ## 関連ドキュメント
 
