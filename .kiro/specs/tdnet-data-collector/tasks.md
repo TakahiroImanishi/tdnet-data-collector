@@ -658,12 +658,15 @@
   - _完了: 2026-02-08, 15テスト成功_
   - _Requirements: 要件4.4（PDFダウンロード）_
 
-- [ ] 13.7 APIエンドポイントE2Eテスト
+- [x] 13.7 APIエンドポイントE2Eテスト
   - **Property 9: APIキー認証の必須性**
   - **Validates: Requirements 11.1, 11.3**
   - 無効なAPIキーで401 Unauthorizedが返されることを検証
   - 有効なAPIキーで正常にレスポンスが返されることを検証
   - _Requirements: 要件14.4（E2Eテスト）_
+  - _完了: 2026-02-08, 28/28テスト成功（100%）_
+  - _成果物: Query/Export handlerのテスト環境対応（TEST_ENV=e2e）_
+  - _注意: LocalStack環境が必要、.env.localにTEST_ENV=e2eとAPI_KEYを設定_
 
 ### 14. Secrets Manager設定
 

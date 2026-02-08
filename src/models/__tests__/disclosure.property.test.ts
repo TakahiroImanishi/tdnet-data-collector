@@ -13,8 +13,8 @@ import {
   fromDynamoDBItem,
   validateDisclosure,
   createDisclosure,
-  generateDisclosureId,
 } from '../disclosure';
+import { generateDisclosureId } from '../../utils/disclosure-id';
 import { Disclosure } from '../../types';
 import { ValidationError } from '../../errors';
 

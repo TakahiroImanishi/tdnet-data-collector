@@ -9,6 +9,7 @@
 import { Disclosure, DynamoDBItem } from '../types';
 import { ValidationError } from '../errors';
 import { generateDatePartition, validateDisclosedAt } from '../utils/date-partition';
+import { generateDisclosureId } from '../utils/disclosure-id';
 
 /**
  * Disclosureの必須フィールドをバリデーション
@@ -176,56 +177,4 @@ export function createDisclosure(
   validateDisclosure(disclosure);
 
   return disclosure;
-}
-
-/**
- * 開示IDを生成
- *
- * フォーマット: 日付_企業コード_連番
- * 例: 20240115_1234_001
- *
- * @param disclosedAt - 開示日時（ISO 8601形式）
- * @param companyCode - 企業コード（4桁）
- * @param sequence - 連番（同一日・同一企業の複数開示を区別）
- * @returns 開示ID
- * @throws {ValidationError} バリデーションエラーの場合
- */
-export function generateDisclosureId(
-  disclosedAt: string,
-  companyCode: string,
-  sequence: number
-): string {
-  // disclosed_atのバリデーション
-  validateDisclosedAt(disclosedAt);
-
-  // company_codeのバリデーション（4桁の数字）
-  const companyCodeRegex = /^\d{4}$/;
-  if (!companyCodeRegex.test(companyCode)) {
-    throw new ValidationError(
-      `Invalid company_code format: ${companyCode}. Expected 4-digit number.`,
-      { company_code: companyCode }
-    );
-  }
-
-  // sequenceのバリデーション（正の整数）
-  if (!Number.isInteger(sequence) || sequence < 0) {
-    throw new ValidationError(`Invalid sequence: ${sequence}. Expected non-negative integer.`, {
-      sequence,
-    });
-  }
-
-  // JST基準で日付を取得
-  const utcDate = new Date(disclosedAt);
-  const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-
-  // YYYYMMDD形式
-  const year = jstDate.getUTCFullYear();
-  const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(jstDate.getUTCDate()).padStart(2, '0');
-  const dateStr = `${year}${month}${day}`;
-
-  // 連番を3桁にゼロパディング
-  const sequenceStr = String(sequence).padStart(3, '0');
-
-  return `${dateStr}_${companyCode}_${sequenceStr}`;
 }

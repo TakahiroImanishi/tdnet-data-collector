@@ -8,12 +8,70 @@
  */
 
 import { APIGatewayProxyResult, Context } from 'aws-lambda';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
 import { ValidationError, AuthenticationError } from '../../errors';
 import { ExportEvent, ExportRequestBody, ExportResponse } from './types';
 import { createExportJob } from './create-export-job';
 import { processExport } from './process-export';
+
+// Secrets Managerクライアント（グローバルスコープで初期化）
+const secretsClient = new SecretsManagerClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+
+// APIキーキャッシュ（5分TTL）
+let cachedApiKey: string | null = null;
+let cacheExpiry: number = 0;
+
+/**
+ * Secrets ManagerからAPIキーを取得
+ *
+ * テスト環境（TEST_ENV=e2e）では、API_KEY環境変数から直接取得します。
+ * 本番環境では、Secrets Managerから取得します。
+ *
+ * @returns APIキー
+ * @throws Error Secrets Managerからの取得に失敗した場合
+ */
+async function getApiKey(): Promise<string> {
+  // キャッシュチェック
+  if (cachedApiKey && Date.now() < cacheExpiry) {
+    return cachedApiKey;
+  }
+
+  // テスト環境: API_KEY環境変数から直接取得
+  if (process.env.TEST_ENV === 'e2e' && process.env.API_KEY) {
+    cachedApiKey = process.env.API_KEY;
+    cacheExpiry = Date.now() + 5 * 60 * 1000;
+    return cachedApiKey;
+  }
+
+  // 本番環境: Secrets Managerから取得
+  const secretArn = process.env.API_KEY_SECRET_ARN;
+  if (!secretArn) {
+    throw new Error('API_KEY_SECRET_ARN environment variable is not set');
+  }
+
+  try {
+    const command = new GetSecretValueCommand({ SecretId: secretArn });
+    const response = await secretsClient.send(command);
+
+    if (!response.SecretString) {
+      throw new Error('Secret value is empty');
+    }
+
+    // APIキーをキャッシュ（5分TTL）
+    cachedApiKey = response.SecretString;
+    cacheExpiry = Date.now() + 5 * 60 * 1000;
+
+    return cachedApiKey;
+  } catch (error) {
+    logger.error('Failed to retrieve API key from Secrets Manager', {
+      error: error instanceof Error ? error.message : String(error),
+      secret_arn: secretArn,
+    });
+    throw new Error('Failed to retrieve API key');
+  }
+}
 
 /**
  * Lambda Exportハンドラー
@@ -63,7 +121,7 @@ export async function handler(
     });
 
     // APIキー認証
-    validateApiKey(event);
+    await validateApiKey(event);
 
     // リクエストボディのパース
     const requestBody = parseRequestBody(event.body);
@@ -154,19 +212,15 @@ export async function handler(
  * @param event ExportEvent
  * @throws AuthenticationError APIキーが無効な場合
  */
-function validateApiKey(event: ExportEvent): void {
+async function validateApiKey(event: ExportEvent): Promise<void> {
   const apiKey = event.headers?.['x-api-key'] || event.headers?.['X-Api-Key'];
 
   if (!apiKey) {
     throw new AuthenticationError('API key is required');
   }
 
-  // 環境変数からAPIキーを取得
-  const validApiKey = process.env.API_KEY;
-
-  if (!validApiKey) {
-    throw new Error('API_KEY environment variable is not set');
-  }
+  // Secrets ManagerからAPIキーを取得
+  const validApiKey = await getApiKey();
 
   if (apiKey !== validApiKey) {
     throw new AuthenticationError('Invalid API key');

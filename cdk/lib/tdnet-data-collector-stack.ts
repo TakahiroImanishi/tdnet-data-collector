@@ -329,7 +329,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       environment: {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         S3_BUCKET_NAME: this.pdfsBucket.bucketName,
-        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
       },
@@ -341,6 +341,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // S3: PDFバケットへの読み取り権限（署名付きURL生成用）
     this.pdfsBucket.grantRead(queryFunction);
+
+    // Secrets Manager: APIキー読み取り権限
+    apiKeyValue.grantRead(queryFunction);
 
     // CloudWatch Metrics: カスタムメトリクス送信権限
     queryFunction.addToRolePolicy(
@@ -380,7 +383,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
         EXPORT_BUCKET_NAME: this.exportsBucket.bucketName,
-        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
         LOG_LEVEL: 'info',
         NODE_OPTIONS: '--enable-source-maps',
         // AWS_REGION is automatically set by Lambda runtime
@@ -397,6 +400,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // S3: exportsバケットへの書き込み権限
     this.exportsBucket.grantPut(exportFunction);
     this.exportsBucket.grantRead(exportFunction);
+
+    // Secrets Manager: APIキー読み取り権限
+    apiKeyValue.grantRead(exportFunction);
 
     // CloudWatch Metrics: カスタムメトリクス送信権限
     exportFunction.addToRolePolicy(
