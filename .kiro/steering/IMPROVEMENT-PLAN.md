@@ -71,21 +71,20 @@
 - ✅ 環境変数の検証パターン
 - ✅ 基本的なエラーハンドリングパターン（参照付き）
 
-### 4. error-handling-implementation.md - 推定50%削減
-**現状**: 約5,000トークン  
-**目標**: 約2,500トークン
+### ✅ 4. error-handling-implementation.md - 50%削減完了
+**削減前**: 約6,932トークン  
+**削減後**: 約3,500トークン  
+**削減率**: 約50%
 
-**削減項目**:
-- ❌ 再試行実装の詳細（要点のみ）
-- ❌ AWS SDK設定の繰り返し（表形式で集約）
-- ❌ サーキットブレーカーの完全実装（概要のみ）
-- ❌ エラー集約の詳細実装
+**削減内容**:
+- ✅ 再試行実装を基本パターンのみに簡略化
+- ✅ AWS SDK設定を表形式に集約
+- ✅ サーキットブレーカーを基本実装のみに簡略化
+- ✅ エラー集約の詳細実装を削除（ErrorAggregatorクラス全体を削除）
+- ✅ 冗長なコード例を削除
+- ✅ ベストプラクティスを4項目に集約
 
-**残す内容**:
-- ✅ 再試行戦略の要点
-- ✅ AWS SDK設定（表形式）
-- ✅ サーキットブレーカーの概要
-- ✅ DLQ設定（簡略版）
+**完了日**: 2026-02-09
 
 ### 5. tdnet-scraping-patterns.md - 推定60%削減
 **現状**: 約4,500トークン  
@@ -103,19 +102,18 @@
 - ✅ 基本的なレート制限実装
 - ✅ PDF検証パターン
 
-### 6. error-handling-enforcement.md - 推定60%削減
-**現状**: 約3,500トークン  
-**目標**: 約1,400トークン
+### ✅ 6. error-handling-enforcement.md - 60%削減完了
+**削減前**: 約4,794トークン  
+**削減後**: 約1,900トークン  
+**削減率**: 約60%
 
-**削減項目**:
-- ❌ MonitoredLambda Constructの完全実装（概要のみ）
-- ❌ DLQプロセッサーの詳細実装
-- ❌ テスト例の詳細
+**削減内容**:
+- ✅ MonitoredLambda Constructの完全実装を削除（200行以上のコードを削除）
+- ✅ DLQプロセッサーの詳細実装を削除
+- ✅ テスト例を基本パターンのみに簡略化（5個のテストケースのみ残す）
+- ✅ 冗長な説明文を削除
 
-**残す内容**:
-- ✅ DLQ必須化ルール（表形式）
-- ✅ 必須アラーム一覧（表形式）
-- ✅ MonitoredLambdaの使用例（簡略版）
+**完了日**: 2026-02-09
 
 ### 7-10. その他development/ファイル
 - **tdnet-file-naming.md**: 現状維持（既に簡潔）
@@ -179,10 +177,13 @@
 
 ### トークン削減見込み
 - **Phase 1（完了）**: 約2,610トークン削減
-- **Phase 2（development/）**: 約6,000トークン削減
+- **Phase 2（development/）**: 約6,326トークン削減（error-handling-implementation.md + error-handling-enforcement.md完了）
+  - ✅ error-handling-implementation.md: 約3,432トークン削減
+  - ✅ error-handling-enforcement.md: 約2,894トークン削減
+  - 🔄 残り: testing-strategy.md, data-validation.md, lambda-implementation.md, tdnet-scraping-patterns.md
 - **Phase 3（infrastructure/）**: 約2,000トークン削減
 - **Phase 4（その他）**: 約800トークン削減
-- **合計**: 約11,410トークン削減（全体の約55%削減）
+- **合計**: 約11,736トークン削減（全体の約55%削減）
 
 ### 実用性の向上
 - 必要な情報に素早くアクセス可能
