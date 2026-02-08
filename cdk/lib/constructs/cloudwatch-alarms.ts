@@ -1,0 +1,294 @@
+import * as cdk from 'aws-cdk-lib';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatch_actions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { Construct } from 'constructs';
+
+/**
+ * CloudWatch Alarms Construct Properties
+ */
+export interface CloudWatchAlarmsProps {
+  /**
+   * Lambda関数のリスト（監視対象）
+   */
+  lambdaFunctions: lambda.IFunction[];
+
+  /**
+   * 環境名（dev, staging, prod）
+   */
+  environment: string;
+
+  /**
+   * アラート通知先メールアドレス（オプション）
+   */
+  alertEmail?: string;
+
+  /**
+   * Lambda Error Rate閾値（デフォルト: 10%）
+   */
+  errorRateThreshold?: number;
+
+  /**
+   * Lambda Duration閾値（秒、デフォルト: 840秒 = 14分）
+   */
+  durationThreshold?: number;
+
+  /**
+   * CollectionSuccessRate閾値（デフォルト: 95%）
+   */
+  collectionSuccessRateThreshold?: number;
+}
+
+/**
+ * CloudWatch Alarms Construct
+ * 
+ * Lambda関数とシステム全体の監視アラームを設定します。
+ * 
+ * 設定されるアラーム:
+ * - Lambda Error Rate > 10% → Critical
+ * - Lambda Duration > 14分 → Warning
+ * - CollectionSuccessRate < 95% → Warning
+ * - SNS Topicへの通知設定
+ */
+export class CloudWatchAlarms extends Construct {
+  /**
+   * SNS Topic（アラート通知用）
+   */
+  public readonly alertTopic: sns.Topic;
+
+  /**
+   * 作成されたアラームのリスト
+   */
+  public readonly alarms: cloudwatch.Alarm[] = [];
+
+  constructor(scope: Construct, id: string, props: CloudWatchAlarmsProps) {
+    super(scope, id);
+
+    // デフォルト値の設定
+    const errorRateThreshold = props.errorRateThreshold ?? 10; // 10%
+    const durationThreshold = props.durationThreshold ?? 840; // 14分 = 840秒
+    const collectionSuccessRateThreshold = props.collectionSuccessRateThreshold ?? 95; // 95%
+
+    // ========================================
+    // SNS Topic作成（アラート通知用）
+    // ========================================
+    this.alertTopic = new sns.Topic(this, 'AlertTopic', {
+      topicName: `tdnet-alerts-${props.environment}`,
+      displayName: `TDnet Data Collector Alerts (${props.environment})`,
+    });
+
+    // メール通知の追加（オプション）
+    if (props.alertEmail) {
+      this.alertTopic.addSubscription(
+        new subscriptions.EmailSubscription(props.alertEmail)
+      );
+    }
+
+    // ========================================
+    // Lambda関数ごとのアラーム設定
+    // ========================================
+    props.lambdaFunctions.forEach((lambdaFunction, index) => {
+      const functionName = lambdaFunction.functionName;
+      // CDK IDには静的な値を使用（トークンを含めない）
+      const alarmIdPrefix = `LambdaFunction${index}`;
+
+      // 1. Lambda Error Rate アラーム（Critical）
+      const errorRateAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ErrorRateAlarm`, {
+        alarmName: `${functionName}-error-rate-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} のエラー率が ${errorRateThreshold}% を超えました`,
+        metric: this.createErrorRateMetric(lambdaFunction),
+        threshold: errorRateThreshold,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      errorRateAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(errorRateAlarm);
+
+      // 2. Lambda Duration アラーム（Warning）
+      const durationAlarm = new cloudwatch.Alarm(this, `${functionName}-DurationAlarm`, {
+        alarmName: `${functionName}-duration-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} の実行時間が ${durationThreshold} 秒を超えました`,
+        metric: lambdaFunction.metricDuration({
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: durationThreshold * 1000, // ミリ秒に変換
+        evaluationPeriods: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      durationAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(durationAlarm);
+
+      // 3. Lambda Throttles アラーム（Critical）
+      const throttleAlarm = new cloudwatch.Alarm(this, `${functionName}-ThrottleAlarm`, {
+        alarmName: `${functionName}-throttles-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} でスロットリングが発生しました`,
+        metric: lambdaFunction.metricThrottles({
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      throttleAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(throttleAlarm);
+    }
+
+    // ========================================
+    // カスタムメトリクスのアラーム
+    // ========================================
+
+    // 4. CollectionSuccessRate アラーム（Warning）
+    const collectionSuccessRateAlarm = new cloudwatch.Alarm(
+      this,
+      'CollectionSuccessRateAlarm',
+      {
+        alarmName: `tdnet-collection-success-rate-${props.environment}`,
+        alarmDescription: `収集成功率が ${collectionSuccessRateThreshold}% を下回りました`,
+        metric: this.createCollectionSuccessRateMetric(props.environment),
+        threshold: collectionSuccessRateThreshold,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      }
+    );
+
+    collectionSuccessRateAlarm.addAlarmAction(
+      new cloudwatch_actions.SnsAction(this.alertTopic)
+    );
+    this.alarms.push(collectionSuccessRateAlarm);
+
+    // 5. データ収集停止アラーム（Critical）
+    const noDataAlarm = new cloudwatch.Alarm(this, 'NoDataCollectedAlarm', {
+      alarmName: `tdnet-no-data-collected-${props.environment}`,
+      alarmDescription: '24時間データ収集がありません',
+      metric: new cloudwatch.Metric({
+        namespace: 'TDnet/Collector',
+        metricName: 'DisclosuresCollected',
+        statistic: 'Sum',
+        period: cdk.Duration.hours(24),
+        dimensionsMap: {
+          Environment: props.environment,
+        },
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.BREACHING,
+    });
+
+    noDataAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+    this.alarms.push(noDataAlarm);
+
+    // 6. 収集失敗アラーム（Warning）
+    const collectionFailureAlarm = new cloudwatch.Alarm(this, 'CollectionFailureAlarm', {
+      alarmName: `tdnet-collection-failures-${props.environment}`,
+      alarmDescription: '24時間で10件以上の収集失敗が発生しました',
+      metric: new cloudwatch.Metric({
+        namespace: 'TDnet/Collector',
+        metricName: 'DisclosuresFailed',
+        statistic: 'Sum',
+        period: cdk.Duration.hours(24),
+        dimensionsMap: {
+          Environment: props.environment,
+        },
+      }),
+      threshold: 10,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    collectionFailureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+    this.alarms.push(collectionFailureAlarm);
+
+    // ========================================
+    // CloudFormation Outputs
+    // ========================================
+    new cdk.CfnOutput(this, 'AlertTopicArn', {
+      value: this.alertTopic.topicArn,
+      description: 'SNS Topic ARN for alerts',
+      exportName: `TdnetAlertTopicArn-${props.environment}`,
+    });
+
+    new cdk.CfnOutput(this, 'AlarmCount', {
+      value: this.alarms.length.toString(),
+      description: 'Number of CloudWatch Alarms created',
+    });
+  }
+
+  /**
+   * Lambda Error Rateメトリクスを作成
+   * 
+   * Error Rate = (Errors / Invocations) * 100
+   */
+  private createErrorRateMetric(lambdaFunction: lambda.IFunction): cloudwatch.IMetric {
+    const errors = lambdaFunction.metricErrors({
+      statistic: 'Sum',
+      period: cdk.Duration.minutes(5),
+    });
+
+    const invocations = lambdaFunction.metricInvocations({
+      statistic: 'Sum',
+      period: cdk.Duration.minutes(5),
+    });
+
+    // Error Rate = (Errors / Invocations) * 100
+    return new cloudwatch.MathExpression({
+      expression: '(errors / invocations) * 100',
+      usingMetrics: {
+        errors,
+        invocations,
+      },
+      label: 'Error Rate (%)',
+      period: cdk.Duration.minutes(5),
+    });
+  }
+
+  /**
+   * CollectionSuccessRateメトリクスを作成
+   * 
+   * Success Rate = (DisclosuresCollected / (DisclosuresCollected + DisclosuresFailed)) * 100
+   */
+  private createCollectionSuccessRateMetric(environment: string): cloudwatch.IMetric {
+    const collected = new cloudwatch.Metric({
+      namespace: 'TDnet/Collector',
+      metricName: 'DisclosuresCollected',
+      statistic: 'Sum',
+      period: cdk.Duration.hours(1),
+      dimensionsMap: {
+        Environment: environment,
+      },
+    });
+
+    const failed = new cloudwatch.Metric({
+      namespace: 'TDnet/Collector',
+      metricName: 'DisclosuresFailed',
+      statistic: 'Sum',
+      period: cdk.Duration.hours(1),
+      dimensionsMap: {
+        Environment: environment,
+      },
+    });
+
+    // Success Rate = (Collected / (Collected + Failed)) * 100
+    return new cloudwatch.MathExpression({
+      expression: '(collected / (collected + failed)) * 100',
+      usingMetrics: {
+        collected,
+        failed,
+      },
+      label: 'Collection Success Rate (%)',
+      period: cdk.Duration.hours(1),
+    });
+  }
+}

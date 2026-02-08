@@ -7,6 +7,7 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { Environment, getEnvironmentConfig } from './config/environment-config';
+import { CloudWatchAlarms } from './constructs/cloudwatch-alarms';
 
 /**
  * Stack properties with environment configuration
@@ -1241,6 +1242,37 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       value: `${this.api.url}collect`,
       description: 'Collect API endpoint URL',
       exportName: 'TdnetCollectEndpoint',
+    });
+
+    // ========================================
+    // Phase 3: CloudWatch Alarms
+    // ========================================
+
+    // すべてのLambda関数を監視対象として収集
+    const allLambdaFunctions = [
+      collectorFunction,
+      queryFunction,
+      exportFunction,
+      collectFunction,
+      collectStatusFunction,
+      exportStatusFunction,
+      pdfDownloadFunction,
+    ];
+
+    // CloudWatch Alarmsを作成
+    const cloudwatchAlarms = new CloudWatchAlarms(this, 'CloudWatchAlarms', {
+      lambdaFunctions: allLambdaFunctions,
+      environment: this.deploymentEnvironment,
+      // alertEmail: 'your-email@example.com', // オプション: メール通知先
+      errorRateThreshold: 10, // 10%
+      durationThreshold: 840, // 14分 = 840秒
+      collectionSuccessRateThreshold: 95, // 95%
+    });
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'CloudWatchAlarmsCount', {
+      value: cloudwatchAlarms.alarms.length.toString(),
+      description: 'Number of CloudWatch Alarms created',
     });
   }
 }

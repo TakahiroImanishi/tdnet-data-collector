@@ -10,6 +10,11 @@
 import { Context } from 'aws-lambda';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
+import {
+  sendDisclosuresCollectedMetric,
+  sendDisclosuresFailedMetric,
+  sendCollectionSuccessRateMetric,
+} from '../../utils/metrics';
 import { ValidationError } from '../../errors';
 import { scrapeTdnetList } from './scrape-tdnet-list';
 import { downloadPdf } from './download-pdf';
@@ -113,26 +118,28 @@ export async function handler(
       duration_ms: duration,
     });
 
-    // 成功メトリクス送信
-    await sendMetrics([
-      {
-        name: 'LambdaExecutionTime',
-        value: duration,
-        unit: 'Milliseconds',
-        dimensions: { FunctionName: 'Collector', Mode: event.mode },
-      },
-      {
-        name: 'DisclosuresCollected',
-        value: response.collected_count,
-        unit: 'Count',
-        dimensions: { Mode: event.mode },
-      },
-      {
-        name: 'DisclosuresFailed',
-        value: response.failed_count,
-        unit: 'Count',
-        dimensions: { Mode: event.mode },
-      },
+    // カスタムメトリクス送信（タスク16.2）
+    const totalCount = response.collected_count + response.failed_count;
+    const successRate = totalCount > 0 
+      ? (response.collected_count / totalCount) * 100 
+      : 0;
+
+    await Promise.all([
+      // 収集成功件数
+      sendDisclosuresCollectedMetric(response.collected_count, context.functionName),
+      // 収集失敗件数
+      sendDisclosuresFailedMetric(response.failed_count, context.functionName),
+      // 収集成功率
+      sendCollectionSuccessRateMetric(successRate, context.functionName),
+      // 実行時間メトリクス（既存）
+      sendMetrics([
+        {
+          name: 'LambdaExecutionTime',
+          value: duration,
+          unit: 'Milliseconds',
+          dimensions: { FunctionName: 'Collector', Mode: event.mode },
+        },
+      ]),
     ]);
 
     return response;

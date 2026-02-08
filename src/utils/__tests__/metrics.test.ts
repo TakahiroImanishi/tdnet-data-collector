@@ -378,4 +378,199 @@ describe('CloudWatch Metrics', () => {
       expect(mockClient.send).toHaveBeenCalledTimes(2);
     });
   });
+
+  describe('sendDisclosuresCollectedMetric', () => {
+    it('should send disclosures collected metric without function name', async () => {
+      await sendDisclosuresCollectedMetric(150);
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              MetricName: 'DisclosuresCollected',
+              Value: 150,
+              Dimensions: [],
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should send disclosures collected metric with function name', async () => {
+      await sendDisclosuresCollectedMetric(150, 'CollectorFunction');
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              MetricName: 'DisclosuresCollected',
+              Value: 150,
+              Dimensions: [
+                { Name: 'FunctionName', Value: 'CollectorFunction' },
+              ],
+            }),
+          ]),
+        })
+      );
+    });
+  });
+
+  describe('sendDisclosuresFailedMetric', () => {
+    it('should send disclosures failed metric without function name', async () => {
+      await sendDisclosuresFailedMetric(5);
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              MetricName: 'DisclosuresFailed',
+              Value: 5,
+              Dimensions: [],
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should send disclosures failed metric with function name', async () => {
+      await sendDisclosuresFailedMetric(5, 'CollectorFunction');
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              MetricName: 'DisclosuresFailed',
+              Value: 5,
+              Dimensions: [
+                { Name: 'FunctionName', Value: 'CollectorFunction' },
+              ],
+            }),
+          ]),
+        })
+      );
+    });
+  });
+
+  describe('sendCollectionSuccessRateMetric', () => {
+    it('should send collection success rate metric without function name', async () => {
+      await sendCollectionSuccessRateMetric(96.77);
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              MetricName: 'CollectionSuccessRate',
+              Value: 96.77,
+              Unit: 'Count',
+              Dimensions: [],
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should send collection success rate metric with function name', async () => {
+      await sendCollectionSuccessRateMetric(96.77, 'CollectorFunction');
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              MetricName: 'CollectionSuccessRate',
+              Value: 96.77,
+              Unit: 'Count',
+              Dimensions: [
+                { Name: 'FunctionName', Value: 'CollectorFunction' },
+              ],
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should handle 100% success rate', async () => {
+      await sendCollectionSuccessRateMetric(100, 'CollectorFunction');
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              Value: 100,
+            }),
+          ]),
+        })
+      );
+    });
+
+    it('should handle 0% success rate', async () => {
+      await sendCollectionSuccessRateMetric(0, 'CollectorFunction');
+
+      const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+      
+      expect(PutMetricDataCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          MetricData: expect.arrayContaining([
+            expect.objectContaining({
+              Value: 0,
+            }),
+          ]),
+        })
+      );
+    });
+  });
+
+  describe('Custom Metrics Integration Example', () => {
+    it('should demonstrate complete collection metrics workflow', async () => {
+      // 収集結果のシミュレーション
+      const collectedCount = 150;
+      const failedCount = 5;
+      const totalCount = collectedCount + failedCount;
+      const successRate = (collectedCount / totalCount) * 100;
+
+      // カスタムメトリクスを送信
+      await Promise.all([
+        sendDisclosuresCollectedMetric(collectedCount, 'CollectorFunction'),
+        sendDisclosuresFailedMetric(failedCount, 'CollectorFunction'),
+        sendCollectionSuccessRateMetric(successRate, 'CollectorFunction'),
+      ]);
+
+      const { CloudWatchClient } = require('@aws-sdk/client-cloudwatch');
+      const mockClient = new CloudWatchClient();
+      
+      // 3つのメトリクスが送信される
+      expect(mockClient.send).toHaveBeenCalledTimes(3);
+    });
+
+    it('should calculate success rate correctly', async () => {
+      const testCases = [
+        { collected: 100, failed: 0, expectedRate: 100 },
+        { collected: 95, failed: 5, expectedRate: 95 },
+        { collected: 150, failed: 5, expectedRate: 96.77419354838710 },
+        { collected: 0, failed: 10, expectedRate: 0 },
+      ];
+
+      for (const testCase of testCases) {
+        const totalCount = testCase.collected + testCase.failed;
+        const successRate = totalCount > 0 
+          ? (testCase.collected / totalCount) * 100 
+          : 0;
+
+        expect(successRate).toBeCloseTo(testCase.expectedRate, 2);
+      }
+    });
+  });
 });

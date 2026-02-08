@@ -248,3 +248,94 @@ export async function sendBatchResultMetrics(
     sendMetric('BatchFailed', failed, { dimensions }),
   ]);
 }
+
+/**
+ * 開示情報収集成功メトリクスを送信
+ *
+ * 日次収集件数を記録します。
+ *
+ * @param count 収集成功件数
+ * @param functionName Lambda関数名(オプション)
+ *
+ * @example
+ * ```typescript
+ * // 収集完了時に送信
+ * await sendDisclosuresCollectedMetric(150, context.functionName);
+ * ```
+ *
+ * Requirements: 要件12.1（監視）
+ */
+export async function sendDisclosuresCollectedMetric(
+  count: number,
+  functionName?: string
+): Promise<void> {
+  const dimensions: MetricDimension[] = [];
+
+  if (functionName) {
+    dimensions.push({ Name: 'FunctionName', Value: functionName });
+  }
+
+  await sendMetric('DisclosuresCollected', count, { dimensions });
+}
+
+/**
+ * 開示情報収集失敗メトリクスを送信
+ *
+ * 失敗件数を記録します。
+ *
+ * @param count 収集失敗件数
+ * @param functionName Lambda関数名(オプション)
+ *
+ * @example
+ * ```typescript
+ * // 収集完了時に送信
+ * await sendDisclosuresFailedMetric(5, context.functionName);
+ * ```
+ *
+ * Requirements: 要件12.1（監視）
+ */
+export async function sendDisclosuresFailedMetric(
+  count: number,
+  functionName?: string
+): Promise<void> {
+  const dimensions: MetricDimension[] = [];
+
+  if (functionName) {
+    dimensions.push({ Name: 'FunctionName', Value: functionName });
+  }
+
+  await sendMetric('DisclosuresFailed', count, { dimensions });
+}
+
+/**
+ * 開示情報収集成功率メトリクスを送信
+ *
+ * 成功率（パーセンテージ）を記録します。
+ *
+ * @param successRate 成功率（0-100）
+ * @param functionName Lambda関数名(オプション)
+ *
+ * @example
+ * ```typescript
+ * // 収集完了時に送信
+ * const successRate = (collected / (collected + failed)) * 100;
+ * await sendCollectionSuccessRateMetric(successRate, context.functionName);
+ * ```
+ *
+ * Requirements: 要件12.1（監視）
+ */
+export async function sendCollectionSuccessRateMetric(
+  successRate: number,
+  functionName?: string
+): Promise<void> {
+  const dimensions: MetricDimension[] = [];
+
+  if (functionName) {
+    dimensions.push({ Name: 'FunctionName', Value: functionName });
+  }
+
+  await sendMetric('CollectionSuccessRate', successRate, {
+    unit: 'Count',
+    dimensions,
+  });
+}

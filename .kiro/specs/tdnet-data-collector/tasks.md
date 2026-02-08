@@ -1092,7 +1092,10 @@
   - _作業記録: work-log-20260208-203039-task15-27-final-coverage-verification.md_
   - _注意: Phase 2実装済み機能のテスト不足（query-disclosures.ts: 9.09%, process-export.ts: 24%）_
 
-- [ ] 15.28 Query/Export Lambda のテスト追加（カバレッジ改善）
+- [x] 15.28 Query/Export Lambda のテスト追加（カバレッジ改善）
+  - _完了: 2026-02-08, 97テストケース追加、全ファイル目標80%達成_
+  - _カバレッジ結果: query-disclosures.ts 98.86%, generate-presigned-url.ts 100%, process-export.ts 100%, create-export-job.ts 100%, update-export-status.ts 100%_
+  - _テスト成功率: 777/777 (100%)_
   - [x] **15.28-A: src/lambda/query/query-disclosures.ts のテスト追加**
     - 現状カバレッジ: 9.09% → **98.86%** ✅
     - 目標カバレッジ: 80%以上 → **達成**
