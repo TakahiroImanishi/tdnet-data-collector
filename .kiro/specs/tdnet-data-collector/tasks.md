@@ -845,66 +845,30 @@
   - _前提条件: タスク15.11-15.13完了_
 
 
-## Phase 3: 自動化とWebダッシュボード
+## Phase 3: Webダッシュボードと監視
 
-### 16. EventBridgeスケジューリング（タスク31本番リリース後に実施）
+### 16. CloudWatch監視設定
 
-- [ ] 16.1 EventBridge RuleをCDKで定義
-  - 日次スケジュール設定（毎日9:00 JST実行）
-  - Lambda Collectorをターゲットに設定
-  - バッチモードでの実行設定
-  - _Requirements: 要件4.1, 4.2（バッチ処理）_
-  - _注意: タスク31本番リリース後に実施_
-
-- [ ]* 16.2 EventBridge設定の検証テスト
-  - EventBridge Ruleが正しく作成されていることを確認
-  - スケジュール設定が正しいことを確認
-  - _Requirements: 要件14.1（テスト）_
-  - _注意: タスク31本番リリース後に実施_
-
-### 17. SNS通知設定（タスク31本番リリース後に実施）
-
-- [ ] 17.1 SNS TopicをCDKで定義
-  - tdnet-alerts トピック作成
-  - Emailサブスクリプション設定
-  - Lambda関数からの通知送信権限付与
-  - _Requirements: 要件4.4（通知）_
-  - _注意: タスク31本番リリース後に実施_
-
-- [ ] 17.2 通知送信ロジックの実装
-  - エラー発生時のSNS通知送信
-  - バッチ完了時のサマリー通知送信
-  - _Requirements: 要件4.3, 4.4（サマリーレポート、通知）_
-  - _注意: タスク31本番リリース後に実施_
-
-- [ ]* 17.3 SNS通知のユニットテスト
-  - エラー時に通知が送信されることを確認
-  - 通知内容が正しいことを確認
-  - _Requirements: 要件14.1（ユニットテスト）_
-  - _注意: タスク31本番リリース後に実施_
-
-### 18. CloudWatch監視設定
-
-- [ ] 18.1 CloudWatch Logsの設定
+- [ ] 16.1 CloudWatch Logsの設定
   - ログ保持期間設定（本番: 3ヶ月、開発: 1週間）
   - ログストリーム設定
   - _Requirements: 要件6.3（ロギング）_
 
-- [ ] 18.2 カスタムメトリクスの実装
+- [ ] 16.2 カスタムメトリクスの実装
   - DisclosuresCollected（日次収集件数）
   - DisclosuresFailed（失敗件数）
   - CollectionSuccessRate（成功率）
   - Lambda関数内でメトリクス送信
   - _Requirements: 要件12.1（監視）_
 
-- [ ] 18.3 CloudWatch Alarmsの設定
+- [ ] 16.3 CloudWatch Alarmsの設定
   - Lambda Error Rate > 10%でCritical
   - Lambda Duration > 14分でWarning
   - CollectionSuccessRate < 95%でWarning
   - SNS Topicへの通知設定
   - _Requirements: 要件12.2（アラート）_
 
-- [ ] 18.4 CloudWatch Dashboardの作成
+- [ ] 16.4 CloudWatch Dashboardの作成
   - Lambda実行メトリクス（Invocations、Errors、Duration）
   - DynamoDB読み書きメトリクス
   - ビジネスメトリクス（日次収集件数、失敗件数）
@@ -912,169 +876,167 @@
   - S3ストレージメトリクス
   - _Requirements: 要件12.1（監視）_
 
-- [ ]* 18.5 CloudWatch設定の検証テスト
+- [ ]* 16.5 CloudWatch設定の検証テスト
   - カスタムメトリクスが送信されることを確認
   - アラームが正しく設定されていることを確認
   - ダッシュボードが表示されることを確認
   - _Requirements: 要件14.1（テスト）_
 
-### 19. Webダッシュボード実装
+### 17. Webダッシュボード実装
 
-- [ ] 19.1 Reactプロジェクトのセットアップ
+- [ ] 17.1 Reactプロジェクトのセットアップ
   - Create React App（TypeScript）でプロジェクト初期化
   - Material-UIまたはAnt Designのインストール
   - axiosのインストール
   - _Requirements: 要件10.1（Webダッシュボード）_
 
-- [ ] 19.2 開示情報一覧コンポーネントの実装
+- [ ] 17.2 開示情報一覧コンポーネントの実装
   - テーブル表示（企業名、企業コード、開示種類、タイトル、開示日時）
   - ページネーション
   - ソート機能
   - _Requirements: 要件10.2（一覧表示）_
 
-- [ ] 19.3 検索・フィルタリングコンポーネントの実装
+- [ ] 17.3 検索・フィルタリングコンポーネントの実装
   - 企業名、企業コード、日付範囲、開示種類でのフィルタリング
   - API呼び出し（GET /disclosures）
   - _Requirements: 要件10.3（検索・フィルタリング）_
 
-- [ ] 19.4 PDFダウンロード機能の実装
+- [ ] 17.4 PDFダウンロード機能の実装
   - 署名付きURL取得（GET /disclosures/{disclosure_id}/pdf）
   - PDFダウンロードボタン
   - _Requirements: 要件10.4（PDFダウンロード）_
 
-- [ ] 19.5 エクスポート機能の実装
+- [ ] 17.5 エクスポート機能の実装
   - エクスポートリクエスト送信（POST /exports）
   - エクスポート状態のポーリング（GET /exports/{export_id}）
   - ダウンロードリンク表示
   - _Requirements: 要件5.1, 5.4（エクスポート、進捗）_
 
-- [ ] 19.6 実行状態表示コンポーネントの実装
+- [ ] 17.6 実行状態表示コンポーネントの実装
   - 収集実行状態のポーリング（GET /collect/{execution_id}）
   - 進捗バー表示
   - _Requirements: 要件6.1（実行状態確認）_
 
-- [ ] 19.7 レスポンシブデザインの実装
+- [ ] 17.7 レスポンシブデザインの実装
   - モバイル対応
   - タブレット対応
   - _Requirements: 要件10.5（レスポンシブデザイン）_
 
-- [ ] 19.8 ダッシュボードのビルドとS3デプロイ
+- [ ] 17.8 ダッシュボードのビルドとS3デプロイ
   - npm run buildでビルド
   - S3バケット（tdnet-dashboard-{account-id}）にアップロード
   - CloudFront設定
   - _Requirements: 要件10.1（Webダッシュボード）_
 
-- [ ]* 19.9 ダッシュボードE2Eテスト
+- [ ]* 17.9 ダッシュボードE2Eテスト
   - 開示情報一覧が表示されることを確認
   - 検索・フィルタリングが機能することを確認
   - PDFダウンロードが機能することを確認
   - エクスポートが機能することを確認
   - _Requirements: 要件14.4（E2Eテスト）_
 
-### 20. CloudFront設定
+### 18. CloudFront設定
 
-- [ ] 20.1 CloudFront DistributionをCDKで定義
+- [ ] 18.1 CloudFront DistributionをCDKで定義
   - S3バケット（tdnet-dashboard-{account-id}）をオリジンに設定
   - OAI（Origin Access Identity）設定
   - HTTPS強制
   - キャッシュ設定
   - _Requirements: 要件10.1（Webダッシュボード）_
 
-- [ ]* 20.2 CloudFront設定の検証テスト
+- [ ]* 18.2 CloudFront設定の検証テスト
   - CloudFront Distributionが正しく作成されていることを確認
   - HTTPSでアクセスできることを確認
   - _Requirements: 要件14.1（テスト）_
 
-### 21. Checkpoint - Phase 3完了確認
+### 19. Checkpoint - Phase 3完了確認
 
-- [ ] 21.1 Phase 3の動作確認
-  - EventBridgeスケジュールが正常に動作することを確認
-  - SNS通知が送信されることを確認
+- [ ] 19.1 Phase 3の動作確認
   - CloudWatch監視が機能することを確認
   - Webダッシュボードが正常に表示されることを確認
 
 
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
 
-### 22. CloudTrail設定
+### 20. CloudTrail設定
 
-- [ ] 22.1 CloudTrailをCDKで定義
+- [ ] 20.1 CloudTrailをCDKで定義
   - 証跡作成（tdnet-audit-trail）
   - S3バケット（tdnet-cloudtrail-logs-{account-id}）への保存
   - CloudWatch Logsへの送信
   - データイベント記録（S3、DynamoDB、Lambda）
   - _Requirements: 要件13.2（監査ログ）_
 
-- [ ] 22.2 CloudTrailログのライフサイクルポリシー設定
+- [ ] 20.2 CloudTrailログのライフサイクルポリシー設定
   - 90日後にGlacierに移行
   - 7年後に自動削除
   - _Requirements: 要件13.2（監査ログ保持）_
 
-- [ ]* 22.3 CloudTrail設定の検証テスト
+- [ ]* 20.3 CloudTrail設定の検証テスト
   - **Property 14: 暗号化の有効性**
   - **Validates: Requirements 13.3**
   - CloudTrailが有効化されていることを確認
   - S3バケットとDynamoDBテーブルで暗号化が有効化されていることを確認
   - _Requirements: 要件14.1（テスト）_
 
-### 23. セキュリティ強化
+### 21. セキュリティ強化
 
-- [ ] 23.1 IAMロールの最小権限化
+- [ ] 21.1 IAMロールの最小権限化
   - Lambda関数ごとに必要最小限の権限を付与
   - S3バケットポリシーの設定（署名付きURLのみアクセス可能）
   - DynamoDBテーブルポリシーの設定
   - _Requirements: 要件13.1（最小権限の原則）_
 
-- [ ] 23.2 S3バケットのパブリックアクセスブロック
+- [ ] 21.2 S3バケットのパブリックアクセスブロック
   - すべてのS3バケットでパブリックアクセスをブロック
   - CloudFront OAIのみアクセス可能に設定
   - _Requirements: 要件13.5（S3セキュリティ）_
 
-- [ ] 23.3 APIキーのローテーション設定
+- [ ] 21.3 APIキーのローテーション設定
   - Secrets Managerで90日ごとの自動ローテーション
   - ローテーション用Lambda関数の実装
   - _Requirements: 要件11.4（APIキー管理）_
 
-- [ ]* 23.4 セキュリティ設定の検証テスト
+- [ ]* 21.4 セキュリティ設定の検証テスト
   - IAMロールが最小権限であることを確認
   - S3バケットがパブリックアクセスブロックされていることを確認
   - APIキーローテーションが機能することを確認
   - _Requirements: 要件14.1（テスト）_
 
-### 24. パフォーマンス最適化
+### 22. パフォーマンス最適化
 
-- [ ] 24.1 Lambda関数のメモリ最適化
+- [ ] 22.1 Lambda関数のメモリ最適化
   - Lambda Power Tuningツールで最適なメモリサイズを測定
   - コスト効率の良いメモリサイズに調整
   - _Requirements: 要件12.1, 12.5（コスト最適化、パフォーマンス）_
 
-- [ ] 24.2 DynamoDBクエリの最適化
+- [ ] 22.2 DynamoDBクエリの最適化
   - GSIの効果的な使用
   - date_partitionによる効率的なクエリ
   - バッチ書き込みの実装（BatchWriteItem）
   - _Requirements: 要件9.1（パフォーマンス）_
 
-- [ ] 24.3 並列処理の最適化
+- [ ] 22.3 並列処理の最適化
   - 並列度の調整（レート制限を考慮）
   - Promise.allSettledの効果的な使用
   - _Requirements: 要件9.1（パフォーマンス）_
 
-- [ ]* 24.4 パフォーマンスベンチマークテスト
+- [ ]* 22.4 パフォーマンスベンチマークテスト
   - 1件あたりの収集時間が5秒以内であることを確認
   - 50件の収集が5分以内であることを確認
   - クエリ応答時間が500ms以内であることを確認
   - _Requirements: 要件9.1（パフォーマンス）_
 
-### 25. CI/CDパイプライン構築
+### 23. CI/CDパイプライン構築
 
-- [ ] 25.1 GitHub Actionsワークフロー作成（テスト）
+- [ ] 23.1 GitHub Actionsワークフロー作成（テスト）
   - .github/workflows/test.yml作成
   - リンター、型チェック、ユニットテスト、プロパティテストの実行
   - カバレッジレポート生成（80%以上を確認）
   - セキュリティ監査（npm audit）
   - _Requirements: 要件14.1, 14.5（テスト、CI/CD）_
 
-- [ ] 25.2 GitHub Actionsワークフロー作成（デプロイ）
+- [ ] 23.2 GitHub Actionsワークフロー作成（デプロイ）
   - .github/workflows/deploy.yml作成
   - CDK Diff実行
   - CDK Deploy実行
@@ -1082,125 +1044,125 @@
   - Slack通知
   - _Requirements: 要件13.1（デプロイ）_
 
-- [ ] 25.3 GitHub Actionsワークフロー作成（依存関係更新）
+- [ ] 23.3 GitHub Actionsワークフロー作成（依存関係更新）
   - .github/workflows/dependency-update.yml作成
   - 週次での依存関係更新
   - 自動テスト実行
   - プルリクエスト作成
   - _Requirements: 要件13.1（依存関係管理）_
 
-- [ ] 25.4 環境分離の実装
+- [ ] 23.4 環境分離の実装
   - 開発環境（dev）と本番環境（prod）の分離
   - 環境ごとの設定（タイムアウト、メモリ、ログレベル）
   - _Requirements: 要件8.1（設定管理）_
 
-- [ ]* 25.5 CI/CDパイプラインの検証テスト
+- [ ]* 23.5 CI/CDパイプラインの検証テスト
   - **Property 15: テストカバレッジの維持**
   - **Validates: Requirements 14.1**
   - コードカバレッジが80%以上であることを確認
   - すべてのテストが成功することを確認
   - _Requirements: 要件14.5（CI/CD）_
 
-### 26. コスト最適化
+### 24. コスト最適化
 
-- [ ] 26.2 S3ライフサイクルポリシーの最適化
+- [ ] 24.1 S3ライフサイクルポリシーの最適化
   - 90日後にStandard-IAに移行
   - 365日後にGlacierに移行
   - 一時ファイルの自動削除（1日後）
   - エクスポートファイルの自動削除（7日後）
   - _Requirements: 要件12.4（ストレージクラス最適化）_
 
-- [ ] 26.3 CloudWatchメトリクスの最適化
+- [ ] 24.2 CloudWatchメトリクスの最適化
   - カスタムメトリクスを3個に削減（DisclosuresCollected、DisclosuresFailed、CollectionSuccessRate）
   - Lambda標準メトリクスを活用（追加コストなし）
   - DynamoDB標準メトリクスを活用（追加コストなし）
   - S3標準メトリクスを活用（追加コストなし）
   - _Requirements: 要件12.1（コスト削減）_
 
-- [ ] 26.4 Lambda実行時間の最適化
+- [ ] 24.3 Lambda実行時間の最適化
   - 不要な依存関係の削除
   - コールドスタート時間の短縮
   - _Requirements: 要件12.5（実行時間最小化）_
 
-- [ ]* 26.5 コスト見積もりの検証
+- [ ]* 24.4 コスト見積もりの検証
   - 月間コストが$20以下であることを確認
   - AWS無料枠を最大限活用していることを確認
   - _Requirements: 要件12.1（コスト最適化）_
 
-### 27. ドキュメント整備
+### 25. ドキュメント整備
 
-- [ ] 27.1 README.mdの作成
+- [ ] 25.1 README.mdの作成
   - プロジェクト概要
   - セットアップ手順
   - デプロイ手順
   - 使用方法
   - _Requirements: 要件13.1（ドキュメント）_
 
-- [ ] 27.2 API仕様書の更新
+- [ ] 25.2 API仕様書の更新
   - OpenAPI仕様（openapi.yaml）の最終確認
   - エンドポイント一覧の更新
   - リクエスト/レスポンス例の追加
   - _Requirements: 要件4.3（API仕様）_
 
-- [ ] 27.3 運用マニュアルの作成
+- [ ] 25.3 運用マニュアルの作成
   - デプロイ手順
   - トラブルシューティング
   - ログ確認方法
   - アラート対応手順
   - _Requirements: 要件13.1（運用ドキュメント）_
 
-- [ ] 27.4 アーキテクチャ図の更新
+- [ ] 25.4 アーキテクチャ図の更新
   - システム構成図の最終確認
   - データフロー図の更新
   - _Requirements: 要件13.1（ドキュメント）_
 
-### 28. 最終テストと検証
+### 26. 最終テストと検証
 
-- [ ] 28.1 統合テストの実行
+- [ ] 26.1 統合テストの実行
   - すべてのコンポーネントが連携して動作することを確認
   - エンドツーエンドのデータフローを検証
   - _Requirements: 要件14.3（統合テスト）_
 
-- [ ] 28.2 E2Eテストの実行
+- [ ] 26.2 E2Eテストの実行
   - Webダッシュボードの主要機能を検証
   - APIエンドポイントの動作を検証
   - _Requirements: 要件14.4（E2Eテスト）_
 
-- [ ] 28.3 プロパティベーステストの実行
+- [ ] 26.3 プロパティベーステストの実行
   - すべてのCorrectness Propertiesを検証
   - fast-checkで1000回以上の反復実行
   - _Requirements: 要件14.2（プロパティテスト）_
 
-- [ ] 28.4 セキュリティテストの実行
+- [ ] 26.4 セキュリティテストの実行
   - APIキー認証の検証
   - WAFルールの検証
   - IAMロールの検証
   - _Requirements: 要件13.1（セキュリティテスト）_
 
-- [ ] 28.5 パフォーマンステストの実行
+- [ ] 26.5 パフォーマンステストの実行
   - Lambda実行時間の測定
   - DynamoDBクエリ性能の測定
   - S3アップロード/ダウンロード性能の測定
   - _Requirements: 要件9.1（パフォーマンステスト）_
 
-- [ ] 28.6 負荷テストの実行
+- [ ] 26.6 負荷テストの実行
   - 大量データ収集時の動作確認（100件以上）
   - 同時アクセス時の動作確認
   - _Requirements: 要件9.1（負荷テスト）_
 
-### 29. 本番デプロイ準備
+### 27. 本番デプロイ準備
 
-- [ ] 29.1 実装チェックリストの確認
+- [ ] 27.1 実装チェックリストの確認
   - docs/implementation-checklist.mdのすべての項目を確認
   - 未完了項目の洗い出しと対応
   - _Requirements: 要件13.1（デプロイ前確認）_
 
-- [ ] 29.2 環境変数の設定
+- [ ] 27.2 環境変数の設定
   - 本番環境の環境変数を設定
   - Secrets Managerにシークレットを登録
   - _Requirements: 要件8.1（設定管理）_
 
-- [ ] 29.3 バックアップ戦略の確認
+- [ ] 27.3 バックアップ戦略の確認
   - データ再収集可能であることを確認
   - CloudTrailログが保存されていることを確認
   - _Requirements: 要件15.4（バックアップ戦略）_
@@ -1257,6 +1219,47 @@
   - アラート対応体制の確認
   - 定期レビュースケジュールの設定
   - _Requirements: 要件13.1（運用開始）_
+
+
+## Phase 5: 本番運用後の自動化強化
+
+### 32. EventBridgeスケジューリング
+
+- [ ] 32.1 EventBridge RuleをCDKで定義
+  - 日次スケジュール設定（毎日9:00 JST実行）
+  - Lambda Collectorをターゲットに設定
+  - バッチモードでの実行設定
+  - _Requirements: 要件4.1, 4.2（バッチ処理）_
+
+- [ ]* 32.2 EventBridge設定の検証テスト
+  - EventBridge Ruleが正しく作成されていることを確認
+  - スケジュール設定が正しいことを確認
+  - _Requirements: 要件14.1（テスト）_
+
+### 33. SNS通知設定
+
+- [ ] 33.1 SNS TopicをCDKで定義
+  - tdnet-alerts トピック作成
+  - Emailサブスクリプション設定
+  - Lambda関数からの通知送信権限付与
+  - _Requirements: 要件4.4（通知）_
+
+- [ ] 33.2 通知送信ロジックの実装
+  - エラー発生時のSNS通知送信
+  - バッチ完了時のサマリー通知送信
+  - _Requirements: 要件4.3, 4.4（サマリーレポート、通知）_
+
+- [ ]* 33.3 SNS通知のユニットテスト
+  - エラー時に通知が送信されることを確認
+  - 通知内容が正しいことを確認
+  - _Requirements: 要件14.1（ユニットテスト）_
+
+### 34. Checkpoint - Phase 5完了確認
+
+- [ ] 34.1 Phase 5の動作確認
+  - EventBridgeスケジュールが正常に動作することを確認
+  - SNS通知が送信されることを確認
+  - 日次バッチが自動実行されることを確認
 
 ## Notes
 
