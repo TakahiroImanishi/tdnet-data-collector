@@ -333,9 +333,8 @@ describe('POST /collect Handler', () => {
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('VALIDATION_ERROR');
-      // JavaScriptのDateコンストラクタは2月30日を3月2日に変換するため、
-      // 日付順序チェックでエラーになる
-      expect(body.error.message).toContain('must be before or equal to');
+      // 日付の整合性チェックで無効な日付を検出
+      expect(body.error.message).toContain('Invalid start_date');
     });
 
     it('start_dateがend_dateより後の場合は400を返す', async () => {

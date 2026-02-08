@@ -13,7 +13,7 @@ import { Context } from 'aws-lambda';
 import { handler } from '../handler';
 import { ExportEvent } from '../types';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 
 // LocalStack環境設定
 const isLocalStack = process.env.AWS_ENDPOINT_URL !== undefined;
@@ -88,8 +88,8 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
       expect(body.request_id).toBe(mockContext.awsRequestId);
 
       // CORSヘッダーの確認
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
-      expect(result.headers['Access-Control-Allow-Headers']).toContain('X-Api-Key');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Access-Control-Allow-Headers']).toContain('X-Api-Key');
     });
 
     it('APIキーが不正な場合は401エラーを返す', async () => {
@@ -119,7 +119,7 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
       expect(body.request_id).toBe(mockContext.awsRequestId);
 
       // CORSヘッダーの確認
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
     });
 
     it('大文字小文字が異なるヘッダー名でも認証が機能する', async () => {
@@ -193,8 +193,8 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
       // Assert
       expect(result.statusCode).toBe(202); // Accepted
-      expect(result.headers['Content-Type']).toBe('application/json');
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Content-Type']).toBe('application/json');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
 
       const body = JSON.parse(result.body);
       expect(body).toHaveProperty('export_id');
@@ -465,9 +465,9 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
       // Assert
       expect(result.statusCode).toBe(401);
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
-      expect(result.headers['Access-Control-Allow-Headers']).toContain('X-Api-Key');
-      expect(result.headers['Content-Type']).toBe('application/json');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers?.['Access-Control-Allow-Headers']).toContain('X-Api-Key');
+      expect(result.headers?.['Content-Type']).toBe('application/json');
     });
 
     it('すべてのエラーレスポンスにrequest_idが含まれる', async () => {
