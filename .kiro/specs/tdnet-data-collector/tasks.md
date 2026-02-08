@@ -645,14 +645,17 @@
   - _完了: 2026-02-08, CDK統合完了、25テスト作成_
   - _注意: Lambda Exportは既に実装済み、API Gateway統合のみ追加_
 
-- [ ] 13.5 GET /exports/{export_id} エンドポイントの実装
+- [x] 13.5 GET /exports/{export_id} エンドポイントの実装
   - エクスポート状態をDynamoDBから取得
   - レスポンス形式の統一
   - _Requirements: 要件5.4（エクスポート状態確認）_
+  - _完了: 2026-02-08, 11テスト成功_
 
-- [ ] 13.6 GET /disclosures/{disclosure_id}/pdf エンドポイントの実装
+- [x] 13.6 GET /disclosures/{disclosure_id}/pdf エンドポイントの実装
   - 署名付きURL生成
   - レスポンス形式の統一
+  - _Requirements: 要件4.4（PDFダウンロード）_
+  - _完了: 2026-02-08, 15テスト成功_
   - _Requirements: 要件4.4（PDFダウンロード）_
 
 - [ ]* 13.7 APIエンドポイントE2Eテスト

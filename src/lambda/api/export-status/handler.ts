@@ -132,8 +132,9 @@ function validateApiKey(event: APIGatewayProxyEvent): void {
     throw new AuthenticationError('API key is required');
   }
 
-  // テスト環境ではAPI_KEYが未設定の場合がある
-  if (API_KEY && apiKey !== API_KEY) {
+  // 環境変数から直接読み取る（テスト環境での動的設定に対応）
+  const expectedApiKey = process.env.API_KEY;
+  if (expectedApiKey && apiKey !== expectedApiKey) {
     throw new AuthenticationError('Invalid API key');
   }
 }
