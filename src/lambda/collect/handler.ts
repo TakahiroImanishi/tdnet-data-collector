@@ -111,7 +111,7 @@ export async function handler(
     logger.error(
       'POST /collect failed',
       createErrorContext(error as Error, {
-        requestId: context.requestId,
+        requestId: context.awsRequestId,
         event,
       })
     );
@@ -230,7 +230,7 @@ async function invokeCollector(
   };
 
   logger.info('Invoking Lambda Collector', {
-    requestId: context.requestId,
+    requestId: context.awsRequestId,
     functionName: COLLECTOR_FUNCTION_NAME,
     event: collectorEvent,
   });
@@ -247,7 +247,7 @@ async function invokeCollector(
     const response = await lambdaClient.send(command);
 
     logger.info('Lambda Collector invoked successfully', {
-      requestId: context.requestId,
+      requestId: context.awsRequestId,
       statusCode: response.StatusCode,
     });
 

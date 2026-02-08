@@ -899,7 +899,7 @@
   - _完了: 2026-02-08, 24/28テスト成功（85.7%）_
   - _注意: 環境変数読み込み問題は完全に解決。残り4件の500エラーはGSI未作成が原因（別タスクで対応）_
 
-- [-] 15.12.2 LocalStack DynamoDB GSI作成とE2Eテスト完全成功
+- [x] 15.12.2 LocalStack DynamoDB GSI作成とE2Eテスト完全成功
   - DynamoDBテーブル定義JSONファイルにGSIを追加
     - `GSI_CompanyCode_DiscloseDate`: パーティションキー=company_code, ソートキー=disclosed_at
     - `GSI_DatePartition`: パーティションキー=date_partition, ソートキー=disclosed_at
