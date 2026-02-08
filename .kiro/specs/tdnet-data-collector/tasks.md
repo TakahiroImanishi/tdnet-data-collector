@@ -1110,13 +1110,18 @@
       - S3へのエクスポート
       - 署名付きURL生成（有効期限7日）
       - エラーハンドリング
-  - **src/lambda/export/create-export-job.ts のテスト追加**
-    - 現状カバレッジ: 30%
-    - 目標カバレッジ: 80%以上
+  - [x] **src/lambda/export/create-export-job.ts のテスト追加**
+    - 現状カバレッジ: 30% → 100% (Statements/Functions/Lines)
+    - 目標カバレッジ: 80%以上 ✅ 達成
     - テスト対象:
       - エクスポートID生成
       - 実行状態をDynamoDBに保存（status: pending）
-      - 非同期でprocessExportを開始
+      - TTL設定（30日後）
+      - ConditionExpression（重複防止）
+      - 再試行設定（ProvisionedThroughputExceededException）
+      - エラーハンドリング
+    - _完了: 2026-02-08, 29テストケース作成、カバレッジ100%達成_
+    - _作業記録: work-log-20260208-203601-task15-28-c-create-export-job-tests.md_
   - **src/lambda/export/update-export-status.ts のテスト追加**
     - 現状カバレッジ: 16.66%
     - 目標カバレッジ: 80%以上

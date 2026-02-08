@@ -24,8 +24,8 @@ API関連のsteeringファイルを最適化し、トークン使用量を削減
 - [x] error-codes.mdの最適化
 
 ### 3. 完了処理
-- [ ] Git commit & push
-- [ ] 作業記録完成
+- [x] Git commit & push
+- [x] 作業記録完成
 
 ## 問題と解決策
 
