@@ -7,10 +7,19 @@
 import { Context } from 'aws-lambda';
 import { handler, CollectorEvent } from '../handler';
 import { scrapeTdnetList } from '../scrape-tdnet-list';
+import { updateExecutionStatus } from '../update-execution-status';
+import { downloadPdf } from '../download-pdf';
+import { saveMetadata } from '../save-metadata';
 
 // Mock dependencies
 jest.mock('../scrape-tdnet-list');
+jest.mock('../update-execution-status');
+jest.mock('../download-pdf');
+jest.mock('../save-metadata');
 const mockScrapeTdnetList = scrapeTdnetList as jest.MockedFunction<typeof scrapeTdnetList>;
+const mockUpdateExecutionStatus = updateExecutionStatus as jest.MockedFunction<typeof updateExecutionStatus>;
+const mockDownloadPdf = downloadPdf as jest.MockedFunction<typeof downloadPdf>;
+const mockSaveMetadata = saveMetadata as jest.MockedFunction<typeof saveMetadata>;
 
 describe('Lambda Collector Handler', () => {
   let mockContext: Context;
@@ -33,6 +42,15 @@ describe('Lambda Collector Handler', () => {
       succeed: jest.fn(),
       callbackWaitsForEmptyEventLoop: true,
     };
+
+    // Mock updateExecutionStatus to resolve successfully
+    mockUpdateExecutionStatus.mockResolvedValue(undefined);
+    
+    // Mock downloadPdf to resolve successfully
+    mockDownloadPdf.mockResolvedValue(Buffer.from('fake-pdf-content'));
+    
+    // Mock saveMetadata to resolve successfully
+    mockSaveMetadata.mockResolvedValue(undefined);
   });
 
   describe('Batch Mode', () => {

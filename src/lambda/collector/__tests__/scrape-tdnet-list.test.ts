@@ -4,36 +4,47 @@
  * Requirements: 要件1.1, 9.1
  */
 
+/**
+ * TDnet List Scraper - Unit Tests
+ *
+ * Requirements: 要件1.1, 9.1
+ */
+
 import axios from 'axios';
-import { scrapeTdnetList } from '../scrape-tdnet-list';
 import { parseDisclosureList } from '../../../scraper/html-parser';
-import { RateLimiter } from '../../../utils/rate-limiter';
 import { ValidationError } from '../../../errors';
 
-// Mock dependencies
+// Mock dependencies BEFORE importing the module under test
 jest.mock('axios');
 jest.mock('../../../scraper/html-parser');
 jest.mock('../../../utils/rate-limiter');
 
+// Mock RateLimiter with a factory function
+const mockWaitIfNeeded = jest.fn().mockResolvedValue(undefined);
+const mockReset = jest.fn();
+const mockGetMinDelayMs = jest.fn().mockReturnValue(2000);
+const mockGetLastRequestTime = jest.fn().mockReturnValue(null);
+
+jest.mock('../../../utils/rate-limiter', () => {
+  return {
+    RateLimiter: jest.fn().mockImplementation(() => ({
+      waitIfNeeded: mockWaitIfNeeded,
+      reset: mockReset,
+      getMinDelayMs: mockGetMinDelayMs,
+      getLastRequestTime: mockGetLastRequestTime,
+    })),
+  };
+});
+
+// NOW import the module under test (after mocks are set up)
+import { scrapeTdnetList } from '../scrape-tdnet-list';
+
 const mockAxios = axios as jest.Mocked<typeof axios>;
 const mockParseDisclosureList = parseDisclosureList as jest.MockedFunction<typeof parseDisclosureList>;
-const MockRateLimiter = RateLimiter as jest.MockedClass<typeof RateLimiter>;
 
 describe('scrapeTdnetList', () => {
-  let mockRateLimiterInstance: jest.Mocked<RateLimiter>;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Mock RateLimiter instance
-    mockRateLimiterInstance = {
-      waitIfNeeded: jest.fn().mockResolvedValue(undefined),
-      reset: jest.fn(),
-      getMinDelayMs: jest.fn().mockReturnValue(2000),
-      getLastRequestTime: jest.fn().mockReturnValue(null),
-    } as any;
-
-    MockRateLimiter.mockImplementation(() => mockRateLimiterInstance);
   });
 
   describe('Success Cases', () => {
@@ -63,7 +74,7 @@ describe('scrapeTdnetList', () => {
       const result = await scrapeTdnetList('2024-01-15');
 
       expect(result).toEqual(mockDisclosures);
-      expect(mockRateLimiterInstance.waitIfNeeded).toHaveBeenCalled();
+      expect(mockWaitIfNeeded).toHaveBeenCalled();
       expect(mockAxios.get).toHaveBeenCalledWith(
         expect.stringContaining('2024-01-15'),
         expect.objectContaining({
@@ -90,7 +101,7 @@ describe('scrapeTdnetList', () => {
       await scrapeTdnetList('2024-01-15');
 
       // Verify rate limiter was called
-      expect(mockRateLimiterInstance.waitIfNeeded).toHaveBeenCalled();
+      expect(mockWaitIfNeeded).toHaveBeenCalled();
       // Verify axios.get was called after rate limiter
       expect(mockAxios.get).toHaveBeenCalled();
     });

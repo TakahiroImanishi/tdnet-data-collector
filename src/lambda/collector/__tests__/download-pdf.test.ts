@@ -16,6 +16,9 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 const s3Mock = mockClient(S3Client);
 
+// axios.isAxiosErrorのモック
+mockedAxios.isAxiosError = jest.fn();
+
 // validatePdfFileのモック
 jest.spyOn(pdfDownloader, 'validatePdfFile').mockImplementation(() => {});
 
@@ -130,6 +133,8 @@ describe('downloadPdf', () => {
       (timeoutError as any).code = 'ETIMEDOUT';
       (timeoutError as any).isAxiosError = true;
 
+      // axios.isAxiosErrorがtrueを返すようにモック
+      (mockedAxios.isAxiosError as jest.Mock).mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(timeoutError);
 
       // Act & Assert
@@ -147,6 +152,8 @@ describe('downloadPdf', () => {
       (serverError as any).isAxiosError = true;
       (serverError as any).response = { status: 503 };
 
+      // axios.isAxiosErrorがtrueを返すようにモック
+      (mockedAxios.isAxiosError as jest.Mock).mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(serverError);
 
       // Act & Assert
@@ -164,6 +171,8 @@ describe('downloadPdf', () => {
       (rateLimitError as any).isAxiosError = true;
       (rateLimitError as any).response = { status: 429 };
 
+      // axios.isAxiosErrorがtrueを返すようにモック
+      (mockedAxios.isAxiosError as jest.Mock).mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(rateLimitError);
 
       // Act & Assert
