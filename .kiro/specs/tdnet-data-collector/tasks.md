@@ -1080,7 +1080,7 @@
   - _優先度: 🟡 Medium_
   - _推定工数: 30分_
 
-- [-] 15.27 テストカバレッジの最終確認
+- [x] 15.27 テストカバレッジの最終確認
   - 全テストスイート実行: `npm test -- --coverage`
   - テスト成功率100%を確認
   - コードカバレッジ80%以上を確認
@@ -1088,6 +1088,53 @@
   - _Requirements: 要件14.1（テスト）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1時間_
+  - _完了: 2026-02-08, テスト成功率100%（680/680）、カバレッジ65.72%（目標80%未達）_
+  - _作業記録: work-log-20260208-203039-task15-27-final-coverage-verification.md_
+  - _注意: Phase 2実装済み機能のテスト不足（query-disclosures.ts: 9.09%, process-export.ts: 24%）_
+
+- [ ] 15.28 Query/Export Lambda のテスト追加（カバレッジ改善）
+  - **src/lambda/query/query-disclosures.ts のテスト追加**
+    - 現状カバレッジ: 9.09%
+    - 目標カバレッジ: 80%以上
+    - テスト対象:
+      - DynamoDBクエリ（GSI使用）
+      - フィルタリングとソート（開示日降順）
+      - ページネーション（limit、offset）
+      - エラーハンドリング（DynamoDB例外）
+  - **src/lambda/export/process-export.ts のテスト追加**
+    - 現状カバレッジ: 24%
+    - 目標カバレッジ: 80%以上
+    - テスト対象:
+      - データ取得（queryDisclosures使用）
+      - 進捗更新（10%、50%、90%、100%）
+      - S3へのエクスポート
+      - 署名付きURL生成（有効期限7日）
+      - エラーハンドリング
+  - **src/lambda/export/create-export-job.ts のテスト追加**
+    - 現状カバレッジ: 30%
+    - 目標カバレッジ: 80%以上
+    - テスト対象:
+      - エクスポートID生成
+      - 実行状態をDynamoDBに保存（status: pending）
+      - 非同期でprocessExportを開始
+  - **src/lambda/export/update-export-status.ts のテスト追加**
+    - 現状カバレッジ: 16.66%
+    - 目標カバレッジ: 80%以上
+    - テスト対象:
+      - エクスポート状態の更新
+      - エラー時のエラーメッセージ記録
+  - **src/lambda/query/generate-presigned-url.ts のテスト追加**
+    - 現状カバレッジ: 0%
+    - 目標カバレッジ: 80%以上
+    - テスト対象:
+      - S3署名付きURL生成（有効期限1時間）
+      - エラーハンドリング
+  - テスト実行: `npm test -- --coverage`
+  - カバレッジ80%以上を確認
+  - _Requirements: 要件14.1（ユニットテスト）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 8-12時間_
+  - _関連: work-log-20260208-203039-task15-27-final-coverage-verification.md_
 
 
 ## Phase 3: Webダッシュボードと監視
