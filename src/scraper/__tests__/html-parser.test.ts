@@ -321,6 +321,144 @@ describe('HTML Parser', () => {
     });
   });
 
+  describe('バリデーションエラー: 必須フィールド欠落', () => {
+    it('should skip rows with missing company_name', () => {
+      const html = `
+        <html>
+          <body>
+            <table class="disclosure-list">
+              <tr><th>Header</th></tr>
+              <tr>
+                <td>7203</td>
+                <td></td>
+                <td>決算短信</td>
+                <td>タイトル</td>
+                <td>2024/01/15 15:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+              <tr>
+                <td>9984</td>
+                <td>ソフトバンクグループ株式会社</td>
+                <td>業績予想</td>
+                <td>業績予想修正</td>
+                <td>2024/01/15 16:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const disclosures = parseDisclosureList(html);
+
+      // company_nameが空の行はスキップされる
+      expect(disclosures).toHaveLength(1);
+      expect(disclosures[0].company_code).toBe('9984');
+    });
+
+    it('should skip rows with missing disclosure_type', () => {
+      const html = `
+        <html>
+          <body>
+            <table class="disclosure-list">
+              <tr><th>Header</th></tr>
+              <tr>
+                <td>7203</td>
+                <td>トヨタ自動車株式会社</td>
+                <td></td>
+                <td>タイトル</td>
+                <td>2024/01/15 15:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+              <tr>
+                <td>9984</td>
+                <td>ソフトバンクグループ株式会社</td>
+                <td>業績予想</td>
+                <td>業績予想修正</td>
+                <td>2024/01/15 16:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const disclosures = parseDisclosureList(html);
+
+      // disclosure_typeが空の行はスキップされる
+      expect(disclosures).toHaveLength(1);
+      expect(disclosures[0].company_code).toBe('9984');
+    });
+
+    it('should skip rows with missing title', () => {
+      const html = `
+        <html>
+          <body>
+            <table class="disclosure-list">
+              <tr><th>Header</th></tr>
+              <tr>
+                <td>7203</td>
+                <td>トヨタ自動車株式会社</td>
+                <td>決算短信</td>
+                <td></td>
+                <td>2024/01/15 15:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+              <tr>
+                <td>9984</td>
+                <td>ソフトバンクグループ株式会社</td>
+                <td>業績予想</td>
+                <td>業績予想修正</td>
+                <td>2024/01/15 16:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const disclosures = parseDisclosureList(html);
+
+      // titleが空の行はスキップされる
+      expect(disclosures).toHaveLength(1);
+      expect(disclosures[0].company_code).toBe('9984');
+    });
+
+    it('should skip rows with missing PDF link', () => {
+      const html = `
+        <html>
+          <body>
+            <table class="disclosure-list">
+              <tr><th>Header</th></tr>
+              <tr>
+                <td>7203</td>
+                <td>トヨタ自動車株式会社</td>
+                <td>決算短信</td>
+                <td>タイトル</td>
+                <td>2024/01/15 15:00</td>
+                <td><a>PDF</a></td>
+              </tr>
+              <tr>
+                <td>9984</td>
+                <td>ソフトバンクグループ株式会社</td>
+                <td>業績予想</td>
+                <td>業績予想修正</td>
+                <td>2024/01/15 16:00</td>
+                <td><a href="https://example.com/test.pdf">PDF</a></td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const disclosures = parseDisclosureList(html);
+
+      // PDF URLが空の行はスキップされる
+      expect(disclosures).toHaveLength(1);
+      expect(disclosures[0].company_code).toBe('9984');
+    });
+  });
+
   describe('エッジケース', () => {
     it('should handle empty table (only header)', () => {
       const html = `

@@ -1261,23 +1261,65 @@
       - 日付フォーマットバリデーション分岐
     - 推定テストケース: 12件
   
-  - [ ] **15.29-F: src/lambda/export/query-disclosures.ts (67.56%)**
-    - 現状: 25/37ブランチ
-    - 不足: 12ブランチ
-    - テスト対象:
-      - フィルター条件の組み合わせ分岐
-      - ページネーション境界値の分岐
-      - DynamoDBクエリエラー時の分岐
-    - 推定テストケース: 10件
+  - [x] **15.29-F: src/lambda/export/query-disclosures.ts (67.56% → 89.18%)**
+    - 現状: 25/37ブランチ → **33/37ブランチ** ✅
+    - 目標: 80%以上 → **89.18%達成** ✅
+    - **完了日時**: 2026-02-08 22:45:00
+    - **最終カバレッジ**: 89.18% (33/37ブランチ)
+    - **テスト結果**: 42 passed (37 existing + 5 new)
+    - カバレッジ結果:
+      - Statements: 100% ✅
+      - Branches: 89.18% (33/37) ✅
+      - Functions: 100% ✅
+      - Lines: 100% ✅
+    - 追加テストケース: 5件
+      - fromDynamoDBItem()のnull処理: 4件
+        - すべてのフィールドがnullのアイテムの変換
+        - 各フィールドが個別にnullの場合の変換（9フィールド × ループ）
+      - 環境変数テスト: 1件（既存維持）
+    - 未カバーブランチ（4ブランチ）:
+      - Lines 17-24: DynamoDBクライアントのグローバル初期化（テスト実行前に初期化済み）
+      - Line 281: fromDynamoDBItemの一部分岐（実質的にカバー済み）
+    - _完了: 2026-02-08 22:45:00_
+    - _作業記録: work-log-20260208-223329-task15-29-group2-branch-coverage.md_
   
-  - [ ] **15.29-G: src/utils/retry.ts (66.66%)**
-    - 現状: 10/15ブランチ
-    - 不足: 5ブランチ
-    - テスト対象:
-      - 再試行可能エラーの判定分岐
-      - 最大再試行回数到達時の分岐
-      - ジッター計算の分岐
-    - 推定テストケース: 8件
+  - [x] **15.29-G: src/utils/retry.ts (66.66% → 86.66%)**
+    - 現状: 10/15ブランチ → **13/15ブランチ** ✅
+    - 目標: 80%以上 → **86.66%達成** ✅
+    - **完了日時**: 2026-02-08 22:45:00
+    - **最終カバレッジ**: 86.66% (13/15ブランチ)
+    - **テスト結果**: 28 passed (新規作成)
+    - カバレッジ結果:
+      - Statements: 97.56% ✅
+      - Branches: 86.66% (13/15) ✅
+      - Functions: 100% ✅
+      - Lines: 97.36% ✅
+    - テストケース: 28件（新規作成）
+      - retryWithBackoff(): 14件
+        - 成功時の即座返却
+        - RetryableErrorの再試行
+        - 最大再試行回数到達時のエラー
+        - 再試行不可能エラーの即座スロー
+        - カスタムshouldRetry関数
+        - 指数バックオフ（ジッターあり/なし）
+        - 非Errorオブジェクトの処理
+        - デフォルトオプション
+        - 部分的オプション指定
+        - attempt=0/1の遅延時間計算
+        - maxRetries=0の場合
+      - isRetryableError(): 14件
+        - RetryableError判定
+        - ValidationError/NotFoundError判定
+        - ネットワークエラー判定（ECONNRESET, ETIMEDOUT, ENOTFOUND, ECONNREFUSED）
+        - タイムアウトエラー判定
+        - AWSエラー判定（ThrottlingException, ServiceUnavailable, RequestTimeout）
+        - 非Errorオブジェクト判定
+        - 通常Error判定
+        - 空エラーメッセージ判定
+    - 未カバーブランチ（2ブランチ）:
+      - Line 136: 到達不可能なコード（TypeScript型チェック用）
+    - _完了: 2026-02-08 22:45:00_
+    - _作業記録: work-log-20260208-223329-task15-29-group2-branch-coverage.md_
   
   - [ ] **15.29-H: src/scraper/html-parser.ts (70.96%)**
     - 現状: 22/31ブランチ

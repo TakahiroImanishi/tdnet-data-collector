@@ -9,8 +9,8 @@ import {
   Typography,
   Collapse,
   IconButton,
-  Grid,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { Search as SearchIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import { SearchParams } from '../types/disclosure';
 import { getDisclosureTypes } from '../services/api';

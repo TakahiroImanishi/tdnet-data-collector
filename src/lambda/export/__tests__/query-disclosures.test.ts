@@ -742,6 +742,155 @@ describe('Export Lambda query-disclosures', () => {
     });
   });
 
+  describe('fromDynamoDBItem()', () => {
+    it('完全なDynamoDBアイテムの変換', async () => {
+      dynamoMock.reset();
+      dynamoMock.on(QueryCommand).resolves({
+        Items: [toDynamoDBItem(mockDisclosure1)],
+      });
+
+      const filter: QueryFilter = {
+        start_date: '2024-01-01',
+        end_date: '2024-01-31',
+      };
+
+      const result = await queryDisclosures(filter);
+
+      expect(result[0]).toEqual(mockDisclosure1);
+    });
+
+    it('一部フィールドが欠けているアイテムの変換', async () => {
+      dynamoMock.reset();
+      dynamoMock.on(QueryCommand).resolves({
+        Items: [
+          {
+            disclosure_id: { S: 'TD20240115001' },
+            company_code: { S: '1234' },
+            company_name: { S: 'テスト株式会社' },
+            disclosure_type: { S: '決算短信' },
+            title: { S: '2024年3月期 決算短信' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+            pdf_url: { S: 'https://example.com/pdf1.pdf' },
+            s3_key: { S: 'pdfs/2024/01/TD20240115001.pdf' },
+            collected_at: { S: '2024-01-15T10:05:00Z' },
+            // date_partitionが欠けている
+          },
+        ],
+      });
+
+      const filter: QueryFilter = {
+        start_date: '2024-01-01',
+        end_date: '2024-01-31',
+      };
+
+      const result = await queryDisclosures(filter);
+
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result[0].disclosure_id).toBe('TD20240115001');
+      expect(result[0].company_code).toBe('1234');
+      expect(result[0].date_partition).toBe(''); // デフォルト値
+    });
+
+    it('空のアイテムの変換', async () => {
+      dynamoMock.reset();
+      dynamoMock.on(QueryCommand).resolves({
+        Items: [
+          {
+            disclosure_id: { S: 'TD20240115001' },
+            company_code: { S: '' },
+            company_name: { S: '' },
+            disclosure_type: { S: '' },
+            title: { S: '' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+            pdf_url: { S: '' },
+            s3_key: { S: '' },
+            collected_at: { S: '2024-01-15T10:05:00Z' },
+            date_partition: { S: '2024-01' },
+          },
+        ],
+      });
+
+      const filter: QueryFilter = {
+        start_date: '2024-01-01',
+        end_date: '2024-01-31',
+      };
+
+      const result = await queryDisclosures(filter);
+
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result[0].disclosure_id).toBe('TD20240115001');
+      expect(result[0].company_code).toBe('');
+      expect(result[0].company_name).toBe('');
+    });
+
+    it('すべてのフィールドがnullのアイテムの変換', async () => {
+      dynamoMock.reset();
+      dynamoMock.on(QueryCommand).resolves({
+        Items: [
+          {
+            // すべてのフィールドがnull/undefined
+            // ただし、disclosed_atは日付範囲フィルターのために必要
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          },
+        ],
+      });
+
+      const filter: QueryFilter = {
+        start_date: '2024-01-01',
+        end_date: '2024-01-31',
+      };
+
+      const result = await queryDisclosures(filter);
+
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result[0].disclosure_id).toBe('');
+      expect(result[0].company_code).toBe('');
+      expect(result[0].company_name).toBe('');
+      expect(result[0].disclosure_type).toBe('');
+      expect(result[0].title).toBe('');
+      expect(result[0].disclosed_at).toBe('2024-01-15T10:00:00Z');
+      expect(result[0].pdf_url).toBe('');
+      expect(result[0].s3_key).toBe('');
+      expect(result[0].collected_at).toBe('');
+      expect(result[0].date_partition).toBe('');
+    });
+
+    it('各フィールドが個別にnullの場合の変換', async () => {
+      dynamoMock.reset();
+      
+      // 各フィールドを個別にnullにしてテスト
+      const testCases = [
+        { field: 'disclosure_id', item: { company_code: { S: '1234' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'company_code', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'company_name', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'disclosure_type', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'title', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'pdf_url', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 's3_key', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'collected_at', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'date_partition', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+      ];
+
+      for (const testCase of testCases) {
+        dynamoMock.reset();
+        dynamoMock.on(QueryCommand).resolves({
+          Items: [testCase.item],
+        });
+
+        const filter: QueryFilter = {
+          start_date: '2024-01-01',
+          end_date: '2024-01-31',
+        };
+
+        const result = await queryDisclosures(filter);
+
+        expect(result.length).toBeGreaterThanOrEqual(1);
+        // 欠けているフィールドは空文字列になる
+        expect(result[0][testCase.field as keyof Disclosure]).toBe('');
+      }
+    });
+  });
+
   describe('環境変数', () => {
     it('AWS_ENDPOINT_URLが設定されている場合', async () => {
       // この テストは環境変数のブランチカバレッジを向上させるためのもの

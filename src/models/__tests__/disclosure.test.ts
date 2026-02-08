@@ -196,6 +196,99 @@ describe('fromDynamoDBItem', () => {
       expect(() => fromDynamoDBItem(invalid)).toThrow(ValidationError);
     });
   });
+
+  describe('エッジケース: nullish coalescing演算子のテスト', () => {
+    it('DynamoDBアイテムのフィールドがundefinedの場合は空文字列にフォールバック', () => {
+      // フィールドが存在するが、Sプロパティがundefinedの場合
+      const itemWithUndefined: DynamoDBItem = {
+        disclosure_id: { S: '20240115_1234_001' },
+        company_code: { S: '1234' },
+        company_name: { S: 'テスト株式会社' },
+        disclosure_type: { S: '決算短信' },
+        title: { S: '2024年3月期 第3四半期決算短信' },
+        disclosed_at: { S: '2024-01-15T10:30:00Z' },
+        pdf_url: { S: undefined as any }, // Sがundefined
+        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        collected_at: { S: '2024-01-15T10:35:00Z' },
+        date_partition: { S: '2024-01' },
+      };
+
+      // バリデーションエラーになるはずだが、nullish coalescingで空文字列になることを確認
+      expect(() => fromDynamoDBItem(itemWithUndefined)).toThrow(ValidationError);
+    });
+
+    it('すべてのフィールドのSプロパティがundefinedの場合は空文字列にフォールバック', () => {
+      const itemAllUndefined: DynamoDBItem = {
+        disclosure_id: { S: undefined as any },
+        company_code: { S: undefined as any },
+        company_name: { S: undefined as any },
+        disclosure_type: { S: undefined as any },
+        title: { S: undefined as any },
+        disclosed_at: { S: undefined as any },
+        pdf_url: { S: undefined as any },
+        s3_key: { S: undefined as any },
+        collected_at: { S: undefined as any },
+        date_partition: { S: undefined as any },
+      };
+
+      // すべて空文字列になり、バリデーションエラーになることを確認
+      expect(() => fromDynamoDBItem(itemAllUndefined)).toThrow(ValidationError);
+    });
+
+    it('一部のフィールドのSプロパティがundefinedの場合', () => {
+      const itemPartialUndefined: DynamoDBItem = {
+        disclosure_id: { S: '20240115_1234_001' },
+        company_code: { S: undefined as any },
+        company_name: { S: 'テスト株式会社' },
+        disclosure_type: { S: undefined as any },
+        title: { S: '2024年3月期 第3四半期決算短信' },
+        disclosed_at: { S: '2024-01-15T10:30:00Z' },
+        pdf_url: { S: 'https://www.release.tdnet.info/inbs/example.pdf' },
+        s3_key: { S: undefined as any },
+        collected_at: { S: '2024-01-15T10:35:00Z' },
+        date_partition: { S: '2024-01' },
+      };
+
+      // 空文字列になったフィールドがあり、バリデーションエラーになることを確認
+      expect(() => fromDynamoDBItem(itemPartialUndefined)).toThrow(ValidationError);
+    });
+
+    it('Sプロパティがnullの場合も空文字列にフォールバック', () => {
+      const itemWithNull: DynamoDBItem = {
+        disclosure_id: { S: '20240115_1234_001' },
+        company_code: { S: '1234' },
+        company_name: { S: null as any },
+        disclosure_type: { S: '決算短信' },
+        title: { S: '2024年3月期 第3四半期決算短信' },
+        disclosed_at: { S: '2024-01-15T10:30:00Z' },
+        pdf_url: { S: 'https://www.release.tdnet.info/inbs/example.pdf' },
+        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        collected_at: { S: '2024-01-15T10:35:00Z' },
+        date_partition: { S: '2024-01' },
+      };
+
+      // nullも空文字列になり、バリデーションエラーになることを確認
+      expect(() => fromDynamoDBItem(itemWithNull)).toThrow(ValidationError);
+    });
+
+    it('複数のフィールドがnullまたはundefinedの場合', () => {
+      const itemMixed: DynamoDBItem = {
+        disclosure_id: { S: '20240115_1234_001' },
+        company_code: { S: null as any },
+        company_name: { S: undefined as any },
+        disclosure_type: { S: '決算短信' },
+        title: { S: null as any },
+        disclosed_at: { S: '2024-01-15T10:30:00Z' },
+        pdf_url: { S: undefined as any },
+        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        collected_at: { S: null as any },
+        date_partition: { S: '2024-01' },
+      };
+
+      // すべて空文字列になり、バリデーションエラーになることを確認
+      expect(() => fromDynamoDBItem(itemMixed)).toThrow(ValidationError);
+    });
+  });
 });
 
 describe('createDisclosure', () => {

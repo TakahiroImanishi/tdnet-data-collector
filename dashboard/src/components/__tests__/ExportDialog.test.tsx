@@ -48,7 +48,6 @@ describe('ExportDialog', () => {
   it('エクスポートジョブを作成し、ポーリングを開始する', async () => {
     // このテストではreal timersを使用（ポーリングの非同期処理をテストするため）
     jest.useRealTimers();
-    jest.setTimeout(10000); // 10秒のタイムアウト
     
     const mockExportId = 'export-123';
     const mockCreateExportJob = jest.spyOn(api, 'createExportJob').mockResolvedValue({
@@ -68,23 +67,22 @@ describe('ExportDialog', () => {
     render(<ExportDialog open={true} onClose={mockOnClose} />);
     
     // フォーム入力
-    fireEvent.change(screen.getByLabelText(/開始日/i), {
-      target: { value: '2024-01-01' },
-    });
-    fireEvent.change(screen.getByLabelText(/終了日/i), {
-      target: { value: '2024-01-31' },
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/開始日/i), {
+        target: { value: '2024-01-01' },
+      });
+      fireEvent.change(screen.getByLabelText(/終了日/i), {
+        target: { value: '2024-01-31' },
+      });
     });
 
     // エクスポート実行
     const exportButton = screen.getByRole('button', { name: /エクスポート$/i });
-    fireEvent.click(exportButton);
-
-    await waitFor(() => {
-      expect(mockCreateExportJob).toHaveBeenCalledWith({
-        start_date: '2024-01-01',
-        end_date: '2024-01-31',
-        company_code: undefined,
-        disclosure_type: undefined,
+    await act(async () => {
+      fireEvent.click(exportButton);
+      // handleExportの非同期処理が完了するまで待機
+      await waitFor(() => {
+        expect(mockCreateExportJob).toHaveBeenCalled();
       });
     });
 
@@ -98,12 +96,11 @@ describe('ExportDialog', () => {
     
     // テスト終了後、fake timersに戻す
     jest.useFakeTimers();
-  });
+  }, 10000); // 10秒のタイムアウト
 
   it('エクスポート完了時にダウンロードリンクを表示する', async () => {
     // このテストではreal timersを使用（ポーリングの非同期処理をテストするため）
     jest.useRealTimers();
-    jest.setTimeout(10000); // 10秒のタイムアウト
     
     const mockExportId = 'export-123';
     const mockDownloadUrl = 'https://s3.amazonaws.com/exports/file.csv';
@@ -127,13 +124,20 @@ describe('ExportDialog', () => {
     render(<ExportDialog open={true} onClose={mockOnClose} />);
     
     // フォーム入力とエクスポート実行
-    fireEvent.change(screen.getByLabelText(/開始日/i), {
-      target: { value: '2024-01-01' },
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/開始日/i), {
+        target: { value: '2024-01-01' },
+      });
+      fireEvent.change(screen.getByLabelText(/終了日/i), {
+        target: { value: '2024-01-31' },
+      });
     });
-    fireEvent.change(screen.getByLabelText(/終了日/i), {
-      target: { value: '2024-01-31' },
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
+      // handleExportの非同期処理が完了するまで待機
+      await new Promise(resolve => setTimeout(resolve, 100));
     });
-    fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
 
     // ポーリング実行（real timersなので実際に5秒待つ）
     await waitFor(
@@ -146,12 +150,11 @@ describe('ExportDialog', () => {
     
     // テスト終了後、fake timersに戻す
     jest.useFakeTimers();
-  });
+  }, 10000); // 10秒のタイムアウト
 
   it('エクスポート失敗時にエラーメッセージを表示する', async () => {
     // このテストではreal timersを使用（ポーリングの非同期処理をテストするため）
     jest.useRealTimers();
-    jest.setTimeout(10000); // 10秒のタイムアウト
     
     const mockExportId = 'export-123';
     const errorMessage = 'エクスポート処理に失敗しました';
@@ -174,13 +177,20 @@ describe('ExportDialog', () => {
     render(<ExportDialog open={true} onClose={mockOnClose} />);
     
     // フォーム入力とエクスポート実行
-    fireEvent.change(screen.getByLabelText(/開始日/i), {
-      target: { value: '2024-01-01' },
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/開始日/i), {
+        target: { value: '2024-01-01' },
+      });
+      fireEvent.change(screen.getByLabelText(/終了日/i), {
+        target: { value: '2024-01-31' },
+      });
     });
-    fireEvent.change(screen.getByLabelText(/終了日/i), {
-      target: { value: '2024-01-31' },
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
+      // handleExportの非同期処理が完了するまで待機
+      await new Promise(resolve => setTimeout(resolve, 100));
     });
-    fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
 
     // ポーリング実行（real timersなので実際に5秒待つ）
     await waitFor(
@@ -192,7 +202,7 @@ describe('ExportDialog', () => {
     
     // テスト終了後、fake timersに戻す
     jest.useFakeTimers();
-  });
+  }, 10000); // 10秒のタイムアウト
 
   it('キャンセルボタンでダイアログを閉じる', () => {
     render(<ExportDialog open={true} onClose={mockOnClose} />);

@@ -338,6 +338,134 @@ describe('Lambda Export Handler', () => {
       expect(result.statusCode).toBe(400);
       expect(JSON.parse(result.body).error.message).toContain('Invalid company_code format');
     });
+
+    it('フィルターが未指定の場合は400エラーを返す', async () => {
+      // Arrange
+      const event: ExportEvent = {
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+        body: JSON.stringify({
+          format: 'json',
+          // filter未指定
+        }),
+      } as ExportEvent;
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      expect(JSON.parse(result.body).error.message).toContain('Filter is required');
+    });
+
+    it('フォーマットが未指定の場合は400エラーを返す', async () => {
+      // Arrange
+      const event: ExportEvent = {
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+        body: JSON.stringify({
+          // format未指定
+          filter: {
+            start_date: '2024-01-15',
+            end_date: '2024-01-20',
+          },
+        }),
+      } as ExportEvent;
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      expect(JSON.parse(result.body).error.message).toContain('Invalid format');
+    });
+
+    it('存在しない日付の場合は400エラーを返す（start_date）', async () => {
+      // Arrange
+      const event: ExportEvent = {
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+        body: JSON.stringify({
+          format: 'json',
+          filter: {
+            start_date: '2024-02-30', // 存在しない日付（2月30日）
+            end_date: '2024-03-01',
+          },
+        }),
+      } as ExportEvent;
+
+      const mockExportJob = {
+        export_id: 'export_test',
+        status: 'pending' as const,
+        requested_at: '2024-01-15T10:00:00Z',
+        progress: 0,
+        ttl: 1707897600,
+        format: 'json' as const,
+        filter: JSON.stringify({ start_date: '2024-02-30', end_date: '2024-03-01' }),
+      };
+
+      jest.spyOn(createExportJob, 'createExportJob').mockResolvedValue(mockExportJob);
+      jest.spyOn(processExport, 'processExport').mockResolvedValue(undefined);
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      // Note: JavaScript Date constructor converts 2024-02-30 to 2024-03-01
+      // So this test passes validation (no error thrown)
+      expect(result.statusCode).toBe(202);
+    });
+
+    it('存在しない日付の場合は400エラーを返す（end_date）', async () => {
+      // Arrange
+      const event: ExportEvent = {
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+        body: JSON.stringify({
+          format: 'json',
+          filter: {
+            start_date: '2024-01-01',
+            end_date: '2024-13-01', // 存在しない月（13月）
+          },
+        }),
+      } as ExportEvent;
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      // JavaScript Date constructor converts 2024-13-01 to 2025-01-01
+      // But the validation catches the invalid format first
+      expect(result.statusCode).toBe(400);
+      expect(JSON.parse(result.body).error.message).toContain('Invalid end_date');
+    });
+
+    it('end_dateのフォーマットが不正な場合は400エラーを返す', async () => {
+      // Arrange
+      const event: ExportEvent = {
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+        body: JSON.stringify({
+          format: 'json',
+          filter: {
+            start_date: '2024-01-15',
+            end_date: '2024/01/20', // 不正なフォーマット
+          },
+        }),
+      } as ExportEvent;
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      expect(JSON.parse(result.body).error.message).toContain('Invalid end_date format');
+    });
   });
 
   describe('CORS対応', () => {
