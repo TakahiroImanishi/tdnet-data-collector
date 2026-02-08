@@ -795,7 +795,7 @@
   - _完了: 2026-02-08, collect handlerの28件のテスト失敗を修正_
   - _成果物: 日付バリデーションロジック改善、テスト成功率96.1%_
 
-- [ ] 15.12 LocalStack環境のセットアップ
+- [ ] 15.11 LocalStack環境のセットアップ
   - Docker Composeファイルの作成（docker-compose.yml）
   - LocalStackサービスの設定（DynamoDB、S3、CloudWatch）
   - セットアップスクリプトの作成（scripts/localstack-setup.ps1）
@@ -807,7 +807,7 @@
   - _推定工数: 2-3時間_
   - _関連: docs/localstack-setup.md, docs/e2e-test-guide.md_
 
-- [ ] 15.13 E2Eテストの実行と検証
+- [ ] 15.12 E2Eテストの実行と検証
   - LocalStack環境の起動確認
   - E2Eテストの実行（npm run test:e2e）
   - 29件のE2Eテスト失敗の解決
@@ -816,9 +816,9 @@
   - _Requirements: 要件14.4（E2Eテスト）_
   - _優先度: 🔴 Critical_
   - _推定工数: 1-2時間_
-  - _前提条件: タスク15.12完了_
+  - _前提条件: タスク15.11完了_
 
-- [ ] 15.14 CI/CD統合の準備
+- [ ] 15.13 CI/CD統合の準備
   - GitHub ActionsでのLocalStack統合
   - E2Eテスト自動実行ワークフローの作成（.github/workflows/e2e-test.yml）
   - プルリクエスト時の自動E2Eテスト実行
@@ -826,10 +826,10 @@
   - _Requirements: 要件14.5（CI/CD）_
   - _優先度: � High_
   - _推定工数: 3-4時間_
-  - _前提条件: タスク15.13完了_
+  - _前提条件: タスク15.12完了_
   - _注意: Phase 4のタスク25（CI/CDパイプライン構築）と統合可能_
 
-- [ ] 15.11 Phase 2完了確認（最終）
+- [ ] 15.14 Phase 2完了確認（最終）
   - すべてのE2Eテストが成功することを確認
   - execution_id不一致問題が解決されていることを確認
   - プロパティテストが100%成功することを確認
@@ -839,7 +839,7 @@
   - _Requirements: 全要件_
   - _優先度: � Critical_
   - _推定工数: 1-2時間_
-  - _前提条件: タスク15.12-15.14完了_
+  - _前提条件: タスク15.11-15.13完了_
 
 
 ## Phase 3: 自動化とWebダッシュボード
