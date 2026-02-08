@@ -290,6 +290,8 @@
   - **Validates: Requirements 1.3, 1.4**
   - メタデータとPDFファイルの両方が取得され、永続化されることを検証
   - _Requirements: 要件14.3（統合テスト）_
+  - _完了: 2026-02-08, 10テスト成功（Property 1: 4テスト、Property 2: 6テスト）_
+  - _注意: テスト日付は現在日から1年以内に設定する必要がある（handler.tsのバリデーション制約）_
 
 ### 9. Checkpoint - Phase 1完了確認
 
