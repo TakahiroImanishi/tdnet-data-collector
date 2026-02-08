@@ -928,7 +928,8 @@
   - _優先度: 🟠 High_
   - _推定工数: 1時間_
   - _関連: steering/api/api-design-guidelines.md_
-  - _完了: 2026-02-08, 20テスト成功_
+  - _完了: 2026-02-08 18:28, 既に実装済み確認、ユニットテスト20/20成功、E2Eテスト28/28成功_
+  - _作業記録: work-log-20260208-182829-query-lambda-error-response-fix.md_
 
 - [x] 15.15 環境分離の実装（Phase 2 High）
   - 開発環境（dev）と本番環境（prod）の分離
@@ -1011,7 +1012,7 @@
 
 ### 15.22. Phase 2残課題（並行作業）
 
-- [x] 15.22.1 Collect handlerテストのAPIキー認証モック修正
+- [x] 15.22 Collect handlerテストのAPIキー認証モック修正
   - バックアップファイルから復元: `handler.test.ts.bak` → `handler.test.ts`
   - Secrets Managerモックを追加（SecretsManagerClient, GetSecretValueCommand）
   - beforeEachでAPIキーシークレットのモックを設定
@@ -1025,7 +1026,7 @@
   - _完了: 2026-02-08, 14/14テスト成功（100%）_
   - _注意: PowerShell正規表現でエンコーディング破損、Node.jsスクリプトで修正_
 
-- [x] 15.22.4 残存テスト失敗の修正（112件）
+- [x] 15.23 残存テスト失敗の修正（112件）
   - 失敗しているテストファイルを特定（9ファイル）
   - 各テストファイルにSecrets Managerモックを追加
   - APIキーヘッダーを全テストケースに追加
@@ -1035,20 +1036,20 @@
   - _推定工数: 4-6時間_
   - _完了: 2026-02-08, Lambda handlerテスト100%成功_
   - _関連: work-log-20260208-181455-task15-22-4-remaining-test-failures.md_
-  - _注意: 残存112件はCDK環境変数設定の問題（タスク15.23で対応）_
+  - _注意: 残存112件はCDK環境変数設定の問題（タスク15.24で対応）_
   
   **失敗テストファイル一覧:**
-  - [x] 15.22.4.1 `src/lambda/query/__tests__/handler.e2e.test.ts` - Query Lambda E2Eテスト
-  - [x] 15.22.4.2 `src/lambda/query/__tests__/date-range-validation.property.test.ts` - Query Lambda プロパティテスト
-  - [x] 15.22.4.3 `src/lambda/export/__tests__/handler.e2e.test.ts` - Export Lambda E2Eテスト
-  - [x] 15.22.4.4 `src/lambda/export/__tests__/export-to-s3.test.ts` - Export Lambda ユニットテスト
-  - [x] 15.22.4.5 `src/lambda/export/__tests__/handler.test.ts` - Export Lambda ハンドラーテスト
-  - [x] 15.22.4.6 `src/lambda/api/__tests__/pdf-download.test.ts` - PDF Download Lambda テスト
-  - [x] 15.22.4.7 `src/lambda/api/__tests__/export-status.test.ts` - Export Status Lambda テスト
-  - [x] 15.22.4.8 `src/models/__tests__/disclosure.test.ts` - Disclosure モデルテスト
-  - [x] 15.22.4.9 `src/__tests__/type-definitions.test.ts` - 型定義テスト
+  - [x] 15.23.1 `src/lambda/query/__tests__/handler.e2e.test.ts` - Query Lambda E2Eテスト
+  - [x] 15.23.2 `src/lambda/query/__tests__/date-range-validation.property.test.ts` - Query Lambda プロパティテスト
+  - [x] 15.23.3 `src/lambda/export/__tests__/handler.e2e.test.ts` - Export Lambda E2Eテスト
+  - [x] 15.23.4 `src/lambda/export/__tests__/export-to-s3.test.ts` - Export Lambda ユニットテスト
+  - [x] 15.23.5 `src/lambda/export/__tests__/handler.test.ts` - Export Lambda ハンドラーテスト
+  - [x] 15.23.6 `src/lambda/api/__tests__/pdf-download.test.ts` - PDF Download Lambda テスト
+  - [x] 15.23.7 `src/lambda/api/__tests__/export-status.test.ts` - Export Status Lambda テスト
+  - [x] 15.23.8 `src/models/__tests__/disclosure.test.ts` - Disclosure モデルテスト
+  - [x] 15.23.9 `src/__tests__/type-definitions.test.ts` - 型定義テスト
 
-- [ ] 15.23 CDK環境変数設定の修正（残存112件のテスト失敗解消）
+- [ ] 15.24 CDK環境変数設定の修正（残存112件のテスト失敗解消）
   - CDKテストで失敗している環境変数設定を特定
   - CollectStatusFunctionの環境変数不足を修正（S3_BUCKET未定義）
   - FunctionName不一致を修正（期待値: tdnet-collector-dev、実際: tdnet-collect-status-dev）
@@ -1057,9 +1058,9 @@
   - _Requirements: 要件8.1（設定管理）_
   - _優先度: 🔴 Critical_
   - _推定工数: 3-4時間_
-  - _関連: タスク15.22.4の残存問題_
+  - _関連: タスク15.23の残存問題_
 
-- [ ] 15.24 testing-strategy.mdへのSecrets Managerモックパターン追加
+- [ ] 15.25 testing-strategy.mdへのSecrets Managerモックパターン追加
   - Lambda handlerテストでのSecrets Managerモック必須化を明記
   - aws-sdk-client-mockの使用パターンを追加
   - TEST_ENV=e2e環境変数の設定方法を追加
@@ -1068,9 +1069,9 @@
   - _Requirements: 要件14.1（テスト戦略）_
   - _優先度: 🟠 High_
   - _推定工数: 1-2時間_
-  - _関連: タスク15.22.4の知見を反映_
+  - _関連: タスク15.23の知見を反映_
 
-- [ ] 15.22.2 プロパティテストの成功率確認
+- [ ] 15.26 プロパティテストの成功率確認
   - プロパティテストのみを実行: `npm test -- --testNamePattern="Property"`
   - 100%成功することを確認
   - 失敗がある場合は原因を特定して修正
@@ -1078,7 +1079,7 @@
   - _優先度: 🟡 Medium_
   - _推定工数: 30分_
 
-- [ ] 15.22.3 テストカバレッジの最終確認
+- [ ] 15.27 テストカバレッジの最終確認
   - 全テストスイート実行: `npm test -- --coverage`
   - テスト成功率100%を確認
   - コードカバレッジ80%以上を確認

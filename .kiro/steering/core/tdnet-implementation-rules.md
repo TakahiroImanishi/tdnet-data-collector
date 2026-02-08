@@ -2,6 +2,13 @@
 
 TDnetから上場企業の開示情報を自動収集するAWSサーバーレスシステムの実装原則。
 
+## 言語設定
+
+**AIの出力言語**: 日本語
+- すべての説明、コメント、ドキュメントは日本語で記述
+- コード内のコメントも日本語
+- エラーメッセージやログも日本語
+
 ## 技術スタック
 
 Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWatch | WAF
