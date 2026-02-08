@@ -456,3 +456,108 @@ context.requestId → context.awsRequestId
 **レビュー対象:** 7ファイル  
 **発見された問題:** 1件（Critical）  
 **推奨改善:** 2件（Low）
+
+
+---
+
+## 実施した修正
+
+### src/lambda/collect/handler.ts の修正完了
+
+**修正内容:** `context.requestId` → `context.awsRequestId`（8箇所）
+
+**修正箇所:**
+
+1. ✅ Line 48-50: Lambda invoked ログ
+2. ✅ Line 82: POST /collect completed ログ
+3. ✅ Line 97-100: POST /collect failed ログ
+4. ✅ Line 177-180: Invoking Lambda Collector ログ
+5. ✅ Line 192: Lambda Collector invoked successfully ログ
+6. ✅ Line 210: Received execution_id ログ
+7. ✅ Line 216-220: Failed to invoke Lambda Collector ログ
+8. ✅ Line 234: toErrorResponse関数の呼び出し
+
+**検証結果:**
+```
+getDiagnostics: No diagnostics found
+```
+
+✅ TypeScriptコンパイルエラーがすべて解消されました。
+
+---
+
+## 最終確認結果
+
+### 整合性確認サマリー（修正後）
+
+| カテゴリ | 準拠状況 | 詳細 |
+|---------|---------|------|
+| **カスタムエラークラス** | ✅ 準拠 | すべての必須エラークラスが定義されている |
+| **再試行ロジック** | ✅ 準拠 | 指数バックオフとジッターが実装されている |
+| **構造化ログ** | ✅ 準拠 | Steering準拠のログフォーマットが実装されている |
+| **Lambda: collector** | ✅ 準拠 | すべての要件を満たしている |
+| **Lambda: collect** | ✅ 準拠 | **修正完了** - すべての要件を満たしている |
+| **Lambda: query** | ✅ 準拠 | すべての要件を満たしている |
+| **Lambda: export** | ✅ 準拠 | すべての要件を満たしている |
+
+**総合評価（修正後）:**
+- **準拠率**: 7/7（100%）
+- **Critical問題**: 0件（すべて解消）
+- **推奨改善**: 2件（エラーレスポンス統一、DLQ実装）
+
+---
+
+## 成果物（最終版）
+
+### 修正済みファイル
+
+1. **src/lambda/collect/handler.ts**
+   - `context.requestId` → `context.awsRequestId`（8箇所修正）
+   - TypeScriptコンパイルエラー解消
+
+### 確認済みファイル（準拠）
+
+1. **Steeringファイル:**
+   - `.kiro/steering/core/error-handling-patterns.md`
+   - `.kiro/steering/development/error-handling-implementation.md`
+   - `.kiro/steering/development/lambda-implementation.md`
+
+2. **実装ファイル:**
+   - `src/errors/index.ts` - ✅ 準拠
+   - `src/utils/retry.ts` - ✅ 準拠
+   - `src/utils/logger.ts` - ✅ 準拠
+   - `src/lambda/collector/handler.ts` - ✅ 準拠
+   - `src/lambda/collect/handler.ts` - ✅ 準拠（修正完了）
+   - `src/lambda/query/handler.ts` - ✅ 準拠
+   - `src/lambda/export/handler.ts` - ✅ 準拠
+
+---
+
+## 次回への申し送り（更新版）
+
+### 推奨対応（優先度: Low）
+
+1. **エラーレスポンス変換の統一**
+   - `src/utils/error-response.ts`を作成
+   - すべてのLambda関数で共通関数を使用
+   - 現状: 各Lambda関数で独自実装（`toErrorResponse`, `handleError`）
+   - メリット: コードの重複削減、エラーレスポンス形式の統一
+
+2. **DLQの実装確認**
+   - CDKコードでDLQ設定を確認
+   - 必要に応じてDLQプロセッサーを実装
+   - 参考: `error-handling-implementation.md`の「Dead Letter Queue（DLQ）の設定と処理」
+
+### 完了した作業
+
+- ✅ エラーハンドリング整合性レビュー
+- ✅ `context.requestId`の誤用を修正（8箇所）
+- ✅ TypeScriptコンパイルエラーの解消
+- ✅ すべてのLambda関数がSteering要件に準拠
+
+---
+
+**作業完了日時:** 2026-02-08 15:14:16  
+**レビュー対象:** 7ファイル  
+**修正完了:** 1ファイル（8箇所）  
+**最終準拠率:** 100%

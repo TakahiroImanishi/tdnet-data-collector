@@ -123,7 +123,7 @@ export async function handler(
       {}
     );
 
-    return toErrorResponse(error as Error, context.requestId);
+    return toErrorResponse(error as Error, context.awsRequestId);
   }
 }
 
@@ -267,7 +267,7 @@ async function invokeCollector(
     }
 
     logger.info('Received execution_id from Lambda Collector', {
-      requestId: context.requestId,
+      requestId: context.awsRequestId,
       execution_id,
       status: collectorResponse.status,
     });
@@ -277,7 +277,7 @@ async function invokeCollector(
     logger.error(
       'Failed to invoke Lambda Collector',
       createErrorContext(error as Error, {
-        requestId: context.requestId,
+        requestId: context.awsRequestId,
         functionName: COLLECTOR_FUNCTION_NAME,
       })
     );
