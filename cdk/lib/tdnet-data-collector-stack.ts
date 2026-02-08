@@ -11,6 +11,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
   // Public properties for cross-stack references
   public readonly disclosuresTable: dynamodb.Table;
   public readonly executionsTable: dynamodb.Table;
+  public readonly exportStatusTable: dynamodb.Table;
   public readonly pdfsBucket: s3.Bucket;
   public readonly exportsBucket: s3.Bucket;
   public readonly dashboardBucket: s3.Bucket;
@@ -95,6 +96,34 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // 3. tdnet_export_status - エクスポート状態管理テーブル
+    this.exportStatusTable = new dynamodb.Table(this, 'ExportStatusTable', {
+      tableName: 'tdnet_export_status',
+      partitionKey: {
+        name: 'export_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // オンデマンドモード
+      encryption: dynamodb.TableEncryption.AWS_MANAGED, // AWS管理キーで暗号化
+      timeToLiveAttribute: 'ttl', // TTL有効化（30日後に自動削除）
+      pointInTimeRecovery: true, // ポイントインタイムリカバリ有効化
+      removalPolicy: cdk.RemovalPolicy.RETAIN, // 本番環境では削除保護
+    });
+
+    // GSI: Status_RequestedAt - エクスポート状態とリクエスト日時でクエリ
+    this.exportStatusTable.addGlobalSecondaryIndex({
+      indexName: 'GSI_Status_RequestedAt',
+      partitionKey: {
+        name: 'status',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'requested_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // CloudFormation Outputs
     new cdk.CfnOutput(this, 'DisclosuresTableName', {
       value: this.disclosuresTable.tableName,
@@ -106,6 +135,12 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       value: this.executionsTable.tableName,
       description: 'DynamoDB table name for executions',
       exportName: 'TdnetExecutionsTableName',
+    });
+
+    new cdk.CfnOutput(this, 'ExportStatusTableName', {
+      value: this.exportStatusTable.tableName,
+      description: 'DynamoDB table name for export status',
+      exportName: 'TdnetExportStatusTableName',
     });
 
     // ========================================
@@ -317,6 +352,62 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       exportName: 'TdnetQueryFunctionArn',
     });
 
+    // ========================================
+    // Phase 2: Lambda Export Function
+    // ========================================
+
+    // Lambda Export Function
+    const exportFunction = new lambda.Function(this, 'ExportFunction', {
+      functionName: 'tdnet-export',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/src/lambda/export'),
+      timeout: cdk.Duration.minutes(5),
+      memorySize: 512,
+      environment: {
+        DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
+        EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
+        EXPORT_BUCKET_NAME: this.exportsBucket.bucketName,
+        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+        AWS_REGION: this.region,
+      },
+    });
+
+    // IAM権限の付与
+    // DynamoDB: disclosuresテーブルへの読み取り権限
+    this.disclosuresTable.grantReadData(exportFunction);
+
+    // DynamoDB: exportStatusテーブルへの読み書き権限
+    this.exportStatusTable.grantReadWriteData(exportFunction);
+
+    // S3: exportsバケットへの書き込み権限
+    this.exportsBucket.grantPut(exportFunction);
+    this.exportsBucket.grantRead(exportFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    exportFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'ExportFunctionName', {
+      value: exportFunction.functionName,
+      description: 'Lambda Export function name',
+      exportName: 'TdnetExportFunctionName',
+    });
+
+    new cdk.CfnOutput(this, 'ExportFunctionArn', {
+      value: exportFunction.functionArn,
+      description: 'Lambda Export function ARN',
+      exportName: 'TdnetExportFunctionArn',
+    });
+
     // Stack resources will be added here in subsequent tasks
     // Phase 2: Lambda Export function, API Gateway integration
     // Phase 3: EventBridge rules, SNS topics, CloudWatch monitoring
@@ -491,6 +582,79 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       value: this.webAcl.attrArn,
       description: 'WAF Web ACL ARN',
       exportName: 'TdnetWebAclArn',
+    });
+
+    // ========================================
+    // Phase 2: API Gateway Integrations
+    // ========================================
+
+    // 1. /export エンドポイント
+    const exportResource = this.api.root.addResource('export');
+    const exportIntegration = new apigateway.LambdaIntegration(exportFunction, {
+      proxy: true,
+      integrationResponses: [
+        {
+          statusCode: '202', // Accepted
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '400', // Bad Request
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '401', // Unauthorized
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '500', // Internal Server Error
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+      ],
+    });
+
+    exportResource.addMethod('POST', exportIntegration, {
+      apiKeyRequired: true, // APIキー認証必須
+      methodResponses: [
+        {
+          statusCode: '202',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'ExportEndpoint', {
+      value: `${this.api.url}export`,
+      description: 'Export API endpoint URL',
+      exportName: 'TdnetExportEndpoint',
     });
   }
 }
