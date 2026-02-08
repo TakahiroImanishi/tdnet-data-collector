@@ -1,0 +1,148 @@
+4e5aee539554ab25b39cf7183debbcb0
+"use strict";
+
+/* istanbul ignore next */
+function cov_12d6bg4s4t() {
+  var path = "C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\health\\index.ts";
+  var hash = "d4228f925949e667eec1253bab89f0e483be1b48";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\health\\index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 25
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 16
+        },
+        end: {
+          line: 4,
+          column: 36
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 112
+        }
+      },
+      "4": {
+        start: {
+          line: 5,
+          column: 81
+        },
+        end: {
+          line: 5,
+          column: 106
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 5,
+            column: 67
+          },
+          end: {
+            line: 5,
+            column: 68
+          }
+        },
+        loc: {
+          start: {
+            line: 5,
+            column: 79
+          },
+          end: {
+            line: 5,
+            column: 108
+          }
+        },
+        line: 5
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\health\\index.ts",
+      mappings: ";;;AAAA,qCAAoC;AAA3B,kGAAA,OAAO,OAAA",
+      names: [],
+      sources: ["C:\\Users\\ti198\\investment_analysis_opopo\\src\\lambda\\health\\index.ts"],
+      sourcesContent: ["export { handler } from './handler';\r\n"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "d4228f925949e667eec1253bab89f0e483be1b48"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_12d6bg4s4t = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_12d6bg4s4t();
+cov_12d6bg4s4t().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_12d6bg4s4t().s[1]++;
+exports.handler = void 0;
+var handler_1 =
+/* istanbul ignore next */
+(cov_12d6bg4s4t().s[2]++, require("./handler"));
+/* istanbul ignore next */
+cov_12d6bg4s4t().s[3]++;
+Object.defineProperty(exports, "handler", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_12d6bg4s4t().f[0]++;
+    cov_12d6bg4s4t().s[4]++;
+    return handler_1.handler;
+  }
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJoYW5kbGVyXzEiLCJjb3ZfMTJkNmJnNHM0dCIsInMiLCJyZXF1aXJlIiwiT2JqZWN0IiwiZGVmaW5lUHJvcGVydHkiLCJleHBvcnRzIiwiZW51bWVyYWJsZSIsImdldCIsImYiLCJoYW5kbGVyIl0sInNvdXJjZXMiOlsiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxsYW1iZGFcXGhlYWx0aFxcaW5kZXgudHMiXSwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IHsgaGFuZGxlciB9IGZyb20gJy4vaGFuZGxlcic7XHJcbiJdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsSUFBQUEsU0FBQTtBQUFBO0FBQUEsQ0FBQUMsY0FBQSxHQUFBQyxDQUFBLE9BQUFDLE9BQUE7QUFBb0M7QUFBQUYsY0FBQSxHQUFBQyxDQUFBO0FBQTNCRSxNQUFBLENBQUFDLGNBQUEsQ0FBQUMsT0FBQTtFQUFBQyxVQUFBO0VBQUFDLEdBQUEsV0FBQUEsQ0FBQTtJQUFBO0lBQUFQLGNBQUEsR0FBQVEsQ0FBQTtJQUFBUixjQUFBLEdBQUFDLENBQUE7SUFBQSxPQUFBRixTQUFBLENBQUFVLE9BQU87RUFBQTtBQUFBIiwiaWdub3JlTGlzdCI6W119
