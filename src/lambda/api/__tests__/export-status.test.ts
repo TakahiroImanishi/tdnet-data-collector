@@ -8,7 +8,7 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
-import { handler } from '../export-status/handler';
+import { handler, clearApiKeyCache } from '../export-status/handler';
 
 // モック
 const dynamoMock = mockClient(DynamoDBClient);
@@ -338,7 +338,9 @@ describe('Export Status Lambda Handler', () => {
 
   describe('APIキーキャッシング', () => {
     beforeEach(() => {
-      // キャッシュをクリアするため、環境変数を変更
+      // キャッシュをクリア
+      clearApiKeyCache();
+      // 環境変数をリセット
       delete process.env.TEST_ENV;
       delete process.env.API_KEY;
       process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:api-key';
@@ -492,9 +494,54 @@ describe('Export Status Lambda Handler', () => {
       // Assert
       expect(secretsManagerMock.calls()).toHaveLength(0); // キャッシュが使われる
     });
+
+    it('APIキーキャッシュの有効期限が切れた場合は再取得する', async () => {
+      // Arrange
+      delete process.env.TEST_ENV;
+      delete process.env.API_KEY;
+      secretsManagerMock.reset();
+      secretsManagerMock.on(GetSecretValueCommand).resolves({
+        SecretString: 'production-api-key',
+      });
+
+      const event1: Partial<APIGatewayProxyEvent> = {
+        pathParameters: { export_id: 'export-20240115-xyz789' },
+        headers: { 'x-api-key': 'production-api-key' },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          export_id: { S: 'export-20240115-xyz789' },
+          status: { S: 'completed' },
+          progress: { N: '100' },
+          requested_at: { S: '2024-01-15T10:00:00Z' },
+          completed_at: { S: '2024-01-15T10:05:00Z' },
+        },
+      });
+
+      // Act - 1回目の呼び出し（キャッシュに保存）
+      await handler(event1 as APIGatewayProxyEvent, mockContext);
+      expect(secretsManagerMock.calls()).toHaveLength(1);
+
+      // キャッシュをクリア（有効期限切れをシミュレート）
+      clearApiKeyCache();
+
+      // Act - 2回目の呼び出し（キャッシュ期限切れ、再取得）
+      await handler(event1 as APIGatewayProxyEvent, mockContext);
+
+      // Assert
+      expect(secretsManagerMock.calls()).toHaveLength(2); // 再取得される
+    });
   });
 
   describe('エクスポート状態の各ステータス', () => {
+    beforeEach(() => {
+      // 各テストの前にキャッシュをクリアし、環境変数を設定
+      clearApiKeyCache();
+      process.env.TEST_ENV = 'e2e';
+      process.env.API_KEY = 'test-api-key';
+    });
+
     it('pending状態のエクスポートを取得できる', async () => {
       // Arrange
       const event: Partial<APIGatewayProxyEvent> = {

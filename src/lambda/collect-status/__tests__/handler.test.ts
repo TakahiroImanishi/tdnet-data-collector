@@ -41,6 +41,106 @@ describe('GET /collect/{execution_id} Handler', () => {
     delete process.env.AWS_REGION;
   });
 
+  describe('環境変数のデフォルト値', () => {
+    it('AWS_REGIONが未設定の場合はap-northeast-1を使用する', async () => {
+      // 環境変数を削除してデフォルト値をテスト
+      delete process.env.AWS_REGION;
+      
+      // モジュールを再読み込みしてデフォルト値を適用
+      jest.resetModules();
+      const { handler: freshHandler } = require('../handler');
+      
+      const executionStatus = {
+        execution_id: 'exec_test',
+        status: 'running',
+        progress: 50,
+        collected_count: 25,
+        failed_count: 0,
+        started_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:05:00Z',
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall(executionStatus),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await freshHandler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.execution_id).toBe('exec_test');
+      
+      // 環境変数を元に戻す
+      process.env.AWS_REGION = 'ap-northeast-1';
+    });
+
+    it('DYNAMODB_EXECUTIONS_TABLEが未設定の場合はtdnet_executionsを使用する', async () => {
+      // 環境変数を削除してデフォルト値をテスト
+      delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+      
+      // モジュールを再読み込みしてデフォルト値を適用
+      jest.resetModules();
+      const { handler: freshHandler } = require('../handler');
+      
+      const executionStatus = {
+        execution_id: 'exec_test',
+        status: 'running',
+        progress: 50,
+        collected_count: 25,
+        failed_count: 0,
+        started_at: '2024-01-15T10:00:00Z',
+        updated_at: '2024-01-15T10:05:00Z',
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall(executionStatus),
+      });
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await freshHandler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.data.execution_id).toBe('exec_test');
+      
+      // 環境変数を元に戻す
+      process.env.DYNAMODB_EXECUTIONS_TABLE = 'tdnet_executions';
+    });
+  });
+
   describe('正常系', () => {
     it('実行状態が存在する場合は200を返す', async () => {
       const executionStatus = {
@@ -555,6 +655,117 @@ describe('GET /collect/{execution_id} Handler', () => {
       expect(result.statusCode).toBe(500); // getExecutionStatusでラップされるため500
       const body = JSON.parse(result.body);
       expect(body.error.details).toBeDefined();
+    });
+
+    it('エラーにdetailsプロパティがない場合は空オブジェクトを返す', async () => {
+      // ValidationErrorを直接handlerでスローさせる（pathParametersを空オブジェクトに）
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/',
+        pathParameters: {}, // 空オブジェクト（execution_idがundefined）
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.details).toEqual({}); // 空オブジェクト（detailsプロパティなし）
+    });
+
+    it('未知のエラー名の場合はINTERNAL_ERRORとして処理する', async () => {
+      const unknownError = new Error('Unknown error type');
+      unknownError.name = 'UnknownErrorType'; // errorCodeMapにない名前
+
+      dynamoMock.on(GetItemCommand).rejects(unknownError);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR'); // デフォルトのエラーコード
+      expect(body.error.message).toBe('Failed to retrieve execution status');
+      expect(body.error.details).toEqual({}); // detailsプロパティがない場合は空オブジェクト
+    });
+
+    it('pathParametersが空オブジェクトの場合もValidationErrorを返す', async () => {
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/',
+        pathParameters: {}, // 空オブジェクト
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('execution_id is required');
+    });
+
+    it('InternalErrorは500を返す', async () => {
+      const error = new Error('Internal error');
+      error.name = 'InternalError';
+
+      dynamoMock.on(GetItemCommand).rejects(error);
+
+      const event: APIGatewayProxyEvent = {
+        body: null,
+        headers: {},
+        multiValueHeaders: {},
+        httpMethod: 'GET',
+        isBase64Encoded: false,
+        path: '/collect/exec_test',
+        pathParameters: {
+          execution_id: 'exec_test',
+        },
+        queryStringParameters: null,
+        multiValueQueryStringParameters: null,
+        stageVariables: null,
+        requestContext: {} as any,
+        resource: '',
+      };
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
     });
   });
 });

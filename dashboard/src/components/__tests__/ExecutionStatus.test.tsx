@@ -1,6 +1,6 @@
 // 実行状態表示コンポーネントのテスト
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ExecutionStatus from '../ExecutionStatus';
 import * as api from '../../services/api';
@@ -35,7 +35,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('収集実行状態')).toBeInTheDocument();
@@ -57,7 +59,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('進捗')).toBeInTheDocument();
@@ -79,7 +83,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('200')).toBeInTheDocument(); // 総件数
@@ -107,9 +113,11 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(
-      <ExecutionStatus executionId={mockExecutionId} onComplete={mockOnComplete} />
-    );
+    await act(async () => {
+      render(
+        <ExecutionStatus executionId={mockExecutionId} onComplete={mockOnComplete} />
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText('完了')).toBeInTheDocument();
@@ -135,7 +143,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('失敗')).toBeInTheDocument();
@@ -175,7 +185,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} />);
+    });
 
     // 初回呼び出し
     await waitFor(() => {
@@ -183,7 +195,10 @@ describe('ExecutionStatus', () => {
     });
 
     // 5秒後のポーリング
-    jest.advanceTimersByTime(5000);
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve(); // マイクロタスクキューをフラッシュ
+    });
 
     await waitFor(() => {
       expect(mockGetCollectionStatus).toHaveBeenCalledTimes(2);
@@ -222,7 +237,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} />);
+    });
 
     // 初回呼び出し
     await waitFor(() => {
@@ -230,14 +247,20 @@ describe('ExecutionStatus', () => {
     });
 
     // 5秒後のポーリング（完了状態になる）
-    jest.advanceTimersByTime(5000);
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve(); // マイクロタスクキューをフラッシュ
+    });
 
     await waitFor(() => {
       expect(mockGetCollectionStatus).toHaveBeenCalledTimes(2);
     });
 
     // さらに5秒後（ポーリング停止を確認）
-    jest.advanceTimersByTime(5000);
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve(); // マイクロタスクキューをフラッシュ
+    });
 
     await waitFor(() => {
       expect(mockGetCollectionStatus).toHaveBeenCalledTimes(2); // 増えない
@@ -250,7 +273,9 @@ describe('ExecutionStatus', () => {
       new Error('API呼び出しに失敗しました')
     );
 
-    render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} onError={mockOnError} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/実行状態の取得に失敗しました/i)).toBeInTheDocument();
@@ -273,7 +298,9 @@ describe('ExecutionStatus', () => {
       },
     });
 
-    render(<ExecutionStatus executionId={mockExecutionId} />);
+    await act(async () => {
+      render(<ExecutionStatus executionId={mockExecutionId} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/開始時刻:/i)).toBeInTheDocument();

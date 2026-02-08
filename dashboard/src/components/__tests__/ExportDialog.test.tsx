@@ -214,20 +214,24 @@ describe('ExportDialog', () => {
     render(<ExportDialog open={true} onClose={mockOnClose} />);
     
     // すべてのフィールドを入力
-    fireEvent.change(screen.getByLabelText(/開始日/i), {
-      target: { value: '2024-01-01' },
-    });
-    fireEvent.change(screen.getByLabelText(/終了日/i), {
-      target: { value: '2024-01-31' },
-    });
-    fireEvent.change(screen.getByLabelText(/企業コード/i), {
-      target: { value: '7203' },
-    });
-    fireEvent.change(screen.getByLabelText(/開示種類/i), {
-      target: { value: '決算短信' },
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/開始日/i), {
+        target: { value: '2024-01-01' },
+      });
+      fireEvent.change(screen.getByLabelText(/終了日/i), {
+        target: { value: '2024-01-31' },
+      });
+      fireEvent.change(screen.getByLabelText(/企業コード/i), {
+        target: { value: '7203' },
+      });
+      fireEvent.change(screen.getByLabelText(/開示種類/i), {
+        target: { value: '決算短信' },
+      });
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /エクスポート$/i }));
+    });
 
     await waitFor(() => {
       expect(mockCreateExportJob).toHaveBeenCalledWith({

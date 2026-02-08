@@ -27,6 +27,15 @@ let cachedApiKey: string | null = null;
 let cacheExpiry: number = 0;
 
 /**
+ * キャッシュをクリア（テスト用）
+ * @internal
+ */
+export function clearApiKeyCache(): void {
+  cachedApiKey = null;
+  cacheExpiry = 0;
+}
+
+/**
  * Secrets ManagerからAPIキーを取得
  *
  * テスト環境（TEST_ENV=e2e）では、API_KEY環境変数から直接取得します。
