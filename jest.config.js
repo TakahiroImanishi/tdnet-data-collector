@@ -3,18 +3,34 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/cdk'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  
+  // Exclude improved test examples from running
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '\\.improved\\.ts$',
+  ],
+  
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+      },
+    }],
   },
+  
   collectCoverageFrom: [
     'src/**/*.ts',
     'cdk/**/*.ts',
     '!src/**/*.d.ts',
     '!src/**/*.test.ts',
     '!src/**/*.spec.ts',
+    '!src/**/*.improved.ts',
+    '!src/**/__tests__/test-helpers.ts',
     '!cdk/**/*.test.ts',
     '!cdk/**/*.spec.ts',
   ],
+  
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
@@ -25,7 +41,32 @@ module.exports = {
       statements: 80,
     },
   },
+  
   moduleFileExtensions: ['ts', 'js', 'json'],
   verbose: true,
+  
+  // タイムアウト設定の最適化
   testTimeout: 30000,
+  
+  // テスト実行の最適化
+  maxWorkers: '50%', // CPU使用率を50%に制限
+  
+  // モジュール解決の最適化
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  
+  // セットアップファイル（必要に応じて）
+  // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  
+  // グローバル設定
+  globals: {
+    'ts-jest': {
+      isolatedModules: true, // 型チェックをスキップして高速化
+    },
+  },
+  
+  // キャッシュの有効化
+  cache: true,
+  cacheDirectory: '<rootDir>/.jest-cache',
 };

@@ -314,13 +314,16 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 4-6時間_
 
-- [ ] 9.3 Phase 2開始前の環境準備
+- [x] 9.3 Phase 2開始前の環境準備
   - 環境変数ファイルの作成（.env.development）
-  - CDK Bootstrap実行
+  - CDK Bootstrap実行準備（ドキュメント化）
   - .gitignore更新（.env.*を追加）
   - _Requirements: 要件8.1（設定管理）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1-2時間_
+  - _完了: 2026-02-08, 環境変数ファイル作成、CDK Bootstrapガイド作成、.gitignore更新完了_
+  - _注意: CDK Bootstrap実行はPhase 2開始時に実施（タスク10.1以降）_
+  - _注意: .env.developmentの{account-id}を実際の値に置き換える必要あり_
 
 - [ ] 9.4 テスト環境の整備（Phase 2並行作業）
   - 依存関係の注入（DI）の導入

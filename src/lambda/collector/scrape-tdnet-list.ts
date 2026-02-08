@@ -94,8 +94,15 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
  *
  * @param date 日付（YYYY-MM-DD形式）
  * @throws ValidationError 日付フォーマットが不正な場合
+ *
+ * @remarks
+ * 以下のバリデーションを実施：
+ * 1. フォーマット検証（YYYY-MM-DD形式）
+ * 2. 存在する日付の検証（2024-02-30などを拒否）
+ * 3. 範囲検証（1970-01-01以降、現在+1日以内）
  */
 function validateDateFormat(date: string): void {
+  // 1. フォーマット検証
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
     throw new ValidationError(
@@ -103,11 +110,42 @@ function validateDateFormat(date: string): void {
     );
   }
 
-  // 日付の有効性チェック
+  // 2. 存在する日付の検証
   const dateObj = new Date(date);
   if (isNaN(dateObj.getTime())) {
     throw new ValidationError(
       `Invalid date: ${date}. Date does not exist.`
+    );
+  }
+
+  // 日付の各部分を抽出して検証
+  const [year, month, day] = date.split('-').map(Number);
+  const reconstructedDate = new Date(year, month - 1, day);
+  
+  // 日付が正規化されていないか確認（例: 2024-02-30 → 2024-03-02）
+  if (
+    reconstructedDate.getFullYear() !== year ||
+    reconstructedDate.getMonth() !== month - 1 ||
+    reconstructedDate.getDate() !== day
+  ) {
+    throw new ValidationError(
+      `Invalid date: ${date}. Date does not exist (e.g., February 30th).`
+    );
+  }
+
+  // 3. 範囲検証（1970-01-01以降、現在+1日以内）
+  const minDate = new Date('1970-01-01T00:00:00Z');
+  const maxDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 現在時刻+1日
+  
+  if (dateObj < minDate) {
+    throw new ValidationError(
+      `Date out of range: ${date}. Must be on or after 1970-01-01.`
+    );
+  }
+  
+  if (dateObj > maxDate) {
+    throw new ValidationError(
+      `Date out of range: ${date}. Must be within 1 day of current date.`
     );
   }
 }

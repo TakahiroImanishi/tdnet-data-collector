@@ -97,29 +97,177 @@ describe('scrapeTdnetList', () => {
   });
 
   describe('Validation', () => {
-    it('should reject invalid date format', async () => {
-      await expect(scrapeTdnetList('2024/01/15')).rejects.toThrow(ValidationError);
-      await expect(scrapeTdnetList('20240115')).rejects.toThrow(ValidationError);
-      await expect(scrapeTdnetList('2024-1-15')).rejects.toThrow(ValidationError);
-    });
-
-    it('should reject non-existent dates', async () => {
-      await expect(scrapeTdnetList('2024-02-30')).rejects.toThrow(ValidationError);
-      await expect(scrapeTdnetList('2024-13-01')).rejects.toThrow(ValidationError);
-    });
-
-    it('should accept valid date format', async () => {
-      mockAxios.get.mockResolvedValue({
-        data: '<html></html>',
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as any,
+    describe('Date Format Validation', () => {
+      it('should reject invalid date format - slash separator', async () => {
+        await expect(scrapeTdnetList('2024/01/15')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024/01/15')).rejects.toThrow('Expected YYYY-MM-DD format');
       });
-      mockParseDisclosureList.mockReturnValue([]);
 
-      await expect(scrapeTdnetList('2024-01-15')).resolves.not.toThrow();
-      await expect(scrapeTdnetList('2024-12-31')).resolves.not.toThrow();
+      it('should reject invalid date format - no separator', async () => {
+        await expect(scrapeTdnetList('20240115')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('20240115')).rejects.toThrow('Expected YYYY-MM-DD format');
+      });
+
+      it('should reject invalid date format - single digit month/day', async () => {
+        await expect(scrapeTdnetList('2024-1-15')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024-01-5')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024-1-5')).rejects.toThrow(ValidationError);
+      });
+
+      it('should reject invalid date format - extra characters', async () => {
+        await expect(scrapeTdnetList('2024-01-15T00:00:00')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024-01-15 ')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList(' 2024-01-15')).rejects.toThrow(ValidationError);
+      });
+    });
+
+    describe('Non-Existent Date Validation', () => {
+      it('should reject February 30th', async () => {
+        await expect(scrapeTdnetList('2024-02-30')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024-02-30')).rejects.toThrow('Date does not exist');
+      });
+
+      it('should reject February 29th in non-leap year', async () => {
+        await expect(scrapeTdnetList('2023-02-29')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2023-02-29')).rejects.toThrow('Date does not exist');
+      });
+
+      it('should accept February 29th in leap year', async () => {
+        mockAxios.get.mockResolvedValue({
+          data: '<html></html>',
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        });
+        mockParseDisclosureList.mockReturnValue([]);
+
+        await expect(scrapeTdnetList('2024-02-29')).resolves.not.toThrow();
+      });
+
+      it('should reject invalid month', async () => {
+        await expect(scrapeTdnetList('2024-13-01')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024-00-01')).rejects.toThrow(ValidationError);
+      });
+
+      it('should reject invalid day', async () => {
+        await expect(scrapeTdnetList('2024-01-32')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('2024-01-00')).rejects.toThrow(ValidationError);
+      });
+
+      it('should reject April 31st (30-day month)', async () => {
+        await expect(scrapeTdnetList('2024-04-31')).rejects.toThrow(ValidationError);
+      });
+
+      it('should reject June 31st (30-day month)', async () => {
+        await expect(scrapeTdnetList('2024-06-31')).rejects.toThrow(ValidationError);
+      });
+
+      it('should reject September 31st (30-day month)', async () => {
+        await expect(scrapeTdnetList('2024-09-31')).rejects.toThrow(ValidationError);
+      });
+
+      it('should reject November 31st (30-day month)', async () => {
+        await expect(scrapeTdnetList('2024-11-31')).rejects.toThrow(ValidationError);
+      });
+    });
+
+    describe('Date Range Validation', () => {
+      it('should reject dates before 1970-01-01', async () => {
+        await expect(scrapeTdnetList('1969-12-31')).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList('1969-12-31')).rejects.toThrow('Must be on or after 1970-01-01');
+      });
+
+      it('should accept 1970-01-01', async () => {
+        mockAxios.get.mockResolvedValue({
+          data: '<html></html>',
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        });
+        mockParseDisclosureList.mockReturnValue([]);
+
+        await expect(scrapeTdnetList('1970-01-01')).resolves.not.toThrow();
+      });
+
+      it('should reject dates more than 1 day in the future', async () => {
+        const futureDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+        const futureDateStr = futureDate.toISOString().split('T')[0];
+        
+        await expect(scrapeTdnetList(futureDateStr)).rejects.toThrow(ValidationError);
+        await expect(scrapeTdnetList(futureDateStr)).rejects.toThrow('Must be within 1 day of current date');
+      });
+
+      it('should accept today\'s date', async () => {
+        const today = new Date().toISOString().split('T')[0];
+        
+        mockAxios.get.mockResolvedValue({
+          data: '<html></html>',
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        });
+        mockParseDisclosureList.mockReturnValue([]);
+
+        await expect(scrapeTdnetList(today)).resolves.not.toThrow();
+      });
+
+      it('should accept tomorrow\'s date (within 1 day)', async () => {
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        
+        mockAxios.get.mockResolvedValue({
+          data: '<html></html>',
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        });
+        mockParseDisclosureList.mockReturnValue([]);
+
+        await expect(scrapeTdnetList(tomorrowStr)).resolves.not.toThrow();
+      });
+    });
+
+    describe('Valid Date Acceptance', () => {
+      beforeEach(() => {
+        mockAxios.get.mockResolvedValue({
+          data: '<html></html>',
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        });
+        mockParseDisclosureList.mockReturnValue([]);
+      });
+
+      it('should accept valid date format', async () => {
+        await expect(scrapeTdnetList('2024-01-15')).resolves.not.toThrow();
+        await expect(scrapeTdnetList('2024-12-31')).resolves.not.toThrow();
+      });
+
+      it('should accept first day of month', async () => {
+        await expect(scrapeTdnetList('2024-01-01')).resolves.not.toThrow();
+      });
+
+      it('should accept last day of 31-day month', async () => {
+        await expect(scrapeTdnetList('2024-01-31')).resolves.not.toThrow();
+        await expect(scrapeTdnetList('2024-03-31')).resolves.not.toThrow();
+        await expect(scrapeTdnetList('2024-05-31')).resolves.not.toThrow();
+      });
+
+      it('should accept last day of 30-day month', async () => {
+        await expect(scrapeTdnetList('2024-04-30')).resolves.not.toThrow();
+        await expect(scrapeTdnetList('2024-06-30')).resolves.not.toThrow();
+        await expect(scrapeTdnetList('2024-09-30')).resolves.not.toThrow();
+      });
+
+      it('should accept February 28th', async () => {
+        await expect(scrapeTdnetList('2024-02-28')).resolves.not.toThrow();
+        await expect(scrapeTdnetList('2023-02-28')).resolves.not.toThrow();
+      });
     });
   });
 
