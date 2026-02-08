@@ -1174,14 +1174,28 @@
   
   **ブランチカバレッジ80%未満のファイル（優先度順）:**
   
-  - [ ] **15.29-A: src/lambda/export/generate-signed-url.ts (40%)**
-    - 現状: 2/5ブランチ
-    - 不足: 3ブランチ
+  - [x] **15.29-A: src/lambda/export/generate-signed-url.ts (40% → 100%)**
+    - 現状: 2/5ブランチ → **5/5ブランチ** ✅
+    - 目標: 80%以上 → **100%達成**
     - テスト対象:
       - エラーハンドリング分岐（try-catch）
-      - 環境変数未設定時の分岐
+      - 環境変数未設定時の分岐（AWS_REGION, EXPORT_BUCKET_NAME）
       - S3クライアントエラー時の分岐
-    - 推定テストケース: 5件
+      - 非標準エラーオブジェクト（name/message/stackプロパティなし）
+      - null/undefinedエラー
+    - 実装修正:
+      - エラーオブジェクトのプロパティアクセスを安全化（Optional Chaining使用）
+      - `error?.name`, `error?.message`, `error?.stack` で安全にアクセス
+    - テストケース: 12件 → 19件（+7件）
+      - 非標準エラーオブジェクトのハンドリング: 6件追加
+      - 環境変数デフォルト値ブランチ: 1件追加
+    - カバレッジ結果:
+      - Statements: 100%
+      - Branches: 40% → **100%** (+60ポイント)
+      - Functions: 100%
+      - Lines: 100%
+    - _完了: 2026-02-08 22:03:35_
+    - _作業記録: work-log-20260208-220335-task15-29-a-generate-signed-url.md_
   
   - [x] **15.29-B: src/lambda/export/create-export-job.ts (50% → 100%)**
     - 現状: 3/6ブランチ → **6/6ブランチ** ✅
