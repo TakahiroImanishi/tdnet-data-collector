@@ -299,7 +299,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Collector Function
     const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
-      functionName: 'tdnet-collector',
+      functionName: `tdnet-collector-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collector'),
@@ -353,7 +353,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Query Function
     const queryFunction = new lambda.Function(this, 'QueryFunction', {
-      functionName: 'tdnet-query',
+      functionName: `tdnet-query-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/query'),
@@ -362,7 +362,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       environment: {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         S3_BUCKET_NAME: this.pdfsBucket.bucketName,
-        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定（セキュリティ修正）
         LOG_LEVEL: envConfig.query.logLevel,
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
@@ -407,7 +407,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Export Function
     const exportFunction = new lambda.Function(this, 'ExportFunction', {
-      functionName: 'tdnet-export',
+      functionName: `tdnet-export-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/export'),
@@ -417,7 +417,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
         EXPORT_BUCKET_NAME: this.exportsBucket.bucketName,
-        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定（セキュリティ修正）
         LOG_LEVEL: envConfig.export.logLevel,
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
@@ -467,7 +467,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 1. API Gateway REST API
     this.api = new apigateway.RestApi(this, 'TdnetApi', {
-      restApiName: 'tdnet-data-collector-api',
+      restApiName: `tdnet-data-collector-api-${this.deploymentEnvironment}`,
       description: 'TDnet Data Collector REST API',
       deployOptions: {
         stageName: 'prod',
@@ -495,7 +495,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // 2. API Key生成
     // Note: apiKeyValueは既にファイル先頭で初期化済み
     this.apiKey = new apigateway.ApiKey(this, 'TdnetApiKey', {
-      apiKeyName: 'tdnet-api-key',
+      apiKeyName: `tdnet-api-key-${this.deploymentEnvironment}`,
       description: 'API Key for TDnet Data Collector',
       enabled: true,
       value: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
@@ -503,7 +503,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 3. Usage Plan設定
     const usagePlan = this.api.addUsagePlan('TdnetUsagePlan', {
-      name: 'tdnet-usage-plan',
+      name: `tdnet-usage-plan-${this.deploymentEnvironment}`,
       description: 'Usage plan for TDnet Data Collector API',
       throttle: {
         rateLimit: 100, // リクエスト/秒
@@ -522,7 +522,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 4. AWS WAF Web ACL設定
     this.webAcl = new wafv2.CfnWebACL(this, 'TdnetWebAcl', {
-      name: 'tdnet-web-acl',
+      name: `tdnet-web-acl-${this.deploymentEnvironment}`,
       scope: 'REGIONAL', // API Gatewayは REGIONAL
       defaultAction: { allow: {} },
       description: 'Web ACL for TDnet Data Collector API',
@@ -772,7 +772,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Collect Function (POST /collect)
     const collectFunction = new lambda.Function(this, 'CollectFunction', {
-      functionName: 'tdnet-collect',
+      functionName: `tdnet-collect-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collect'),
@@ -780,6 +780,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       memorySize: envConfig.collect.memorySize,
       environment: {
         COLLECTOR_FUNCTION_NAME: collectorFunction.functionName,
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定（セキュリティ修正）
         LOG_LEVEL: envConfig.collect.logLevel,
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
@@ -789,6 +790,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // IAM権限の付与
     // Lambda Collectorを呼び出す権限
     collectorFunction.grantInvoke(collectFunction);
+
+    // Secrets Manager: APIキー読み取り権限
+    apiKeyValue.grantRead(collectFunction);
 
     // CloudWatch Metrics: カスタムメトリクス送信権限
     collectFunction.addToRolePolicy(
@@ -801,7 +805,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Collect Status Function (GET /collect/{execution_id})
     const collectStatusFunction = new lambda.Function(this, 'CollectStatusFunction', {
-      functionName: 'tdnet-collect-status',
+      functionName: `tdnet-collect-status-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/collect-status'),
@@ -966,7 +970,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda Export Status Function (GET /exports/{export_id})
     const exportStatusFunction = new lambda.Function(this, 'ExportStatusFunction', {
-      functionName: 'tdnet-export-status',
+      functionName: `tdnet-export-status-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/api/export-status'),
@@ -974,7 +978,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       memorySize: envConfig.exportStatus.memorySize,
       environment: {
         EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
-        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定（セキュリティ修正）
         LOG_LEVEL: envConfig.exportStatus.logLevel,
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
@@ -984,6 +988,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // IAM権限の付与
     // DynamoDB: exportStatusテーブルへの読み取り権限
     this.exportStatusTable.grantReadData(exportStatusFunction);
+
+    // Secrets Manager: APIキー読み取り権限
+    apiKeyValue.grantRead(exportStatusFunction);
 
     // CloudWatch Metrics: カスタムメトリクス送信権限
     exportStatusFunction.addToRolePolicy(
@@ -996,7 +1003,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // Lambda PDF Download Function (GET /disclosures/{disclosure_id}/pdf)
     const pdfDownloadFunction = new lambda.Function(this, 'PdfDownloadFunction', {
-      functionName: 'tdnet-pdf-download',
+      functionName: `tdnet-pdf-download-${this.deploymentEnvironment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('dist/src/lambda/api/pdf-download'),
@@ -1005,7 +1012,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       environment: {
         DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
         S3_BUCKET_NAME: this.pdfsBucket.bucketName,
-        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
+        API_KEY_SECRET_ARN: apiKeyValue.secretArn, // ARNのみを環境変数に設定（セキュリティ修正）
         LOG_LEVEL: envConfig.pdfDownload.logLevel,
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
@@ -1018,6 +1025,9 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // S3: PDFバケットへの読み取り権限（署名付きURL生成用）
     this.pdfsBucket.grantRead(pdfDownloadFunction);
+
+    // Secrets Manager: APIキー読み取り権限
+    apiKeyValue.grantRead(pdfDownloadFunction);
 
     // CloudWatch Metrics: カスタムメトリクス送信権限
     pdfDownloadFunction.addToRolePolicy(

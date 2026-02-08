@@ -366,6 +366,7 @@ function validateDateFormat(date: string, fieldName: string): void {
  * エラーハンドリング
  *
  * カスタムエラーを適切なHTTPステータスコードとエラーコードに変換します。
+ * API設計ガイドラインに準拠した形式でエラーレスポンスを返します。
  *
  * @param error エラーオブジェクト
  * @param requestId リクエストID
@@ -375,10 +376,15 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
   // エラー種別に応じたステータスコードとエラーコード
   let statusCode = 500;
   let errorCode = 'INTERNAL_ERROR';
+  let details: Record<string, any> = {};
 
   if (error instanceof ValidationError) {
     statusCode = 400;
     errorCode = 'VALIDATION_ERROR';
+    // ValidationErrorの詳細情報を含める
+    if ((error as any).details) {
+      details = (error as any).details;
+    }
   } else if (error instanceof NotFoundError) {
     statusCode = 404;
     errorCode = 'NOT_FOUND';
@@ -390,16 +396,20 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
     errorCode = 'UNAUTHORIZED';
   }
 
-  // センシティブ情報を除外したエラーレスポンス
+  // API設計ガイドラインに準拠したエラーレスポンス形式
   const errorResponse = {
-    error_code: errorCode,
-    message: error.message,
+    status: 'error',
+    error: {
+      code: errorCode,
+      message: error.message,
+      details,
+    },
     request_id: requestId,
   };
 
   // 本番環境ではスタックトレースを含めない
   if (process.env.NODE_ENV !== 'production') {
-    (errorResponse as any).stack = error.stack;
+    (errorResponse.error as any).stack = error.stack;
   }
 
   return {

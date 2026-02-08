@@ -88,6 +88,7 @@ describe('Lambda Query Handler', () => {
     };
 
     // 環境変数設定
+    process.env.TEST_ENV = 'e2e'; // テスト環境として設定
     process.env.API_KEY = 'test-api-key';
     process.env.DYNAMODB_TABLE_NAME = 'tdnet_disclosures';
     process.env.S3_BUCKET_NAME = 'tdnet-pdfs';
@@ -140,8 +141,10 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('UNAUTHORIZED');
-      expect(body.message).toContain('API key is required');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('API key is required');
+      expect(body.request_id).toBe('test-request-id');
     });
 
     it('無効なAPIキーの場合は401エラー', async () => {
@@ -153,8 +156,10 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('UNAUTHORIZED');
-      expect(body.message).toContain('Invalid API key');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('Invalid API key');
+      expect(body.request_id).toBe('test-request-id');
     });
   });
 
@@ -216,8 +221,10 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid company_code');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid company_code');
+      expect(body.request_id).toBe('test-request-id');
     });
 
     it('不正な日付形式でバリデーションエラー', async () => {
@@ -229,21 +236,25 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid start_date format');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid start_date format');
+      expect(body.request_id).toBe('test-request-id');
     });
 
     it('存在しない日付でバリデーションエラー', async () => {
       mockEvent.queryStringParameters = {
-        start_date: '2024-02-30', // 存在しない日付
+        start_date: '2024-13-01', // 存在しない月
       };
 
       const result = await handler(mockEvent, mockContext);
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Date does not exist');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Date does not exist');
+      expect(body.request_id).toBe('test-request-id');
     });
 
     it('開始日が終了日より後の場合はバリデーションエラー（Property 8）', async () => {
@@ -256,10 +267,12 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('start_date');
-      expect(body.message).toContain('must be before or equal to');
-      expect(body.message).toContain('end_date');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('start_date');
+      expect(body.error.message).toContain('must be before or equal to');
+      expect(body.error.message).toContain('end_date');
+      expect(body.request_id).toBe('test-request-id');
     });
 
     it('limitのバリデーション（範囲内）', async () => {
@@ -294,8 +307,10 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid limit');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid limit');
+      expect(body.request_id).toBe('test-request-id');
     });
 
     it('offsetのバリデーション', async () => {
@@ -330,8 +345,10 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid offset');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid offset');
+      expect(body.request_id).toBe('test-request-id');
     });
   });
 
@@ -422,8 +439,10 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('VALIDATION_ERROR');
-      expect(body.message).toContain('Invalid format');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid format');
+      expect(body.request_id).toBe('test-request-id');
     });
   });
 
@@ -462,7 +481,9 @@ describe('Lambda Query Handler', () => {
 
       expect(result.statusCode).toBe(500);
       const body = JSON.parse(result.body);
-      expect(body.error_code).toBe('INTERNAL_ERROR');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toBe('Internal error');
       expect(body.request_id).toBe('test-request-id');
     });
 
@@ -476,7 +497,7 @@ describe('Lambda Query Handler', () => {
       const result = await handler(mockEvent, mockContext);
 
       const body = JSON.parse(result.body);
-      expect(body.stack).toBeUndefined();
+      expect(body.error.stack).toBeUndefined();
 
       delete process.env.NODE_ENV;
     });
