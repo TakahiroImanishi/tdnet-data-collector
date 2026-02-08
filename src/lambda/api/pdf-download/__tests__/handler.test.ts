@@ -407,4 +407,115 @@ describe('Lambda PDF Download Handler', () => {
       });
     });
   });
+
+  describe('エッジケース', () => {
+    it('X-Api-Key（大文字）ヘッダーでも認証できる', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'X-Api-Key': 'test-api-key', // 大文字
+        },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          disclosure_id: { S: '20240115_7203_001' },
+          company_code: { S: '7203' },
+          company_name: { S: 'トヨタ自動車株式会社' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+        },
+      });
+
+      s3Mock.on(HeadObjectCommand).resolves({});
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+    });
+
+    it('queryStringParametersがnullの場合でもデフォルト有効期限を使用する', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        queryStringParameters: null, // null
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          disclosure_id: { S: '20240115_7203_001' },
+          company_code: { S: '7203' },
+          company_name: { S: 'トヨタ自動車株式会社' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+        },
+      });
+
+      s3Mock.on(HeadObjectCommand).resolves({});
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+    });
+
+    it('S3エラー（404以外）の場合は再試行後にエラーを返す', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          disclosure_id: { S: '20240115_7203_001' },
+          company_code: { S: '7203' },
+          company_name: { S: 'トヨタ自動車株式会社' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+        },
+      });
+
+      const serviceError: any = new Error('ServiceUnavailable');
+      serviceError.name = 'ServiceUnavailable';
+      serviceError.$metadata = { httpStatusCode: 503 };
+      s3Mock.on(HeadObjectCommand).rejects(serviceError);
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+    });
+
+    it('pathParametersがnullの場合は400エラーを返す', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: null, // null
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
 });

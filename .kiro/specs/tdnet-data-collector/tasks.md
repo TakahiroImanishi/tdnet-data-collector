@@ -1541,11 +1541,13 @@
   - _関連: work-log-20260208-214728-task19-1-phase3-verification.md_
   
   **失敗テスト一覧（11件）:**
-  - [ ] 19.2.1 `dashboard/src/components/__tests__/ExportDialog.test.tsx` - 3件失敗
+  - [x] 19.2.1 `dashboard/src/components/__tests__/ExportDialog.test.tsx` - 3件失敗
     - エクスポートジョブ作成とポーリング開始
     - エクスポート完了時のダウンロードリンク表示
     - エクスポート失敗時のエラーメッセージ表示
     - 問題: `act()`ラッピング不足、タイマーモック問題
+    - _完了: 2026-02-08 22:33, 全8テスト成功、act()ラッピング追加、タイムアウト設定修正_
+    - _作業記録: work-log-20260208-223316-task19-2-1-export-dialog-test.md_
   - [ ] 19.2.2 `dashboard/src/App.test.tsx` - 1件失敗
     - "learn react"テキスト検索失敗
     - 問題: テストが実際のアプリ構造と不一致
