@@ -109,7 +109,7 @@ export class CloudWatchAlarms extends Construct {
       this.alarms.push(errorRateAlarm);
 
       // 2. Lambda Duration アラーム（Warning）
-      const durationAlarm = new cloudwatch.Alarm(this, `${functionName}-DurationAlarm`, {
+      const durationAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}DurationAlarm`, {
         alarmName: `${functionName}-duration-${props.environment}`,
         alarmDescription: `Lambda関数 ${functionName} の実行時間が ${durationThreshold} 秒を超えました`,
         metric: lambdaFunction.metricDuration({
@@ -126,7 +126,7 @@ export class CloudWatchAlarms extends Construct {
       this.alarms.push(durationAlarm);
 
       // 3. Lambda Throttles アラーム（Critical）
-      const throttleAlarm = new cloudwatch.Alarm(this, `${functionName}-ThrottleAlarm`, {
+      const throttleAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleAlarm`, {
         alarmName: `${functionName}-throttles-${props.environment}`,
         alarmDescription: `Lambda関数 ${functionName} でスロットリングが発生しました`,
         metric: lambdaFunction.metricThrottles({
@@ -141,7 +141,7 @@ export class CloudWatchAlarms extends Construct {
 
       throttleAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(throttleAlarm);
-    }
+    });
 
     // ========================================
     // カスタムメトリクスのアラーム

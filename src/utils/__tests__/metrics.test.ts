@@ -13,6 +13,9 @@ import {
   sendSuccessMetric,
   sendExecutionTimeMetric,
   sendBatchResultMetrics,
+  sendDisclosuresCollectedMetric,
+  sendDisclosuresFailedMetric,
+  sendCollectionSuccessRateMetric,
 } from '../metrics';
 import { ValidationError, RetryableError } from '../../errors';
 

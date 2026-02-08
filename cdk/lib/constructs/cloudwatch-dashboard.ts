@@ -232,3 +232,298 @@ export class CloudWatchDashboard extends Construct {
         period: cdk.Duration.minutes(5),
       })
     );
+
+    // DynamoDB Errors
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'DynamoDB Errors',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'UserErrors',
+            dimensionsMap: { TableName: dynamodbTables.disclosures.tableName },
+            statistic: 'Sum',
+            label: 'Disclosures UserErrors',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'SystemErrors',
+            dimensionsMap: { TableName: dynamodbTables.disclosures.tableName },
+            statistic: 'Sum',
+            label: 'Disclosures SystemErrors',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'UserErrors',
+            dimensionsMap: { TableName: dynamodbTables.executions.tableName },
+            statistic: 'Sum',
+            label: 'Executions UserErrors',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'SystemErrors',
+            dimensionsMap: { TableName: dynamodbTables.executions.tableName },
+            statistic: 'Sum',
+            label: 'Executions SystemErrors',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
+
+    // DynamoDB Throttles
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'DynamoDB Throttled Requests',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'ThrottledRequests',
+            dimensionsMap: { TableName: dynamodbTables.disclosures.tableName },
+            statistic: 'Sum',
+            label: 'Disclosures',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'ThrottledRequests',
+            dimensionsMap: { TableName: dynamodbTables.executions.tableName },
+            statistic: 'Sum',
+            label: 'Executions',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'ThrottledRequests',
+            dimensionsMap: { TableName: dynamodbTables.exportStatus.tableName },
+            statistic: 'Sum',
+            label: 'ExportStatus',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
+  }
+
+  /**
+   * ビジネスメトリクスウィジェットを追加
+   */
+  private addBusinessMetricsWidgets(props: CloudWatchDashboardProps): void {
+    const { environment } = props;
+
+    // 日次収集件数
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Disclosures Collected (Daily)',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'TDnet/Collector',
+            metricName: 'DisclosuresCollected',
+            dimensionsMap: { Environment: environment },
+            statistic: 'Sum',
+            period: cdk.Duration.hours(1),
+          }),
+        ],
+        width: 12,
+      })
+    );
+
+    // 収集失敗件数
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Disclosures Failed',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'TDnet/Collector',
+            metricName: 'DisclosuresFailed',
+            dimensionsMap: { Environment: environment },
+            statistic: 'Sum',
+            period: cdk.Duration.hours(1),
+          }),
+        ],
+        width: 12,
+      })
+    );
+
+    // 収集成功率
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Collection Success Rate (%)',
+        left: [
+          new cloudwatch.MathExpression({
+            expression: '(collected / (collected + failed)) * 100',
+            usingMetrics: {
+              collected: new cloudwatch.Metric({
+                namespace: 'TDnet/Collector',
+                metricName: 'DisclosuresCollected',
+                dimensionsMap: { Environment: environment },
+                statistic: 'Sum',
+              }),
+              failed: new cloudwatch.Metric({
+                namespace: 'TDnet/Collector',
+                metricName: 'DisclosuresFailed',
+                dimensionsMap: { Environment: environment },
+                statistic: 'Sum',
+              }),
+            },
+            label: 'Success Rate',
+            period: cdk.Duration.hours(1),
+          }),
+        ],
+        width: 12,
+        leftYAxis: {
+          min: 0,
+          max: 100,
+        },
+      })
+    );
+  }
+
+  /**
+   * API Gatewayメトリクスウィジェットを追加
+   */
+  private addApiGatewayMetricsWidgets(props: CloudWatchDashboardProps): void {
+    const { apiGateway } = props;
+
+    // API Gateway Requests
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'API Gateway Requests',
+        left: [
+          apiGateway.metricCount({ label: 'Total Requests' }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+        statistic: 'Sum',
+      })
+    );
+
+    // API Gateway Errors
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'API Gateway Errors',
+        left: [
+          apiGateway.metricClientError({ label: '4XX Errors' }),
+          apiGateway.metricServerError({ label: '5XX Errors' }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+        statistic: 'Sum',
+      })
+    );
+
+    // API Gateway Latency
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'API Gateway Latency (ms)',
+        left: [
+          apiGateway.metricLatency({ label: 'Latency', statistic: 'Average' }),
+          apiGateway.metricIntegrationLatency({ label: 'Integration Latency', statistic: 'Average' }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
+  }
+
+  /**
+   * S3ストレージメトリクスウィジェットを追加
+   */
+  private addS3MetricsWidgets(props: CloudWatchDashboardProps): void {
+    const { s3Buckets } = props;
+
+    // S3 Bucket Size
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'S3 Bucket Size (Bytes)',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/S3',
+            metricName: 'BucketSizeBytes',
+            dimensionsMap: {
+              BucketName: s3Buckets.pdfs.bucketName,
+              StorageType: 'StandardStorage',
+            },
+            statistic: 'Average',
+            period: cdk.Duration.days(1),
+            label: 'PDFs Bucket',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/S3',
+            metricName: 'BucketSizeBytes',
+            dimensionsMap: {
+              BucketName: s3Buckets.exports.bucketName,
+              StorageType: 'StandardStorage',
+            },
+            statistic: 'Average',
+            period: cdk.Duration.days(1),
+            label: 'Exports Bucket',
+          }),
+        ],
+        width: 12,
+      })
+    );
+
+    // S3 Number of Objects
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'S3 Number of Objects',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/S3',
+            metricName: 'NumberOfObjects',
+            dimensionsMap: {
+              BucketName: s3Buckets.pdfs.bucketName,
+              StorageType: 'AllStorageTypes',
+            },
+            statistic: 'Average',
+            period: cdk.Duration.days(1),
+            label: 'PDFs Bucket',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/S3',
+            metricName: 'NumberOfObjects',
+            dimensionsMap: {
+              BucketName: s3Buckets.exports.bucketName,
+              StorageType: 'AllStorageTypes',
+            },
+            statistic: 'Average',
+            period: cdk.Duration.days(1),
+            label: 'Exports Bucket',
+          }),
+        ],
+        width: 12,
+      })
+    );
+
+    // S3 Requests
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'S3 Requests',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/S3',
+            metricName: 'AllRequests',
+            dimensionsMap: {
+              BucketName: s3Buckets.pdfs.bucketName,
+            },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+            label: 'PDFs Bucket',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/S3',
+            metricName: 'AllRequests',
+            dimensionsMap: {
+              BucketName: s3Buckets.exports.bucketName,
+            },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+            label: 'Exports Bucket',
+          }),
+        ],
+        width: 12,
+      })
+    );
+  }
+}

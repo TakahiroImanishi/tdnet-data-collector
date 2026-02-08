@@ -1169,10 +1169,13 @@
 
 ### 16. CloudWatch監視設定
 
-- [ ] 16.1 CloudWatch Logsの設定
+- [x] 16.1 CloudWatch Logsの設定
   - ログ保持期間設定（本番: 3ヶ月、開発: 1週間）
   - ログストリーム設定
   - _Requirements: 要件6.3（ロギング）_
+  - _完了: 2026-02-08 21:00_
+  - _成果物: CloudWatch Logs Construct実装、テスト9件合格_
+  - _作業記録: work-log-20260208-204441-task16-1-cloudwatch-logs-setup.md_
 
 - [ ] 16.2 カスタムメトリクスの実装
   - DisclosuresCollected（日次収集件数）
