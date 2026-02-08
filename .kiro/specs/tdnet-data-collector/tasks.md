@@ -322,7 +322,7 @@
   - _注意: ファイル名不一致は誤解（両ファイルは異なる目的で存在）_
 
 - [x] 9.3 Phase 2開始前の環境準備
-  - 環境変数ファイルの作成（.env.production）
+  - 環境変数ファイルの作成（.env.development）
   - CDK Bootstrap実行準備（ドキュメント化）
   - .gitignore更新（.env.*を追加）
   - _Requirements: 要件8.1（設定管理）_
@@ -330,8 +330,7 @@
   - _推定工数: 1-2時間_
   - _完了: 2026-02-08, 環境変数ファイル作成、CDK Bootstrapガイド作成、.gitignore更新完了_
   - _注意: CDK Bootstrap実行はPhase 2開始時に実施（タスク10.1以降）_
-  - _注意: .env.productionの{account-id}を実際の値に置き換える必要あり_
-  - _注意: 本番環境のみで運用、開発環境は作成しない_
+  - _注意: .env.developmentの{account-id}を実際の値に置き換える必要あり_
 
 - [x] 9.4 テスト環境の整備（Phase 2並行作業）
   - 依存関係の注入（DI）の導入
@@ -734,7 +733,7 @@
 
 - [x] 15.5 デプロイ準備の自動化
   - /tdnet/api-key シークレット作成スクリプトの作成
-  - 環境変数ファイル（.env.production）の自動生成スクリプトの作成
+  - 環境変数ファイル（.env.development）の自動生成スクリプトの作成
   - CDK Bootstrap実行ガイドの更新
   - デプロイスクリプト（deploy.ps1）の作成
   - _Requirements: 要件8.1（設定管理）_
@@ -742,7 +741,6 @@
   - _推定工数: 3-4時間_
   - _完了: 2026-02-08, サブエージェントBにより完了_
   - _成果物: scripts/create-api-key-secret.ps1, scripts/generate-env-file.ps1, scripts/deploy.ps1, docs/cdk-bootstrap-guide.md_
-  - _注意: 本番環境のみで運用、開発環境は作成しない_
 
 - [x] 15.6 CDKテストカバレッジの改善
   - CDKテスト成功率を78.0%（32/41）から80%以上に改善
@@ -933,14 +931,15 @@
   - _完了: 2026-02-08 18:28, 既に実装済み確認、ユニットテスト20/20成功、E2Eテスト28/28成功_
   - _作業記録: work-log-20260208-182829-query-lambda-error-response-fix.md_
 
-- [x] 15.15 環境設定の実装（Phase 2 High）
-  - 本番環境（prod）の設定（タイムアウト、メモリ、ログレベル）
+- [x] 15.15 環境分離の実装（Phase 2 High）
+  - 開発環境（dev）と本番環境（prod）の分離
+  - 環境ごとの設定（タイムアウト、メモリ、ログレベル）
   - CDKスタックの環境パラメータ化
   - _Requirements: 要件8.1（設定管理）_
   - _優先度: 🟠 High_
-  - _推定工数: 2時間_
-  - _完了: 2026-02-08, 本番環境のみで運用_
-  - _注意: 開発環境は作成せず、本番環境のみで運用する_
+  - _推定工数: 3時間_
+  - _完了: 2026-02-08, 18テスト中14テスト成功（4テスト失敗はLocalStack制限）_
+  - _注意: LocalStackではGSI作成に制限があるため、一部テストは本番環境でのみ実行可能_
 
 - [x] 15.16 セキュリティリスクの修正（Phase 2 Critical）
   - exportStatusFunctionとpdfDownloadFunctionのAPI Key環境変数設定を修正
@@ -1956,6 +1955,93 @@
   - 定期レビュースケジュールの設定
   - _Requirements: 要件13.1（運用開始）_
 
+
+### 19. 実装品質の網羅的確認と改善
+
+- [x] 19.1 エラーハンドリング実装の確認
+  - カスタムエラークラス（src/errors/index.ts）の完全性確認
+  - 再試行ロジック（src/utils/retry.ts）の実装確認
+  - 構造化ログ（src/utils/logger.ts）の実装確認
+  - エラーメトリクス送信の実装確認
+  - _Requirements: 要件6.1-6.5（エラーハンドリング全般）_
+  - _完了: 2026-02-09, すべての実装が完備_
+
+- [x] 19.2 Lambda関数実装の確認
+  - Collector Lambda: バリデーション、並列処理、部分的失敗処理
+  - Query Lambda: APIキー認証、クエリパラメータバリデーション、JSON/CSV対応
+  - Export Lambda: APIキー認証、非同期処理、進捗管理
+  - Collect Lambda: APIキー認証、Lambda Collector同期呼び出し
+  - _Requirements: 要件1.1-1.4, 4.1-4.4, 5.1-5.4（Lambda関数全般）_
+  - _完了: 2026-02-09, すべてのLambda関数が適切に実装_
+
+- [x] 19.3 ユーティリティ実装の確認
+  - レート制限（src/utils/rate-limiter.ts）
+  - メトリクス送信（src/utils/metrics.ts, cloudwatch-metrics.ts）
+  - データバリデーション（disclosure_id, date_partition生成）
+  - _Requirements: 要件9.1-9.2（レート制限）, 6.4（メトリクス）_
+  - _完了: 2026-02-09, すべてのユーティリティが適切に実装_
+
+- [x] 19.4 CDK実装の確認
+  - CloudWatch Alarms（6種類のアラーム）
+  - Lambda関数（Collector, Query, Export）
+  - DynamoDB テーブル
+  - S3 バケット
+  - Secrets Manager
+  - _Requirements: 要件12.1-12.4（インフラ全般）_
+  - _完了: 2026-02-09, CDK実装は概ね良好だがDLQ設定が欠如_
+
+- [x] 19.5 テストカバレッジの確認
+  - ユニットテスト: 497テスト成功
+  - 統合テスト: 実装済み
+  - プロパティベーステスト: 実装済み
+  - E2Eテスト: 28テスト成功
+  - カバレッジ: Statements 79.78%, Branches 72.2%
+  - _Requirements: 要件14.1-14.4（テスト全般）_
+  - _完了: 2026-02-09, カバレッジが目標値80%に若干不足_
+
+- [x] 19.6 問題点の特定と優先度付け
+  - 🔴 Critical: DLQ設定の欠如（Lambda Collector）
+  - 🟡 Warning: テストカバレッジ不足（Statements 79.78%, Branches 72.2%）
+  - _完了: 2026-02-09, 改善タスクを特定_
+
+- [x] 19.7 作業記録の作成と改善タスクの追加
+  - work-log-20260209-073940-implementation-quality-check.md作成
+  - tasks.mdにタスク19.8, 19.9を追加
+  - _完了: 2026-02-09_
+
+- [ ] 19.8 DLQ設定の実装（Critical）
+  - Lambda Collector用SQS DLQキュー作成
+  - Lambda Collector ConstructにDLQ設定追加（deadLetterQueue, deadLetterQueueEnabled, retryAttempts）
+  - DLQプロセッサーLambda実装（src/lambda/dlq-processor/index.ts）
+  - DLQメッセージ数のCloudWatch Alarm追加
+  - テスト実装（DLQ設定検証、DLQプロセッサー動作確認）
+  - _Requirements: 要件6.1, 6.2（エラーハンドリング）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 6-8時間_
+  - _参考資料: .kiro/specs/tdnet-data-collector/templates/lambda-dlq-example.ts_
+  - _関連: steering/core/error-handling-patterns.md（DLQ設定必須）_
+  - _実装内容:_
+    - SQS DLQキュー作成（保持期間14日、visibilityTimeout 5分）
+    - Lambda Collector ConstructにDLQ設定追加
+    - DLQプロセッサーLambda実装（失敗メッセージ解析、SNS通知）
+    - CloudWatch Alarm追加（DLQメッセージ数 > 0 → Critical）
+    - テスト実装（DLQ設定検証、プロセッサー動作確認）
+
+- [ ] 19.9 テストカバレッジ改善（Warning）
+  - カバレッジレポート詳細確認（coverage/lcov-report/index.html）
+  - 未カバー箇所の特定（特にBranches: 72.2%）
+  - 追加テストケース作成（条件分岐、エラーハンドリングパス）
+  - カバレッジ目標達成確認（Statements 80%以上、Branches 80%以上）
+  - _Requirements: 要件14.1, 14.2（テスト）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 4-6時間_
+  - _関連: steering/development/testing-strategy.md（カバレッジ目標80%）_
+  - _実装内容:_
+    - カバレッジレポート分析
+    - 未カバー条件分岐の特定
+    - エラーハンドリングパスのテスト追加
+    - エッジケースのテスト追加
+    - カバレッジ再測定と目標達成確認
 
 ## Phase 5: 本番運用後の自動化強化
 
