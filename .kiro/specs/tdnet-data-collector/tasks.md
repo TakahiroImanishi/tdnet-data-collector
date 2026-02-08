@@ -820,6 +820,9 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 1-2時間_
   - _前提条件: タスク15.11完了_
+  - _状態: ブロック中 - Docker環境が利用不可_
+  - _注意: Docker Desktop/Docker Engineのインストールが必須。代替案: AWS開発環境へのデプロイ_
+  - _作業記録: work-log-20260208-122408-e2e-test-execution.md_
 
 - [ ] 15.13 CI/CD統合の準備
   - GitHub ActionsでのLocalStack統合
