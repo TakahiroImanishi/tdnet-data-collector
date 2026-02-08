@@ -919,7 +919,245 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       ],
     });
 
+    // ========================================
+    // Phase 2: Export Status & PDF Download Lambda Functions
+    // ========================================
+
+    // Lambda Export Status Function (GET /exports/{export_id})
+    const exportStatusFunction = new lambda.Function(this, 'ExportStatusFunction', {
+      functionName: 'tdnet-export-status',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/src/lambda/api/export-status'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        EXPORT_STATUS_TABLE_NAME: this.exportStatusTable.tableName,
+        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
+        AWS_REGION: this.region,
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+    });
+
+    // IAM権限の付与
+    // DynamoDB: exportStatusテーブルへの読み取り権限
+    this.exportStatusTable.grantReadData(exportStatusFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    exportStatusFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // Lambda PDF Download Function (GET /disclosures/{disclosure_id}/pdf)
+    const pdfDownloadFunction = new lambda.Function(this, 'PdfDownloadFunction', {
+      functionName: 'tdnet-pdf-download',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('dist/src/lambda/api/pdf-download'),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        DYNAMODB_TABLE_NAME: this.disclosuresTable.tableName,
+        S3_BUCKET_NAME: this.pdfsBucket.bucketName,
+        API_KEY: apiKeyValue.secretValue.unsafeUnwrap(),
+        AWS_REGION: this.region,
+        LOG_LEVEL: 'info',
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+    });
+
+    // IAM権限の付与
+    // DynamoDB: disclosuresテーブルへの読み取り権限
+    this.disclosuresTable.grantReadData(pdfDownloadFunction);
+
+    // S3: PDFバケットへの読み取り権限（署名付きURL生成用）
+    this.pdfsBucket.grantRead(pdfDownloadFunction);
+
+    // CloudWatch Metrics: カスタムメトリクス送信権限
+    pdfDownloadFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+      })
+    );
+
+    // ========================================
+    // Phase 2: Export Status & PDF Download API Gateway Integrations
+    // ========================================
+
+    // 1. GET /exports/{export_id} エンドポイント
+    const exportIdResource = exportsResource.addResource('{export_id}');
+
+    const exportStatusIntegration = new apigateway.LambdaIntegration(exportStatusFunction, {
+      proxy: true,
+      integrationResponses: [
+        {
+          statusCode: '200', // Success
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '400', // Bad Request
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '401', // Unauthorized
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '404', // Not Found
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '500', // Internal Server Error
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+      ],
+    });
+
+    exportIdResource.addMethod('GET', exportStatusIntegration, {
+      apiKeyRequired: true, // APIキー認証必須
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
+    // 2. GET /disclosures/{disclosure_id}/pdf エンドポイント
+    const disclosureIdResource = disclosuresResource.addResource('{disclosure_id}');
+    const pdfResource = disclosureIdResource.addResource('pdf');
+
+    const pdfDownloadIntegration = new apigateway.LambdaIntegration(pdfDownloadFunction, {
+      proxy: true,
+      integrationResponses: [
+        {
+          statusCode: '200', // Success
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '400', // Bad Request
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '401', // Unauthorized
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '404', // Not Found
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+        {
+          statusCode: '500', // Internal Server Error
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        },
+      ],
+    });
+
+    pdfResource.addMethod('GET', pdfDownloadIntegration, {
+      apiKeyRequired: true, // APIキー認証必須
+      requestParameters: {
+        'method.request.querystring.expiration': false,
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '400',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '401',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '404',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+        {
+          statusCode: '500',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
+
     // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'ExportStatusFunctionName', {
+      value: exportStatusFunction.functionName,
+      description: 'Lambda Export Status function name',
+      exportName: 'TdnetExportStatusFunctionName',
+    });
+
+    new cdk.CfnOutput(this, 'PdfDownloadFunctionName', {
+      value: pdfDownloadFunction.functionName,
+      description: 'Lambda PDF Download function name',
+      exportName: 'TdnetPdfDownloadFunctionName',
+    });
+
     new cdk.CfnOutput(this, 'CollectFunctionName', {
       value: collectFunction.functionName,
       description: 'Lambda Collect function name',

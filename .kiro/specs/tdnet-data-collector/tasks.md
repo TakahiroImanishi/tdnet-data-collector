@@ -615,16 +615,19 @@
 
 ### 13. APIエンドポイント実装
 
-- [ ] 13.1 POST /collect エンドポイントの実装
+- [x] 13.1 POST /collect エンドポイントの実装
   - Lambda Collectorを呼び出し
   - リクエストボディのバリデーション（start_date、end_date）
   - レスポンス形式の統一
   - _Requirements: 要件4.1（オンデマンド収集）_
+  - _完了: 2026-02-08, 11テスト成功（バリデーション、Lambda呼び出し、エラーハンドリング）_
+  - _注意: execution_idの不一致問題あり（POST /collectとLambda Collectorで異なるIDを生成）_
 
-- [ ] 13.2 GET /collect/{execution_id} エンドポイントの実装
+- [x] 13.2 GET /collect/{execution_id} エンドポイントの実装
   - 実行状態をDynamoDBから取得
   - レスポンス形式の統一
   - _Requirements: 要件6.1（実行状態確認）_
+  - _完了: 2026-02-08, 6テスト成功（正常系、バリデーション、NotFound、DynamoDBエラー）_
 
 - [x] 13.3 GET /disclosures エンドポイントの実装
   - Lambda Queryを呼び出し
