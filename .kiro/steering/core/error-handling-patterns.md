@@ -1,18 +1,14 @@
 # エラーハンドリングパターン
 
-エラーハンドリングの基本原則。詳細実装: `../development/error-handling-implementation.md`, APIエラーコード: `../api/error-codes.md`
-
 ## エラー分類
 
 | 分類 | 対応 | 例 |
 |------|------|-----|
-| **Retryable** | 再試行 | ネットワークエラー(ECONNRESET, ETIMEDOUT), 5xxエラー, AWS ThrottlingException, 429 Too Many Requests |
-| **Non-Retryable** | 即座に失敗 | 401/403認証エラー, 404 Not Found, 400バリデーションエラー, 設定エラー, データ整合性エラー |
+| **Retryable** | 再試行 | ECONNRESET, ETIMEDOUT, 5xx, ThrottlingException, 429 |
+| **Non-Retryable** | 即座に失敗 | 401/403, 404, 400, 設定エラー, データ整合性エラー |
 | **Partial Failure** | 成功分コミット、失敗分記録 | バッチ処理で一部失敗 |
 
 ## 再試行戦略
-
-指数バックオフを使用:
 
 ```typescript
 import { retryWithBackoff } from '../utils/retry';
@@ -21,8 +17,6 @@ await retryWithBackoff(async () => await operation(), {
     maxRetries: 3, initialDelay: 2000, backoffMultiplier: 2, jitter: true
 });
 ```
-
-**完全な実装:** `../development/error-handling-implementation.md` を参照
 
 ## ログ構造
 
@@ -37,22 +31,13 @@ logger.error('Operation failed', {
 });
 ```
 
-**ロガー実装:** `../development/error-handling-implementation.md` を参照
-
-## ベストプラクティス
-
-1. **エラー伝播**: カスタムエラークラス使用（RetryableError, ValidationError, NotFoundError等）
-   - **実装:** `src/errors/index.ts` を参照
-2. **Graceful Degradation**: バッチ処理で個別失敗を記録して継続
-3. **構造化ログ**: error_type, error_message, context, stack_traceを含む
-
-## 実装チェックリスト
+## 必須実装
 
 - [ ] エラー分類（Retryable/Non-Retryable/Partial Failure）
 - [ ] 指数バックオフ再試行（`retryWithBackoff`）
-- [ ] 構造化ログ
-- [ ] カスタムエラークラス
+- [ ] 構造化ログ（error_type, error_message, context, stack_trace）
+- [ ] カスタムエラークラス（`src/errors/index.ts`）
 - [ ] CloudWatchメトリクス（Lambda）
 - [ ] 部分的失敗処理（バッチ）
-
-詳細: `../development/error-handling-implementation.md`, `../api/error-codes.md`, `../api/api-design-guidelines.md`, `../infrastructure/monitoring-alerts.md`
+- [ ] DLQ設定（SQS/Lambda）
+- [ ] CloudWatch Alarms（エラー率、DLQメッセージ数）

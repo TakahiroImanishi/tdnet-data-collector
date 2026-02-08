@@ -6,22 +6,31 @@ TDnetから上場企業の開示情報を自動収集するAWSサーバーレス
 
 Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWatch | WAF
 
-## 実装原則
+## 必須実装ルール
 
-### 1. コスト最適化最優先
-AWS無料枠を最大活用。詳細: `../infrastructure/performance-optimization.md`
+### 1. コスト最適化
+- AWS無料枠内で運用（Lambda 100万リクエスト/月、DynamoDB 25GB、S3 5GB）
+- Lambda: メモリ128-512MB、タイムアウト最小化
+- DynamoDB: オンデマンド課金、GSI最小限
 
-### 2. エラーハンドリング徹底
-外部API呼び出しに再試行ロジック実装、部分的失敗を許容。詳細: `error-handling-patterns.md`, `../development/error-handling-implementation.md`
+### 2. エラーハンドリング
+- 外部API: 指数バックオフ再試行（`retryWithBackoff`）
+- バッチ処理: 部分的失敗を許容、失敗分をDLQへ
+- 構造化ログ: error_type, error_message, context, stack_trace
 
-### 3. レート制限遵守
-TDnetへのリクエスト間隔を適切に制御。詳細: `../development/tdnet-scraping-patterns.md`
+### 3. レート制限
+- TDnet: 1リクエスト/秒（`RateLimiter`使用）
+- 並列実行: 最大5並列
 
-### 4. データ整合性保証
-重複チェックとデータ検証を徹底。詳細: `../development/data-validation.md`
+### 4. データ整合性
+- disclosure_id: 一意性保証（`generateDisclosureId`）
+- date_partition: YYYY-MM形式、JST基準（`generateDatePartition`）
+- バリデーション: Zod使用、必須フィールド検証
 
-### 5. date_partition活用
-DynamoDB GSIで`date_partition`（YYYY-MM形式）を使用し月単位クエリを高速化。JST基準で`disclosed_at`から自動生成。詳細: `../development/data-validation.md`
+### 5. DynamoDB設計
+- PK: `disclosure_id`
+- GSI: `date_partition` + `disclosed_at`（月単位クエリ高速化）
+- TTL: 不要データ自動削除
 
 ## 関連ドキュメント
 

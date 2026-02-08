@@ -1,54 +1,101 @@
 # TDnet Data Collector - Steering Files
 
-このディレクトリには、TDnet Data Collectorプロジェクトの実装ガイドライン、ベストプラクティス、ルールをまとめたsteeringファイルが格納されています。
-
 ## フォルダ構造
 
-### 📁 core/ - 基本ルール（常に読み込まれる）
-- **tdnet-implementation-rules.md** - 実装時の基本ルールとコーディング規約
-- **error-handling-patterns.md** - エラーハンドリングのパターンとベストプラクティス
-- **tdnet-data-collector.md** - タスク実行ルールとフィードバックループ
+### 📁 core/ - 常時読み込み
+- **tdnet-implementation-rules.md** - 実装ルール
+- **error-handling-patterns.md** - エラーハンドリング
+- **tdnet-data-collector.md** - タスク実行ルール
 
-### 📁 development/ - 開発ガイドライン
-- **testing-strategy.md** - テスト戦略（ユニット、統合、E2E、プロパティテスト）
-- **data-validation.md** - データバリデーションルールとパターン
-- **tdnet-scraping-patterns.md** - TDnetスクレイピングのパターンとベストプラクティス
-- **error-handling-implementation.md** - エラーハンドリングの詳細実装
-- **error-handling-enforcement.md** - エラーハンドリングの強制化（DLQ必須化、Alarms自動設定）
-- **lambda-implementation.md** - Lambda実装ガイドライン
-- **tdnet-file-naming.md** - ファイル・フォルダ命名規則
-- **workflow-guidelines.md** - ワークフローガイドライン
+### 📁 development/
+- **testing-strategy.md** - テスト戦略
+- **data-validation.md** - データバリデーション
+- **tdnet-scraping-patterns.md** - スクレイピング
+- **error-handling-implementation.md** - エラーハンドリング詳細
+- **error-handling-enforcement.md** - エラーハンドリング強制化
+- **lambda-implementation.md** - Lambda実装
+- **tdnet-file-naming.md** - 命名規則
+- **workflow-guidelines.md** - ワークフロー
 - **documentation-standards.md** - ドキュメント標準
-- **mcp-server-guidelines.md** - MCP Server活用ガイドライン
+- **mcp-server-guidelines.md** - MCP Server活用
 
-### 📁 infrastructure/ - インフラ・デプロイ
-- **deployment-checklist.md** - デプロイ前後のチェックリスト
-- **environment-variables.md** - 環境変数の定義と管理方法
-- **performance-optimization.md** - パフォーマンス最適化戦略
-- **monitoring-alerts.md** - 監視とアラート設定
+### 📁 infrastructure/
+- **deployment-checklist.md** - デプロイチェックリスト
+- **environment-variables.md** - 環境変数
+- **performance-optimization.md** - パフォーマンス最適化
+- **monitoring-alerts.md** - 監視・アラート
 
-### 📁 security/ - セキュリティ
-- **security-best-practices.md** - セキュリティベストプラクティス（IAM、暗号化、監査）
+### 📁 security/
+- **security-best-practices.md** - セキュリティ
 
-### 📁 api/ - API設計
-- **api-design-guidelines.md** - RESTful API設計ガイドライン
-- **error-codes.md** - APIエラーコード標準
+### 📁 api/
+- **api-design-guidelines.md** - API設計
+- **error-codes.md** - エラーコード
 
-### 📁 meta/ - メタ情報
-- **pattern-matching-tests.md** - fileMatchPatternのテストケースと検証方法
+### 📁 meta/
+- **pattern-matching-tests.md** - fileMatchPatternテスト
 
-## 読み込みタイミングの制御
+## 読み込み制御
 
-- **常時読み込み**: `core/` フォルダ内のファイル（front-matter不要）
-- **条件付き読み込み**: front-matterの`fileMatchPattern`に一致するファイル編集時のみ
+**常時**: `core/`内ファイル  
+**条件付**: front-matterの`fileMatchPattern`一致時
 
-**front-matter形式:**
 ```yaml
 ---
 inclusion: fileMatch
 fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 ---
 ```
+
+## fileMatchパターン
+
+| パターン | ファイル | steering |
+|---------|---------|----------|
+| `**/*.test.ts\|**/*.spec.ts` | テスト | testing-strategy.md, mcp-server-guidelines.md |
+| `**/validators/**/*.ts` | バリデーション | data-validation.md |
+| `**/models/**/*.ts` | モデル | data-validation.md, error-handling-implementation.md |
+| `**/types/**/*.ts` | 型定義 | data-validation.md, error-handling-implementation.md |
+| `**/scraper/**/*.ts` | スクレイピング | tdnet-scraping-patterns.md, error-handling-implementation.md, mcp-server-guidelines.md |
+| `**/collector/**/*.ts` | コレクター | tdnet-scraping-patterns.md, error-handling-implementation.md, mcp-server-guidelines.md |
+| `**/lambda/**/*.ts` | Lambda | lambda-implementation.md, error-handling-implementation.md, error-handling-enforcement.md, environment-variables.md, performance-optimization.md, mcp-server-guidelines.md |
+| `**/api/**/*.ts` | API | api-design-guidelines.md, error-codes.md, error-handling-implementation.md, mcp-server-guidelines.md |
+| `**/cdk/**/*.ts` | CDK | environment-variables.md, mcp-server-guidelines.md |
+| `**/cdk/lib/**/*-stack.ts` | CDKスタック | security-best-practices.md, deployment-checklist.md, mcp-server-guidelines.md |
+| `**/cdk/lib/constructs/**/*.ts` | CDKコンストラクト | tdnet-file-naming.md, mcp-server-guidelines.md |
+| `**/.env*` | 環境変数 | environment-variables.md |
+| `**/docs/**/*.md` | ドキュメント | documentation-standards.md, mcp-server-guidelines.md |
+| `**/.kiro/specs/**/*.md` | 仕様 | documentation-standards.md, workflow-guidelines.md, mcp-server-guidelines.md |
+| `**/.kiro/steering/**/*.md` | steering | pattern-matching-tests.md |
+
+## 参照関係（DAG構造）
+
+### レベル3（中心）
+- **tdnet-implementation-rules.md** → 13ファイル参照
+
+### レベル2（統合）
+- **tdnet-data-collector.md** → error-handling-patterns.md, workflow-guidelines.md, documentation-standards.md
+- **error-handling-patterns.md** → error-handling-implementation.md, error-codes.md, api-design-guidelines.md, monitoring-alerts.md
+- **deployment-checklist.md** → security-best-practices.md, environment-variables.md, monitoring-alerts.md
+
+### レベル1（特化）
+- **security-best-practices.md** → environment-variables.md, monitoring-alerts.md
+- **tdnet-scraping-patterns.md** → error-handling-patterns.md
+- **lambda-implementation.md** → error-handling-patterns.md, error-handling-implementation.md, performance-optimization.md, environment-variables.md
+- **testing-strategy.md** → tdnet-implementation-rules.md
+- **error-handling-implementation.md** → error-handling-patterns.md, error-codes.md
+- **error-handling-enforcement.md** → error-handling-patterns.md, error-handling-implementation.md, monitoring-alerts.md
+- **api-design-guidelines.md** → data-validation.md, error-codes.md
+
+### レベル0（基盤）
+- error-codes.md, workflow-guidelines.md, documentation-standards.md, data-validation.md, tdnet-file-naming.md, mcp-server-guidelines.md, environment-variables.md, monitoring-alerts.md, performance-optimization.md
+
+## メンテナンス
+
+新規steeringファイル追加時:
+1. 適切なフォルダに配置
+2. front-matter設定
+3. README.md更新（ファイル一覧、fileMatchパターン）
+4. 関連ファイルの「関連ドキュメント」更新
 
 ## fileMatchパターン対応表
 
