@@ -250,6 +250,18 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     });
 
     // ========================================
+    // Phase 2: Secrets Manager（Lambda関数より前に初期化）
+    // ========================================
+
+    // IMPORTANT: apiKeyValueはLambda関数の環境変数で使用されるため、
+    // Lambda関数定義より前に初期化する必要があります
+    const apiKeyValue = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'ApiKeySecret',
+      '/tdnet/api-key'
+    );
+
+    // ========================================
     // Phase 1: Lambda Functions
     // ========================================
 
@@ -408,11 +420,6 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       exportName: 'TdnetExportFunctionArn',
     });
 
-    // Stack resources will be added here in subsequent tasks
-    // Phase 2: Lambda Export function, API Gateway integration
-    // Phase 3: EventBridge rules, SNS topics, CloudWatch monitoring
-    // Phase 4: CloudTrail, security configurations
-
     // ========================================
     // Phase 2: API Gateway + WAF
     // ========================================
@@ -444,13 +451,8 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       cloudWatchRole: true, // CloudWatch Logsへのログ出力を有効化
     });
 
-    // 2. API Key生成とSecrets Managerへの保存
-    const apiKeyValue = secretsmanager.Secret.fromSecretNameV2(
-      this,
-      'ApiKeySecret',
-      '/tdnet/api-key'
-    );
-
+    // 2. API Key生成
+    // Note: apiKeyValueは既にファイル先頭で初期化済み
     this.apiKey = new apigateway.ApiKey(this, 'TdnetApiKey', {
       apiKeyName: 'tdnet-api-key',
       description: 'API Key for TDnet Data Collector',
