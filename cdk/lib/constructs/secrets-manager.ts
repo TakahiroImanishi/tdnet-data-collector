@@ -92,20 +92,6 @@ export class SecretsManagerConstruct extends Construct {
       this.apiKeySecret.grantRead(this.rotationFunction);
       this.apiKeySecret.grantWrite(this.rotationFunction);
 
-      // DescribeSecret権限を追加
-      this.rotationFunction.addToRolePolicy(
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'secretsmanager:DescribeSecret',
-            'secretsmanager:GetSecretValue',
-            'secretsmanager:PutSecretValue',
-            'secretsmanager:UpdateSecretVersionStage',
-          ],
-          resources: [this.apiKeySecret.secretArn],
-        })
-      );
-
       // 自動ローテーションスケジュールを設定
       this.apiKeySecret.addRotationSchedule('RotationSchedule', {
         rotationLambda: this.rotationFunction,

@@ -31,6 +31,10 @@ module.exports = {
     '!src/**/__tests__/test-helpers.ts',
     '!cdk/**/*.test.ts',
     '!cdk/**/*.spec.ts',
+    // Phase 3実装予定の未実装機能を除外（タスク19.9）
+    '!src/lambda/get-disclosure/**',
+    '!src/lambda/health/**',
+    '!src/lambda/stats/**',
   ],
   
   coverageDirectory: 'coverage',
