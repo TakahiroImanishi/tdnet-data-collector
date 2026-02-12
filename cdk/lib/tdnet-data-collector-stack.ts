@@ -4,7 +4,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 import { Environment, getEnvironmentConfig } from './config/environment-config';

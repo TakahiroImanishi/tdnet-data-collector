@@ -90,8 +90,14 @@ export class CloudTrailConstruct extends Construct {
 
       // カスタムポリシーでDynamoDBデータイベントを記録
       const cfnTrail = this.trail.node.defaultChild as cloudtrail.CfnTrail;
+      
+      // 既存のEventSelectorsを取得（配列として扱う）
+      const existingSelectors = cfnTrail.eventSelectors 
+        ? (Array.isArray(cfnTrail.eventSelectors) ? cfnTrail.eventSelectors : [cfnTrail.eventSelectors])
+        : [];
+
       cfnTrail.eventSelectors = [
-        ...(cfnTrail.eventSelectors || []),
+        ...existingSelectors,
         {
           readWriteType: 'All',
           includeManagementEvents: false,

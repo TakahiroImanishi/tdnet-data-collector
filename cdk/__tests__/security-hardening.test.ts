@@ -326,12 +326,27 @@ describe('セキュリティ強化テスト', () => {
       // スタックが正常に作成されることを確認
       expect(stack).toBeDefined();
 
-      // 主要なリソースが存在することを確認
-      template.resourceCountIs('AWS::Lambda::Function', Match.anyValue());
-      template.resourceCountIs('AWS::S3::Bucket', Match.anyValue());
-      template.resourceCountIs('AWS::DynamoDB::Table', Match.anyValue());
-      template.resourceCountIs('AWS::SecretsManager::Secret', Match.anyValue());
-      template.resourceCountIs('AWS::SecretsManager::RotationSchedule', Match.anyValue());
+      // 主要なリソースが存在することを確認（最小数を確認）
+      const resources = template.toJSON().Resources;
+      const lambdaFunctions = Object.values(resources).filter(
+        (r: any) => r.Type === 'AWS::Lambda::Function'
+      );
+      const s3Buckets = Object.values(resources).filter((r: any) => r.Type === 'AWS::S3::Bucket');
+      const dynamoTables = Object.values(resources).filter(
+        (r: any) => r.Type === 'AWS::DynamoDB::Table'
+      );
+      const secrets = Object.values(resources).filter(
+        (r: any) => r.Type === 'AWS::SecretsManager::Secret'
+      );
+      const rotationSchedules = Object.values(resources).filter(
+        (r: any) => r.Type === 'AWS::SecretsManager::RotationSchedule'
+      );
+
+      expect(lambdaFunctions.length).toBeGreaterThan(0);
+      expect(s3Buckets.length).toBeGreaterThan(0);
+      expect(dynamoTables.length).toBeGreaterThan(0);
+      expect(secrets.length).toBeGreaterThan(0);
+      expect(rotationSchedules.length).toBeGreaterThan(0);
     });
 
     it('CloudFormationテンプレートが有効であること', () => {

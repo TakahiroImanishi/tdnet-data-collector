@@ -16,7 +16,10 @@ describe('SecretsManagerConstruct', () => {
   describe('シークレット作成', () => {
     it('シークレット名が /tdnet/api-key であること', () => {
       // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager');
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       template = Template.fromStack(stack);
 
       // Assert
@@ -27,7 +30,10 @@ describe('SecretsManagerConstruct', () => {
 
     it('シークレットの説明が設定されていること', () => {
       // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager');
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       template = Template.fromStack(stack);
 
       // Assert
@@ -38,7 +44,10 @@ describe('SecretsManagerConstruct', () => {
 
     it('シークレットが自動生成設定を持つこと', () => {
       // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager');
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       template = Template.fromStack(stack);
 
       // Assert
@@ -54,7 +63,10 @@ describe('SecretsManagerConstruct', () => {
 
     it('シークレットが暗号化されていること（デフォルトのAWS管理キー）', () => {
       // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager');
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       template = Template.fromStack(stack);
 
       // Assert
@@ -68,7 +80,10 @@ describe('SecretsManagerConstruct', () => {
   describe('Lambda関数へのアクセス権限', () => {
     it('Lambda関数にシークレット読み取り権限が付与されること', () => {
       // Arrange
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager');
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       const testFunction = new lambda.Function(stack, 'TestFunction', {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'index.handler',
@@ -98,7 +113,10 @@ describe('SecretsManagerConstruct', () => {
 
     it('複数のLambda関数にシークレット読み取り権限が付与されること', () => {
       // Arrange
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager');
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       const queryFunction = new lambda.Function(stack, 'QueryFunction', {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'index.handler',
@@ -134,7 +152,10 @@ describe('SecretsManagerConstruct', () => {
   describe('ヘルパーメソッド', () => {
     it('getSecretArn() がシークレットARNを返すこと', () => {
       // Arrange
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager');
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
 
       // Act
       const secretArn = secretsManager.getSecretArn();
@@ -146,7 +167,10 @@ describe('SecretsManagerConstruct', () => {
 
     it('getSecretValue() がSecretValue型を返すこと', () => {
       // Arrange
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager');
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
 
       // Act
       const secretValue = secretsManager.getSecretValue();
@@ -161,7 +185,10 @@ describe('SecretsManagerConstruct', () => {
   describe('削除保護', () => {
     it('シークレットが削除保護されていること（RETAIN）', () => {
       // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager');
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       template = Template.fromStack(stack);
 
       // Assert
@@ -178,7 +205,10 @@ describe('SecretsManagerConstruct', () => {
   describe('統合テスト', () => {
     it('SecretsManagerConstructが正しくスタックに統合されること', () => {
       // Arrange & Act
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager');
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
       const testFunction = new lambda.Function(stack, 'TestFunction', {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'index.handler',

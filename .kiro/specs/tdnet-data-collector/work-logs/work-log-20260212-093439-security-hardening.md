@@ -45,3 +45,44 @@ TDnet Data CollectorプロジェクトのPhase 4セキュリティ強化タス�
 - CloudWatch PutMetricDataの権限を特定のメトリクス名前空間に制限
 - Lambda関数ごとに必要最小限の権限を確認・調整
 
+
+
+#### 実装完了
+- CloudWatch PutMetricData権限を特定の名前空間（`TDnet/*`）に制限
+- 全Lambda関数（7個）のIAMポリシーを更新
+
+### 3. タスク21.2: S3バケットのパブリックアクセスブロック
+
+#### 実装内容
+- 既存のS3バケット設定を確認
+- すべてのバケットで`blockPublicAccess: BLOCK_ALL`設定済み
+- CloudFront OAI設定も実装済み
+
+#### 実装完了
+- 追加の設定変更は不要（既に要件を満たしている）
+
+### 4. タスク21.3: APIキーのローテーション設定
+
+#### 実装内容
+- ローテーション用Lambda関数を実装（`src/lambda/api-key-rotation/index.ts`）
+- Secrets Manager Constructを更新してローテーション設定を追加
+- 90日ごとの自動ローテーションスケジュールを設定
+- スタックファイルでSecretsManagerConstructを使用するように変更
+
+#### 実装完了
+- ローテーション用Lambda関数: 4ステップ（createSecret, setSecret, testSecret, finishSecret）
+- SecretsManagerConstructProps追加: environment, enableRotation, rotationDays
+- スタックファイル更新: SecretsManagerConstructをインポート・使用
+
+### 5. タスク21.4: セキュリティ設定の検証テスト
+
+#### 実装内容
+- セキュリティ強化テストファイルを作成（`cdk/__tests__/security-hardening.test.ts`）
+- 既存のSecrets Managerテストを更新（新しいpropsに対応）
+
+#### テスト項目
+- タスク21.1: IAMロールの最小権限化（5個のテスト）
+- タスク21.2: S3バケットのパブリックアクセスブロック（3個のテスト）
+- タスク21.3: APIキーのローテーション設定（4個のテスト）
+- 統合テスト（2個のテスト）
+
