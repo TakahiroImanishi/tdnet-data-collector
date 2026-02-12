@@ -132,7 +132,7 @@ describe('POST /collect Handler', () => {
 
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
       });
 
       const testDates = getTestDates();
@@ -163,7 +163,7 @@ describe('POST /collect Handler', () => {
 
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
       });
 
       const testDates = getTestDates();
@@ -187,7 +187,7 @@ describe('POST /collect Handler', () => {
 
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
       });
 
       const testDates = getTestDates();
@@ -457,7 +457,7 @@ describe('POST /collect Handler', () => {
 
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
       });
 
       const testDates = getTestDates();
@@ -653,7 +653,7 @@ describe('POST /collect Handler', () => {
 
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
       });
 
       const testDates = getTestDates();
@@ -774,7 +774,7 @@ describe('POST /collect Handler', () => {
 
       lambdaMock.on(InvokeCommand).resolves({
         StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
       });
 
       const testDates = getTestDates();
@@ -808,7 +808,7 @@ describe('POST /collect Handler', () => {
 
         lambdaMock.on(InvokeCommand).resolves({
           StatusCode: 200,
-          Payload: Buffer.from(JSON.stringify(mockCollectorResponse)),
+          Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
         });
 
         const testDates = getTestDates();

@@ -44,10 +44,10 @@ describe('Lambda Collector Handler', () => {
     };
 
     // Mock updateExecutionStatus to resolve successfully
-    mockUpdateExecutionStatus.mockResolvedValue(undefined);
+    mockUpdateExecutionStatus.mockResolvedValue({} as any);
     
     // Mock downloadPdf to resolve successfully
-    mockDownloadPdf.mockResolvedValue(Buffer.from('fake-pdf-content'));
+    mockDownloadPdf.mockResolvedValue(Buffer.from('fake-pdf-content') as any);
     
     // Mock saveMetadata to resolve successfully
     mockSaveMetadata.mockResolvedValue(undefined);

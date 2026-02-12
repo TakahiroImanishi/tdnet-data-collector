@@ -54,7 +54,7 @@ export function createDefaultDependencies(): CollectorDependencies {
   const cloudWatchClient = new CloudWatchClient({ region: 'ap-northeast-1' });
 
   // Rate Limiter（最小遅延2秒）
-  const rateLimiter = new RateLimiter(2000);
+  const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
 
   return {
     dynamoClient: docClient,

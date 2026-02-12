@@ -25,7 +25,7 @@ export const cloudWatchMock = mockClient(CloudWatchClient);
  */
 export class MockRateLimiter extends RateLimiter {
   constructor() {
-    super(0); // 遅延なし
+    super({ minDelayMs: 0 }); // 遅延なし
   }
 
   async waitIfNeeded(): Promise<void> {

@@ -16,8 +16,8 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 const s3Mock = mockClient(S3Client);
 
-// axios.isAxiosErrorのモック
-mockedAxios.isAxiosError = jest.fn();
+// axios.isAxiosErrorのモック（型エラー回避のためanyにキャスト）
+(mockedAxios.isAxiosError as any) = jest.fn();
 
 // validatePdfFileのモック
 jest.spyOn(pdfDownloader, 'validatePdfFile').mockImplementation(() => {});
