@@ -67,14 +67,14 @@ x-api-key: your-api-key-here
 | メソッド | パス | 説明 | 実装状況 |
 |---------|------|------|---------|
 | GET | `/disclosures` | 開示情報一覧取得 | ✅ 実装済み |
-| GET | `/disclosures/{id}` | 開示情報詳細取得 | ❌ 未実装 |
+| GET | `/disclosures/{id}` | 開示情報詳細取得 | ✅ 実装済み |
 | GET | `/disclosures/{id}/pdf` | PDF署名付きURL取得 | ✅ 実装済み |
 | POST | `/collect` | データ収集開始 | ✅ 実装済み |
 | GET | `/collect/{execution_id}` | 収集状態取得 | ✅ 実装済み |
 | POST | `/exports` | データエクスポート開始 | ✅ 実装済み |
 | GET | `/exports/{export_id}` | エクスポート状態取得 | ✅ 実装済み |
-| GET | `/health` | ヘルスチェック | ❌ 未実装 |
-| GET | `/stats` | 統計情報取得 | ❌ 未実装 |
+| GET | `/health` | ヘルスチェック | ✅ 実装済み |
+| GET | `/stats` | 統計情報取得 | ✅ 実装済み |
 
 ---
 
