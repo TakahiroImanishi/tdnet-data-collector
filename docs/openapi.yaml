@@ -128,6 +128,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DisclosureListResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス例
+                  value:
+                    status: success
+                    disclosures:
+                      - disclosure_id: '20240115_7203_001'
+                        company_code: '7203'
+                        company_name: 'トヨタ自動車株式会社'
+                        disclosure_type: '決算短信'
+                        title: '2024年3月期 第3四半期決算短信'
+                        disclosed_at: '2024-01-15T15:00:00+09:00'
+                        date_partition: '2024-01'
+                        pdf_url: null
+                      - disclosure_id: '20240115_9984_001'
+                        company_code: '9984'
+                        company_name: 'ソフトバンクグループ株式会社'
+                        disclosure_type: '業績予想修正'
+                        title: '2024年3月期 業績予想の修正に関するお知らせ'
+                        disclosed_at: '2024-01-15T14:30:00+09:00'
+                        date_partition: '2024-01'
+                        pdf_url: null
+                    total: 150
+                    count: 2
+                    offset: 0
+                    limit: 100
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -174,6 +200,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DisclosureDetailResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス例
+                  value:
+                    status: success
+                    data:
+                      disclosure_id: '20240115_7203_001'
+                      company_code: '7203'
+                      company_name: 'トヨタ自動車株式会社'
+                      disclosure_type: '決算短信'
+                      title: '2024年3月期 第3四半期決算短信'
+                      disclosed_at: '2024-01-15T15:00:00+09:00'
+                      date_partition: '2024-01'
+                      downloaded_at: '2024-01-15T15:05:30+09:00'
+                      file_size: 1048576
+                      pdf_s3_key: '2024/01/15/7203_決算短信_20240115150000.pdf'
+                      pdf_url: 'https://tdnet-pdfs.s3.amazonaws.com/...'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -226,6 +269,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PDFUrlResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス例
+                  value:
+                    status: success
+                    data:
+                      pdf_url: 'https://tdnet-pdfs.s3.amazonaws.com/2024/01/15/7203_決算短信_20240115150000.pdf?X-Amz-Algorithm=...'
+                      expires_at: '2024-01-15T16:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -246,6 +297,17 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CollectionRequest'
+            examples:
+              monthly:
+                summary: 月次収集
+                value:
+                  start_date: '2024-01-01'
+                  end_date: '2024-01-31'
+              weekly:
+                summary: 週次収集
+                value:
+                  start_date: '2024-01-15'
+                  end_date: '2024-01-21'
       responses:
         '200':
           description: Collection started
@@ -267,6 +329,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollectionResponse'
+              examples:
+                success:
+                  summary: 収集開始成功
+                  value:
+                    status: success
+                    data:
+                      execution_id: 'exec-20240115-abc123'
+                      status: 'pending'
+                      started_at: '2024-01-15T10:00:00Z'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -310,6 +381,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollectionStatusResponse'
+              examples:
+                running:
+                  summary: 実行中
+                  value:
+                    status: success
+                    data:
+                      execution_id: 'exec-20240115-abc123'
+                      status: 'running'
+                      total_count: 100
+                      progress: 45
+                      collected_count: 40
+                      failed_count: 3
+                      skipped_count: 2
+                      started_at: '2024-01-15T10:00:00Z'
+                      completed_at: null
+                completed:
+                  summary: 完了
+                  value:
+                    status: success
+                    data:
+                      execution_id: 'exec-20240115-abc123'
+                      status: 'completed'
+                      total_count: 100
+                      progress: 100
+                      collected_count: 95
+                      failed_count: 3
+                      skipped_count: 2
+                      started_at: '2024-01-15T10:00:00Z'
+                      completed_at: '2024-01-15T10:15:30Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -330,6 +430,19 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ExportRequest'
+            examples:
+              csv_all:
+                summary: 全データCSVエクスポート
+                value:
+                  format: 'csv'
+              json_filtered:
+                summary: フィルタ付きJSONエクスポート
+                value:
+                  format: 'json'
+                  company_code: '7203'
+                  start_date: '2024-01-01'
+                  end_date: '2024-12-31'
+                  disclosure_type: '決算短信'
       responses:
         '200':
           description: Export started
@@ -394,6 +507,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExportStatusResponse'
+              examples:
+                processing:
+                  summary: 処理中
+                  value:
+                    status: success
+                    data:
+                      export_id: 'export-20240115-xyz789'
+                      status: 'processing'
+                      export_count: null
+                      file_size: null
+                      download_url: null
+                      expires_at: null
+                completed:
+                  summary: 完了
+                  value:
+                    status: success
+                    data:
+                      export_id: 'export-20240115-xyz789'
+                      status: 'completed'
+                      export_count: 1500
+                      file_size: 10485760
+                      download_url: 'https://tdnet-exports.s3.amazonaws.com/...'
+                      expires_at: '2024-01-15T16:00:00Z'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -416,12 +552,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: 正常
+                  value:
+                    status: 'healthy'
+                    timestamp: '2024-01-15T10:00:00Z'
+                    services:
+                      dynamodb: 'healthy'
+                      s3: 'healthy'
+                unhealthy:
+                  summary: 異常
+                  value:
+                    status: 'unhealthy'
+                    timestamp: '2024-01-15T10:00:00Z'
+                    services:
+                      dynamodb: 'unhealthy'
+                      s3: 'healthy'
+                    details:
+                      dynamodb: 'Table status: UPDATING'
         '503':
           description: Unhealthy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+              examples:
+                error:
+                  summary: エラー
+                  value:
+                    status: 'unhealthy'
+                    timestamp: '2024-01-15T10:00:00Z'
+                    services:
+                      dynamodb: 'unknown'
+                      s3: 'unknown'
+                    details:
+                      error: 'Health check failed'
 
   /stats:
     get:
@@ -451,6 +617,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatsResponse'
+              examples:
+                success:
+                  summary: 統計情報
+                  value:
+                    status: success
+                    data:
+                      total_disclosures: 15000
+                      last_30_days: 450
+                      top_companies:
+                        - company_code: '7203'
+                          company_name: 'トヨタ自動車株式会社'
+                          count: 45
+                        - company_code: '9984'
+                          company_name: 'ソフトバンクグループ株式会社'
+                          count: 38
+                        - company_code: '6758'
+                          company_name: 'ソニーグループ株式会社'
+                          count: 35
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':

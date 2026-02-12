@@ -105,7 +105,10 @@ describe('CI/CD Verification', () => {
       const workflowPath = path.join(process.cwd(), '.github', 'workflows', 'test.yml');
       const workflowContent = fs.readFileSync(workflowPath, 'utf-8');
 
-      expect(workflowContent).toContain('--coverage');
+      // test:coverage スクリプトまたは --coverage フラグの使用を確認
+      const hasCoverageCheck = workflowContent.includes('test:coverage') || 
+                               workflowContent.includes('--coverage');
+      expect(hasCoverageCheck).toBe(true);
     });
 
     it('deploy.yml ワークフローが存在する', () => {
@@ -130,7 +133,7 @@ describe('CI/CD Verification', () => {
       } catch (error: any) {
         // エラーコード1は脆弱性が見つかった場合
         if (error.status === 1) {
-          fail('重大な脆弱性が見つかりました。npm audit を実行して確認してください。');
+          throw new Error('重大な脆弱性が見つかりました。npm audit を実行して確認してください。');
         }
         // その他のエラーは無視（ネットワークエラーなど）
       }

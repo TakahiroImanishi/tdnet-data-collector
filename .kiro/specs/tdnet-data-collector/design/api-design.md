@@ -154,18 +154,75 @@ disclosure_id,company_code,company_name,disclosure_type,title,disclosed_at,date_
 
 開示情報の詳細を取得します。
 
-**実装状況:** ❌ 未実装
+**実装ファイル:** `src/lambda/get-disclosure/handler.ts`
 
-**推奨実装:**
-- DynamoDBから開示情報を取得
-- S3からPDFメタデータを取得
-- 詳細情報を返却
+#### リクエスト
+
+**パスパラメータ:**
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|---|------|------|
+| `id` | string | Yes | 開示ID（形式: `YYYYMMDD_CCCC_NNN`） |
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | 必須 | 説明 | デフォルト |
+|-----------|---|------|------|-----------|
+| `expiration` | integer | No | PDF URL有効期限（秒、1-604800） | 3600 |
+
+**バリデーション:**
+- `id`: `YYYYMMDD_CCCC_NNN` 形式（例: `20240115_7203_001`）
+- `expiration`: 1-604800の整数（1秒〜7日）
+
+**例:**
+```
+GET /disclosures/20240115_7203_001?expiration=7200
+```
+
+#### レスポンス
+
+**成功（200 OK):**
+```json
+{
+  "status": "success",
+  "data": {
+    "disclosure_id": "20240115_7203_001",
+    "company_code": "7203",
+    "company_name": "トヨタ自動車株式会社",
+    "disclosure_type": "決算短信",
+    "title": "2024年3月期 第3四半期決算短信",
+    "disclosed_at": "2024-01-15T15:00:00+09:00",
+    "date_partition": "2024-01",
+    "s3_key": "2024/01/15/7203_決算短信_20240115150000.pdf",
+    "downloaded_at": "2024-01-15T15:05:30+09:00",
+    "file_size": 1048576,
+    "pdf_url": "https://s3.amazonaws.com/..."
+  }
+}
+```
+
+**エラー:**
+- `400 VALIDATION_ERROR`: バリデーションエラー
+- `401 UNAUTHORIZED`: 認証エラー
+- `404 NOT_FOUND`: 開示情報が存在しない
+- `500 INTERNAL_ERROR`: 内部エラー
+
+**処理フロー:**
+1. APIキー認証（Secrets Manager経由）
+2. `disclosure_id` のバリデーション
+3. DynamoDBから開示情報を取得
+4. S3署名付きURLを生成（PDFが存在する場合）
+5. レスポンスを返却
 
 ---
 
 ### GET /disclosures/{id}/pdf
 
 PDFファイルの署名付きURLを取得します。
+
+**実装ファイル:** `src/lambda/api/pdf-download/handler.ts`
+
+**注意:** このエンドポイントは非推奨です。代わりに `GET /disclosures/{id}` を使用してください（`pdf_url` フィールドに署名付きURLが含まれます）。
 
 **実装ファイル:** `src/lambda/api/pdf-download/handler.ts`
 
@@ -468,14 +525,20 @@ GET /exports/export-20240115-xyz789
 
 ヘルスチェックエンドポイント。
 
-**実装状況:** ❌ 未実装
+**実装ファイル:** `src/lambda/health/handler.ts`
 
-**推奨実装:**
-- DynamoDBの接続確認
-- S3の接続確認
-- ヘルスステータスを返却
+#### リクエスト
 
-**推奨レスポンス:**
+**認証:** 不要（パブリックエンドポイント）
+
+**例:**
+```
+GET /health
+```
+
+#### レスポンス
+
+**成功（200 OK):**
 ```json
 {
   "status": "healthy",
@@ -487,32 +550,103 @@ GET /exports/export-20240115-xyz789
 }
 ```
 
+**異常（200 OK - ステータスはbodyで判定):**
+```json
+{
+  "status": "unhealthy",
+  "timestamp": "2024-01-15T10:00:00Z",
+  "services": {
+    "dynamodb": "unhealthy",
+    "s3": "healthy"
+  },
+  "details": {
+    "dynamodb": "Table status: UPDATING"
+  }
+}
+```
+
+**エラー（503 Service Unavailable):**
+```json
+{
+  "status": "unhealthy",
+  "timestamp": "2024-01-15T10:00:00Z",
+  "services": {
+    "dynamodb": "unknown",
+    "s3": "unknown"
+  },
+  "details": {
+    "error": "Health check failed"
+  }
+}
+```
+
+**処理フロー:**
+1. DynamoDBテーブルの状態確認（DescribeTable）
+2. S3バケットの存在確認（HeadBucket）
+3. 全体のステータスを判定
+4. レスポンスを返却
+
+**注意:**
+- ヘルスチェックは常に200を返します（bodyでステータスを判定）
+- 例外が発生した場合のみ503を返します
+
 ---
 
 ### GET /stats
 
 統計情報を取得します。
 
-**実装状況:** ❌ 未実装
+**実装ファイル:** `src/lambda/stats/handler.ts`
 
-**推奨実装:**
-- 総開示件数
-- 総企業数
-- 最新開示日
-- ストレージサイズ
+#### リクエスト
 
-**推奨レスポンス:**
+**認証:** 必須（APIキー）
+
+**例:**
+```
+GET /stats
+```
+
+#### レスポンス
+
+**成功（200 OK):**
 ```json
 {
   "status": "success",
   "data": {
     "total_disclosures": 15000,
-    "total_companies": 3800,
-    "latest_disclosure_date": "2024-01-15",
-    "storage_size_bytes": 1073741824
+    "last_30_days": 450,
+    "top_companies": [
+      {
+        "company_code": "7203",
+        "company_name": "トヨタ自動車株式会社",
+        "count": 45
+      },
+      {
+        "company_code": "9984",
+        "company_name": "ソフトバンクグループ株式会社",
+        "count": 38
+      }
+    ]
   }
 }
 ```
+
+**エラー:**
+- `401 UNAUTHORIZED`: 認証エラー
+- `500 INTERNAL_ERROR`: 内部エラー
+
+**処理フロー:**
+1. APIキー認証（Secrets Manager経由）
+2. 総開示情報件数を取得（Scan）
+3. 直近30日の収集件数を取得（GSI_DatePartition使用）
+4. 企業別件数トップ10を取得（メモリ上で集計）
+5. レスポンスを返却
+
+**パフォーマンス注意:**
+- 統計情報の取得はScanを使用するため、大量データの場合はパフォーマンスに影響します
+- レスポンスは5分間キャッシュされます（`Cache-Control: public, max-age=300`）
+- 本番環境では集計テーブルを別途用意することを推奨します
 
 ---
 
@@ -709,20 +843,17 @@ GET /disclosures?limit=20&offset=20
 
 ## 実装状況サマリー
 
-### 実装済みエンドポイント（6/9）
+### 実装済みエンドポイント（9/9）
 
 - ✅ GET /disclosures
+- ✅ GET /disclosures/{id}
 - ✅ GET /disclosures/{id}/pdf
 - ✅ POST /collect
 - ✅ GET /collect/{execution_id}
 - ✅ POST /exports
 - ✅ GET /exports/{export_id}
-
-### 未実装エンドポイント（3/9）
-
-- ❌ GET /disclosures/{id}
-- ❌ GET /health
-- ❌ GET /stats
+- ✅ GET /health
+- ✅ GET /stats
 
 ### 実装の品質
 
@@ -731,7 +862,7 @@ GET /disclosures?limit=20&offset=20
 - ✅ CORS対応: 実装済み
 - ✅ 構造化ログ: 実装済み
 - ✅ CloudWatchメトリクス: 実装済み
-- ⚠️ 認証方式: 統一されていない（一部エンドポイントで未実装）
+- ✅ 認証方式: Secrets Manager経由で統一（一部エンドポイントを除く）
 - ⚠️ レート制限ヘッダー: 未実装
 
 ---
@@ -740,20 +871,19 @@ GET /disclosures?limit=20&offset=20
 
 ### 優先度: 高
 
-1. **未実装エンドポイントの実装**
-   - GET /disclosures/{id}
-   - GET /health
-   - GET /stats
-
-2. **認証方式の統一**
+1. **認証方式の完全統一**
    - POST /collect と GET /collect/{execution_id} にAPIキー認証を追加
    - すべてのハンドラーでSecrets Manager経由の認証に統一
 
 ### 優先度: 中
 
-3. **レート制限の実装**
+2. **レート制限の実装**
    - API Gatewayレベルでレート制限を設定
    - Lambda関数でレート制限ヘッダーを返却
+
+3. **統計情報の最適化**
+   - 集計テーブルを別途用意（Scanの使用を避ける）
+   - リアルタイム集計からバッチ集計への移行
 
 ### 優先度: 低
 
@@ -774,5 +904,6 @@ GET /disclosures?limit=20&offset=20
 
 ---
 
-**最終更新**: 2026-02-08  
-**レビュー担当**: Sub-agent (general-task-execution)
+**最終更新**: 2026-02-12  
+**レビュー担当**: Sub-agent (spec-task-execution)  
+**更新内容**: 実装済みエンドポイント（GET /disclosures/{id}, GET /health, GET /stats）の詳細を追加

@@ -1919,11 +1919,13 @@
   - _完了: 2026-02-12, 使用方法・トラブルシューティング・コスト情報・CI/CD情報を追加_
   - _成果物: README.md（大幅拡充）_
 
-- [ ] 25.2 API仕様書の更新
+- [x] 25.2 API仕様書の更新
   - OpenAPI仕様（openapi.yaml）の最終確認
   - エンドポイント一覧の更新
   - リクエスト/レスポンス例の追加
   - _Requirements: 要件4.3（API仕様）_
+  - _完了: 2026-02-12_
+  - _成果物: docs/openapi.yaml（全エンドポイントに例追加）、.kiro/specs/tdnet-data-collector/design/api-design.md（実装状況更新）_
 
 - [ ] 25.3 運用マニュアルの作成
   - デプロイ手順
