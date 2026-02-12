@@ -1709,7 +1709,7 @@
   - _ビルド結果: npm run build 成功 ✅_
   - _作業記録: work-logs/work-log-20260212-085425-task19-8-dlq-implementation.md_
 
-- [ ] 19.9 テストカバレッジ改善（Warning）
+- [-] 19.9 テストカバレッジ改善（Warning）
   - カバレッジレポート詳細確認（coverage/lcov-report/index.html）
   - 未カバー箇所の特定（特にBranches: 72.2%）
   - 追加テストケース作成（条件分岐、エラーハンドリングパス）

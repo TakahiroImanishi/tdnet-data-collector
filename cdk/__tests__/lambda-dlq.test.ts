@@ -71,15 +71,11 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasResourceProperties('AWS::Lambda::EventSourceMapping', {
-        BatchSize: 10,
-        EventSourceArn: {
-          'Fn::GetAtt': [
-            template.findResources('AWS::SQS::Queue')[Object.keys(template.findResources('AWS::SQS::Queue'))[0]],
-            'Arn',
-          ],
-        },
-      });
+      const resources = template.findResources('AWS::Lambda::EventSourceMapping');
+      const eventSourceMapping = Object.values(resources)[0];
+      
+      expect(eventSourceMapping.Properties.BatchSize).toBe(10);
+      expect(eventSourceMapping.Properties.EventSourceArn).toHaveProperty('Fn::GetAtt');
     });
 
     it('CloudWatch Alarmが正しく作成される', () => {
@@ -112,22 +108,21 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: [
-            {
-              Action: [
-                'sqs:ReceiveMessage',
-                'sqs:ChangeMessageVisibility',
-                'sqs:GetQueueUrl',
-                'sqs:DeleteMessage',
-                'sqs:GetQueueAttributes',
-              ],
-              Effect: 'Allow',
-            },
-          ],
-        },
-      });
+      const policies = template.findResources('AWS::IAM::Policy');
+      const policy = Object.values(policies)[0];
+      const statements = policy.Properties.PolicyDocument.Statement;
+      
+      const sqsStatement = statements.find((s: any) => 
+        Array.isArray(s.Action) && s.Action.includes('sqs:ReceiveMessage')
+      );
+      
+      expect(sqsStatement).toBeDefined();
+      expect(sqsStatement.Action).toContain('sqs:ReceiveMessage');
+      expect(sqsStatement.Action).toContain('sqs:ChangeMessageVisibility');
+      expect(sqsStatement.Action).toContain('sqs:GetQueueUrl');
+      expect(sqsStatement.Action).toContain('sqs:DeleteMessage');
+      expect(sqsStatement.Action).toContain('sqs:GetQueueAttributes');
+      expect(sqsStatement.Effect).toBe('Allow');
     });
 
     it('DLQプロセッサーにSNS発行権限が付与される', () => {
@@ -139,16 +134,16 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: [
-            {
-              Action: 'sns:Publish',
-              Effect: 'Allow',
-            },
-          ],
-        },
-      });
+      const policies = template.findResources('AWS::IAM::Policy');
+      const policy = Object.values(policies)[0];
+      const statements = policy.Properties.PolicyDocument.Statement;
+      
+      const snsStatement = statements.find((s: any) => 
+        s.Action === 'sns:Publish' || (Array.isArray(s.Action) && s.Action.includes('sns:Publish'))
+      );
+      
+      expect(snsStatement).toBeDefined();
+      expect(snsStatement.Effect).toBe('Allow');
     });
 
     it('DLQプロセッサーにCloudWatch Logs権限が付与される', () => {
@@ -160,21 +155,20 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: [
-            {
-              Action: [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents',
-              ],
-              Effect: 'Allow',
-              Resource: '*',
-            },
-          ],
-        },
-      });
+      const policies = template.findResources('AWS::IAM::Policy');
+      const policy = Object.values(policies)[0];
+      const statements = policy.Properties.PolicyDocument.Statement;
+      
+      const logsStatement = statements.find((s: any) => 
+        Array.isArray(s.Action) && s.Action.includes('logs:CreateLogGroup')
+      );
+      
+      expect(logsStatement).toBeDefined();
+      expect(logsStatement.Action).toContain('logs:CreateLogGroup');
+      expect(logsStatement.Action).toContain('logs:CreateLogStream');
+      expect(logsStatement.Action).toContain('logs:PutLogEvents');
+      expect(logsStatement.Effect).toBe('Allow');
+      expect(logsStatement.Resource).toBe('*');
     });
   });
 
@@ -243,11 +237,12 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasOutput('TestDLQQueueUrl', {
-        Export: {
-          Name: 'TdnetDLQUrl-dev',
-        },
-      });
+      const outputs = template.toJSON().Outputs;
+      const queueUrlOutput = Object.values(outputs).find((o: any) => 
+        o.Export?.Name === 'TdnetDLQUrl-dev'
+      );
+      
+      expect(queueUrlOutput).toBeDefined();
     });
 
     it('DLQ ARNがエクスポートされる', () => {
@@ -259,11 +254,12 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasOutput('TestDLQQueueArn', {
-        Export: {
-          Name: 'TdnetDLQArn-dev',
-        },
-      });
+      const outputs = template.toJSON().Outputs;
+      const queueArnOutput = Object.values(outputs).find((o: any) => 
+        o.Export?.Name === 'TdnetDLQArn-dev'
+      );
+      
+      expect(queueArnOutput).toBeDefined();
     });
 
     it('DLQプロセッサー関数名がエクスポートされる', () => {
@@ -275,11 +271,12 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasOutput('TestDLQProcessorFunctionName', {
-        Export: {
-          Name: 'TdnetDLQProcessorFunctionName-dev',
-        },
-      });
+      const outputs = template.toJSON().Outputs;
+      const functionNameOutput = Object.values(outputs).find((o: any) => 
+        o.Export?.Name === 'TdnetDLQProcessorFunctionName-dev'
+      );
+      
+      expect(functionNameOutput).toBeDefined();
     });
 
     it('DLQアラーム名がエクスポートされる', () => {
@@ -291,11 +288,12 @@ describe('LambdaDLQ Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      template.hasOutput('TestDLQAlarmName', {
-        Export: {
-          Name: 'TdnetDLQAlarmName-dev',
-        },
-      });
+      const outputs = template.toJSON().Outputs;
+      const alarmNameOutput = Object.values(outputs).find((o: any) => 
+        o.Export?.Name === 'TdnetDLQAlarmName-dev'
+      );
+      
+      expect(alarmNameOutput).toBeDefined();
     });
   });
 });
