@@ -115,7 +115,7 @@ async function checkS3(): Promise<{ status: ServiceStatus; message?: string }> {
  * Lambda Health Checkハンドラー
  */
 export async function handler(
-  event: APIGatewayProxyEvent,
+  _event: APIGatewayProxyEvent, // Unused but required by Lambda signature
   context: Context
 ): Promise<APIGatewayProxyResult> {
   const startTime = Date.now();

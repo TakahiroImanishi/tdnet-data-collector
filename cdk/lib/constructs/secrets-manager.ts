@@ -88,7 +88,7 @@ export class SecretsManagerConstruct extends Construct {
    * 
    * @returns シークレット値（SecretValue型）
    */
-  public getSecretValue(): secretsmanager.SecretValue {
+  public getSecretValue(): any {
     return this.apiKeySecret.secretValue;
   }
 }

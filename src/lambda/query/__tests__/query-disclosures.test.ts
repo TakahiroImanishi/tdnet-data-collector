@@ -252,7 +252,8 @@ describe('queryDisclosures', () => {
       });
 
       // Act
-      const result = await queryDisclosures(params);
+      // Note: result is intentionally unused as we only test the mock calls
+      await queryDisclosures(params);
 
       // Assert
       expect(mockSend).toHaveBeenCalledTimes(2); // 2024-01と2024-02の2回
@@ -475,7 +476,7 @@ describe('queryDisclosures', () => {
 
       // retryWithBackoffのモックを一時的に変更
       const { retryWithBackoff } = require('../../../utils/retry');
-      (retryWithBackoff as jest.Mock).mockImplementationOnce(async (fn, options) => {
+      (retryWithBackoff as jest.Mock).mockImplementationOnce(async (_fn, options) => {
         // shouldRetryをテスト
         expect(options.shouldRetry(throttlingError)).toBe(true);
         // 実際には再試行せず、エラーをスロー
@@ -500,7 +501,7 @@ describe('queryDisclosures', () => {
 
       // retryWithBackoffのモックを一時的に変更
       const { retryWithBackoff } = require('../../../utils/retry');
-      (retryWithBackoff as jest.Mock).mockImplementationOnce(async (fn, options) => {
+      (retryWithBackoff as jest.Mock).mockImplementationOnce(async (_fn, options) => {
         // shouldRetryをテスト
         expect(options.shouldRetry(throughputError)).toBe(true);
         // 実際には再試行せず、エラーをスロー

@@ -76,7 +76,7 @@ export async function handler(
 ): Promise<APIGatewayProxyResult> {
   try {
     logger.info('GET /collect/{execution_id} invoked', {
-      requestId: context.requestId,
+      requestId: context.awsRequestId,
       functionName: context.functionName,
       pathParameters: event.pathParameters,
     });
@@ -99,7 +99,7 @@ export async function handler(
     };
 
     logger.info('GET /collect/{execution_id} completed', {
-      requestId: context.requestId,
+      requestId: context.awsRequestId,
       execution_id,
       status: executionStatus.status,
     });
@@ -116,7 +116,7 @@ export async function handler(
     logger.error(
       'GET /collect/{execution_id} failed',
       createErrorContext(error as Error, {
-        requestId: context.requestId,
+        requestId: context.awsRequestId,
         event,
       })
     );
@@ -128,7 +128,7 @@ export async function handler(
       {}
     );
 
-    return toErrorResponse(error as Error, context.requestId);
+    return toErrorResponse(error as Error, context.awsRequestId);
   }
 }
 

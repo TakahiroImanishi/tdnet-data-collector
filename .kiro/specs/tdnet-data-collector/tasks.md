@@ -1572,124 +1572,153 @@
   - _Requirements: 要件14.1（テスト）_
   - _完了: 2026-02-08 21:07, cdk/__tests__/cloudfront.test.ts作成、15テスト中13テスト成功_
 
-### 19. Checkpoint - Phase 3完了確認
+### 19. Checkpoint - Phase 3完了確認と実装品質改善
 
-- [x] 19.1 Phase 3の動作確認
+#### 19.1 Phase 3の動作確認
+
+- [x] 19.1.1 CloudWatch監視の動作確認
   - CloudWatch監視が機能することを確認
-  - Webダッシュボードが正常に表示されることを確認
-  - _完了: 2026-02-08 21:50, CloudWatchテスト39/39成功（100%）、ダッシュボード実装完了_
+  - _完了: 2026-02-08 21:50, CloudWatchテスト39/39成功（100%）_
   - _作業記録: work-log-20260208-214728-task19-1-phase3-verification.md_
-  - _注意: ダッシュボードテスト12/23成功（52.2%）、テストコード改善はPhase 4並行作業_
 
-### 19.2. Phase 3残課題（並行作業）
+- [x] 19.1.2 Webダッシュボードの動作確認
+  - Webダッシュボードが正常に表示されることを確認
+  - _完了: 2026-02-08 21:50, ダッシュボード実装完了_
+  - _注意: ダッシュボードテスト12/23成功（52.2%）、テストコード改善はタスク19.2で対応_
 
-- [x] 19.2 ダッシュボードテストの修正
+#### 19.2 Phase 3残課題（並行作業）
+
+- [x] 19.2.1 ダッシュボードテストの修正
   - Reactテストコードの`act()`ラッピング追加
   - Material-UI Grid v2への移行（非推奨警告解消）
   - タイマーモックの改善
   - テスト成功率を100%に改善
   - _Requirements: 要件14.1（テスト）_
   - _優先度: 🟠 High_
-  - _推定工数: 4-6時間_
-  - _関連: work-log-20260208-214728-task19-1-phase3-verification.md_
-  
-  **失敗テスト一覧（11件）:**
-  - [x] 19.2.1 `dashboard/src/components/__tests__/ExportDialog.test.tsx` - 3件失敗
-    - エクスポートジョブ作成とポーリング開始
-    - エクスポート完了時のダウンロードリンク表示
-    - エクスポート失敗時のエラーメッセージ表示
-    - 問題: `act()`ラッピング不足、タイマーモック問題
-    - _完了: 2026-02-08 22:33, 全8テスト成功、act()ラッピング追加、タイムアウト設定修正_
-    - _作業記録: work-log-20260208-223316-task19-2-1-export-dialog-test.md_
-  - [x] 19.2.2 `dashboard/src/App.test.tsx` - 1件失敗
-    - "learn react"テキスト検索失敗
-    - 問題: テストが実際のアプリ構造と不一致
-  - [x] 19.2.3 Material-UI Grid v2移行
-    - `item`, `xs`, `sm`, `md`プロパティの非推奨警告解消
-    - Grid2コンポーネントへの移行
-    - _完了: 2026-02-08 23:00, Grid v1をStackコンポーネントに移行（Grid2は未提供）_
-    - _成果物: SearchFilter.tsx, ExecutionStatus.tsx（Stackコンポーネント使用）_
-    - _作業記録: work-log-20260208-230043-task19-2-3-grid-v2-migration.md_
-  - [x] 19.2.4 `act()`警告の解消
-    - SearchFilter、ExportDialog、ExecutionStatusコンポーネント
-    - 状態更新を`act()`でラップ
-    - _完了: 2026-02-08 23:30, 27/27テスト成功（SearchFilter: 11, ExportDialog: 8, ExecutionStatus: 10）_
-    - _成果物: SearchFilter.test.tsx（新規）, ExportDialog.test.tsx（修正）, ExecutionStatus.test.tsx（修正）_
-    - _作業記録: work-log-20260208-230610-task19-2-4-act-warnings.md_
+  - _完了: 2026-02-08 23:30, 27/27テスト成功_
 
-- [x] 19.3 ダッシュボードE2Eテストの実行
+- [x] 19.2.2 ダッシュボードE2Eテストの実行
   - Playwrightテストの実行環境構築
-  - `dashboard/src/__tests__/e2e/dashboard.spec.ts` 実行
-  - `dashboard/src/__tests__/e2e/api-integration.spec.ts` 実行
   - LocalStack環境またはデプロイ済み環境での実行
   - _Requirements: 要件14.4（E2Eテスト）_
   - _優先度: 🟡 Medium_
-  - _推定工数: 2-3時間_
-  - _関連: dashboard/playwright.config.ts_
-  - _完了: 2026-02-08, 21テスト実行（3成功、15失敗、3スキップ）、主な失敗原因: API未起動、テスト期待値不一致_
-  - _作業記録: work-log-20260208-224908-task19-3-4-e2e-deploy.md_
+  - _完了: 2026-02-08, 21テスト実行（3成功、15失敗、3スキップ）_
 
-- [x] 19.4 ダッシュボードのビルドとデプロイ検証
+- [x] 19.2.3 ダッシュボードのビルドとデプロイ検証
   - `npm run build`でビルド成功を確認
   - S3バケットへのアップロード検証
   - CloudFront Invalidation実行検証
-  - デプロイスクリプト（scripts/deploy-dashboard.ps1）の動作確認
   - _Requirements: 要件10.1（Webダッシュボード）_
   - _優先度: 🟡 Medium_
-  - _推定工数: 1-2時間_
-  - _関連: scripts/deploy-dashboard.ps1_
-  - _完了: 2026-02-08, ビルド成功（162.15 kB gzip後）、デプロイスクリプト確認完了_
-  - _作業記録: work-log-20260208-224908-task19-3-4-e2e-deploy.md_
+  - _完了: 2026-02-08, ビルド成功（162.15 kB gzip後）_
 
-### 19.5. 全量テスト失敗ケース解消
+#### 19.3 全量テスト失敗ケース解消
 
-- [x] 19.5 APIキーキャッシュロジック修正
-  - **ファイル**: `src/lambda/collect/__tests__/handler.test.ts:827`
-  - **失敗内容**: キャッシュが有効な場合でもSecrets Managerが1回呼ばれている
-  - **原因**: テスト環境（`NODE_ENV=test`）ではキャッシュが無効化されているため、毎回Secrets Managerが呼ばれる
-  - **対応内容**:
-    - `src/lambda/collect/handler.ts` に`clearApiKeyCache()`関数を追加
-    - テストの`beforeEach`でキャッシュをクリア
-    - テストケース内で`NODE_ENV`を一時的に`production`に変更し、キャッシュを有効化
+- [x] 19.3.1 APIキーキャッシュロジック修正
+  - キャッシュが有効な場合でもSecrets Managerが呼ばれる問題を修正
   - _Requirements: 要件11.1（API認証）_
   - _優先度: 🟡 Medium_
-  - _推定工数: 2-3時間_
-  - _関連: work-log-20260209-070746-full-test-analysis.md_
   - _完了: 2026-02-09 07:13:09, 全テスト29/29成功（100%）_
-  - _作業記録: work-log-20260209-071035-task19-5-api-key-cache-fix.md_
 
-- [x] 19.6 CloudFront ViewerCertificate設定追加
-  - **ファイル**: `cdk/lib/constructs/cloudfront.ts`
-  - **失敗内容**: CloudFront DistributionのViewerCertificateプロパティが設定されていない
-  - **原因**: CDK Constructで`ViewerCertificate`の設定が欠落している
-  - **対応内容**:
-    - CDK Nag抑制（AwsSolutions-CFR4）を追加
-    - デフォルトCloudFront証明書使用時の制限を文書化
-    - `minimumProtocolVersion`は既に設定済み（TLS_V1_2_2021）
-    - 将来のACM証明書移行に備えた設定を維持
+- [x] 19.3.2 CloudFront ViewerCertificate設定追加
+  - CDK Nag抑制（AwsSolutions-CFR4）を追加
+  - デフォルトCloudFront証明書使用時の制限を文書化
   - _Requirements: 要件13.1（セキュリティ）_
-  - _優先度: 🔴 Critical（セキュリティ要件）_
-  - _推定工数: 1-2時間_
+  - _優先度: � Critical_
   - _完了: 2026-02-09, CDK Synth成功_
-  - _作業記録: work-log-20260209-071039-task19-6-cloudfront-viewer-certificate.md_
-  - _備考: デフォルト証明書ではTLS 1.2強制不可。ACM証明書導入時に完全対応可能_
 
-- [x] 19.7 CloudFront CfnOutput追加
-  - **ファイル**: `cdk/lib/constructs/cloudfront.ts`
-  - **実装内容**: 3つのCfnOutputを追加
-    - DistributionDomainName: CloudFront Distribution Domain Name
-    - DistributionId: CloudFront Distribution ID
-    - DashboardUrl: TDnet Dashboard URL（HTTPS形式）
-  - **テスト結果**: 15/15テスト成功（100%）
-  - **実際の出力名**:
-    - TestCloudFrontDistributionDomainName7A52A094
-    - TestCloudFrontDistributionId8DAE6F5D
-    - TestCloudFrontDashboardUrl2BDAAAA2
+- [x] 19.3.3 CloudFront CfnOutput追加
+  - DistributionDomainName, DistributionId, DashboardUrlを追加
   - _Requirements: 要件10.1（Webダッシュボード）_
   - _優先度: 🟡 Medium_
   - _完了: 2026-02-09 07:39:19, 15/15テスト成功_
-  - _作業記録: work-log-20260209-073919-task19-7-completion-review.md_
 
+#### 19.4 実装品質の網羅的確認
+
+- [x] 19.4.1 エラーハンドリング実装の確認
+  - カスタムエラークラス（src/errors/index.ts）の完全性確認
+  - 再試行ロジック（src/utils/retry.ts）の実装確認
+  - 構造化ログ（src/utils/logger.ts）の実装確認
+  - エラーメトリクス送信の実装確認
+  - _Requirements: 要件6.1-6.5（エラーハンドリング全般）_
+  - _完了: 2026-02-09, すべての実装が完備_
+
+- [x] 19.4.2 Lambda関数実装の確認
+  - Collector Lambda: バリデーション、並列処理、部分的失敗処理
+  - Query Lambda: APIキー認証、クエリパラメータバリデーション、JSON/CSV対応
+  - Export Lambda: APIキー認証、非同期処理、進捗管理
+  - Collect Lambda: APIキー認証、Lambda Collector同期呼び出し
+  - _Requirements: 要件1.1-1.4, 4.1-4.4, 5.1-5.4（Lambda関数全般）_
+  - _完了: 2026-02-09, すべてのLambda関数が適切に実装_
+
+- [x] 19.4.3 ユーティリティ実装の確認
+  - レート制限（src/utils/rate-limiter.ts）
+  - メトリクス送信（src/utils/metrics.ts, cloudwatch-metrics.ts）
+  - データバリデーション（disclosure_id, date_partition生成）
+  - _Requirements: 要件9.1-9.2（レート制限）, 6.4（メトリクス）_
+  - _完了: 2026-02-09, すべてのユーティリティが適切に実装_
+
+- [x] 19.4.4 CDK実装の確認
+  - CloudWatch Alarms（6種類のアラーム）
+  - Lambda関数（Collector, Query, Export）
+  - DynamoDB テーブル
+  - S3 バケット
+  - Secrets Manager
+  - _Requirements: 要件12.1-12.4（インフラ全般）_
+  - _完了: 2026-02-09, CDK実装は概ね良好だがDLQ設定が欠如_
+
+- [x] 19.5 テストカバレッジの確認
+  - ユニットテスト: 497テスト成功
+  - 統合テスト: 実装済み
+  - プロパティベーステスト: 実装済み
+  - E2Eテスト: 28テスト成功
+  - カバレッジ: Statements 79.78%, Branches 72.2%
+  - _Requirements: 要件14.1-14.4（テスト全般）_
+  - _完了: 2026-02-09, カバレッジが目標値80%に若干不足_
+
+- [x] 19.6 問題点の特定と優先度付け
+  - 🔴 Critical: DLQ設定の欠如（Lambda Collector）
+  - 🟡 Warning: テストカバレッジ不足（Statements 79.78%, Branches 72.2%）
+  - _完了: 2026-02-09, 改善タスクを特定_
+
+- [x] 19.7 作業記録の作成と改善タスクの追加
+  - work-log-20260209-073940-implementation-quality-check.md作成
+  - tasks.mdにタスク19.8, 19.9を追加
+  - _完了: 2026-02-09_
+
+- [x] 19.8 DLQ設定の実装（Critical）
+  - Lambda Collector用SQS DLQキュー作成
+  - Lambda Collector ConstructにDLQ設定追加（deadLetterQueue, deadLetterQueueEnabled, retryAttempts）
+  - DLQプロセッサーLambda実装（src/lambda/dlq-processor/index.ts）
+  - DLQメッセージ数のCloudWatch Alarm追加
+  - テスト実装（DLQ設定検証、DLQプロセッサー動作確認）
+  - _Requirements: 要件6.1, 6.2（エラーハンドリング）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 6-8時間_
+  - _参考資料: .kiro/specs/tdnet-data-collector/templates/lambda-dlq-example.ts_
+  - _関連: steering/core/error-handling-patterns.md（DLQ設定必須）_
+  - _実装内容:_
+    - SQS DLQキュー作成（保持期間14日、visibilityTimeout 5分）
+    - Lambda Collector ConstructにDLQ設定追加
+    - DLQプロセッサーLambda実装（失敗メッセージ解析、SNS通知）
+    - CloudWatch Alarm追加（DLQメッセージ数 > 0 → Critical）
+    - テスト実装（DLQ設定検証、プロセッサー動作確認）
+
+- [ ] 19.9 テストカバレッジ改善（Warning）
+  - カバレッジレポート詳細確認（coverage/lcov-report/index.html）
+  - 未カバー箇所の特定（特にBranches: 72.2%）
+  - 追加テストケース作成（条件分岐、エラーハンドリングパス）
+  - カバレッジ目標達成確認（Statements 80%以上、Branches 80%以上）
+  - _Requirements: 要件14.1, 14.2（テスト）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 4-6時間_
+  - _関連: steering/development/testing-strategy.md（カバレッジ目標80%）_
+  - _実装内容:_
+    - カバレッジレポート分析
+    - 未カバー条件分岐の特定
+    - エラーハンドリングパスのテスト追加
+    - エッジケースのテスト追加
+    - カバレッジ再測定と目標達成確認
 
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
 
@@ -1956,92 +1985,7 @@
   - _Requirements: 要件13.1（運用開始）_
 
 
-### 19. 実装品質の網羅的確認と改善
 
-- [x] 19.1 エラーハンドリング実装の確認
-  - カスタムエラークラス（src/errors/index.ts）の完全性確認
-  - 再試行ロジック（src/utils/retry.ts）の実装確認
-  - 構造化ログ（src/utils/logger.ts）の実装確認
-  - エラーメトリクス送信の実装確認
-  - _Requirements: 要件6.1-6.5（エラーハンドリング全般）_
-  - _完了: 2026-02-09, すべての実装が完備_
-
-- [x] 19.2 Lambda関数実装の確認
-  - Collector Lambda: バリデーション、並列処理、部分的失敗処理
-  - Query Lambda: APIキー認証、クエリパラメータバリデーション、JSON/CSV対応
-  - Export Lambda: APIキー認証、非同期処理、進捗管理
-  - Collect Lambda: APIキー認証、Lambda Collector同期呼び出し
-  - _Requirements: 要件1.1-1.4, 4.1-4.4, 5.1-5.4（Lambda関数全般）_
-  - _完了: 2026-02-09, すべてのLambda関数が適切に実装_
-
-- [x] 19.3 ユーティリティ実装の確認
-  - レート制限（src/utils/rate-limiter.ts）
-  - メトリクス送信（src/utils/metrics.ts, cloudwatch-metrics.ts）
-  - データバリデーション（disclosure_id, date_partition生成）
-  - _Requirements: 要件9.1-9.2（レート制限）, 6.4（メトリクス）_
-  - _完了: 2026-02-09, すべてのユーティリティが適切に実装_
-
-- [x] 19.4 CDK実装の確認
-  - CloudWatch Alarms（6種類のアラーム）
-  - Lambda関数（Collector, Query, Export）
-  - DynamoDB テーブル
-  - S3 バケット
-  - Secrets Manager
-  - _Requirements: 要件12.1-12.4（インフラ全般）_
-  - _完了: 2026-02-09, CDK実装は概ね良好だがDLQ設定が欠如_
-
-- [x] 19.5 テストカバレッジの確認
-  - ユニットテスト: 497テスト成功
-  - 統合テスト: 実装済み
-  - プロパティベーステスト: 実装済み
-  - E2Eテスト: 28テスト成功
-  - カバレッジ: Statements 79.78%, Branches 72.2%
-  - _Requirements: 要件14.1-14.4（テスト全般）_
-  - _完了: 2026-02-09, カバレッジが目標値80%に若干不足_
-
-- [x] 19.6 問題点の特定と優先度付け
-  - 🔴 Critical: DLQ設定の欠如（Lambda Collector）
-  - 🟡 Warning: テストカバレッジ不足（Statements 79.78%, Branches 72.2%）
-  - _完了: 2026-02-09, 改善タスクを特定_
-
-- [x] 19.7 作業記録の作成と改善タスクの追加
-  - work-log-20260209-073940-implementation-quality-check.md作成
-  - tasks.mdにタスク19.8, 19.9を追加
-  - _完了: 2026-02-09_
-
-- [ ] 19.8 DLQ設定の実装（Critical）
-  - Lambda Collector用SQS DLQキュー作成
-  - Lambda Collector ConstructにDLQ設定追加（deadLetterQueue, deadLetterQueueEnabled, retryAttempts）
-  - DLQプロセッサーLambda実装（src/lambda/dlq-processor/index.ts）
-  - DLQメッセージ数のCloudWatch Alarm追加
-  - テスト実装（DLQ設定検証、DLQプロセッサー動作確認）
-  - _Requirements: 要件6.1, 6.2（エラーハンドリング）_
-  - _優先度: 🔴 Critical_
-  - _推定工数: 6-8時間_
-  - _参考資料: .kiro/specs/tdnet-data-collector/templates/lambda-dlq-example.ts_
-  - _関連: steering/core/error-handling-patterns.md（DLQ設定必須）_
-  - _実装内容:_
-    - SQS DLQキュー作成（保持期間14日、visibilityTimeout 5分）
-    - Lambda Collector ConstructにDLQ設定追加
-    - DLQプロセッサーLambda実装（失敗メッセージ解析、SNS通知）
-    - CloudWatch Alarm追加（DLQメッセージ数 > 0 → Critical）
-    - テスト実装（DLQ設定検証、プロセッサー動作確認）
-
-- [ ] 19.9 テストカバレッジ改善（Warning）
-  - カバレッジレポート詳細確認（coverage/lcov-report/index.html）
-  - 未カバー箇所の特定（特にBranches: 72.2%）
-  - 追加テストケース作成（条件分岐、エラーハンドリングパス）
-  - カバレッジ目標達成確認（Statements 80%以上、Branches 80%以上）
-  - _Requirements: 要件14.1, 14.2（テスト）_
-  - _優先度: 🟡 Medium_
-  - _推定工数: 4-6時間_
-  - _関連: steering/development/testing-strategy.md（カバレッジ目標80%）_
-  - _実装内容:_
-    - カバレッジレポート分析
-    - 未カバー条件分岐の特定
-    - エラーハンドリングパスのテスト追加
-    - エッジケースのテスト追加
-    - カバレッジ再測定と目標達成確認
 
 ## Phase 5: 本番運用後の自動化強化
 

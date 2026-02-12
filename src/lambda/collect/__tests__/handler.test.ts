@@ -306,7 +306,6 @@ describe('POST /collect Handler', () => {
       // ただし、E年以冁E�E日付を使用する忁E��がある
       const today = new Date();
       const year = today.getFullYear();
-      const month = today.getMonth() + 1; // 現在の朁E
       
       const event = createTestEvent({
           start_date: `${year}-02-30`, // 2朁E0日は存在しなぁE

@@ -365,7 +365,8 @@ async function verifyS3ObjectExists(s3Key: string): Promise<void> {
         jitter: true,
         shouldRetry: (error) => {
           // 404エラーは再試行しない
-          if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+          const awsError = error as any;
+          if (error.name === 'NotFound' || awsError.$metadata?.httpStatusCode === 404) {
             return false;
           }
           // その他のエラーは再試行

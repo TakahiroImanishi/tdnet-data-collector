@@ -252,7 +252,7 @@ describe('generatePresignedUrls', () => {
         '2024/01/16/TD20240116001.pdf',
       ];
 
-      mockGetSignedUrl.mockImplementation(async (client, command) => {
+      mockGetSignedUrl.mockImplementation(async (_client, command) => {
         const key = (command as GetObjectCommand).input.Key;
         return `https://test-pdfs-bucket.s3.amazonaws.com/${key}?X-Amz-...`;
       });
@@ -285,7 +285,7 @@ describe('generatePresignedUrls', () => {
       const s3Keys = ['2024/01/15/TD20240115001.pdf', '2024/01/15/TD20240115002.pdf'];
       const expiresIn = 7200; // 2時間
 
-      mockGetSignedUrl.mockImplementation(async (client, command) => {
+      mockGetSignedUrl.mockImplementation(async (_client, command) => {
         const key = (command as GetObjectCommand).input.Key;
         return `https://test-pdfs-bucket.s3.amazonaws.com/${key}?X-Amz-...`;
       });
@@ -310,7 +310,7 @@ describe('generatePresignedUrls', () => {
         '2024/01/16/TD20240116001.pdf',
       ];
 
-      mockGetSignedUrl.mockImplementation(async (client, command) => {
+      mockGetSignedUrl.mockImplementation(async (_client, command) => {
         const key = (command as GetObjectCommand).input.Key;
         if (key === s3Keys[1]) {
           throw new Error('NoSuchKey');
@@ -349,7 +349,7 @@ describe('generatePresignedUrls', () => {
         '2024/01/16/TD20240116001.pdf',
       ];
 
-      mockGetSignedUrl.mockImplementation(async (client, command) => {
+      mockGetSignedUrl.mockImplementation(async (_client, command) => {
         const key = (command as GetObjectCommand).input.Key;
         if (key === s3Keys[1]) {
           throw 'String error'; // 非Errorオブジェクト
@@ -382,7 +382,7 @@ describe('generatePresignedUrls', () => {
       let concurrentCalls = 0;
       let maxConcurrentCalls = 0;
 
-      mockGetSignedUrl.mockImplementation(async (client, command) => {
+      mockGetSignedUrl.mockImplementation(async (_client, command) => {
         concurrentCalls++;
         maxConcurrentCalls = Math.max(maxConcurrentCalls, concurrentCalls);
 

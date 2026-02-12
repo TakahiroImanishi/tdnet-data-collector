@@ -5,7 +5,7 @@
  * 現状: 66.66% (10/15ブランチ) → 目標: 80%以上 (12/15ブランチ以上)
  */
 
-import { retryWithBackoff, isRetryableError, RetryOptions } from '../retry';
+import { retryWithBackoff, isRetryableError } from '../retry';
 import { RetryableError, ValidationError, NotFoundError } from '../../errors';
 
 describe('retry.ts', () => {

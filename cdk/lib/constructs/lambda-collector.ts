@@ -8,6 +8,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { LambdaEnvironmentConfig, Environment } from '../config/environment-config';
@@ -40,6 +41,11 @@ export interface LambdaCollectorProps {
    * S3 PDFs bucket
    */
   pdfsBucket: s3.IBucket;
+
+  /**
+   * Dead Letter Queue (optional)
+   */
+  deadLetterQueue?: sqs.IQueue;
 }
 
 /**
@@ -71,6 +77,10 @@ export class LambdaCollector extends Construct {
         NODE_OPTIONS: '--enable-source-maps',
       },
       reservedConcurrentExecutions: 1, // 同時実行数を1に制限（レート制限のため）
+      // DLQ設定
+      deadLetterQueue: props.deadLetterQueue,
+      deadLetterQueueEnabled: props.deadLetterQueue !== undefined,
+      retryAttempts: 2, // Lambda非同期呼び出しの再試行回数
     });
 
     // Grant IAM permissions

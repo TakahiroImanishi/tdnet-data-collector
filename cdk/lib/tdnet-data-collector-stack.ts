@@ -5,11 +5,13 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 import { Environment, getEnvironmentConfig } from './config/environment-config';
 import { CloudWatchAlarms } from './constructs/cloudwatch-alarms';
 import { CloudWatchDashboard } from './constructs/cloudwatch-dashboard';
 import { DashboardCloudFront } from './constructs/cloudfront';
+import { LambdaDLQ } from './constructs/lambda-dlq';
 
 /**
  * Stack properties with environment configuration
@@ -289,7 +291,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // ========================================
 
     // CloudFront Distribution for Dashboard
-    const dashboardCloudFront = new DashboardCloudFront(this, 'DashboardCloudFront', {
+    new DashboardCloudFront(this, 'DashboardCloudFront', {
       dashboardBucket: this.dashboardBucket,
       environment: this.deploymentEnvironment,
     });
@@ -305,6 +307,36 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       'ApiKeySecret',
       '/tdnet/api-key'
     );
+
+    // ========================================
+    // Phase 1.6: SNS Topic for Alerts
+    // ========================================
+
+    // SNSトピック作成（アラート通知用）
+    const alertTopic = new sns.Topic(this, 'AlertTopic', {
+      displayName: `TDnet Alerts - ${this.deploymentEnvironment}`,
+      topicName: `tdnet-alerts-${this.deploymentEnvironment}`,
+    });
+
+    // CloudFormation Output
+    new cdk.CfnOutput(this, 'AlertTopicArn', {
+      value: alertTopic.topicArn,
+      description: 'SNS Topic ARN for alerts',
+      exportName: `TdnetAlertTopicArn-${this.deploymentEnvironment}`,
+    });
+
+    // ========================================
+    // Phase 1.7: Dead Letter Queue (DLQ)
+    // ========================================
+
+    // DLQ構成を作成
+    const lambdaDLQ = new LambdaDLQ(this, 'LambdaDLQ', {
+      environment: this.deploymentEnvironment,
+      alertTopic,
+      queueNamePrefix: 'tdnet',
+    });
+
+    // CloudFormation Outputs（LambdaDLQ constructから自動的に出力される）
 
     // ========================================
     // Phase 1: Lambda Functions
@@ -327,6 +359,10 @@ export class TdnetDataCollectorStack extends cdk.Stack {
         NODE_OPTIONS: '--enable-source-maps',
       },
       reservedConcurrentExecutions: 1, // 同時実行数を1に制限（レート制限のため）
+      // DLQ設定
+      deadLetterQueue: lambdaDLQ.queue,
+      deadLetterQueueEnabled: true,
+      retryAttempts: 2, // Lambda非同期呼び出しの再試行回数
     });
 
     // IAM権限の付与
