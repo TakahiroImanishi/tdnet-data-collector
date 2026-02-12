@@ -134,7 +134,7 @@ describe('downloadPdf', () => {
       (timeoutError as any).isAxiosError = true;
 
       // axios.isAxiosErrorがtrueを返すようにモック
-      (mockedAxios.isAxiosError as jest.Mock).mockReturnValue(true);
+      ((mockedAxios.isAxiosError as unknown) as jest.Mock).mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(timeoutError);
 
       // Act & Assert
@@ -153,7 +153,7 @@ describe('downloadPdf', () => {
       (serverError as any).response = { status: 503 };
 
       // axios.isAxiosErrorがtrueを返すようにモック
-      (mockedAxios.isAxiosError as jest.Mock).mockReturnValue(true);
+      ((mockedAxios.isAxiosError as unknown) as jest.Mock).mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(serverError);
 
       // Act & Assert
@@ -172,7 +172,7 @@ describe('downloadPdf', () => {
       (rateLimitError as any).response = { status: 429 };
 
       // axios.isAxiosErrorがtrueを返すようにモック
-      (mockedAxios.isAxiosError as jest.Mock).mockReturnValue(true);
+      ((mockedAxios.isAxiosError as unknown) as jest.Mock).mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(rateLimitError);
 
       // Act & Assert

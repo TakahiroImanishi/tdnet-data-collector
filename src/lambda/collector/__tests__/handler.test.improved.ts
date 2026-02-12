@@ -19,7 +19,7 @@ import {
   mockPutDisclosure,
   mockUpdateExecutionStatus,
   mockPutPdf,
-} from './test-helpers';
+} from '../test-helpers';
 import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 

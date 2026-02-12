@@ -860,15 +860,15 @@ describe('Export Lambda query-disclosures', () => {
       
       // 各フィールドを個別にnullにしてテスト
       const testCases = [
-        { field: 'disclosure_id', item: { company_code: { S: '1234' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'company_code', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'company_name', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'disclosure_type', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'title', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'pdf_url', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 's3_key', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'collected_at', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
-        { field: 'date_partition', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } },
+        { field: 'disclosure_id', item: { company_code: { S: '1234' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'company_code', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'company_name', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'disclosure_type', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'title', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'pdf_url', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 's3_key', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'collected_at', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'date_partition', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
       ];
 
       for (const testCase of testCases) {

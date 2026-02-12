@@ -65,9 +65,6 @@ export async function generateSignedUrl(
     });
 
     // S3エラーは再試行可能
-    throw new RetryableError('Failed to generate signed URL', {
-      cause: error,
-      context: { s3_key, expires_in: expiresIn },
-    });
+    throw new RetryableError('Failed to generate signed URL', error as Error);
   }
 }

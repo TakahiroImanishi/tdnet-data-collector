@@ -51,7 +51,7 @@ describe('Lambda Export Handler', () => {
   describe('正常系', () => {
     it('JSON形式のエクスポートリクエストを受け付ける', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -62,7 +62,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       const mockExportJob = {
         export_id: 'export_1705305600000_abc123_12345678',
@@ -102,7 +102,7 @@ describe('Lambda Export Handler', () => {
 
     it('CSV形式のエクスポートリクエストを受け付ける', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -114,7 +114,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-31',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       const mockExportJob = {
         export_id: 'export_1705305600000_def456_87654321',
@@ -150,7 +150,7 @@ describe('Lambda Export Handler', () => {
   describe('異常系: APIキー認証', () => {
     it('APIキーが未指定の場合は401エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {},
         body: JSON.stringify({
           format: 'json',
@@ -159,7 +159,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -179,7 +179,7 @@ describe('Lambda Export Handler', () => {
 
     it('APIキーが不正な場合は401エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'invalid-api-key',
         },
@@ -190,7 +190,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -212,12 +212,12 @@ describe('Lambda Export Handler', () => {
   describe('異常系: バリデーション', () => {
     it('リクエストボディが空の場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
         body: '',
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -229,12 +229,12 @@ describe('Lambda Export Handler', () => {
 
     it('不正なJSON形式の場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
         body: 'invalid json',
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -246,7 +246,7 @@ describe('Lambda Export Handler', () => {
 
     it('不正なフォーマットの場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -257,7 +257,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -269,7 +269,7 @@ describe('Lambda Export Handler', () => {
 
     it('不正な日付フォーマットの場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -280,7 +280,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -292,7 +292,7 @@ describe('Lambda Export Handler', () => {
 
     it('開始日が終了日より後の場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -303,7 +303,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-15', // 開始日より前
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -317,7 +317,7 @@ describe('Lambda Export Handler', () => {
 
     it('不正な企業コードの場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -329,7 +329,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -341,7 +341,7 @@ describe('Lambda Export Handler', () => {
 
     it('フィルターが未指定の場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -349,7 +349,7 @@ describe('Lambda Export Handler', () => {
           format: 'json',
           // filter未指定
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -361,7 +361,7 @@ describe('Lambda Export Handler', () => {
 
     it('フォーマットが未指定の場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -372,7 +372,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -384,7 +384,7 @@ describe('Lambda Export Handler', () => {
 
     it('存在しない日付の場合は400エラーを返す（start_date）', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -395,7 +395,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-03-01',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       const mockExportJob = {
         export_id: 'export_test',
@@ -421,7 +421,7 @@ describe('Lambda Export Handler', () => {
 
     it('存在しない日付の場合は400エラーを返す（end_date）', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -432,7 +432,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-13-01', // 存在しない月（13月）
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -446,7 +446,7 @@ describe('Lambda Export Handler', () => {
 
     it('end_dateのフォーマットが不正な場合は400エラーを返す', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -457,7 +457,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024/01/20', // 不正なフォーマット
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       // Act
       const result = await handler(event, mockContext);
@@ -471,7 +471,7 @@ describe('Lambda Export Handler', () => {
   describe('CORS対応', () => {
     it('レスポンスにCORSヘッダーが含まれる', async () => {
       // Arrange
-      const event: ExportEvent = {
+      const event = {
         headers: {
           'x-api-key': 'test-api-key',
         },
@@ -482,7 +482,7 @@ describe('Lambda Export Handler', () => {
             end_date: '2024-01-20',
           },
         }),
-      } as ExportEvent;
+      } as unknown as ExportEvent;
 
       const mockExportJob = {
         export_id: 'export_1705305600000_abc123_12345678',

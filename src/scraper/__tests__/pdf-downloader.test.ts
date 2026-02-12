@@ -55,7 +55,7 @@ describe('downloadPdf', () => {
       (error as any).code = 'ECONNABORTED';
       (error as any).isAxiosError = true;
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert
@@ -70,7 +70,7 @@ describe('downloadPdf', () => {
       (error as any).code = 'ETIMEDOUT';
       (error as any).isAxiosError = true;
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert
@@ -85,7 +85,7 @@ describe('downloadPdf', () => {
       (error as any).isAxiosError = true;
       (error as any).response = { status: 500 };
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert
@@ -100,7 +100,7 @@ describe('downloadPdf', () => {
       (error as any).isAxiosError = true;
       (error as any).response = { status: 503 };
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert
@@ -115,7 +115,7 @@ describe('downloadPdf', () => {
       const url = 'https://www.release.tdnet.info/inbs/140120240115001.pdf';
       const error = new Error('Unknown error');
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(false);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(false);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert
@@ -130,7 +130,7 @@ describe('downloadPdf', () => {
       (error as any).isAxiosError = true;
       (error as any).response = { status: 404 };
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert
@@ -145,7 +145,7 @@ describe('downloadPdf', () => {
       (error as any).isAxiosError = true;
       (error as any).response = { status: 400 };
 
-      mockedAxios.isAxiosError = jest.fn().mockReturnValue(true);
+      (mockedAxios.isAxiosError as any) = jest.fn().mockReturnValue(true);
       mockedAxios.get.mockRejectedValue(error);
 
       // Act & Assert

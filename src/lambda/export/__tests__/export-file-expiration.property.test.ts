@@ -49,7 +49,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         fc.array(
           fc.record({
             disclosure_id: fc.string({ minLength: 10, maxLength: 20 }),
-            company_code: fc.stringOf(fc.integer({ min: 0, max: 9 }), { minLength: 4, maxLength: 4 }),
+            company_code: fc.string({ minLength: 4, maxLength: 4 }).map(s => s.replace(/[^0-9]/g, '0')),
             company_name: fc.string({ minLength: 1, maxLength: 100 }),
             disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示'),
             title: fc.string({ minLength: 1, maxLength: 200 }),
@@ -85,7 +85,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           
           // PutObjectCommandのinputプロパティにアクセス
           expect(call.args[0].input).toBeDefined();
-          expect(call.args[0].input.Tagging).toBe('auto-delete=true');
+          expect((call.args[0].input as any).Tagging).toBe('auto-delete=true');
         }
       ),
       {
@@ -112,7 +112,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         fc.array(
           fc.record({
             disclosure_id: fc.string({ minLength: 10, maxLength: 20 }),
-            company_code: fc.stringOf(fc.integer({ min: 0, max: 9 }), { minLength: 4, maxLength: 4 }),
+            company_code: fc.string({ minLength: 4, maxLength: 4 }).map(s => s.replace(/[^0-9]/g, '0')),
             company_name: fc.string({ minLength: 1, maxLength: 100 }),
             disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示'),
             title: fc.string({ minLength: 1, maxLength: 200 }),
@@ -172,7 +172,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         fc.array(
           fc.record({
             disclosure_id: fc.string({ minLength: 10, maxLength: 20 }),
-            company_code: fc.stringOf(fc.integer({ min: 0, max: 9 }), { minLength: 4, maxLength: 4 }),
+            company_code: fc.string({ minLength: 4, maxLength: 4 }).map(s => s.replace(/[^0-9]/g, '0')),
             company_name: fc.string({ minLength: 1, maxLength: 100 }),
             disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示'),
             title: fc.string({ minLength: 1, maxLength: 200 }),
@@ -208,7 +208,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           
           // PutObjectCommandのinputプロパティにアクセス
           expect(call.args[0].input).toBeDefined();
-          const contentType = call.args[0].input.ContentType;
+          const contentType = (call.args[0].input as any).ContentType;
 
           // Property: ContentTypeが正しく設定されている
           const expectedContentType = format === 'json' ? 'application/json' : 'text/csv';
@@ -265,7 +265,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           
           // PutObjectCommandのinputプロパティにアクセス
           expect(call.args[0].input).toBeDefined();
-          const body = call.args[0].input.Body;
+          const body = (call.args[0].input as any).Body;
           const lines = body.split('\n');
 
           // Property: カンマを含む値がダブルクォートで囲まれている

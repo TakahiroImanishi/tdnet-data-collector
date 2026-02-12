@@ -380,7 +380,7 @@ describe('Lambda Query Handler', () => {
       const result = await handler(mockEvent, mockContext);
 
       expect(result.statusCode).toBe(200);
-      expect(result.headers['Content-Type']).toBe('application/json');
+      expect(result.headers!['Content-Type']).toBe('application/json');
       expect(JSON.parse(result.body)).toEqual({
         disclosures: mockDisclosures,
         total: 1,
@@ -425,8 +425,8 @@ describe('Lambda Query Handler', () => {
       const result = await handler(mockEvent, mockContext);
 
       expect(result.statusCode).toBe(200);
-      expect(result.headers['Content-Type']).toBe('text/csv');
-      expect(result.headers['Content-Disposition']).toContain('attachment');
+      expect(result.headers!['Content-Type']).toBe('text/csv');
+      expect(result.headers!['Content-Disposition']).toContain('attachment');
       expect(result.body).toContain('disclosure_id,company_code');
     });
 
@@ -458,7 +458,7 @@ describe('Lambda Query Handler', () => {
 
       const result = await handler(mockEvent, mockContext);
 
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers!['Access-Control-Allow-Origin']).toBe('*');
     });
 
     it('エラーレスポンスにもCORSヘッダーが含まれる', async () => {
@@ -467,7 +467,7 @@ describe('Lambda Query Handler', () => {
       const result = await handler(mockEvent, mockContext);
 
       expect(result.statusCode).toBe(401);
-      expect(result.headers['Access-Control-Allow-Origin']).toBe('*');
+      expect(result.headers!['Access-Control-Allow-Origin']).toBe('*');
     });
   });
 
