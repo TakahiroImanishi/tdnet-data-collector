@@ -1934,10 +1934,12 @@
   - アラート対応手順
   - _Requirements: 要件13.1（運用ドキュメント）_
 
-- [ ] 25.4 アーキテクチャ図の更新
+- [x] 25.4 アーキテクチャ図の更新
   - システム構成図の最終確認
   - データフロー図の更新
   - _Requirements: 要件13.1（ドキュメント）_
+  - _完了: 2026-02-12 10:44:47_
+  - _成果物: `.kiro/specs/tdnet-data-collector/design/architecture.md`, `docs/data-flow.md`_
 
 ### 26. 最終テストと検証
 
