@@ -365,3 +365,91 @@ describe('CloudTrail Configuration', () => {
     });
   });
 });
+
+  describe('Optional DynamoDB Tables', () => {
+    it('should handle empty DynamoDB tables array', () => {
+      // CloudTrail Constructを直接テストするため、新しいスタックを作成
+      const testApp = new cdk.App();
+      const testStack = new cdk.Stack(testApp, 'TestStackNoDynamoDB');
+      
+      const logsBucket = new cdk.aws_s3.Bucket(testStack, 'LogsBucket');
+      
+      // DynamoDBテーブルなしでCloudTrail Constructを作成
+      const { CloudTrailConstruct } = require('../lib/constructs/cloudtrail');
+      new CloudTrailConstruct(testStack, 'CloudTrail', {
+        logsBucket,
+        environment: 'test',
+        dynamodbTables: [], // 空配列
+      });
+
+      const testTemplate = Template.fromStack(testStack);
+      
+      // CloudTrailが作成されていることを確認
+      const trails = testTemplate.findResources('AWS::CloudTrail::Trail');
+      expect(Object.keys(trails).length).toBe(1);
+      
+      // DynamoDBデータイベントセレクターが存在しないことを確認
+      const trail = trails[Object.keys(trails)[0]];
+      const dynamodbSelectors = trail.Properties.EventSelectors?.filter(
+        (selector: any) =>
+          selector.DataResources &&
+          selector.DataResources.some((dr: any) => dr.Type === 'AWS::DynamoDB::Table')
+      ) || [];
+      
+      expect(dynamodbSelectors.length).toBe(0);
+    });
+
+    it('should handle undefined DynamoDB tables', () => {
+      // CloudTrail Constructを直接テストするため、新しいスタックを作成
+      const testApp = new cdk.App();
+      const testStack = new cdk.Stack(testApp, 'TestStackNoDynamoDB2');
+      
+      const logsBucket = new cdk.aws_s3.Bucket(testStack, 'LogsBucket');
+      
+      // DynamoDBテーブルなしでCloudTrail Constructを作成
+      const { CloudTrailConstruct } = require('../lib/constructs/cloudtrail');
+      new CloudTrailConstruct(testStack, 'CloudTrail', {
+        logsBucket,
+        environment: 'test',
+        // dynamodbTables: undefined (省略)
+      });
+
+      const testTemplate = Template.fromStack(testStack);
+      
+      // CloudTrailが作成されていることを確認
+      const trails = testTemplate.findResources('AWS::CloudTrail::Trail');
+      expect(Object.keys(trails).length).toBe(1);
+    });
+
+    it('should handle undefined PDFs bucket', () => {
+      // CloudTrail Constructを直接テストするため、新しいスタックを作成
+      const testApp = new cdk.App();
+      const testStack = new cdk.Stack(testApp, 'TestStackNoPdfsBucket');
+      
+      const logsBucket = new cdk.aws_s3.Bucket(testStack, 'LogsBucket');
+      
+      // PDFバケットなしでCloudTrail Constructを作成
+      const { CloudTrailConstruct } = require('../lib/constructs/cloudtrail');
+      new CloudTrailConstruct(testStack, 'CloudTrail', {
+        logsBucket,
+        environment: 'test',
+        // pdfsBucket: undefined (省略)
+      });
+
+      const testTemplate = Template.fromStack(testStack);
+      
+      // CloudTrailが作成されていることを確認
+      const trails = testTemplate.findResources('AWS::CloudTrail::Trail');
+      expect(Object.keys(trails).length).toBe(1);
+      
+      // S3データイベントセレクターが存在しないことを確認
+      const trail = trails[Object.keys(trails)[0]];
+      const s3Selectors = trail.Properties.EventSelectors?.filter(
+        (selector: any) =>
+          selector.DataResources &&
+          selector.DataResources.some((dr: any) => dr.Type === 'AWS::S3::Object')
+      ) || [];
+      
+      expect(s3Selectors.length).toBe(0);
+    });
+  });

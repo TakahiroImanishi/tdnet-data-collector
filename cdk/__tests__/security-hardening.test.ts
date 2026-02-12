@@ -273,10 +273,10 @@ describe('セキュリティ強化テスト', () => {
 
         // ローテーション間隔が設定されていることを確認
         expect(schedule.Properties.RotationRules).toBeDefined();
-        expect(schedule.Properties.RotationRules.AutomaticallyAfterDays).toBeDefined();
+        expect(schedule.Properties.RotationRules.ScheduleExpression).toBeDefined();
         
         // ローテーション間隔が90日であることを確認
-        expect(schedule.Properties.RotationRules.AutomaticallyAfterDays).toBe(90);
+        expect(schedule.Properties.RotationRules.ScheduleExpression).toBe('rate(90 days)');
 
         // ローテーションLambda関数が設定されていることを確認
         expect(schedule.Properties.RotationLambdaARN).toBeDefined();
@@ -307,6 +307,8 @@ describe('セキュリティ強化テスト', () => {
               const requiredActions = [
                 'secretsmanager:DescribeSecret',
                 'secretsmanager:GetSecretValue',
+                'secretsmanager:PutSecretValue',
+                'secretsmanager:UpdateSecret',
               ];
 
               const hasRequiredAction = requiredActions.some((requiredAction) =>

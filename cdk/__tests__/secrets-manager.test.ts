@@ -202,6 +202,121 @@ describe('SecretsManagerConstruct', () => {
     });
   });
 
+  describe('ローテーション設定', () => {
+    it('ローテーションが無効の場合、ローテーション関数が作成されないこと', () => {
+      // Arrange & Act
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: false,
+      });
+      template = Template.fromStack(stack);
+
+      // Assert
+      // ローテーション関数が作成されていないことを確認
+      expect(secretsManager.rotationFunction).toBeUndefined();
+      
+      // ローテーションスケジュールが作成されていないことを確認
+      const secrets = template.findResources('AWS::SecretsManager::Secret');
+      const secretKey = Object.keys(secrets)[0];
+      const secret = secrets[secretKey];
+      expect(secret.Properties.RotationSchedule).toBeUndefined();
+    });
+
+    it('ローテーションが有効の場合、ローテーション関数が作成されること', () => {
+      // Arrange & Act
+      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: true,
+        rotationDays: 90,
+      });
+      template = Template.fromStack(stack);
+
+      // Assert
+      // ローテーション関数が作成されていることを確認
+      expect(secretsManager.rotationFunction).toBeDefined();
+      
+      // Lambda関数が作成されていることを確認
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-api-key-rotation-dev',
+        Runtime: 'nodejs20.x',
+        Handler: 'index.handler',
+        Timeout: 30,
+        MemorySize: 128,
+      });
+    });
+
+    it('ローテーションが有効の場合、ローテーションスケジュールが設定されること', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: true,
+        rotationDays: 90,
+      });
+      template = Template.fromStack(stack);
+
+      // Assert
+      // ローテーションスケジュールが作成されていることを確認
+      template.hasResourceProperties('AWS::SecretsManager::RotationSchedule', {
+        RotationRules: {
+          ScheduleExpression: 'rate(90 days)',
+        },
+      });
+    });
+
+    it('カスタムローテーション間隔が設定できること', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'prod',
+        enableRotation: true,
+        rotationDays: 30, // 30日ごとにローテーション
+      });
+      template = Template.fromStack(stack);
+
+      // Assert
+      template.hasResourceProperties('AWS::SecretsManager::RotationSchedule', {
+        RotationRules: {
+          ScheduleExpression: 'rate(30 days)',
+        },
+      });
+    });
+
+    it('ローテーション関数にSecrets Manager権限が付与されること', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: true,
+      });
+      template = Template.fromStack(stack);
+
+      // Assert
+      // ローテーション関数のロールにシークレット読み取り・書き込みポリシーが追加されていることを確認
+      template.hasResourceProperties('AWS::IAM::Policy', {
+        PolicyDocument: {
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+              Effect: 'Allow',
+            }),
+          ]),
+        },
+      });
+
+      template.hasResourceProperties('AWS::IAM::Policy', {
+        PolicyDocument: {
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: Match.arrayWith([
+                'secretsmanager:PutSecretValue',
+                'secretsmanager:UpdateSecret',
+              ]),
+              Effect: 'Allow',
+            }),
+          ]),
+        },
+      });
+    });
+  });
+
   describe('統合テスト', () => {
     it('SecretsManagerConstructが正しくスタックに統合されること', () => {
       // Arrange & Act
