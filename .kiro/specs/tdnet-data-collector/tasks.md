@@ -1841,10 +1841,12 @@
   - _完了: 2026-02-12, ワークフロー作成完了（Update Dependencies, Security Audit, 週次自動実行）_
   - _注意: 毎週月曜日午前9時（JST）に自動実行、手動実行も可能_
 
-- [ ] 23.4 環境分離の実装
+- [x] 23.4 環境分離の実装
   - 開発環境（dev）と本番環境（prod）の分離
   - 環境ごとの設定（タイムアウト、メモリ、ログレベル）
   - _Requirements: 要件8.1（設定管理）_
+  - _完了: 2026-02-12, すでに完全実装済み（environment-config.ts、CDKスタック、環境変数ファイル、テスト）_
+  - _注意: dev環境（DEBUG、短いタイムアウト）、prod環境（INFO、長いタイムアウト）で最適化済み_
 
 - [ ] 23.5 CI/CDパイプラインの検証テスト
   - **Property 15: テストカバレッジの維持**
@@ -1875,15 +1877,33 @@
   - _成果物: docs/cloudwatch-metrics-guide.md（更新）_
   - _備考: カスタムメトリクスは既に3個のみに最適化済み、年間$14.40のコスト削減_
 
-- [ ] 24.3 Lambda実行時間の最適化
+- [x] 24.3 Lambda実行時間の最適化
   - 不要な依存関係の削除
   - コールドスタート時間の短縮
+  - Lambda Layersの活用検討
+  - バンドルサイズの最適化
+  - package.jsonの依存関係レビュー
+  - テスト実装（src/__tests__/lambda-optimization.test.ts）
   - _Requirements: 要件12.5（実行時間最小化）_
+  - _完了: 2026-02-12, 16テスト成功_
+  - _成果物: package.json（最適化）、src/__tests__/lambda-optimization.test.ts_
+  - _バンドルサイズ: collector 0.07MB, query 0.04MB, export 0.05MB（すべて10MB以下）_
+  - _最適化内容: CDK/テスト関連をdevDependenciesに移動、AWS SDKバージョン統一（3.515.0）_
+  - _作業記録: work-log-20260212-095457-task24-3-4-lambda-cost.md_
 
-- [ ]* 24.4 コスト見積もりの検証
+- [x] 24.4 コスト見積もりの検証
   - 月間コストが$20以下であることを確認
   - AWS無料枠を最大限活用していることを確認
+  - コスト見積もりドキュメント作成（docs/cost-estimation.md）
+  - 各サービスのコスト内訳を記載
+  - 無料枠の使用状況を記載
   - _Requirements: 要件12.1（コスト最適化）_
+  - _完了: 2026-02-12_
+  - _成果物: docs/cost-estimation.md_
+  - _月間コスト: $11.12（無料枠適用後）、目標$20以下を達成 ✅_
+  - _最適化提案: WAF無効化（$8.00削減）、CloudWatchメトリクス削減（$2.70削減）、Secrets Manager移行（$0.40削減）_
+  - _最適化後コスト: 開発環境 $0.02/月、本番環境 $8.02/月_
+  - _作業記録: work-log-20260212-095457-task24-3-4-lambda-cost.md_
 
 ### 25. ドキュメント整備
 
