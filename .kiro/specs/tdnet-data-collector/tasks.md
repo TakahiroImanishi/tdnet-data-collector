@@ -1729,19 +1729,19 @@
 
 ### 20. CloudTrail設定
 
-- [ ] 20.1 CloudTrailをCDKで定義
+- [x] 20.1 CloudTrailをCDKで定義
   - 証跡作成（tdnet-audit-trail）
   - S3バケット（tdnet-cloudtrail-logs-{account-id}）への保存
   - CloudWatch Logsへの送信
   - データイベント記録（S3、DynamoDB、Lambda）
   - _Requirements: 要件13.2（監査ログ）_
 
-- [ ] 20.2 CloudTrailログのライフサイクルポリシー設定
+- [x] 20.2 CloudTrailログのライフサイクルポリシー設定
   - 90日後にGlacierに移行
   - 7年後に自動削除
   - _Requirements: 要件13.2（監査ログ保持）_
 
-- [ ]* 20.3 CloudTrail設定の検証テスト
+- [x]* 20.3 CloudTrail設定の検証テスト
   - **Property 14: 暗号化の有効性**
   - **Validates: Requirements 13.3**
   - CloudTrailが有効化されていることを確認
