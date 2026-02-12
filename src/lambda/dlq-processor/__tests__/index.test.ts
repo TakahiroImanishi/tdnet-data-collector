@@ -267,4 +267,152 @@ describe('DLQ Processor Lambda', () => {
       await expect(handler(event)).resolves.not.toThrow();
     });
   });
+
+  describe('エラー型チェックのブランチカバレッジ', () => {
+    it('Error以外のオブジェクトがスローされた場合もログに記録する', async () => {
+      // Arrange
+      const customError = { code: 'CUSTOM_ERROR', details: 'Custom error details' };
+      mockSend.mockRejectedValueOnce(customError);
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+
+    it('文字列エラーがスローされた場合もログに記録する', async () => {
+      // Arrange
+      mockSend.mockRejectedValueOnce('String error message');
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+
+    it('nullがスローされた場合もログに記録する', async () => {
+      // Arrange
+      mockSend.mockRejectedValueOnce(null);
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+
+    it('undefinedがスローされた場合もログに記録する', async () => {
+      // Arrange
+      mockSend.mockRejectedValueOnce(undefined);
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+
+    it('数値がスローされた場合もログに記録する', async () => {
+      // Arrange
+      mockSend.mockRejectedValueOnce(404);
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+  });
 });

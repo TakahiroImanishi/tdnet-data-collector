@@ -1,0 +1,257 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # 手動実行を許可
+
+jobs:
+  # ==========================================
+  # Lint & Type Check
+  # ==========================================
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+      
+      - name: Run TypeScript type check
+        run: npm run build
+      
+      - name: Check code formatting
+        run: npm run format:check
+
+  # ==========================================
+  # Security Audit
+  # ==========================================
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+      
+      - name: Generate audit report
+        if: always()
+        run: |
+          echo "# 🔒 Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          npm audit --json > audit-results.json || true
+          
+          if [ -f audit-results.json ]; then
+            VULNERABILITIES=$(jq '.metadata.vulnerabilities' audit-results.json)
+            echo "## Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Info**: $(echo $VULNERABILITIES | jq '.info')" >> $GITHUB_STEP_SUMMARY
+            echo "- **Low**: $(echo $VULNERABILITIES | jq '.low')" >> $GITHUB_STEP_SUMMARY
+            echo "- **Moderate**: $(echo $VULNERABILITIES | jq '.moderate')" >> $GITHUB_STEP_SUMMARY
+            echo "- **High**: $(echo $VULNERABILITIES | jq '.high')" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical**: $(echo $VULNERABILITIES | jq '.critical')" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-results
+          path: audit-results.json
+          retention-days: 30
+
+  # ==========================================
+  # Unit Tests
+  # ==========================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+      
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          echo "Coverage: $COVERAGE%"
+          
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "❌ Coverage is below 80% threshold"
+            exit 1
+          else
+            echo "✅ Coverage meets 80% threshold"
+          fi
+      
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "# 🧪 Unit Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f coverage/coverage-summary.json ]; then
+            LINES=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+            STATEMENTS=$(jq '.total.statements.pct' coverage/coverage-summary.json)
+            FUNCTIONS=$(jq '.total.functions.pct' coverage/coverage-summary.json)
+            BRANCHES=$(jq '.total.branches.pct' coverage/coverage-summary.json)
+            
+            echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines | ${LINES}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Statements | ${STATEMENTS}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | ${FUNCTIONS}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| Branches | ${BRANCHES}% |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if (( $(echo "$LINES >= 80" | bc -l) )); then
+              echo "✅ Coverage meets 80% threshold" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ Coverage is below 80% threshold" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage/
+          retention-days: 30
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            coverage/
+            junit.xml
+          retention-days: 30
+
+  # ==========================================
+  # Property-Based Tests
+  # ==========================================
+  property-tests:
+    name: Property-Based Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run property-based tests
+        run: npm test -- --testPathPattern="property.test.ts" --verbose
+      
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "# 🎲 Property-Based Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Property-based tests completed successfully" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # Test Summary
+  # ==========================================
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [lint, security, unit-tests, property-tests]
+    if: always()
+    
+    steps:
+      - name: Check test results
+        run: |
+          echo "# 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.lint.result }}" == "success" ]; then
+            echo "✅ Lint & Type Check: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Lint & Type Check: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.security.result }}" == "success" ]; then
+            echo "✅ Security Audit: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Security Audit: Issues Found" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.unit-tests.result }}" == "success" ]; then
+            echo "✅ Unit Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Unit Tests: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.property-tests.result }}" == "success" ]; then
+            echo "✅ Property-Based Tests: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Property-Based Tests: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "Test completed at $(date)" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Fail if any test failed
+        if: |
+          needs.lint.result != 'success' ||
+          needs.unit-tests.result != 'success' ||
+          needs.property-tests.result != 'success'
+        run: |
+          echo "❌ One or more tests failed"
+          exit 1

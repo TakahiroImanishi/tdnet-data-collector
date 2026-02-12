@@ -1,7 +1,28 @@
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+
+/**
+ * Secrets Manager Construct Properties
+ */
+export interface SecretsManagerConstructProps {
+  /**
+   * 環境名（dev, staging, prod）
+   */
+  environment: string;
+
+  /**
+   * ローテーションを有効化するかどうか（デフォルト: true）
+   */
+  enableRotation?: boolean;
+
+  /**
+   * ローテーション間隔（日数、デフォルト: 90日）
+   */
+  rotationDays?: number;
+}
 
 /**
  * Secrets Manager Construct
@@ -23,8 +44,15 @@ export class SecretsManagerConstruct extends Construct {
    */
   public readonly apiKeySecret: secretsmanager.Secret;
 
-  constructor(scope: Construct, id: string) {
+  /**
+   * ローテーション用Lambda関数（ローテーション有効時のみ）
+   */
+  public readonly rotationFunction?: lambda.Function;
+
+  constructor(scope: Construct, id: string, props: SecretsManagerConstructProps) {
     super(scope, id);
+
+    const { environment, enableRotation = true, rotationDays = 90 } = props;
 
     // APIキーシークレット作成
     this.apiKeySecret = new secretsmanager.Secret(this, 'ApiKeySecret', {
@@ -43,14 +71,47 @@ export class SecretsManagerConstruct extends Construct {
       removalPolicy: cdk.RemovalPolicy.RETAIN, // 本番環境では削除保護
     });
 
-    // TODO: Phase 4で自動ローテーション設定を実装
-    // 自動ローテーションにはローテーション用Lambda関数が必要
-    // 
-    // 実装例:
-    // this.apiKeySecret.addRotationSchedule('RotationSchedule', {
-    //   rotationLambda: rotationFunction,
-    //   automaticallyAfter: cdk.Duration.days(90), // 90日ごとにローテーション
-    // });
+    // 自動ローテーション設定（Phase 4実装）
+    if (enableRotation) {
+      // ローテーション用Lambda関数を作成
+      this.rotationFunction = new lambda.Function(this, 'RotationFunction', {
+        functionName: `tdnet-api-key-rotation-${environment}`,
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset('dist/src/lambda/api-key-rotation'),
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 128,
+        environment: {
+          LOG_LEVEL: 'info',
+          ENVIRONMENT: environment,
+          NODE_OPTIONS: '--enable-source-maps',
+        },
+      });
+
+      // ローテーション関数にSecrets Manager権限を付与
+      this.apiKeySecret.grantRead(this.rotationFunction);
+      this.apiKeySecret.grantWrite(this.rotationFunction);
+
+      // DescribeSecret権限を追加
+      this.rotationFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'secretsmanager:DescribeSecret',
+            'secretsmanager:GetSecretValue',
+            'secretsmanager:PutSecretValue',
+            'secretsmanager:UpdateSecretVersionStage',
+          ],
+          resources: [this.apiKeySecret.secretArn],
+        })
+      );
+
+      // 自動ローテーションスケジュールを設定
+      this.apiKeySecret.addRotationSchedule('RotationSchedule', {
+        rotationLambda: this.rotationFunction,
+        automaticallyAfter: cdk.Duration.days(rotationDays), // 90日ごとにローテーション
+      });
+    }
   }
 
   /**

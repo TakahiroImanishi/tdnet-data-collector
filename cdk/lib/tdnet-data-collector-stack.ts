@@ -12,6 +12,8 @@ import { CloudWatchAlarms } from './constructs/cloudwatch-alarms';
 import { CloudWatchDashboard } from './constructs/cloudwatch-dashboard';
 import { DashboardCloudFront } from './constructs/cloudfront';
 import { LambdaDLQ } from './constructs/lambda-dlq';
+import { SecretsManagerConstruct } from './constructs/secrets-manager';
+import { CloudTrailConstruct } from './constructs/cloudtrail';
 
 /**
  * Stack properties with environment configuration
@@ -300,13 +302,16 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Phase 2: Secrets Manager（Lambda関数より前に初期化）
     // ========================================
 
+    // Secrets Manager Constructを作成（自動ローテーション有効）
+    const secretsManagerConstruct = new SecretsManagerConstruct(this, 'SecretsManager', {
+      environment: this.deploymentEnvironment,
+      enableRotation: true, // 自動ローテーション有効化
+      rotationDays: 90, // 90日ごとにローテーション
+    });
+
     // IMPORTANT: apiKeyValueはLambda関数の環境変数で使用されるため、
     // Lambda関数定義より前に初期化する必要があります
-    const apiKeyValue = secretsmanager.Secret.fromSecretNameV2(
-      this,
-      'ApiKeySecret',
-      '/tdnet/api-key'
-    );
+    const apiKeyValue = secretsManagerConstruct.apiKeySecret;
 
     // ========================================
     // Phase 1.6: SNS Topic for Alerts
@@ -374,12 +379,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     this.pdfsBucket.grantPut(collectorFunction);
     this.pdfsBucket.grantRead(collectorFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     collectorFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/Collector',
+          },
+        },
       })
     );
 
@@ -428,12 +438,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Secrets Manager: APIキー読み取り権限
     apiKeyValue.grantRead(queryFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     queryFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/Query',
+          },
+        },
       })
     );
 
@@ -488,12 +503,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Secrets Manager: APIキー読み取り権限
     apiKeyValue.grantRead(exportFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     exportFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/Export',
+          },
+        },
       })
     );
 
@@ -843,12 +863,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Secrets Manager: APIキー読み取り権限
     apiKeyValue.grantRead(collectFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     collectFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/Collect',
+          },
+        },
       })
     );
 
@@ -876,12 +901,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // S3: PDFバケットへの読み取り権限（追加）
     this.pdfsBucket.grantRead(collectStatusFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     collectStatusFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/CollectStatus',
+          },
+        },
       })
     );
 
@@ -1045,12 +1075,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Secrets Manager: APIキー読み取り権限
     apiKeyValue.grantRead(exportStatusFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     exportStatusFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/ExportStatus',
+          },
+        },
       })
     );
 
@@ -1082,12 +1117,17 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Secrets Manager: APIキー読み取り権限
     apiKeyValue.grantRead(pdfDownloadFunction);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet名前空間のみ）
     pdfDownloadFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/PdfDownload',
+          },
+        },
       })
     );
 
@@ -1356,6 +1396,35 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       value: dashboard.dashboard.dashboardName,
       description: 'CloudWatch Dashboard name',
       exportName: 'TdnetDashboardName',
+    });
+
+    // ========================================
+    // Phase 4: CloudTrail（監査ログ）
+    // ========================================
+
+    // CloudTrail証跡を作成
+    const cloudTrail = new CloudTrailConstruct(this, 'CloudTrail', {
+      logsBucket: this.cloudtrailLogsBucket,
+      environment: this.deploymentEnvironment,
+      pdfsBucket: this.pdfsBucket,
+      dynamodbTables: [
+        this.disclosuresTable,
+        this.executionsTable,
+        this.exportStatusTable,
+      ],
+    });
+
+    // CloudFormation Outputs
+    new cdk.CfnOutput(this, 'CloudTrailArn', {
+      value: cloudTrail.trail.trailArn,
+      description: 'CloudTrail ARN',
+      exportName: `TdnetCloudTrailArn-${this.deploymentEnvironment}`,
+    });
+
+    new cdk.CfnOutput(this, 'CloudTrailLogGroupName', {
+      value: cloudTrail.logGroup.logGroupName,
+      description: 'CloudTrail CloudWatch Logs group name',
+      exportName: `TdnetCloudTrailLogGroupName-${this.deploymentEnvironment}`,
     });
   }
 }

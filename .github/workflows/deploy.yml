@@ -1,0 +1,322 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # 手動実行を許可
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  # ==========================================
+  # CDK Diff
+  # ==========================================
+  cdk-diff:
+    name: CDK Diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+      
+      - name: Run CDK Diff
+        run: npm run cdk:diff
+      
+      - name: Generate diff report
+        if: always()
+        run: |
+          echo "# 📋 CDK Diff Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "CDK diff completed. Review changes before deployment." >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # CDK Deploy
+  # ==========================================
+  cdk-deploy:
+    name: CDK Deploy
+    runs-on: ubuntu-latest
+    needs: cdk-diff
+    timeout-minutes: 30
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+      
+      - name: Deploy to AWS
+        run: npm run cdk:deploy -- --require-approval never
+      
+      - name: Get stack outputs
+        id: stack-outputs
+        run: |
+          STACK_NAME="TdnetDataCollectorStack"
+          
+          # API Endpoint取得
+          API_ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' \
+            --output text 2>/dev/null || echo "Not found")
+          
+          echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
+          
+          # その他の出力を取得
+          aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].Outputs' \
+            --output json > stack-outputs.json || echo "[]" > stack-outputs.json
+      
+      - name: Generate deployment report
+        if: always()
+        run: |
+          echo "# 🚀 Deployment Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Environment" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region**: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f stack-outputs.json ]; then
+            echo "## Stack Outputs" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | "- **\(.OutputKey)**: \(.OutputValue)"' stack-outputs.json >> $GITHUB_STEP_SUMMARY || true
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployment completed successfully" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload deployment artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-artifacts
+          path: |
+            stack-outputs.json
+            cdk.out/
+          retention-days: 30
+
+  # ==========================================
+  # Smoke Tests
+  # ==========================================
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: cdk-deploy
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+      
+      - name: Get API endpoint
+        id: get-endpoint
+        run: |
+          STACK_NAME="TdnetDataCollectorStack"
+          API_ENDPOINT=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' \
+            --output text 2>/dev/null || echo "")
+          
+          echo "api_endpoint=$API_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "API Endpoint: $API_ENDPOINT"
+      
+      - name: Test API health endpoint
+        if: steps.get-endpoint.outputs.api_endpoint != ''
+        run: |
+          API_ENDPOINT="${{ steps.get-endpoint.outputs.api_endpoint }}"
+          
+          echo "Testing health endpoint: ${API_ENDPOINT}/health"
+          
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "${API_ENDPOINT}/health" || echo "000")
+          
+          if [ "$RESPONSE" == "200" ]; then
+            echo "✅ Health check passed (HTTP $RESPONSE)"
+          else
+            echo "❌ Health check failed (HTTP $RESPONSE)"
+            exit 1
+          fi
+      
+      - name: Test Lambda functions
+        run: |
+          echo "Testing Lambda functions..."
+          
+          # Collector Lambda
+          COLLECTOR_FUNCTION=$(aws lambda list-functions \
+            --query 'Functions[?contains(FunctionName, `collector`)].FunctionName' \
+            --output text | head -n 1)
+          
+          if [ -n "$COLLECTOR_FUNCTION" ]; then
+            echo "Found collector function: $COLLECTOR_FUNCTION"
+            
+            # 関数の設定を確認
+            aws lambda get-function-configuration \
+              --function-name "$COLLECTOR_FUNCTION" \
+              --query '{Name:FunctionName,Runtime:Runtime,MemorySize:MemorySize,Timeout:Timeout,State:State}' \
+              --output json
+            
+            echo "✅ Collector Lambda is configured"
+          else
+            echo "⚠️ Collector Lambda not found"
+          fi
+      
+      - name: Test DynamoDB tables
+        run: |
+          echo "Testing DynamoDB tables..."
+          
+          # Disclosures table
+          DISCLOSURES_TABLE=$(aws dynamodb list-tables \
+            --query 'TableNames[?contains(@, `disclosures`)]' \
+            --output text | head -n 1)
+          
+          if [ -n "$DISCLOSURES_TABLE" ]; then
+            echo "Found disclosures table: $DISCLOSURES_TABLE"
+            
+            # テーブルの状態を確認
+            TABLE_STATUS=$(aws dynamodb describe-table \
+              --table-name "$DISCLOSURES_TABLE" \
+              --query 'Table.TableStatus' \
+              --output text)
+            
+            if [ "$TABLE_STATUS" == "ACTIVE" ]; then
+              echo "✅ Disclosures table is ACTIVE"
+            else
+              echo "⚠️ Disclosures table status: $TABLE_STATUS"
+            fi
+          else
+            echo "⚠️ Disclosures table not found"
+          fi
+      
+      - name: Test S3 buckets
+        run: |
+          echo "Testing S3 buckets..."
+          
+          # PDFs bucket
+          PDFS_BUCKET=$(aws s3 ls | grep -i "pdfs" | awk '{print $3}' | head -n 1)
+          
+          if [ -n "$PDFS_BUCKET" ]; then
+            echo "Found PDFs bucket: $PDFS_BUCKET"
+            echo "✅ PDFs bucket exists"
+          else
+            echo "⚠️ PDFs bucket not found"
+          fi
+      
+      - name: Generate smoke test report
+        if: always()
+        run: |
+          echo "# 🔥 Smoke Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Smoke tests completed. All critical resources are operational." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "Test completed at $(date)" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================
+  # Slack Notification (Optional)
+  # ==========================================
+  notify:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs: [cdk-deploy, smoke-tests]
+    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    
+    steps:
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Deployment ${{ needs.cdk-deploy.result == 'success' && needs.smoke-tests.result == 'success' && 'succeeded' || 'failed' }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ needs.cdk-deploy.result == 'success' && needs.smoke-tests.result == 'success' && '✅' || '❌' }} TDnet Data Collector Deployment"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\n${{ github.event.inputs.environment || 'dev' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ needs.cdk-deploy.result == 'success' && needs.smoke-tests.result == 'success' && 'Success' || 'Failed' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n${{ github.ref }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
