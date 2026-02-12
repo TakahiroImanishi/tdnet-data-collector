@@ -1927,12 +1927,15 @@
   - _完了: 2026-02-12_
   - _成果物: docs/openapi.yaml（全エンドポイントに例追加）、.kiro/specs/tdnet-data-collector/design/api-design.md（実装状況更新）_
 
-- [ ] 25.3 運用マニュアルの作成
+- [x] 25.3 運用マニュアルの作成
   - デプロイ手順
   - トラブルシューティング
   - ログ確認方法
   - アラート対応手順
   - _Requirements: 要件13.1（運用ドキュメント）_
+  - _完了: 2026-02-12 10:50:14_
+  - _成果物: docs/operations-manual.md（包括的な運用マニュアル）_
+  - _作業記録: work-log-20260212-104440-task25-3-operations-manual.md_
 
 - [x] 25.4 アーキテクチャ図の更新
   - システム構成図の最終確認
