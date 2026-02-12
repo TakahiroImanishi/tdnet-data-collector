@@ -242,6 +242,425 @@ npm run cdk:destroy
 
 ---
 
+## 使用方法
+
+### Lambda関数の手動実行
+
+#### AWS CLIでの実行
+
+```bash
+# Collector Lambda（開示情報収集）を手動実行
+aws lambda invoke \
+  --function-name tdnet-collector \
+  --payload '{"date":"2024-01-15"}' \
+  response.json
+
+# 実行結果を確認
+cat response.json
+```
+
+#### AWS Consoleでの実行
+
+1. AWS Consoleにログイン
+2. Lambda > 関数 > `tdnet-collector` を選択
+3. 「テスト」タブをクリック
+4. テストイベントを作成:
+   ```json
+   {
+     "date": "2024-01-15"
+   }
+   ```
+5. 「テスト」ボタンをクリック
+
+### EventBridgeスケジューラーの確認
+
+```bash
+# スケジュールルールの確認
+aws events list-rules --name-prefix tdnet
+
+# スケジュールの詳細を確認
+aws events describe-rule --name tdnet-daily-collector
+```
+
+### DynamoDBデータの確認
+
+```bash
+# 開示情報の一覧を取得（最新10件）
+aws dynamodb scan \
+  --table-name tdnet-disclosures \
+  --limit 10 \
+  --output table
+
+# 特定の開示情報を取得
+aws dynamodb get-item \
+  --table-name tdnet-disclosures \
+  --key '{"disclosure_id":{"S":"TD202401151234001"}}'
+```
+
+### S3バケットの確認
+
+```bash
+# PDFファイルの一覧を取得
+aws s3 ls s3://tdnet-pdfs-prod/ --recursive
+
+# 特定のPDFファイルをダウンロード
+aws s3 cp s3://tdnet-pdfs-prod/2024/01/TD202401151234001.pdf ./
+```
+
+### API呼び出し例（Phase 2以降）
+
+#### 検索API
+
+```bash
+# 日付範囲で検索
+curl -X GET "https://api.example.com/disclosures?start_date=2024-01-01&end_date=2024-01-31"
+
+# 企業コードで検索
+curl -X GET "https://api.example.com/disclosures?company_code=7203"
+
+# 開示種別で検索
+curl -X GET "https://api.example.com/disclosures?disclosure_type=決算短信"
+```
+
+#### エクスポートAPI
+
+```bash
+# CSVエクスポート
+curl -X POST "https://api.example.com/export" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "csv",
+    "start_date": "2024-01-01",
+    "end_date": "2024-01-31"
+  }'
+
+# JSONエクスポート
+curl -X POST "https://api.example.com/export" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "json",
+    "company_code": "7203"
+  }'
+```
+
+---
+
+## トラブルシューティング
+
+### デプロイエラー
+
+#### 1. CDK Bootstrap未実行
+
+**エラーメッセージ:**
+```
+This stack uses assets, so the toolkit stack must be deployed to the environment
+```
+
+**解決方法:**
+```bash
+cdk bootstrap aws://ACCOUNT-ID/REGION
+```
+
+#### 2. IAM権限不足
+
+**エラーメッセージ:**
+```
+User: arn:aws:iam::123456789012:user/username is not authorized to perform: cloudformation:CreateStack
+```
+
+**解決方法:**
+- AWS管理者に以下の権限を依頼:
+  - `CloudFormationFullAccess`
+  - `IAMFullAccess`
+  - `LambdaFullAccess`
+  - `DynamoDBFullAccess`
+  - `S3FullAccess`
+
+#### 3. スタック削除エラー
+
+**エラーメッセージ:**
+```
+The bucket you tried to delete is not empty
+```
+
+**解決方法:**
+```bash
+# S3バケットを空にする
+aws s3 rm s3://tdnet-pdfs-prod/ --recursive
+
+# スタックを削除
+cdk destroy
+```
+
+### Lambda実行エラー
+
+#### 1. 環境変数未設定
+
+**エラーメッセージ:**
+```
+Environment variable S3_BUCKET_NAME is not set
+```
+
+**解決方法:**
+- Lambda関数の環境変数を確認・設定:
+  ```bash
+  aws lambda update-function-configuration \
+    --function-name tdnet-collector \
+    --environment Variables={S3_BUCKET_NAME=tdnet-pdfs-prod,DYNAMODB_TABLE_NAME=tdnet-disclosures}
+  ```
+
+#### 2. タイムアウト
+
+**エラーメッセージ:**
+```
+Task timed out after 15.00 seconds
+```
+
+**解決方法:**
+- Lambda関数のタイムアウトを延長:
+  ```bash
+  aws lambda update-function-configuration \
+    --function-name tdnet-collector \
+    --timeout 900
+  ```
+
+#### 3. メモリ不足
+
+**エラーメッセージ:**
+```
+Runtime exited with error: signal: killed
+```
+
+**解決方法:**
+- Lambda関数のメモリを増やす:
+  ```bash
+  aws lambda update-function-configuration \
+    --function-name tdnet-collector \
+    --memory-size 1024
+  ```
+
+### DynamoDBエラー
+
+#### 1. スロットリング
+
+**エラーメッセージ:**
+```
+ProvisionedThroughputExceededException
+```
+
+**解決方法:**
+- オンデマンド課金モードに変更（推奨）
+- または、プロビジョニング済みキャパシティを増やす
+
+#### 2. アクセス拒否
+
+**エラーメッセージ:**
+```
+User is not authorized to perform: dynamodb:PutItem
+```
+
+**解決方法:**
+- Lambda実行ロールにDynamoDB権限を追加:
+  ```json
+  {
+    "Effect": "Allow",
+    "Action": [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:Scan"
+    ],
+    "Resource": "arn:aws:dynamodb:REGION:ACCOUNT-ID:table/tdnet-disclosures"
+  }
+  ```
+
+### S3エラー
+
+#### 1. バケット未作成
+
+**エラーメッセージ:**
+```
+The specified bucket does not exist
+```
+
+**解決方法:**
+```bash
+# S3バケットを作成
+aws s3 mb s3://tdnet-pdfs-prod --region ap-northeast-1
+```
+
+#### 2. アクセス拒否
+
+**エラーメッセージ:**
+```
+Access Denied
+```
+
+**解決方法:**
+- Lambda実行ロールにS3権限を追加:
+  ```json
+  {
+    "Effect": "Allow",
+    "Action": [
+      "s3:PutObject",
+      "s3:GetObject"
+    ],
+    "Resource": "arn:aws:s3:::tdnet-pdfs-prod/*"
+  }
+  ```
+
+### スクレイピングエラー
+
+#### 1. TDnetサイト変更
+
+**エラーメッセージ:**
+```
+Failed to parse HTML: selector not found
+```
+
+**解決方法:**
+1. TDnetサイトのHTML構造を確認
+2. `src/scraper/html-parser.ts` のセレクタを更新
+3. テストを実行して動作確認
+
+#### 2. ネットワークエラー
+
+**エラーメッセージ:**
+```
+ECONNRESET: Connection reset by peer
+```
+
+**解決方法:**
+- 再試行ロジックが自動的に実行されます（最大3回）
+- それでも失敗する場合は、TDnetサイトの状態を確認
+
+#### 3. レート制限
+
+**エラーメッセージ:**
+```
+Too many requests
+```
+
+**解決方法:**
+- レート制限設定を確認（デフォルト: 1リクエスト/秒）
+- 必要に応じて `src/utils/rate-limiter.ts` の設定を調整
+
+### ログの確認方法
+
+```bash
+# Lambda関数のログを確認
+aws logs tail /aws/lambda/tdnet-collector --follow
+
+# 特定の期間のログを確認
+aws logs filter-log-events \
+  --log-group-name /aws/lambda/tdnet-collector \
+  --start-time $(date -d '1 hour ago' +%s)000 \
+  --end-time $(date +%s)000
+```
+
+---
+
+## コスト情報
+
+### 月間コスト見積もり
+
+詳細なコスト見積もりは [コスト見積もりドキュメント](docs/cost-estimation.md) を参照してください。
+
+**概算（AWS無料枠適用後）:**
+- **開発環境**: 約$0.02/月
+- **本番環境**: 約$11.12/月
+
+**主なコスト要因:**
+1. AWS WAF: $8.00/月（72%）
+2. CloudWatch カスタムメトリクス: $2.70/月（24%）
+3. Secrets Manager: $0.40/月（4%）
+
+### AWS無料枠の活用
+
+以下のサービスでAWS無料枠を活用しています:
+
+| サービス | 無料枠 | 使用量 |
+|---------|--------|--------|
+| Lambda | 100万リクエスト/月 | 約11,000リクエスト/月 |
+| DynamoDB | 25GB、25 RCU、25 WCU | 約50MB、2,700 WRU、110,000 RRU |
+| S3 | 5GB（12ヶ月間） | 約12GB |
+| API Gateway | 100万APIコール/月（12ヶ月間） | 約11,600コール/月 |
+| CloudWatch | 10メトリクス、10アラーム | 19メトリクス、10アラーム |
+
+### コスト最適化のヒント
+
+1. **WAFの最適化**
+   - 開発環境ではWAFを無効化（$8.00削減）
+   - レート制限をAPI Gatewayのスロットリング機能で代替
+
+2. **CloudWatchメトリクスの削減**
+   - 重要なメトリクスのみに絞る（10個以内で$2.70削減）
+   - Lambda Insightsを活用
+
+3. **Secrets Managerの代替**
+   - Systems Manager Parameter Storeに移行（$0.40削減）
+
+4. **S3ライフサイクルポリシー**
+   - 90日後にStandard-IAに移行
+   - 365日後にGlacierに移行
+
+詳細は [パフォーマンス最適化ガイド](.kiro/steering/infrastructure/performance-optimization.md) を参照してください。
+
+---
+
+## CI/CD
+
+### GitHub Actionsワークフロー
+
+プロジェクトでは以下のGitHub Actionsワークフローを使用しています:
+
+#### 1. Test Workflow (`.github/workflows/test.yml`)
+
+**トリガー**: プルリクエスト、mainブランチへのプッシュ
+
+**実行内容:**
+- Lint（ESLint）
+- 型チェック（TypeScript）
+- ユニットテスト
+- プロパティベーステスト
+- カバレッジレポート生成（80%以上必須）
+- セキュリティ監査（npm audit）
+
+#### 2. Deploy Workflow (`.github/workflows/deploy.yml`)
+
+**トリガー**: mainブランチへのマージ
+
+**実行内容:**
+- CDK Diff実行
+- CDK Deploy実行
+- スモークテスト実行
+- Slack通知
+
+#### 3. Dependency Update Workflow (`.github/workflows/dependency-update.yml`)
+
+**トリガー**: 毎週月曜日午前9時（JST）
+
+**実行内容:**
+- 依存関係の更新（npm update）
+- セキュリティ監査（npm audit）
+- テスト実行
+- プルリクエスト作成
+
+### テストカバレッジ要件
+
+すべてのコードメトリクスで**80%以上**のカバレッジを維持する必要があります:
+
+- **Statements**: 80%以上
+- **Branches**: 80%以上
+- **Functions**: 80%以上
+- **Lines**: 80%以上
+
+カバレッジが80%未満の場合、CI/CDパイプラインは失敗します。
+
+詳細は [CI/CDパイプラインドキュメント](docs/ci-cd-pipeline.md) を参照してください。
+
+---
+
 ## ドキュメント
 
 ### 仕様書
