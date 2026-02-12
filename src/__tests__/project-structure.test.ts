@@ -81,12 +81,9 @@ describe('プロジェクト構造の検証', () => {
 
     describe('必須の依存関係がインストールされていること', () => {
       const requiredDependencies = [
-        'aws-cdk-lib',
-        'constructs',
         'axios',
         'cheerio',
         'winston',
-        'fast-check',
         '@aws-sdk/client-dynamodb',
         '@aws-sdk/client-s3',
         '@aws-sdk/client-cloudwatch',
@@ -114,6 +111,9 @@ describe('プロジェクト構造の検証', () => {
         'eslint-config-prettier',
         'eslint-plugin-prettier',
         'aws-cdk',
+        'aws-cdk-lib',
+        'constructs',
+        'fast-check',
       ];
 
       test.each(requiredDevDependencies)('devDependency "%s" が存在すること', (dependency) => {
