@@ -2041,23 +2041,29 @@
   - _成果物: .env.production.template, docs/secrets-manager-setup.md, docs/ssm-parameter-store-setup.md_
   - _作業記録: work-log-20260214-083328-task27-1-3-environment-variables.md_
 
-- [ ] 27.1.4 コスト管理の準備（セクション9）
-  - [ ] AWS Budgetsの設定手順書作成
-  - [ ] コストアラートの設定手順書作成
-  - [ ] 月次コストレポートの作成方法をドキュメント化
+- [x] 27.1.4 コスト管理の準備（セクション9）
+  - [x] AWS Budgetsの設定手順書作成
+  - [x] コストアラートの設定手順書作成
+  - [x] 月次コストレポートの作成方法をドキュメント化
   - _Requirements: 要件12.4（コスト最適化）_
   - _優先度: 🟡 Medium_
   - _推定工数: 2-3時間_
+  - _完了: 2026-02-14 08:33:39_
+  - _成果物: docs/aws-budgets-setup.md, docs/cost-monitoring.md_
+  - _作業記録: work-log-20260214-083339-task27-1-4-5-cost-risk-management.md_
 
-- [ ] 27.1.5 リスク管理の文書化（セクション12）
-  - [ ] 技術的リスクと対策をREADMEに追記
+- [x] 27.1.5 リスク管理の文書化（セクション12）
+  - [x] 技術的リスクと対策をREADMEに追記
     - TDnetのHTML構造変更 → スクレイピングロジックの柔軟性確保
     - AWS Lambda実行時間制限 → タイムアウト設定とDLQ
     - DynamoDBスロットリング → オンデマンドモード、再試行ロジック
-  - [ ] 外部依存リスク（TDnet）の監視方法をドキュメント化
+  - [x] 外部依存リスク（TDnet）の監視方法をドキュメント化
   - _Requirements: 要件13.1（リスク管理）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1-2時間_
+  - _完了: 2026-02-14 08:33:39_
+  - _成果物: docs/external-dependency-monitoring.md, README.md（リスク管理セクション追加）_
+  - _作業記録: work-log-20260214-083339-task27-1-4-5-cost-risk-management.md_
 
 - [ ] 27.1.6 本番環境デプロイ手順書の作成
   - [ ] CDK Bootstrap実行手順（本番環境）
