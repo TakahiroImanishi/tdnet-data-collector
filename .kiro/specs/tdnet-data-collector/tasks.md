@@ -2121,17 +2121,20 @@
   - _検証結果: ✅ 全テーブルが要件に完全準拠、date_partition生成ロジックがJST基準で正しく実装、エッジケース完全カバー_
   - _作業記録: work-log-20260214-085209-task27-1-9-database-verification.md_
 
-- [ ] 27.1.10 S3バケット設計の最終確認（セクション15）
-  - [ ] PDFファイル用バケット確認（tdnet-data-collector-pdfs-{account-id}）
-  - [ ] エクスポートファイル用バケット確認（tdnet-data-collector-exports-{account-id}）
-  - [ ] Webダッシュボード用バケット確認（tdnet-dashboard-{account-id}）
-  - [ ] CloudTrailログ用バケット確認（tdnet-cloudtrail-logs-{account-id}）
-  - [ ] ライフサイクルポリシー確認（90日後Standard-IA、365日後Glacier）
-  - [ ] バケットポリシー確認（パブリックアクセスブロック、CloudFront OAI）
+- [x] 27.1.10 S3バケット設計の最終確認（セクション15）
+  - [x] PDFファイル用バケット確認（tdnet-data-collector-pdfs-{account-id}）
+  - [x] エクスポートファイル用バケット確認（tdnet-data-collector-exports-{account-id}）
+  - [x] Webダッシュボード用バケット確認（tdnet-dashboard-{account-id}）
+  - [x] CloudTrailログ用バケット確認（tdnet-cloudtrail-logs-{account-id}）
+  - [x] ライフサイクルポリシー確認（90日後Standard-IA、365日後Glacier）
+  - [x] バケットポリシー確認（パブリックアクセスブロック、CloudFront OAI）
   - _Requirements: 要件3.5, 12.4（ファイルストレージ、コスト最適化）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1時間_
   - _注意: Phase 1で実装済み、最終確認のみ_
+  - _完了: 2026-02-14 08:57:08_
+  - _検証結果: ✅ 4バケット全て要件完全準拠、セキュリティ・コスト最適化・コンプライアンス全て適合、テストカバレッジ100%（48テストケース）_
+  - _作業記録: work-log-20260214-085708-task27-1-10-s3-verification.md_
 
 - [ ] 27.1.11 テスト戦略の最終確認（セクション8）
   - [ ] ユニットテストカバレッジ80%以上確認
