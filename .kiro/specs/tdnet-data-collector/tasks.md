@@ -2090,18 +2090,20 @@
   - _完了: 2026-02-14, すべてのテストがパス（24/24）、改善提案2件（API Gateway、X-Ray）_
   - _作業記録: work-log-20260214-084323-task27-1-7-monitoring-verification.md_
 
-- [ ] 27.1.8 セキュリティ設定の最終確認（セクション5）
-  - [ ] IAMロール最小権限化の確認（Lambda, API Gateway, DynamoDB, S3）
-  - [ ] Secrets Manager設定確認（/tdnet/api-key、90日自動ローテーション）
-  - [ ] WAF設定確認（レート制限: 2000リクエスト/5分）
-  - [ ] CloudTrail有効化確認（データイベント記録）
-  - [ ] S3バケット暗号化確認（AES-256）
-  - [ ] DynamoDBテーブル暗号化確認（AWS管理キー）
-  - [ ] APIキー認証の動作確認（すべてのエンドポイント）
+- [x] 27.1.8 セキュリティ設定の最終確認（セクション5）
+  - [x] IAMロール最小権限化の確認（Lambda, API Gateway, DynamoDB, S3）
+  - [x] Secrets Manager設定確認（/tdnet/api-key、90日自動ローテーション）
+  - [x] WAF設定確認（レート制限: 2000リクエスト/5分）
+  - [x] CloudTrail有効化確認（データイベント記録）
+  - [x] S3バケット暗号化確認（AES-256）
+  - [x] DynamoDBテーブル暗号化確認（AWS管理キー）
+  - [x] APIキー認証の動作確認（すべてのエンドポイント）
   - _Requirements: 要件13.1-13.5（セキュリティ全般）_
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _注意: Phase 4で実装済み、最終確認のみ_
+  - _完了: 2026-02-14, すべてのセキュリティ設定が要件を満たしている、セキュリティテスト13件すべて合格_
+  - _作業記録: work-log-20260214-084329-task27-1-8-security-verification.md_
 
 - [ ] 27.1.9 データベース設計の最終確認（セクション14）
   - [ ] DynamoDBテーブル構造確認（tdnet_disclosures, tdnet_executions）
