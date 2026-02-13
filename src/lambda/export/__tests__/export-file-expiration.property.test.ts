@@ -89,7 +89,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         }
       ),
       {
-        numRuns: 100, // 100回のランダムテストを実行
+        numRuns: 1000, // 1000回のランダムテストを実行
         verbose: true,
       }
     );
@@ -147,7 +147,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         }
       ),
       {
-        numRuns: 100,
+        numRuns: 1000,
         verbose: true,
       }
     );
@@ -216,7 +216,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         }
       ),
       {
-        numRuns: 100,
+        numRuns: 1000,
         verbose: true,
       }
     );
@@ -273,7 +273,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         }
       ),
       {
-        numRuns: 50,
+        numRuns: 1000,
         verbose: true,
       }
     );

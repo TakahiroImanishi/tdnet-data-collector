@@ -14,43 +14,43 @@
         - button "フィルター表示切替" [ref=e15] [cursor=pointer]:
           - img [ref=e16]
       - generic [ref=e18]:
-        - generic [ref=e20]:
+        - generic [ref=e19]:
           - generic: 企業名
-          - generic [ref=e21]:
-            - textbox "企業名" [ref=e22]:
+          - generic [ref=e20]:
+            - textbox "企業名" [ref=e21]:
               - /placeholder: "例: トヨタ自動車"
             - group:
               - generic: 企業名
-        - generic [ref=e24]:
+        - generic [ref=e22]:
           - generic: 企業コード
-          - generic [ref=e25]:
-            - textbox "企業コード" [ref=e26]:
+          - generic [ref=e23]:
+            - textbox "企業コード" [ref=e24]:
               - /placeholder: "例: 7203"
             - group:
               - generic: 企業コード
-        - generic [ref=e28]:
+        - generic [ref=e25]:
           - generic: 開示種類
-          - generic [ref=e29]:
-            - combobox "開示種類" [ref=e30] [cursor=pointer]
+          - generic [ref=e26]:
+            - combobox "開示種類" [ref=e27] [cursor=pointer]
             - textbox
             - img
             - group:
               - generic: 開示種類
       - generic: 開示日（開始）
       - generic: 開示日（終了）
-      - generic [ref=e31]:
-        - button "リセット" [ref=e32] [cursor=pointer]
-        - button "検索" [ref=e33] [cursor=pointer]:
-          - img [ref=e35]
+      - generic [ref=e28]:
+        - button "リセット" [ref=e29] [cursor=pointer]
+        - button "検索" [ref=e30] [cursor=pointer]:
+          - img [ref=e32]
           - text: 検索
-    - alert [ref=e37]:
-      - img [ref=e39]
-      - generic [ref=e41]: サーバーに接続できません。ネットワークを確認してください。
-      - button "Close" [ref=e43] [cursor=pointer]:
-        - img [ref=e44]
-    - alert [ref=e46]:
-      - img [ref=e48]
-      - generic [ref=e50]: サーバーに接続できません。ネットワークを確認してください。
-  - contentinfo [ref=e51]:
-    - paragraph [ref=e53]: © 2026 TDnet Data Collector. All rights reserved.
+    - alert [ref=e34]:
+      - img [ref=e36]
+      - generic [ref=e38]: サーバーに接続できません。ネットワークを確認してください。
+      - button "Close" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+    - alert [ref=e43]:
+      - img [ref=e45]
+      - generic [ref=e47]: サーバーに接続できません。ネットワークを確認してください。
+  - contentinfo [ref=e48]:
+    - paragraph [ref=e50]: © 2026 TDnet Data Collector. All rights reserved.
 ```

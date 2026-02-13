@@ -37,7 +37,7 @@ function Write-Warning-Custom {
 Write-Info "Checking LocalStack availability..."
 
 try {
-    $response = Invoke-WebRequest -Uri "$ENDPOINT/_localstack/health" -Method Get -TimeoutSec 5 -ErrorAction Stop
+    $response = Invoke-WebRequest -Uri "$ENDPOINT/_localstack/health" -Method Get -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
     Write-Success "LocalStack is running"
 } catch {
     Write-Error-Custom "LocalStack is not running. Please start it with: docker-compose up -d"

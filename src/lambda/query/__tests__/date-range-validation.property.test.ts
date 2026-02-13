@@ -151,7 +151,7 @@ describe('Property 8: 日付範囲の順序性', () => {
 
         return true;
       }),
-      { numRuns: 100 } // 100回反復実行
+      { numRuns: 1000 } // 1000回反復実行
     );
   });
 
@@ -173,7 +173,7 @@ describe('Property 8: 日付範囲の順序性', () => {
 
         return true;
       }),
-      { numRuns: 100 }
+      { numRuns: 1000 }
     );
   });
 
@@ -200,7 +200,7 @@ describe('Property 8: 日付範囲の順序性', () => {
 
         return true;
       }),
-      { numRuns: 100 }
+      { numRuns: 1000 }
     );
   });
 

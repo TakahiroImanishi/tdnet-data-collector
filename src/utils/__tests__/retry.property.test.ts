@@ -47,9 +47,9 @@ describe('retryWithBackoff - Property Tests', () => {
           expect(attemptCount).toBeLessThanOrEqual(maxRetries + 1);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
-  }, 60000); // 60秒のタイムアウト
+  }, 180000); // 180秒のタイムアウト（1000回反復に対応）
 
   /**
    * Property: 再試行不可能なエラーは即座に失敗
@@ -84,7 +84,7 @@ describe('retryWithBackoff - Property Tests', () => {
           expect(attemptCount).toBe(1);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 
@@ -110,7 +110,7 @@ describe('retryWithBackoff - Property Tests', () => {
           expect(result).toEqual(expectedResult);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 
@@ -159,7 +159,7 @@ describe('retryWithBackoff - Property Tests', () => {
           expect(totalTime).toBeGreaterThanOrEqual(expectedTotalDelay - 50);
         }
       ),
-      { numRuns: 10 } // 10回の反復実行（テスト時間短縮）
+      { numRuns: 100 } // 100回の反復実行（時間がかかるため）
     );
   }, 30000); // 30秒のタイムアウト
 
@@ -201,9 +201,9 @@ describe('retryWithBackoff - Property Tests', () => {
           }
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
-  }, 30000); // 30秒のタイムアウト
+  }, 180000); // 180秒のタイムアウト（1000回反復に対応）
 });
 
 describe('isRetryableError - Property Tests', () => {
@@ -221,7 +221,7 @@ describe('isRetryableError - Property Tests', () => {
           expect(isRetryableError(error)).toBe(true);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 
@@ -239,7 +239,7 @@ describe('isRetryableError - Property Tests', () => {
           expect(isRetryableError(error)).toBe(false);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 
@@ -261,7 +261,7 @@ describe('isRetryableError - Property Tests', () => {
           expect(isRetryableError(error)).toBe(true);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 
@@ -283,7 +283,7 @@ describe('isRetryableError - Property Tests', () => {
           expect(isRetryableError(error)).toBe(true);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 
@@ -307,7 +307,7 @@ describe('isRetryableError - Property Tests', () => {
           expect(isRetryableError(value)).toBe(false);
         }
       ),
-      { numRuns: 20 } // 20回の反復実行（テスト時間短縮）
+      { numRuns: 1000 } // 1000回の反復実行
     );
   });
 });

@@ -1,395 +1,56 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e3]:
-    - banner [ref=e4]:
-      - generic [ref=e5]:
-        - img [ref=e6]
-        - heading "TDnet 開示情報ダッシュボード" [level=1] [ref=e8]
-    - generic [ref=e9]:
-      - generic [ref=e10]:
-        - generic [ref=e11]:
-          - img [ref=e12]
-          - heading "開示情報検索" [level=2] [ref=e14]
-          - button "フィルター表示切替" [ref=e15] [cursor=pointer]:
-            - img [ref=e16]
-        - generic [ref=e18]:
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e6]
+      - heading "TDnet 開示情報ダッシュボード" [level=1] [ref=e8]
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - img [ref=e12]
+        - heading "開示情報検索" [level=2] [ref=e14]
+        - button "フィルター表示切替" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic: 企業名
           - generic [ref=e20]:
-            - generic: 企業名
-            - generic [ref=e21]:
-              - textbox "企業名" [ref=e22]:
-                - /placeholder: "例: トヨタ自動車"
-              - group:
-                - generic: 企業名
-          - generic [ref=e24]:
-            - generic: 企業コード
-            - generic [ref=e25]:
-              - textbox "企業コード" [ref=e26]:
-                - /placeholder: "例: 7203"
-              - group:
-                - generic: 企業コード
-          - generic [ref=e28]:
-            - generic: 開示種類
-            - generic [ref=e29]:
-              - combobox "開示種類" [ref=e30] [cursor=pointer]
-              - textbox
-              - img
-              - group:
-                - generic: 開示種類
-        - generic: 開示日（開始）
-        - generic: 開示日（終了）
-        - generic [ref=e31]:
-          - button "リセット" [ref=e32] [cursor=pointer]
-          - button "検索" [ref=e33] [cursor=pointer]:
-            - img [ref=e35]
-            - text: 検索
-      - alert [ref=e37]:
-        - img [ref=e39]
-        - generic [ref=e41]: サーバーに接続できません。ネットワークを確認してください。
-        - button "Close" [ref=e43] [cursor=pointer]:
-          - img [ref=e44]
-      - alert [ref=e46]:
-        - img [ref=e48]
-        - generic [ref=e50]: サーバーに接続できません。ネットワークを確認してください。
-    - contentinfo [ref=e51]:
-      - paragraph [ref=e53]: © 2026 TDnet Data Collector. All rights reserved.
-  - iframe [ref=e54]:
-    - generic [ref=f3e2]:
-      - generic [ref=f3e3]: "Compiled with problems:"
-      - button "Dismiss" [ref=f3e4] [cursor=pointer]: ×
-      - generic [ref=f3e5]:
-        - generic [ref=f3e6]:
-          - generic [ref=f3e7]: ERROR in src/components/ExecutionStatus.tsx:210:11
-          - generic [ref=f3e8]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element[]; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e9]:
-              - text: "208 | {/* 統計情報 */} 209 | <Grid container spacing={2}>"
-              - generic [ref=f3e10]: ">"
-              - text: "210 | <Grid item xs={6} sm={3}> |"
-              - generic [ref=f3e11]: ^
-              - generic [ref=f3e12]: ^
-              - generic [ref=f3e13]: ^
-              - generic [ref=f3e14]: ^
-              - generic [ref=f3e15]: ^
-              - generic [ref=f3e16]: ^
-              - generic [ref=f3e17]: ^
-              - generic [ref=f3e18]: ^
-              - generic [ref=f3e19]: ^
-              - generic [ref=f3e20]: ^
-              - generic [ref=f3e21]: ^
-              - generic [ref=f3e22]: ^
-              - generic [ref=f3e23]: ^
-              - generic [ref=f3e24]: ^
-              - generic [ref=f3e25]: ^
-              - generic [ref=f3e26]: ^
-              - generic [ref=f3e27]: ^
-              - generic [ref=f3e28]: ^
-              - generic [ref=f3e29]: ^
-              - generic [ref=f3e30]: ^
-              - generic [ref=f3e31]: ^
-              - generic [ref=f3e32]: ^
-              - generic [ref=f3e33]: ^
-              - generic [ref=f3e34]: ^
-              - generic [ref=f3e35]: ^
-              - text: 211 | <Typography variant="body2" color="text.secondary"> 212 | 総件数 213 | </Typography>
-        - generic [ref=f3e36]:
-          - generic [ref=f3e37]: ERROR in src/components/ExecutionStatus.tsx:217:11
-          - generic [ref=f3e38]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element[]; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e39]:
-              - text: 215 | </Grid> 216 |
-              - generic [ref=f3e40]: ">"
-              - text: "217 | <Grid item xs={6} sm={3}> |"
-              - generic [ref=f3e41]: ^
-              - generic [ref=f3e42]: ^
-              - generic [ref=f3e43]: ^
-              - generic [ref=f3e44]: ^
-              - generic [ref=f3e45]: ^
-              - generic [ref=f3e46]: ^
-              - generic [ref=f3e47]: ^
-              - generic [ref=f3e48]: ^
-              - generic [ref=f3e49]: ^
-              - generic [ref=f3e50]: ^
-              - generic [ref=f3e51]: ^
-              - generic [ref=f3e52]: ^
-              - generic [ref=f3e53]: ^
-              - generic [ref=f3e54]: ^
-              - generic [ref=f3e55]: ^
-              - generic [ref=f3e56]: ^
-              - generic [ref=f3e57]: ^
-              - generic [ref=f3e58]: ^
-              - generic [ref=f3e59]: ^
-              - generic [ref=f3e60]: ^
-              - generic [ref=f3e61]: ^
-              - generic [ref=f3e62]: ^
-              - generic [ref=f3e63]: ^
-              - generic [ref=f3e64]: ^
-              - generic [ref=f3e65]: ^
-              - text: 218 | <Typography variant="body2" color="text.secondary"> 219 | 処理済み 220 | </Typography>
-        - generic [ref=f3e66]:
-          - generic [ref=f3e67]: ERROR in src/components/ExecutionStatus.tsx:226:11
-          - generic [ref=f3e68]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element[]; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e69]:
-              - text: 224 | </Grid> 225 |
-              - generic [ref=f3e70]: ">"
-              - text: "226 | <Grid item xs={6} sm={3}> |"
-              - generic [ref=f3e71]: ^
-              - generic [ref=f3e72]: ^
-              - generic [ref=f3e73]: ^
-              - generic [ref=f3e74]: ^
-              - generic [ref=f3e75]: ^
-              - generic [ref=f3e76]: ^
-              - generic [ref=f3e77]: ^
-              - generic [ref=f3e78]: ^
-              - generic [ref=f3e79]: ^
-              - generic [ref=f3e80]: ^
-              - generic [ref=f3e81]: ^
-              - generic [ref=f3e82]: ^
-              - generic [ref=f3e83]: ^
-              - generic [ref=f3e84]: ^
-              - generic [ref=f3e85]: ^
-              - generic [ref=f3e86]: ^
-              - generic [ref=f3e87]: ^
-              - generic [ref=f3e88]: ^
-              - generic [ref=f3e89]: ^
-              - generic [ref=f3e90]: ^
-              - generic [ref=f3e91]: ^
-              - generic [ref=f3e92]: ^
-              - generic [ref=f3e93]: ^
-              - generic [ref=f3e94]: ^
-              - generic [ref=f3e95]: ^
-              - text: 227 | <Typography variant="body2" color="text.secondary"> 228 | 失敗 229 | </Typography>
-        - generic [ref=f3e96]:
-          - generic [ref=f3e97]: ERROR in src/components/ExecutionStatus.tsx:235:11
-          - generic [ref=f3e98]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element[]; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e99]:
-              - text: 233 | </Grid> 234 |
-              - generic [ref=f3e100]: ">"
-              - text: "235 | <Grid item xs={6} sm={3}> |"
-              - generic [ref=f3e101]: ^
-              - generic [ref=f3e102]: ^
-              - generic [ref=f3e103]: ^
-              - generic [ref=f3e104]: ^
-              - generic [ref=f3e105]: ^
-              - generic [ref=f3e106]: ^
-              - generic [ref=f3e107]: ^
-              - generic [ref=f3e108]: ^
-              - generic [ref=f3e109]: ^
-              - generic [ref=f3e110]: ^
-              - generic [ref=f3e111]: ^
-              - generic [ref=f3e112]: ^
-              - generic [ref=f3e113]: ^
-              - generic [ref=f3e114]: ^
-              - generic [ref=f3e115]: ^
-              - generic [ref=f3e116]: ^
-              - generic [ref=f3e117]: ^
-              - generic [ref=f3e118]: ^
-              - generic [ref=f3e119]: ^
-              - generic [ref=f3e120]: ^
-              - generic [ref=f3e121]: ^
-              - generic [ref=f3e122]: ^
-              - generic [ref=f3e123]: ^
-              - generic [ref=f3e124]: ^
-              - generic [ref=f3e125]: ^
-              - text: 236 | <Typography variant="body2" color="text.secondary"> 237 | 成功率 238 | </Typography>
-        - generic [ref=f3e126]:
-          - generic [ref=f3e127]: ERROR in src/components/SearchFilter.tsx:104:9
-          - generic [ref=f3e128]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e129]:
-              - text: "102 | {/* 基本検索フィールド */} 103 | <Grid container spacing={2} sx={{ mb: 2 }}>"
-              - generic [ref=f3e130]: ">"
-              - text: "104 | <Grid item xs={12} sm={6} md={4}> |"
-              - generic [ref=f3e131]: ^
-              - generic [ref=f3e132]: ^
-              - generic [ref=f3e133]: ^
-              - generic [ref=f3e134]: ^
-              - generic [ref=f3e135]: ^
-              - generic [ref=f3e136]: ^
-              - generic [ref=f3e137]: ^
-              - generic [ref=f3e138]: ^
-              - generic [ref=f3e139]: ^
-              - generic [ref=f3e140]: ^
-              - generic [ref=f3e141]: ^
-              - generic [ref=f3e142]: ^
-              - generic [ref=f3e143]: ^
-              - generic [ref=f3e144]: ^
-              - generic [ref=f3e145]: ^
-              - generic [ref=f3e146]: ^
-              - generic [ref=f3e147]: ^
-              - generic [ref=f3e148]: ^
-              - generic [ref=f3e149]: ^
-              - generic [ref=f3e150]: ^
-              - generic [ref=f3e151]: ^
-              - generic [ref=f3e152]: ^
-              - generic [ref=f3e153]: ^
-              - generic [ref=f3e154]: ^
-              - generic [ref=f3e155]: ^
-              - generic [ref=f3e156]: ^
-              - generic [ref=f3e157]: ^
-              - generic [ref=f3e158]: ^
-              - generic [ref=f3e159]: ^
-              - generic [ref=f3e160]: ^
-              - generic [ref=f3e161]: ^
-              - generic [ref=f3e162]: ^
-              - generic [ref=f3e163]: ^
-              - text: 105 | <TextField 106 | fullWidth 107 | label="企業名"
-        - generic [ref=f3e164]:
-          - generic [ref=f3e165]: ERROR in src/components/SearchFilter.tsx:114:9
-          - generic [ref=f3e166]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e167]:
-              - text: 112 | /> 113 | </Grid>
-              - generic [ref=f3e168]: ">"
-              - text: "114 | <Grid item xs={12} sm={6} md={4}> |"
-              - generic [ref=f3e169]: ^
-              - generic [ref=f3e170]: ^
-              - generic [ref=f3e171]: ^
-              - generic [ref=f3e172]: ^
-              - generic [ref=f3e173]: ^
-              - generic [ref=f3e174]: ^
-              - generic [ref=f3e175]: ^
-              - generic [ref=f3e176]: ^
-              - generic [ref=f3e177]: ^
-              - generic [ref=f3e178]: ^
-              - generic [ref=f3e179]: ^
-              - generic [ref=f3e180]: ^
-              - generic [ref=f3e181]: ^
-              - generic [ref=f3e182]: ^
-              - generic [ref=f3e183]: ^
-              - generic [ref=f3e184]: ^
-              - generic [ref=f3e185]: ^
-              - generic [ref=f3e186]: ^
-              - generic [ref=f3e187]: ^
-              - generic [ref=f3e188]: ^
-              - generic [ref=f3e189]: ^
-              - generic [ref=f3e190]: ^
-              - generic [ref=f3e191]: ^
-              - generic [ref=f3e192]: ^
-              - generic [ref=f3e193]: ^
-              - generic [ref=f3e194]: ^
-              - generic [ref=f3e195]: ^
-              - generic [ref=f3e196]: ^
-              - generic [ref=f3e197]: ^
-              - generic [ref=f3e198]: ^
-              - generic [ref=f3e199]: ^
-              - generic [ref=f3e200]: ^
-              - generic [ref=f3e201]: ^
-              - text: 115 | <TextField 116 | fullWidth 117 | label="企業コード"
-        - generic [ref=f3e202]:
-          - generic [ref=f3e203]: ERROR in src/components/SearchFilter.tsx:124:9
-          - generic [ref=f3e204]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e205]:
-              - text: 122 | /> 123 | </Grid>
-              - generic [ref=f3e206]: ">"
-              - text: "124 | <Grid item xs={12} sm={12} md={4}> |"
-              - generic [ref=f3e207]: ^
-              - generic [ref=f3e208]: ^
-              - generic [ref=f3e209]: ^
-              - generic [ref=f3e210]: ^
-              - generic [ref=f3e211]: ^
-              - generic [ref=f3e212]: ^
-              - generic [ref=f3e213]: ^
-              - generic [ref=f3e214]: ^
-              - generic [ref=f3e215]: ^
-              - generic [ref=f3e216]: ^
-              - generic [ref=f3e217]: ^
-              - generic [ref=f3e218]: ^
-              - generic [ref=f3e219]: ^
-              - generic [ref=f3e220]: ^
-              - generic [ref=f3e221]: ^
-              - generic [ref=f3e222]: ^
-              - generic [ref=f3e223]: ^
-              - generic [ref=f3e224]: ^
-              - generic [ref=f3e225]: ^
-              - generic [ref=f3e226]: ^
-              - generic [ref=f3e227]: ^
-              - generic [ref=f3e228]: ^
-              - generic [ref=f3e229]: ^
-              - generic [ref=f3e230]: ^
-              - generic [ref=f3e231]: ^
-              - generic [ref=f3e232]: ^
-              - generic [ref=f3e233]: ^
-              - generic [ref=f3e234]: ^
-              - generic [ref=f3e235]: ^
-              - generic [ref=f3e236]: ^
-              - generic [ref=f3e237]: ^
-              - generic [ref=f3e238]: ^
-              - generic [ref=f3e239]: ^
-              - generic [ref=f3e240]: ^
-              - text: 125 | <TextField 126 | fullWidth 127 | select
-        - generic [ref=f3e241]:
-          - generic [ref=f3e242]: ERROR in src/components/SearchFilter.tsx:146:11
-          - generic [ref=f3e243]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e244]:
-              - text: "144 | <Collapse in={expanded}> 145 | <Grid container spacing={2} sx={{ mb: 2 }}>"
-              - generic [ref=f3e245]: ">"
-              - text: "146 | <Grid item xs={12} sm={6}> |"
-              - generic [ref=f3e246]: ^
-              - generic [ref=f3e247]: ^
-              - generic [ref=f3e248]: ^
-              - generic [ref=f3e249]: ^
-              - generic [ref=f3e250]: ^
-              - generic [ref=f3e251]: ^
-              - generic [ref=f3e252]: ^
-              - generic [ref=f3e253]: ^
-              - generic [ref=f3e254]: ^
-              - generic [ref=f3e255]: ^
-              - generic [ref=f3e256]: ^
-              - generic [ref=f3e257]: ^
-              - generic [ref=f3e258]: ^
-              - generic [ref=f3e259]: ^
-              - generic [ref=f3e260]: ^
-              - generic [ref=f3e261]: ^
-              - generic [ref=f3e262]: ^
-              - generic [ref=f3e263]: ^
-              - generic [ref=f3e264]: ^
-              - generic [ref=f3e265]: ^
-              - generic [ref=f3e266]: ^
-              - generic [ref=f3e267]: ^
-              - generic [ref=f3e268]: ^
-              - generic [ref=f3e269]: ^
-              - generic [ref=f3e270]: ^
-              - generic [ref=f3e271]: ^
-              - text: 147 | <TextField 148 | fullWidth 149 | type="date"
-        - generic [ref=f3e272]:
-          - generic [ref=f3e273]: ERROR in src/components/SearchFilter.tsx:157:11
-          - generic [ref=f3e274]:
-            - text: "TS2769: No overload matches this call. Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error. Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'. Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, \"div\">>): Element | null', gave the following error. Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'. Property 'item' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'."
-            - generic [ref=f3e275]:
-              - text: 155 | /> 156 | </Grid>
-              - generic [ref=f3e276]: ">"
-              - text: "157 | <Grid item xs={12} sm={6}> |"
-              - generic [ref=f3e277]: ^
-              - generic [ref=f3e278]: ^
-              - generic [ref=f3e279]: ^
-              - generic [ref=f3e280]: ^
-              - generic [ref=f3e281]: ^
-              - generic [ref=f3e282]: ^
-              - generic [ref=f3e283]: ^
-              - generic [ref=f3e284]: ^
-              - generic [ref=f3e285]: ^
-              - generic [ref=f3e286]: ^
-              - generic [ref=f3e287]: ^
-              - generic [ref=f3e288]: ^
-              - generic [ref=f3e289]: ^
-              - generic [ref=f3e290]: ^
-              - generic [ref=f3e291]: ^
-              - generic [ref=f3e292]: ^
-              - generic [ref=f3e293]: ^
-              - generic [ref=f3e294]: ^
-              - generic [ref=f3e295]: ^
-              - generic [ref=f3e296]: ^
-              - generic [ref=f3e297]: ^
-              - generic [ref=f3e298]: ^
-              - generic [ref=f3e299]: ^
-              - generic [ref=f3e300]: ^
-              - generic [ref=f3e301]: ^
-              - generic [ref=f3e302]: ^
-              - text: 158 | <TextField 159 | fullWidth 160 | type="date"
+            - textbox "企業名" [ref=e21]:
+              - /placeholder: "例: トヨタ自動車"
+            - group:
+              - generic: 企業名
+        - generic [ref=e22]:
+          - generic: 企業コード
+          - generic [ref=e23]:
+            - textbox "企業コード" [ref=e24]:
+              - /placeholder: "例: 7203"
+            - group:
+              - generic: 企業コード
+        - generic [ref=e25]:
+          - generic: 開示種類
+          - generic [ref=e26]:
+            - combobox "開示種類" [ref=e27] [cursor=pointer]
+            - textbox
+            - img
+            - group:
+              - generic: 開示種類
+      - generic: 開示日（開始）
+      - generic: 開示日（終了）
+      - generic [ref=e28]:
+        - button "リセット" [ref=e29] [cursor=pointer]
+        - button "検索" [ref=e30] [cursor=pointer]:
+          - img [ref=e32]
+          - text: 検索
+    - alert [ref=e34]:
+      - img [ref=e36]
+      - generic [ref=e38]: サーバーに接続できません。ネットワークを確認してください。
+      - button "Close" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+    - alert [ref=e43]:
+      - img [ref=e45]
+      - generic [ref=e47]: サーバーに接続できません。ネットワークを確認してください。
+  - contentinfo [ref=e48]:
+    - paragraph [ref=e50]: © 2026 TDnet Data Collector. All rights reserved.
 ```

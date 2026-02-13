@@ -67,12 +67,32 @@ npm test -- --watchAll=false
 npm test -- --watchAll=false --coverage
 ```
 
+### E2Eテスト実行（LocalStack必須）
+
+```bash
+# 1. LocalStack起動
+docker-compose up -d
+
+# 2. 起動待機（30秒）
+Start-Sleep -Seconds 30
+
+# 3. セットアップ実行
+.\scripts\localstack-setup.ps1
+
+# 4. E2Eテスト実行
+npm run test:e2e
+
+# 5. 停止
+docker-compose down
+```
+
 ## 必須ルール
 
 - [ ] 対話モード禁止（`--watchAll=false`必須）
 - [ ] 各テストは独立して実行可能
 - [ ] 外部依存はモック化
 - [ ] AAA パターン（Arrange → Act → Assert）
+- [ ] E2Eテスト前にLocalStack起動・セットアップ実行
 
 ## 関連ドキュメント
 

@@ -13,6 +13,13 @@
 - [ ] 実装・テスト実行
 - [ ] 問題と解決策を作業記録に追記
 
+### E2Eテスト実行時（必須）
+- [ ] Docker Desktop起動確認: `docker ps`
+- [ ] LocalStack環境起動: `docker compose up -d`
+- [ ] LocalStack環境確認: `docker ps --filter "name=localstack"`
+- [ ] DynamoDB/S3リソース確認: `scripts/localstack-setup.ps1`
+- [ ] E2Eテスト実行: `npm run test:e2e`
+
 ### 完了時
 - [ ] 作業記録に成果物・申し送り記入
 - [ ] Git commit & push（形式: `[feat/fix/docs/refactor/test/chore/improve] 変更内容`）
