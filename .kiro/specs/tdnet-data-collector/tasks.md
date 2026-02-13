@@ -2108,15 +2108,18 @@
   - _完了: 2026-02-14, すべてのセキュリティ設定が要件を満たしている、セキュリティテスト13件すべて合格_
   - _作業記録: work-log-20260214-084329-task27-1-8-security-verification.md_
 
-- [ ] 27.1.9 データベース設計の最終確認（セクション14）
-  - [ ] DynamoDBテーブル構造確認（tdnet_disclosures, tdnet_executions）
-  - [ ] GSI設計確認（GSI_CompanyCode_DiscloseDate, GSI_DatePartition, GSI_Status_StartedAt）
-  - [ ] date_partition生成ロジック確認（YYYY-MM形式、JST基準）
-  - [ ] TTL設定確認（tdnet_executions: 30日後削除）
+- [x] 27.1.9 データベース設計の最終確認（セクション14）
+  - [x] DynamoDBテーブル構造確認（tdnet_disclosures, tdnet_executions, tdnet_export_status）
+  - [x] GSI設計確認（GSI_CompanyCode_DiscloseDate, GSI_DatePartition, GSI_Status_StartedAt, GSI_Status_RequestedAt）
+  - [x] date_partition生成ロジック確認（YYYY-MM形式、JST基準）
+  - [x] TTL設定確認（tdnet_executions: 30日後削除、tdnet_export_status: 30日後削除）
   - _Requirements: 要件2.1-2.5（データモデル）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1時間_
   - _注意: Phase 1で実装済み、最終確認のみ_
+  - _完了: 2026-02-14 08:52:09_
+  - _検証結果: ✅ 全テーブルが要件に完全準拠、date_partition生成ロジックがJST基準で正しく実装、エッジケース完全カバー_
+  - _作業記録: work-log-20260214-085209-task27-1-9-database-verification.md_
 
 - [ ] 27.1.10 S3バケット設計の最終確認（セクション15）
   - [ ] PDFファイル用バケット確認（tdnet-data-collector-pdfs-{account-id}）
@@ -2141,16 +2144,19 @@
   - _推定工数: 2-3時間_
   - _注意: Phase 1-3で実装済み、最終確認とスモークテスト手順書作成_
 
-- [ ] 27.1.12 実装順序の最終確認（セクション10）
-  - [ ] Phase 1（基本機能）完了確認 ✅
-  - [ ] Phase 2（API実装）完了確認 ✅
-  - [ ] Phase 3（Webダッシュボード・監視）完了確認 ✅
-  - [ ] Phase 4（運用改善）完了確認 ✅
-  - [ ] Phase 5（EventBridge・SNS）実装状況確認 ⚠️ 未完了
-  - [ ] マイルストーン達成状況の記録
+- [x] 27.1.12 実装順序の最終確認（セクション10）
+  - [x] Phase 1（基本機能）完了確認 ✅
+  - [x] Phase 2（API実装）完了確認 ✅
+  - [x] Phase 3（Webダッシュボード・監視）完了確認 ✅
+  - [x] Phase 4（運用改善）完了確認 ✅
+  - [x] Phase 5（EventBridge・SNS）実装状況確認 ⚠️ 未完了
+  - [x] マイルストーン達成状況の記録
   - _Requirements: 全要件_
   - _優先度: 🟡 Medium_
   - _推定工数: 1時間_
+  - _完了: 2026-02-14 08:57:09_
+  - _検証結果: Phase 1-4完了（100%）、Phase 5未着手（本番運用後実施予定）_
+  - _作業記録: work-log-20260214-085709-task27-1-12-implementation-order-verification.md_
 
 - [ ] 27.1.13 最終確認（セクション16）
   - [ ] すべてのsteeringファイルを再読して理解確認
