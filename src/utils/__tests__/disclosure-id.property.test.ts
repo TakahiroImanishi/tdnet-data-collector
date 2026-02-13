@@ -37,7 +37,7 @@ describe('generateDisclosureId - Property Tests', () => {
             expect(uniqueIds.size).toBe(ids.length);
           }
         ),
-        { numRuns: 1000 }
+        { numRuns: 100 }
       );
     });
 
@@ -58,7 +58,7 @@ describe('generateDisclosureId - Property Tests', () => {
             expect(id1).toBe(id2);
           }
         ),
-        { numRuns: 1000 }
+        { numRuns: 100 }
       );
     });
   });

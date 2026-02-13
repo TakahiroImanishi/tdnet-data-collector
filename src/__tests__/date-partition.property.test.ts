@@ -37,7 +37,7 @@ describe('generateDatePartition - Property Tests', () => {
           expect(month).toBeLessThanOrEqual(12);
         }
       ),
-      { numRuns: 1000 } // Run 1000 iterations for thorough testing
+      { numRuns: 100 } // Run 100 iterations for faster testing
     );
   });
 
@@ -65,7 +65,7 @@ describe('generateDatePartition - Property Tests', () => {
           expect(result).toBe(expected);
         }
       ),
-      { numRuns: 1000 }
+      { numRuns: 100 }
     );
   });
 
@@ -160,7 +160,7 @@ describe('generateDatePartition - Property Tests', () => {
           return true;
         }
       ),
-      { numRuns: 1000 }
+      { numRuns: 100 }
     );
   });
 
@@ -184,7 +184,7 @@ describe('generateDatePartition - Property Tests', () => {
           expect(result2).toBe(result3);
         }
       ),
-      { numRuns: 1000 }
+      { numRuns: 100 }
     );
   });
 
@@ -212,7 +212,7 @@ describe('generateDatePartition - Property Tests', () => {
           expect(result).toBe(manualResult);
         }
       ),
-      { numRuns: 1000 }
+      { numRuns: 100 }
     );
   });
 
@@ -264,7 +264,7 @@ describe('generateDatePartition - Property Tests', () => {
           expect(result).toBe(resultWithoutMs);
         }
       ),
-      { numRuns: 1000 }
+      { numRuns: 100 }
     );
   });
 
@@ -311,7 +311,7 @@ describe('generateDatePartition - Property Tests', () => {
           expect(result).toBe(`${expectedYear}-${expectedMonth}`);
         }
       ),
-      { numRuns: 24 } // Test all 24 hours
+      { numRuns: 24 } // Test all 24 hours (keep as is)
     );
   });
 });

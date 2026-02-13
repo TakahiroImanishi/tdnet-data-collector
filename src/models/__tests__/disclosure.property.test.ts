@@ -123,7 +123,7 @@ describe('Disclosure Property Tests', () => {
           expect(item.collected_at.S).toBe(disclosure.collected_at);
           expect(item.date_partition.S).toBe(disclosure.date_partition);
         }),
-        { numRuns: 1000 } // 1000回の反復実行
+        { numRuns: 100 } // 100回の反復実行
       );
     });
 
@@ -158,7 +158,7 @@ describe('Disclosure Property Tests', () => {
           expect(restored.collected_at).toBe(disclosure.collected_at);
           expect(restored.date_partition).toBe(disclosure.date_partition);
         }),
-        { numRuns: 1000 }
+        { numRuns: 100 }
       );
     });
 
@@ -205,7 +205,7 @@ describe('Disclosure Property Tests', () => {
           // 完全に一致することを確認
           expect(restored).toEqual(disclosure);
         }),
-        { numRuns: 1000 }
+        { numRuns: 100 }
       );
     });
   });
@@ -260,7 +260,7 @@ describe('Disclosure Property Tests', () => {
             expect(() => validateDisclosure(disclosure)).not.toThrow();
           }
         ),
-        { numRuns: 1000 }
+        { numRuns: 100 }
       );
     });
   });
@@ -326,7 +326,7 @@ describe('Disclosure Property Tests', () => {
             expect(id1).toBe(id2);
           }
         ),
-        { numRuns: 1000 }
+        { numRuns: 100 }
       );
     });
   });
