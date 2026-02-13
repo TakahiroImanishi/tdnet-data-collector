@@ -775,3 +775,299 @@ aws lambda get-function-configuration `
     --profile prod `
     --query "Environment.Variables.API_KEY_SECRET_ARN"
 ```
+
+### 問題3: Lambda関数が実行されない
+
+**症状**: Lambda関数の実行でエラーが発生
+
+**原因**:
+- 環境変数が正しく設定されていない
+- IAMロールに権限がない
+- タイムアウトが短すぎる
+- メモリが不足している
+
+**解決策**:
+
+```powershell
+# Lambda関数の設定を確認
+aws lambda get-function-configuration `
+    --function-name tdnet-collector-prod `
+    --profile prod
+
+# 環境変数を確認
+aws lambda get-function-configuration `
+    --function-name tdnet-collector-prod `
+    --profile prod `
+    --query "Environment.Variables"
+
+# IAMロールを確認
+aws lambda get-function `
+    --function-name tdnet-collector-prod `
+    --profile prod `
+    --query "Configuration.Role"
+
+# CloudWatch Logsでエラーを確認
+aws logs tail /aws/lambda/tdnet-collector-prod --follow --profile prod
+```
+
+### 問題4: DynamoDBにデータが保存されない
+
+**症状**: DynamoDBテーブルが空
+
+**原因**:
+- テーブル名が正しくない
+- IAMロールに書き込み権限がない
+- バリデーションエラーが発生している
+
+**解決策**:
+
+```powershell
+# テーブルの存在を確認
+aws dynamodb describe-table `
+    --table-name tdnet_disclosures_prod `
+    --profile prod
+
+# Lambda関数のログを確認
+aws logs tail /aws/lambda/tdnet-collector-prod --follow --profile prod
+
+# IAMポリシーを確認
+aws iam get-role-policy `
+    --role-name tdnet-collector-prod-role `
+    --policy-name DynamoDBAccess `
+    --profile prod
+
+# テーブルのアイテム数を確認
+aws dynamodb scan `
+    --table-name tdnet_disclosures_prod `
+    --select COUNT `
+    --profile prod
+```
+
+### 問題5: S3にファイルが保存されない
+
+**症状**: S3バケットが空
+
+**原因**:
+- バケット名が正しくない
+- IAMロールに書き込み権限がない
+- PDFダウンロードが失敗している
+
+**解決策**:
+
+```powershell
+# バケットの存在を確認
+aws s3 ls s3://tdnet-data-collector-pdfs-prod-123456789012/ --profile prod
+
+# Lambda関数のログを確認
+aws logs tail /aws/lambda/tdnet-collector-prod --follow --profile prod
+
+# IAMポリシーを確認
+aws iam get-role-policy `
+    --role-name tdnet-collector-prod-role `
+    --policy-name S3Access `
+    --profile prod
+
+# バケットポリシーを確認
+aws s3api get-bucket-policy `
+    --bucket tdnet-data-collector-pdfs-prod-123456789012 `
+    --profile prod
+```
+
+### 問題6: デプロイが途中で失敗する
+
+**症状**: `cdk deploy`が途中で失敗する
+
+**原因**:
+- リソース制限に達している
+- IAM権限が不足している
+- CloudFormationスタックがロールバック状態
+
+**解決策**:
+
+```powershell
+# CloudFormationスタックのイベントを確認
+aws cloudformation describe-stack-events `
+    --stack-name TdnetDataCollectorStack-prod `
+    --profile prod `
+    --max-items 20
+
+# スタックの状態を確認
+aws cloudformation describe-stacks `
+    --stack-name TdnetDataCollectorStack-prod `
+    --profile prod `
+    --query "Stacks[0].StackStatus"
+
+# ロールバック状態の場合、スタックを削除
+aws cloudformation delete-stack `
+    --stack-name TdnetDataCollectorStack-prod `
+    --profile prod
+
+# 再デプロイ
+.\scripts\deploy-prod.ps1
+```
+
+### 問題7: コストが予想より高い
+
+**症状**: AWS Budgetsアラートが頻繁に発生
+
+**原因**:
+- Lambda実行回数が多すぎる
+- DynamoDBのWCU/RCUが高い
+- S3ストレージが増加している
+- CloudWatch Logsが増加している
+
+**解決策**:
+
+```powershell
+# Cost Explorerでコストを確認
+# https://console.aws.amazon.com/cost-management/home#/cost-explorer
+
+# Lambda実行回数を確認
+aws cloudwatch get-metric-statistics `
+    --namespace AWS/Lambda `
+    --metric-name Invocations `
+    --dimensions Name=FunctionName,Value=tdnet-collector-prod `
+    --start-time (Get-Date).AddDays(-7).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") `
+    --end-time (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") `
+    --period 86400 `
+    --statistics Sum `
+    --profile prod
+
+# DynamoDBのメトリクスを確認
+aws cloudwatch get-metric-statistics `
+    --namespace AWS/DynamoDB `
+    --metric-name ConsumedReadCapacityUnits `
+    --dimensions Name=TableName,Value=tdnet_disclosures_prod `
+    --start-time (Get-Date).AddDays(-7).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") `
+    --end-time (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss") `
+    --period 86400 `
+    --statistics Sum `
+    --profile prod
+```
+
+**詳細**: [コスト監視ガイド](./cost-monitoring.md)を参照
+
+---
+
+## デプロイ後の監視設定
+
+### 1. CloudWatch Dashboardの確認
+
+```powershell
+# ダッシュボードの一覧を取得
+aws cloudwatch list-dashboards --profile prod
+
+# ダッシュボードを開く
+# https://console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:
+```
+
+### 2. CloudWatch Alarmsの確認
+
+```powershell
+# アラームの一覧を取得
+aws cloudwatch describe-alarms `
+    --profile prod `
+    --query "MetricAlarms[?starts_with(AlarmName, 'tdnet')].AlarmName"
+
+# アラームの状態を確認
+aws cloudwatch describe-alarms `
+    --profile prod `
+    --alarm-names tdnet-collector-prod-errors
+```
+
+### 3. SNS通知の確認
+
+```powershell
+# SNSトピックの確認
+aws sns list-topics --profile prod | Select-String "tdnet"
+
+# サブスクリプションの確認
+aws sns list-subscriptions-by-topic `
+    --topic-arn arn:aws:sns:ap-northeast-1:123456789012:tdnet-alerts-prod `
+    --profile prod
+```
+
+**詳細**: [監視・アラート設定ガイド](./external-dependency-monitoring.md)を参照
+
+---
+
+## 定期的なメンテナンス
+
+### 月次チェックリスト
+
+- [ ] Cost Explorerでコストを確認
+- [ ] CloudWatch Logsのサイズを確認
+- [ ] S3ストレージのサイズを確認
+- [ ] DynamoDBのアイテム数を確認
+- [ ] Lambda実行回数を確認
+- [ ] エラーログを確認
+- [ ] アラーム履歴を確認
+- [ ] セキュリティパッチの適用
+
+### 四半期チェックリスト
+
+- [ ] CDKバージョンのアップデート
+- [ ] Node.jsランタイムのアップデート
+- [ ] 依存関係のアップデート
+- [ ] セキュリティ監査
+- [ ] パフォーマンステスト
+- [ ] バックアップの確認
+- [ ] ドキュメントの更新
+
+---
+
+## 関連ドキュメント
+
+- [CDK Bootstrapガイド](./cdk-bootstrap-guide.md)
+- [Secrets Manager設定手順書](./secrets-manager-setup.md)
+- [環境変数設定ガイド](./ssm-parameter-store-setup.md)
+- [スモークテストガイド](./.kiro/specs/tdnet-data-collector/docs/deployment-smoke-test.md)
+- [コスト監視ガイド](./cost-monitoring.md)
+- [AWS Budgets設定手順書](./aws-budgets-setup.md)
+- [外部依存監視ガイド](./external-dependency-monitoring.md)
+- [GitHub Secrets設定手順書](./github-secrets-setup.md)
+- [デプロイチェックリスト](./.kiro/steering/infrastructure/deployment-checklist.md)
+
+---
+
+## 付録: デプロイチェックシート
+
+### デプロイ前チェック
+
+- [ ] すべてのテストが成功
+- [ ] TypeScriptコンパイルエラーなし
+- [ ] Lintエラーなし
+- [ ] 開発環境で動作確認済み
+- [ ] コードレビュー完了
+- [ ] ドキュメント更新済み
+- [ ] CDK Bootstrap完了
+- [ ] Secrets Manager設定完了
+- [ ] .env.productionファイル作成完了
+- [ ] AWS認証情報確認済み
+
+### デプロイ実行チェック
+
+- [ ] CDK Synth成功
+- [ ] CDK Diff確認済み
+- [ ] CDK Deploy成功
+- [ ] CloudFormationスタック作成完了
+
+### デプロイ後チェック
+
+- [ ] Lambda関数が存在する
+- [ ] DynamoDBテーブルが存在する
+- [ ] S3バケットが存在する
+- [ ] Lambda関数が正常に実行される
+- [ ] DynamoDBにデータが保存される
+- [ ] S3にPDFファイルが保存される
+- [ ] CloudWatch Logsにログが出力される
+- [ ] CloudWatch Metricsが記録される
+- [ ] API Gatewayエンドポイントが応答する
+- [ ] CloudWatch Alarmsが設定されている
+- [ ] SNS通知が設定されている
+
+---
+
+**最終更新日**: 2026-02-14  
+**バージョン**: 1.0.0  
+**作成者**: TDnet Data Collector Team

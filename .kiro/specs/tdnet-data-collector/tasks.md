@@ -2065,16 +2065,19 @@
   - _成果物: docs/external-dependency-monitoring.md, README.md（リスク管理セクション追加）_
   - _作業記録: work-log-20260214-083339-task27-1-4-5-cost-risk-management.md_
 
-- [ ] 27.1.6 本番環境デプロイ手順書の作成
-  - [ ] CDK Bootstrap実行手順（本番環境）
-  - [ ] Secrets Manager初期設定手順（APIキー登録）
-  - [ ] 環境変数設定手順（.env.production）
-  - [ ] デプロイコマンド実行手順（cdk deploy --profile prod）
-  - [ ] デプロイ後の動作確認手順（スモークテスト）
-  - [ ] ロールバック手順
+- [x] 27.1.6 本番環境デプロイ手順書の作成
+  - [x] CDK Bootstrap実行手順（本番環境）
+  - [x] Secrets Manager初期設定手順（APIキー登録）
+  - [x] 環境変数設定手順（.env.production）
+  - [x] デプロイコマンド実行手順（cdk deploy --profile prod）
+  - [x] デプロイ後の動作確認手順（スモークテスト）
+  - [x] ロールバック手順
   - _Requirements: 要件13.1（デプロイ）_
   - _優先度: 🔴 Critical_
   - _推定工数: 3-4時間_
+  - _完了日時: 2026-02-14 08:50_
+  - _成果物: docs/production-deployment-guide.md_
+  - _作業記録: work-log-20260214-084314-task27-1-6-production-deployment-guide.md_
 
 - [x] 27.1.7 監視・アラート設定の最終確認（セクション6）
   - [x] CloudWatch Logsの保持期間設定確認（本番: 3ヶ月、開発: 1週間）
