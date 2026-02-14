@@ -2226,10 +2226,14 @@
   - _検証結果: ✅ 全確認項目クリア、本番デプロイ準備完了（条件付きGo）_
   - _注意: Phase 5（EventBridge・SNS）は本番運用後実施予定_
 
-- [ ] 27.2 環境変数の設定
+- [x] 27.2 環境変数の設定
   - 本番環境の環境変数を設定
   - Secrets Managerにシークレットを登録
   - _Requirements: 要件8.1（設定管理）_
+  - _完了: 2026-02-14 10:30_
+  - _成果物: docs/production-environment-setup.md（本番環境セットアップガイド）_
+  - _作業記録: work-log-20260214-101417-task27-2-environment-setup.md_
+  - _注意: 既存のスクリプト（create-api-key-secret.ps1、generate-env-file.ps1）を活用_
 
 - [x] 27.2.1 Utilsエッジケーステスト追加（テストカバレッジ向上）
   - [x] rate-limiter.test.ts 新規作成（17テストケース、100%カバレッジ）
