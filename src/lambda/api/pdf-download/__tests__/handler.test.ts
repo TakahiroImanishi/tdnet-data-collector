@@ -408,6 +408,246 @@ describe('Lambda PDF Download Handler', () => {
     });
   });
 
+  describe('異常系: Secrets Manager', () => {
+    it('API_KEY_SECRET_ARN環境変数が未設定の場合は500エラーを返す', async () => {
+      // Arrange
+      const originalApiKey = process.env.API_KEY;
+      const originalTestEnv = process.env.TEST_ENV;
+      const originalSecretArn = process.env.API_KEY_SECRET_ARN;
+
+      delete process.env.API_KEY; // テスト環境フラグを無効化
+      delete process.env.TEST_ENV;
+      delete process.env.API_KEY_SECRET_ARN; // 環境変数未設定
+
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+
+      // 環境変数を復元
+      if (originalApiKey) process.env.API_KEY = originalApiKey;
+      if (originalTestEnv) process.env.TEST_ENV = originalTestEnv;
+      if (originalSecretArn) process.env.API_KEY_SECRET_ARN = originalSecretArn;
+    });
+
+    it('Secrets Managerからの取得に失敗した場合は500エラーを返す', async () => {
+      // Arrange
+      const originalApiKey = process.env.API_KEY;
+      const originalTestEnv = process.env.TEST_ENV;
+      const originalSecretArn = process.env.API_KEY_SECRET_ARN;
+
+      delete process.env.API_KEY; // テスト環境フラグを無効化
+      delete process.env.TEST_ENV;
+      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:test';
+
+      secretsManagerMock.on(GetSecretValueCommand).rejects(new Error('AccessDeniedException'));
+
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+
+      // 環境変数を復元
+      if (originalApiKey) process.env.API_KEY = originalApiKey;
+      if (originalTestEnv) process.env.TEST_ENV = originalTestEnv;
+      if (originalSecretArn) process.env.API_KEY_SECRET_ARN = originalSecretArn;
+      else delete process.env.API_KEY_SECRET_ARN;
+    });
+
+    it('Secrets ManagerのSecretStringが空の場合は500エラーを返す', async () => {
+      // Arrange
+      const originalApiKey = process.env.API_KEY;
+      const originalTestEnv = process.env.TEST_ENV;
+      const originalSecretArn = process.env.API_KEY_SECRET_ARN;
+
+      delete process.env.API_KEY; // テスト環境フラグを無効化
+      delete process.env.TEST_ENV;
+      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:test';
+
+      secretsManagerMock.on(GetSecretValueCommand).resolves({
+        SecretString: undefined, // 空のシークレット
+      });
+
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+
+      // 環境変数を復元
+      if (originalApiKey) process.env.API_KEY = originalApiKey;
+      if (originalTestEnv) process.env.TEST_ENV = originalTestEnv;
+      if (originalSecretArn) process.env.API_KEY_SECRET_ARN = originalSecretArn;
+      else delete process.env.API_KEY_SECRET_ARN;
+    });
+  });
+
+  describe('異常系: DynamoDB', () => {
+    it('DynamoDB ProvisionedThroughputExceededExceptionの場合は再試行する', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      const throughputError: any = new Error('ProvisionedThroughputExceededException');
+      throughputError.name = 'ProvisionedThroughputExceededException';
+
+      // 最初の2回は失敗、3回目は成功
+      dynamoMock
+        .on(GetItemCommand)
+        .rejectsOnce(throughputError)
+        .rejectsOnce(throughputError)
+        .resolvesOnce({
+          Item: {
+            disclosure_id: { S: '20240115_7203_001' },
+            company_code: { S: '7203' },
+            company_name: { S: 'トヨタ自動車株式会社' },
+            pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          },
+        });
+
+      s3Mock.on(HeadObjectCommand).resolves({});
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      expect(dynamoMock.calls().length).toBeGreaterThanOrEqual(3); // 再試行が実行された
+    });
+
+    it('DynamoDB一般エラーの場合は500エラーを返す', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      dynamoMock.on(GetItemCommand).rejects(new Error('InternalServerError'));
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+  });
+
+  describe('異常系: S3', () => {
+    it('S3 AccessDeniedエラーの場合は500エラーを返す', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          disclosure_id: { S: '20240115_7203_001' },
+          company_code: { S: '7203' },
+          company_name: { S: 'トヨタ自動車株式会社' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+        },
+      });
+
+      const accessDeniedError: any = new Error('AccessDenied');
+      accessDeniedError.name = 'AccessDenied';
+      accessDeniedError.$metadata = { httpStatusCode: 403 };
+      s3Mock.on(HeadObjectCommand).rejects(accessDeniedError);
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    it('S3 HeadObjectが再試行後に成功する', async () => {
+      // Arrange
+      const event: any = {
+        pathParameters: {
+          disclosure_id: '20240115_7203_001',
+        },
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: {
+          disclosure_id: { S: '20240115_7203_001' },
+          company_code: { S: '7203' },
+          company_name: { S: 'トヨタ自動車株式会社' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+        },
+      });
+
+      const temporaryError: any = new Error('ServiceUnavailable');
+      temporaryError.name = 'ServiceUnavailable';
+
+      // 最初は失敗、2回目は成功
+      s3Mock.on(HeadObjectCommand).rejectsOnce(temporaryError).resolvesOnce({});
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+    });
+  });
+
   describe('エッジケース', () => {
     it('X-Api-Key（大文字）ヘッダーでも認証できる', async () => {
       // Arrange

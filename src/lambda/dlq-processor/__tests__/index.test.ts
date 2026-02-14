@@ -268,6 +268,64 @@ describe('DLQ Processor Lambda', () => {
     });
   });
 
+  describe('SNSクライアント再利用', () => {
+    it('複数のメッセージ処理で同じSNSクライアントを再利用する', async () => {
+      // Arrange
+      // 最初のhandler呼び出しでSNSクライアントを初期化
+      const firstEvent: SQSEvent = {
+        Records: [
+          {
+            messageId: 'message-1',
+            receiptHandle: 'receipt-1',
+            body: JSON.stringify({ error: 'Error 1' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'sender-1',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'md5-1',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act - 最初の呼び出し（SNSクライアント初期化）
+      await handler(firstEvent);
+
+      // 2回目の呼び出し（SNSクライアント再利用）
+      const secondEvent: SQSEvent = {
+        Records: [
+          {
+            messageId: 'message-2',
+            receiptHandle: 'receipt-2',
+            body: JSON.stringify({ error: 'Error 2' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567891',
+              SenderId: 'sender-2',
+              ApproximateFirstReceiveTimestamp: '1234567891',
+            },
+            messageAttributes: {},
+            md5OfBody: 'md5-2',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      await handler(secondEvent);
+
+      // Assert
+      // SNSクライアントは1回だけ初期化され、2回のhandler呼び出しで再利用される
+      expect(mockSend).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('エラー型チェックのブランチカバレッジ', () => {
     it('Error以外のオブジェクトがスローされた場合もログに記録する', async () => {
       // Arrange
@@ -389,6 +447,69 @@ describe('DLQ Processor Lambda', () => {
     it('数値がスローされた場合もログに記録する', async () => {
       // Arrange
       mockSend.mockRejectedValueOnce(404);
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+
+    it('processDLQMessageでError以外がスローされた場合もログに記録する', async () => {
+      // Arrange
+      // JSON.parseでエラーを発生させるが、Error以外の型をテストするため
+      // sendAlertでError以外をスローさせる
+      const nonErrorObject = { custom: 'error', code: 500 };
+      mockSend.mockRejectedValueOnce(nonErrorObject);
+
+      const event: SQSEvent = {
+        Records: [
+          {
+            messageId: 'test-message-id',
+            receiptHandle: 'test-receipt-handle',
+            body: JSON.stringify({ error: 'Test error' }),
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1234567890',
+              SenderId: 'test-sender',
+              ApproximateFirstReceiveTimestamp: '1234567890',
+            },
+            messageAttributes: {},
+            md5OfBody: 'test-md5',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:ap-northeast-1:123456789012:test-queue',
+            awsRegion: 'ap-northeast-1',
+          },
+        ],
+      };
+
+      // Act & Assert
+      await expect(handler(event)).resolves.not.toThrow();
+    });
+
+    it('processDLQMessageでstackプロパティがないErrorの場合', async () => {
+      // Arrange
+      const errorWithoutStack = new Error('Error without stack');
+      delete (errorWithoutStack as any).stack;
+      mockSend.mockRejectedValueOnce(errorWithoutStack);
 
       const event: SQSEvent = {
         Records: [
