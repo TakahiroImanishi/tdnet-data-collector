@@ -588,8 +588,8 @@ async function processDisclosure(
       title: metadata.title,
       disclosed_at: metadata.disclosed_at,
       pdf_url: metadata.pdf_url,
-      s3_key,
-      collected_at: new Date().toISOString(),
+      pdf_s3_key: s3_key,
+      downloaded_at: new Date().toISOString(),
       date_partition: '', // saveMetadata内で自動生成
     };
 

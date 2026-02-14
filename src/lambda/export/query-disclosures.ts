@@ -280,8 +280,8 @@ function fromDynamoDBItem(item: Record<string, any>): Disclosure {
     title: item.title?.S ?? '',
     disclosed_at: item.disclosed_at?.S ?? '',
     pdf_url: item.pdf_url?.S ?? '',
-    s3_key: item.s3_key?.S ?? '',
-    collected_at: item.collected_at?.S ?? '',
+    pdf_s3_key: item.pdf_s3_key?.S ?? '',
+    downloaded_at: item.downloaded_at?.S ?? '',
     date_partition: item.date_partition?.S ?? '',
   };
 }

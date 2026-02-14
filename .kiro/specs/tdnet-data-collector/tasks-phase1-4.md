@@ -3162,16 +3162,18 @@
   - _API Gateway URL: https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod_
   - _注意: 「開示情報の取得に失敗しました」エラーは、データ未収集のため正常な動作_
 
-- [ ] 31.5 ビルドエラーの修正
+- [x] 31.5 ビルドエラーの修正
   - TypeScriptコンパイルエラーの修正（11個のエラー）
-  - src/lambda/collector/handler.ts: s3_keyプロパティエラー修正
-  - src/lambda/export/query-disclosures.ts: s3_keyプロパティエラー修正
-  - src/lambda/stats/handler.ts: event変数名エラー修正
-  - src/models/disclosure.ts: file_sizeプロパティエラー修正（8個）
-  - ビルド成功確認: `npm run build`
+  - src/lambda/collector/handler.ts: s3_key→pdf_s3_key, collected_at→downloaded_at修正
+  - src/lambda/export/query-disclosures.ts: s3_key→pdf_s3_key, collected_at→downloaded_at修正
+  - src/lambda/stats/handler.ts: event→context.awsRequestId修正
+  - src/models/disclosure.ts: file_sizeバリデーション削除（8個のエラー解消）
+  - ビルド成功確認: `npm run build` (Exit Code: 0)
   - _Requirements: 要件14.1（品質保証）_
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
+  - _完了: 2026-02-15, ビルド成功_
+  - _作業記録: work-log-20260215-080816-typescript-build-errors-fix.md_
 
 - [x] 31.6 初回データ収集の実行
   - 手動でデータ収集を実行

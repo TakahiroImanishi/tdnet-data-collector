@@ -64,23 +64,6 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
       { date_partition: disclosure.date_partition }
     );
   }
-
-  // file_sizeのバリデーション（10MB以下）
-  if (disclosure.file_size !== undefined && disclosure.file_size !== null) {
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    if (disclosure.file_size > MAX_FILE_SIZE) {
-      throw new ValidationError(
-        `File size exceeds maximum allowed size: ${disclosure.file_size} bytes (max: ${MAX_FILE_SIZE} bytes)`,
-        { file_size: disclosure.file_size, max_file_size: MAX_FILE_SIZE }
-      );
-    }
-    if (disclosure.file_size < 0) {
-      throw new ValidationError(
-        `File size must be non-negative: ${disclosure.file_size}`,
-        { file_size: disclosure.file_size }
-      );
-    }
-  }
 }
 
 /**

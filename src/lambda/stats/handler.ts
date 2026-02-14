@@ -238,7 +238,7 @@ export async function handler(
       'Stats'
     );
 
-    return handleError(error as Error, event.requestContext.requestId);
+    return handleError(error as Error, context.awsRequestId);
   }
 }
 
