@@ -2390,7 +2390,7 @@
       - _前提条件: タスク31.1.3.1完了_
       - _作業記録: work-log-20260214-164904-api-authentication-design-fix.md_
 
-- [-] 31.2 スモークテスト実施
+- [x] 31.2 スモークテスト実施
   - インフラ確認（CloudFormation、DynamoDB、Lambda、S3、API Gateway）
   - API動作確認
   - データ収集テスト
@@ -2398,12 +2398,46 @@
   - 監視・アラート確認
   - Webダッシュボード確認
   - _Requirements: 要件14.4（E2Eテスト）_
-  - _状態: 中断（Lambda関数デプロイ問題により）_
-  - _完了項目: インフラ確認（4スタック、3テーブル、8関数、4バケット、API Gateway、API Key）_
-  - _未完了項目: API動作確認、データ収集テスト、エクスポート機能テスト、監視・アラート確認、Webダッシュボード確認_
-  - _発見された問題: すべてのLambda関数で`Runtime.ImportModuleError: Cannot find module '../../utils/logger'`が発生_
-  - _作業記録: work-log-20260214-154337-task31-2-smoke-test.md_
-  - _注意: タスク31.1.1〜31.1.3完了後に再開_
+  - _完了: 2026-02-14 17:35:00（部分的完了）_
+  - _完了項目: インフラ確認、API動作確認（部分）、データ収集テスト（失敗）_
+  - _未完了項目: エクスポート機能テスト、監視・アラート確認、Webダッシュボード確認（データ収集失敗のため実施不可）_
+  - _発見された問題:_
+    1. GET /health と GET /stats がAPI Gatewayに未登録（404 Not Found）
+    2. データ収集が失敗（failed_count: 2、collected_count: 0）
+    3. CloudWatch Logsにエラーメッセージが記録されていない
+  - _作業記録: work-log-20260214-154337-task31-2-smoke-test.md, work-log-20260214-171955-task31-2-smoke-test-continuation.md_
+  - _注意: タスク31.2.1〜31.2.3で問題対応が必要_
+
+  - [ ] 31.2.1 未実装エンドポイントのAPI Gateway統合（Critical）
+    - GET /health エンドポイントのCDK定義追加
+    - GET /stats エンドポイントのCDK定義追加
+    - API Gatewayへの統合設定
+    - デプロイとスモークテスト再実行
+    - _Requirements: 要件4.1, 12.1（API、監視）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 2-3時間_
+    - _関連: タスク15.18（Lambda関数実装済み）_
+
+  - [ ] 31.2.2 データ収集失敗の原因調査と修正（Critical）
+    - CloudWatch Logsの詳細確認（全ログストリーム）
+    - 環境変数の確認（TDNET_BASE_URL、S3_BUCKET、DYNAMODB_TABLE）
+    - IAMロールの権限確認（S3、DynamoDB、CloudWatch Logs）
+    - TDnet APIへのアクセステスト（手動実行）
+    - エラー原因の特定と修正
+    - 修正後のデプロイとスモークテスト再実行
+    - _Requirements: 要件1.1（データ収集）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 3-4時間_
+    - _関連: steering/core/error-handling-patterns.md_
+
+  - [ ] 31.2.3 構造化ログ出力の改善（High）
+    - LOG_LEVEL環境変数をDEBUGに変更
+    - Lambda関数のログ出力確認
+    - エラーログが正しく記録されることを確認
+    - _Requirements: 要件6.3（ロギング）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+    - _関連: steering/core/error-handling-patterns.md_
 
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
