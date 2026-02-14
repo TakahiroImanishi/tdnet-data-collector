@@ -176,8 +176,8 @@ describe('fromDynamoDBItem', () => {
       expect(disclosure.title).toBe('2024年3月期 第3四半期決算短信');
       expect(disclosure.disclosed_at).toBe('2024-01-15T10:30:00Z');
       expect(disclosure.pdf_url).toBe('https://www.release.tdnet.info/inbs/example.pdf');
-      expect(disclosure.s3_key).toBe('pdfs/2024/01/20240115_1234_001.pdf');
-      expect(disclosure.collected_at).toBe('2024-01-15T10:35:00Z');
+      expect(disclosure.pdf_s3_key).toBe('pdfs/2024/01/20240115_1234_001.pdf');
+      expect(disclosure.downloaded_at).toBe('2024-01-15T10:35:00Z');
       expect(disclosure.date_partition).toBe('2024-01');
     });
   });
@@ -207,13 +207,13 @@ describe('fromDynamoDBItem', () => {
         disclosure_type: { S: '決算短信' },
         title: { S: '2024年3月期 第3四半期決算短信' },
         disclosed_at: { S: '2024-01-15T10:30:00Z' },
-        pdf_url: { S: undefined as any }, // Sがundefined
+        pdf_url: { S: 'https://example.com/pdf.pdf' },
         pdf_s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
-        downloaded_at: { S: '2024-01-15T10:35:00Z' },
+        downloaded_at: { S: undefined as any }, // Sがundefined（必須フィールド）
         date_partition: { S: '2024-01' },
       };
 
-      // バリデーションエラーになるはずだが、nullish coalescingで空文字列になることを確認
+      // 必須フィールドのdownloaded_atがundefinedなのでバリデーションエラー
       expect(() => fromDynamoDBItem(itemWithUndefined)).toThrow(ValidationError);
     });
 
@@ -308,8 +308,8 @@ describe('createDisclosure', () => {
       const disclosure = createDisclosure(baseParams);
 
       expect(disclosure.date_partition).toBe('2024-01');
-      expect(disclosure.collected_at).toBeDefined();
-      expect(disclosure.collected_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(disclosure.downloaded_at).toBeDefined();
+      expect(disclosure.downloaded_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
 
     it('date_partitionが指定されている場合はそれを使用', () => {
@@ -413,10 +413,10 @@ describe('generateDisclosureId', () => {
       expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123', 1)).toThrow(
         ValidationError
       );
-      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '12345', 1)).toThrow(
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123456', 1)).toThrow(
         ValidationError
       );
-      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'ABCD', 1)).toThrow(
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'ABC', 1)).toThrow(
         ValidationError
       );
     });

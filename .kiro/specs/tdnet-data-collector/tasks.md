@@ -2925,8 +2925,10 @@
     - _推定工数: 1-2時間_
     - _影響: セキュリティリスク軽減_
     - _関連: work-log-20260215-000859-subagent-b-lambda-cdk.md（不整合2, 3）_
+    - _完了: 2026-02-15 06:45, 5つのLambda関数から不要な権限を削除_
+    - _作業記録: work-log-20260215-063137-subagent-b-high-tasks.md_
   
-  - [ ] 31.3.6 エラーログ構造の修正（High）
+  - [x] 31.3.6 エラーログ構造の修正（High）
     - `src/utils/logger.ts` の `createErrorContext` 関数修正
     - `additionalContext` を `context` でラップ
     - 全Lambda関数でログ出力を確認
@@ -2936,8 +2938,10 @@
     - _推定工数: 1-2時間_
     - _影響: CloudWatch Logs Insightsでのクエリ改善_
     - _関連: work-log-20260215-000852-error-security-consistency.md（不整合H-1）_
+    - _完了: 2026-02-15 06:45, Steering準拠のログ構造に統一, 10/10テスト成功_
+    - _作業記録: work-log-20260215-063137-subagent-b-high-tasks.md_
   
-  - [ ] 31.3.7 CloudWatch Alarmsの閾値修正（High）
+  - [x] 31.3.7 CloudWatch Alarmsの閾値修正（High）
     - `cdk/lib/constructs/cloudwatch-alarms.ts` 修正
     - Lambda Duration アラーム閾値を変更
       - 警告: 10分（600秒）
@@ -2947,8 +2951,10 @@
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
     - _関連: work-log-20260215-000852-error-security-consistency.md（不整合H-2）_
+    - _完了: 2026-02-15 06:45, 2段階アラーム実装（警告/重大）, 14/14テスト成功_
+    - _作業記録: work-log-20260215-063137-subagent-b-high-tasks.md_
   
-  - [ ] 31.3.8 DLQアラームの実装（High）
+  - [x] 31.3.8 DLQアラームの実装（High）
     - `cdk/lib/constructs/cloudwatch-alarms.ts` にDLQアラーム追加
     - DLQメッセージ数 > 0 でCriticalアラート
     - SNS通知設定
@@ -2957,6 +2963,8 @@
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
     - _関連: work-log-20260215-000852-error-security-consistency.md（不整合H-3）_
+    - _完了: 2026-02-15 06:45, DLQアラーム実装完了, 14/14テスト成功_
+    - _作業記録: work-log-20260215-063137-subagent-b-high-tasks.md_
   
   - [x] 31.3.9 APIレスポンス形式の統一（High）
     - OpenAPI仕様から `status` フィールドを削除（API設計書に合わせる）
