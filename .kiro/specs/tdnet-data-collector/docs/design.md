@@ -732,13 +732,11 @@ GET /disclosures/{disclosure_id}/pdf
 ```
 ディレクトリ構造:
 /pdfs/YYYY/MM/DD/{company_code}_{disclosure_type}_{timestamp}.pdf
-/temp/{disclosure_id}.pdf
 /exports/{export_id}.{format}
 
 例:
 /pdfs/2024/01/15/7203_決算短信_20240115093000.pdf
 /pdfs/2024/01/15/6758_業績予想修正_20240115140000.pdf
-/temp/20240115_7203_001.pdf
 /exports/export-20240115-xyz789.csv
 
 セキュリティ設定:
@@ -748,7 +746,6 @@ GET /disclosures/{disclosure_id}/pdf
 - アクセス: 署名付きURLのみ
 
 ライフサイクルポリシー:
-- temp/: 1日経過後に自動削除
 - exports/: 7日経過後に自動削除
 - pdfs/: 90日経過後にS3 Standard-IA（低頻度アクセス）に移行
 - pdfs/: 365日経過後にS3 Glacier Flexible Retrievalに移行
