@@ -2570,27 +2570,40 @@
     - _作業記録: work-log-20260214-203526-task31-2-6-retest.md_
     - _注意: 本番環境では100件すべて失敗（タスク31.2.6.2で原因分析）_
 
-  - [-] 31.2.6.2 データ収集失敗の原因分析（Critical）
+  - [x] 31.2.6.2 データ収集失敗の原因分析（Critical）
     - 2026-02-13のデータ収集で100件すべて失敗した原因を分析
     - 調査項目:
-      - [ ] CloudWatch Logsで詳細なエラーログを確認
-      - [ ] PDF ダウンロード失敗の原因を特定
-      - [ ] メタデータ保存失敗の原因を特定
-      - [ ] S3アップロード失敗の原因を特定
-      - [ ] IAM権限の確認（S3、DynamoDB、CloudWatch）
-      - [ ] ネットワーク接続の確認（TDnetサイトへのアクセス）
-      - [ ] タイムアウト設定の確認
+      - [x] CloudWatch Logsで詳細なエラーログを確認
+      - [x] PDF ダウンロード失敗の原因を特定
+      - [x] メタデータ保存失敗の原因を特定
+      - [x] S3アップロード失敗の原因を特定
+      - [x] IAM権限の確認（S3、DynamoDB、CloudWatch）
+      - [x] ネットワーク接続の確認（TDnetサイトへのアクセス）
+      - [x] タイムアウト設定の確認
     - 検証結果:
       - HTMLパーサー: 100件正常に取得 ✅
       - ログ出力: JSON形式で正常に出力 ✅
       - データ収集: 100件すべて失敗 ❌
       - DynamoDB実行記録: `collected_count: 0`, `failed_count: 100`, `status: failed`
+    - **根本原因特定:**
+      - **TextDecoderの`shift_jis`サポート不足（Critical）**
+        - Lambda環境（Node.js 20.x）でTextDecoderは`shift_jis`エンコーディングをサポートしていない
+        - デコード失敗時にUTF-8フォールバックが使用され、不正な文字（`\ufffd`）が生成される
+        - HTMLパーサーは不正な文字を含むHTMLを正しくパースできない
+        - 結果として、100件すべてのデータ収集が失敗
+      - **IAMロール権限不足（High）**
+        - CloudWatch PutMetricData権限がない
+        - メトリクス送信に失敗（警告レベル）
+    - **修正方針:**
+      - 修正1: `iconv-lite`ライブラリを使用してShift_JISデコードを修正（Critical）
+      - 修正2: IAMロールに`cloudwatch:PutMetricData`権限を追加（High）
     - _Requirements: 要件1.3, 1.4, 6.1（PDFダウンロード、メタデータ保存、エラーハンドリング）_
     - _優先度: 🔴 Critical_
     - _推定工数: 2-3時間_
     - _前提条件: タスク31.2.6.1完了（HTMLパーサー修正）_
-    - _作業記録: work-log-20260214-205358-lambda-logging-fix.md_
-    - _注意: AWS ConsoleでCloudWatch Logsを直接確認する必要がある_
+    - _完了: 2026-02-14 22:30, 根本原因特定完了_
+    - _作業記録: work-log-20260214-221221-data-collection-failure-analysis.md_
+    - _次のアクション: タスク31.2.6.3でShift_JISデコード修正_
 
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
