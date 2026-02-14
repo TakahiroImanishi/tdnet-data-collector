@@ -228,7 +228,33 @@ npm run test:coverage
 
 ## デプロイ
 
-### CDK操作（Phase 2以降）
+### デプロイ方式の選択
+
+本プロジェクトでは2つのデプロイ方式を提供しています：
+
+#### 1. 分割スタックデプロイ（推奨）
+
+4つの独立したスタックに分割し、デプロイ時間を70-90%短縮します。
+
+```bash
+# 全スタックをデプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack all
+
+# Lambda関数のみ更新（3-5分）
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack compute
+
+# API設定のみ更新（2-3分）
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack api
+```
+
+**利点**:
+- デプロイ時間: 従来15-20分 → 変更箇所のみ2-5分
+- ロールバック影響: 変更したスタックのみ
+- 並列開発: 複数チームが独立して作業可能
+
+詳細は [スタック分割設計](docs/stack-split-design.md) を参照してください。
+
+#### 2. 単一スタックデプロイ（従来方式）
 
 ```bash
 # CDK環境の初期化（初回のみ）

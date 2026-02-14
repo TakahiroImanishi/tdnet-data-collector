@@ -42,6 +42,15 @@
 
 ## 本番環境デプロイ手順
 
+### デプロイ方式の選択
+
+本プロジェクトでは2つのデプロイ方式を提供しています：
+
+1. **単一スタックデプロイ** - 従来の方式（全リソースを1つのスタックで管理）
+2. **分割スタックデプロイ** - 推奨方式（4つのスタックに分割、デプロイ時間70-90%短縮）
+
+**推奨**: 新規デプロイは分割スタック方式を使用してください。詳細は [スタック分割設計](./stack-split-design.md) を参照。
+
 ### 前提条件
 
 1. **AWS本番アカウントへのアクセス**
@@ -125,12 +134,38 @@ npx cdk diff --context environment=prod
 
 ### ステップ6: CDK Deploy（デプロイ実行）
 
+#### 方法A: 分割スタックデプロイ（推奨）
+
+```powershell
+# 全スタックを依存関係順にデプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack all
+```
+
+**実行時間**: 約12-18分（初回）、約3-5分（更新時）
+
+**デプロイ順序**:
+1. Foundation Stack (基盤層) - 5-7分
+2. Compute Stack (Lambda関数) - 3-5分
+3. API Stack (API Gateway) - 2-3分
+4. Monitoring Stack (監視) - 2-3分
+
+**個別スタックのデプロイ**:
+```powershell
+# Lambda関数のみ更新
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack compute
+
+# API設定のみ更新
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack api
+```
+
+#### 方法B: 単一スタックデプロイ（従来方式）
+
 ```powershell
 cd cdk
 npx cdk deploy --context environment=prod --require-approval always
 ```
 
-**実行時間**: 約10-15分
+**実行時間**: 約15-20分
 
 **確認ポイント**:
 - CloudFormationスタックが`CREATE_COMPLETE`または`UPDATE_COMPLETE`
@@ -238,13 +273,34 @@ curl -X GET "$apiUrl/health"
 
 デプロイに問題がある場合：
 
-### 方法1: CloudFormationロールバック
+### 分割スタックのロールバック
+
+#### 方法1: 特定スタックのロールバック
+
+```powershell
+# 問題のあるスタックのみロールバック
+aws cloudformation rollback-stack --stack-name TdnetCompute-prod
+```
+
+#### 方法2: 全スタックの削除と再作成
+
+```powershell
+# 全スタックを依存関係の逆順で削除
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action destroy -Stack all
+
+# 再デプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack all
+```
+
+### 単一スタックのロールバック
+
+#### 方法1: CloudFormationロールバック
 
 ```powershell
 aws cloudformation rollback-stack --stack-name TdnetDataCollectorStack-prod
 ```
 
-### 方法2: スタック削除と再作成
+#### 方法2: スタック削除と再作成
 
 ```powershell
 # スタック削除
@@ -321,6 +377,7 @@ aws logs tail /aws/lambda/tdnet-collector-prod --follow
 ## 関連ドキュメント
 
 - [本番環境デプロイ手順書](./production-deployment-guide.md)
+- [スタック分割設計](./stack-split-design.md) - 推奨デプロイ方式
 - [スモークテストガイド](./smoke-test-guide.md)
 - [運用マニュアル](./operations-manual.md)
 - [トラブルシューティングガイド](./troubleshooting-guide.md)
