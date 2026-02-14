@@ -297,7 +297,7 @@ describe('TypeScript型定義とインターフェース', () => {
       });
 
       expect(disclosure.date_partition).toBe('2024-01');
-      expect(disclosure.collected_at).toBeDefined();
+      expect(disclosure.downloaded_at).toBeDefined();
     });
 
     it('should use provided date_partition', () => {

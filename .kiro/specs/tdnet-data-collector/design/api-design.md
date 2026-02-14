@@ -131,11 +131,14 @@ GET /disclosures?company_code=7203&start_date=2024-01-01&end_date=2024-01-31&lim
     }
   ],
   "total": 150,
+  "total_count": 150,
   "count": 20,
   "offset": 0,
   "limit": 20
 }
 ```
+
+**注意:** `total` と `total_count` は同じ値を返します。`total_count` は将来的な拡張のために追加されました。
 
 **成功（200 OK）- CSV形式:**
 ```csv

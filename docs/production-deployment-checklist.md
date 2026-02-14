@@ -193,9 +193,78 @@ npx cdk deploy --context environment=prod --require-approval always
 - すべてのDynamoDBテーブルが作成された
 - すべてのS3バケットが作成された
 
-### ステップ8: デプロイ後確認
+### ステップ8: Webダッシュボードのデプロイ（必須）
 
-#### 8.1 リソース確認
+#### 8.1 ダッシュボードのビルド
+
+```powershell
+# dashboardディレクトリに移動
+cd dashboard
+
+# 依存関係のインストール（初回のみ）
+npm install
+
+# 本番環境用にビルド
+npm run build
+```
+
+**確認**: `dashboard/build/` フォルダにビルドファイルが生成されること
+
+```powershell
+# ビルド結果確認
+Test-Path dashboard/build/index.html
+Test-Path dashboard/build/static
+```
+
+#### 8.2 S3へのアップロード
+
+```powershell
+# プロジェクトルートに戻る
+cd ..
+
+# デプロイスクリプトを実行（本番環境）
+.\scripts\deploy-dashboard.ps1 -Environment prod
+```
+
+**実行内容**:
+1. ダッシュボードのビルド（`npm run build`）
+2. S3バケット（`tdnet-dashboard-prod-{account-id}`）へのアップロード
+3. CloudFront Invalidation実行
+
+**実行時間**: 約2-3分
+
+#### 8.3 CloudFront URLの確認
+
+```powershell
+# CloudFront Distribution IDを取得
+$accountId = aws sts get-caller-identity --query Account --output text
+$bucketName = "tdnet-dashboard-prod-$accountId"
+$distributionId = aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?DomainName=='$bucketName.s3.amazonaws.com']].Id | [0]" --output text
+
+# CloudFront URLを取得
+$distributionDomain = aws cloudfront get-distribution --id $distributionId --query "Distribution.DomainName" --output text
+Write-Host "ダッシュボードURL: https://$distributionDomain"
+```
+
+#### 8.4 ダッシュボードの動作確認
+
+ブラウザで CloudFront URL にアクセスし、以下を確認：
+
+- [ ] ダッシュボードが正常に表示される
+- [ ] API接続が正常に動作する（API Key認証）
+- [ ] データ収集機能が動作する
+- [ ] 開示情報検索機能が動作する
+- [ ] PDFダウンロード機能が動作する
+- [ ] データエクスポート機能が動作する
+
+**トラブルシューティング**:
+- "Access Denied"エラー → S3バケットポリシーとCloudFront OAIを確認
+- API接続エラー → API GatewayのCORS設定とAPIキーを確認
+- 404エラー → CloudFront Invalidationが完了しているか確認
+
+### ステップ9: デプロイ後確認
+
+#### 9.1 リソース確認
 
 ```powershell
 # Lambda関数確認
@@ -206,16 +275,19 @@ aws dynamodb list-tables --query "TableNames[?starts_with(@, 'tdnet')]"
 
 # S3バケット確認
 aws s3 ls | Select-String "tdnet"
+
+# CloudFront Distribution確認
+aws cloudfront list-distributions --query "DistributionList.Items[?contains(Origins.Items[0].DomainName, 'tdnet-dashboard')].{Id:Id,DomainName:DomainName,Status:Status}"
 ```
 
-#### 8.2 CloudWatch Logs確認
+#### 9.2 CloudWatch Logs確認
 
 ```powershell
 # ロググループ確認
 aws logs describe-log-groups --query "logGroups[?starts_with(logGroupName, '/aws/lambda/tdnet')].logGroupName"
 ```
 
-#### 8.3 CloudWatch Alarms確認
+#### 9.3 CloudWatch Alarms確認
 
 ```powershell
 # アラーム状態確認

@@ -143,3 +143,36 @@ Tests:       49 passed, 49 total
 1. **レート制限ヘッダー**: 将来実装予定として記載。Lambda関数での実装は別タスクで対応が必要
 2. **DownloadError**: Steering Filesの例が実行可能になった
 3. **Logger環境判定**: `NODE_ENV === 'production'`条件を削除。Lambda環境のみconsole.log使用
+
+
+---
+
+## 最終確認
+
+### Git Commit
+```
+[improve] タスク31.3.19-31.3.22完了: レート制限ヘッダー注記追加、format default変更、DownloadError追加、Logger環境判定簡略化
+```
+
+### 変更ファイル一覧
+- `docs/openapi.yaml`: レート制限ヘッダー注記、format default変更
+- `src/errors/index.ts`: DownloadErrorクラス追加
+- `src/errors/index.test.ts`: 新規作成（17テスト）
+- `src/utils/logger.ts`: 環境判定簡略化
+- `src/utils/__tests__/logger.test.ts`: テスト修正（49テスト）
+- `.kiro/specs/tdnet-data-collector/tasks.md`: タスク完了マーク
+
+### すべてのテスト結果
+✅ `src/errors/index.test.ts`: 17/17 passed
+✅ `src/utils/__tests__/logger.test.ts`: 49/49 passed
+
+### ファイルエンコーディング
+✅ すべてのファイルがUTF-8 BOMなしで作成・編集済み
+
+---
+
+## 作業完了
+
+**完了日時**: 2026-02-15 06:43:00  
+**タスク**: 31.3.19-31.3.22（Phase 1: Low優先度）  
+**ステータス**: ✅ 完了

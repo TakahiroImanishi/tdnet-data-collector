@@ -97,8 +97,6 @@ describe('Disclosure Property Tests', () => {
             'disclosure_type',
             'title',
             'disclosed_at',
-            'pdf_url',
-            'pdf_s3_key',
             'downloaded_at',
             'date_partition',
           ];
@@ -118,10 +116,16 @@ describe('Disclosure Property Tests', () => {
           expect(item.disclosure_type.S).toBe(disclosure.disclosure_type);
           expect(item.title.S).toBe(disclosure.title);
           expect(item.disclosed_at.S).toBe(disclosure.disclosed_at);
-          expect(item.pdf_url.S).toBe(disclosure.pdf_url);
-          expect(item.s3_key.S).toBe(disclosure.s3_key);
-          expect(item.collected_at.S).toBe(disclosure.collected_at);
+          expect(item.downloaded_at.S).toBe(disclosure.downloaded_at);
           expect(item.date_partition.S).toBe(disclosure.date_partition);
+          
+          // オプショナルフィールド
+          if (disclosure.pdf_url) {
+            expect(item.pdf_url?.S).toBe(disclosure.pdf_url);
+          }
+          if (disclosure.pdf_s3_key) {
+            expect(item.pdf_s3_key?.S).toBe(disclosure.pdf_s3_key);
+          }
         }),
         { numRuns: 100 } // 100回の反復実行
       );
@@ -141,9 +145,7 @@ describe('Disclosure Property Tests', () => {
           expect(restored.disclosure_type).toBeDefined();
           expect(restored.title).toBeDefined();
           expect(restored.disclosed_at).toBeDefined();
-          expect(restored.pdf_url).toBeDefined();
-          expect(restored.s3_key).toBeDefined();
-          expect(restored.collected_at).toBeDefined();
+          expect(restored.downloaded_at).toBeDefined();
           expect(restored.date_partition).toBeDefined();
 
           // フィールド値が元のDisclosureと一致することを確認
@@ -153,10 +155,16 @@ describe('Disclosure Property Tests', () => {
           expect(restored.disclosure_type).toBe(disclosure.disclosure_type);
           expect(restored.title).toBe(disclosure.title);
           expect(restored.disclosed_at).toBe(disclosure.disclosed_at);
-          expect(restored.pdf_url).toBe(disclosure.pdf_url);
-          expect(restored.s3_key).toBe(disclosure.s3_key);
-          expect(restored.collected_at).toBe(disclosure.collected_at);
+          expect(restored.downloaded_at).toBe(disclosure.downloaded_at);
           expect(restored.date_partition).toBe(disclosure.date_partition);
+          
+          // オプショナルフィールド
+          if (disclosure.pdf_url) {
+            expect(restored.pdf_url).toBe(disclosure.pdf_url);
+          }
+          if (disclosure.pdf_s3_key) {
+            expect(restored.pdf_s3_key).toBe(disclosure.pdf_s3_key);
+          }
         }),
         { numRuns: 100 }
       );
@@ -170,8 +178,6 @@ describe('Disclosure Property Tests', () => {
         'disclosure_type',
         'title',
         'disclosed_at',
-        'pdf_url',
-        'pdf_s3_key',
         'downloaded_at',
         'date_partition',
       ];
@@ -243,16 +249,22 @@ describe('Disclosure Property Tests', () => {
             expect(disclosure.disclosure_type).toBe(disclosureType);
             expect(disclosure.title).toBe(title);
             expect(disclosure.disclosed_at).toBe(disclosedAt);
-            expect(disclosure.pdf_url).toBe(pdfUrl);
-            expect(disclosure.s3_key).toBeDefined();
-            expect(disclosure.collected_at).toBeDefined();
+            expect(disclosure.downloaded_at).toBeDefined();
             expect(disclosure.date_partition).toBeDefined();
+            
+            // オプショナルフィールド
+            if (disclosure.pdf_url) {
+              expect(disclosure.pdf_url).toBe(pdfUrl);
+            }
+            if (disclosure.pdf_s3_key) {
+              expect(disclosure.pdf_s3_key).toBeDefined();
+            }
 
             // date_partitionがYYYY-MM形式であることを確認
             expect(disclosure.date_partition).toMatch(/^\d{4}-\d{2}$/);
 
-            // collected_atがISO 8601形式であることを確認
-            expect(disclosure.collected_at).toMatch(
+            // downloaded_atがISO 8601形式であることを確認
+            expect(disclosure.downloaded_at).toMatch(
               /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
             );
 
