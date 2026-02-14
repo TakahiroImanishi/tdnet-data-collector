@@ -55,6 +55,11 @@ tmp/
 temp/
 *.tmp
 
+# Test files (manual testing)
+dynamodb-key.json
+lambda-test-payload.json
+tdnet-sample.html
+
 # AWS credentials (never commit!)
 .aws/
 credentials
