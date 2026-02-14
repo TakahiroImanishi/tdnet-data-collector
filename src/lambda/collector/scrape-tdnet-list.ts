@@ -58,8 +58,8 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
     // TDnetからHTMLを取得（再試行あり）
     const html = await fetchTdnetHtml(date);
 
-    // HTMLをパース
-    const disclosures = parseDisclosureList(html);
+    // HTMLをパース（日付を渡す）
+    const disclosures = parseDisclosureList(html, date);
 
     logger.info('TDnet list scraped successfully', {
       date,
@@ -154,7 +154,7 @@ function validateDateFormat(date: string): void {
  * TDnetからHTMLを取得（再試行あり）
  *
  * @param date 日付（YYYY-MM-DD形式）
- * @returns HTMLコンテンツ
+ * @returns HTMLコンテンツ（UTF-8にデコード済み）
  * @throws RetryableError ネットワークエラーまたはHTTPエラー
  */
 async function fetchTdnetHtml(date: string): Promise<string> {
@@ -174,17 +174,22 @@ async function fetchTdnetHtml(date: string): Promise<string> {
             'Accept-Encoding': 'gzip, deflate',
             'Connection': 'keep-alive',
           },
+          // Shift_JISエンコーディング対応
+          responseType: 'arraybuffer',
           validateStatus: (status) => status >= 200 && status < 300,
         });
+
+        // Shift_JISからUTF-8にデコード
+        const html = decodeShiftJIS(response.data);
 
         logger.debug('TDnet HTML fetched successfully', {
           url,
           date,
           status: response.status,
-          content_length: response.data.length,
+          content_length: html.length,
         });
 
-        return response.data;
+        return html;
       } catch (error) {
         // AxiosErrorを適切なエラーに変換
         throw convertAxiosError(error as AxiosError, url);
@@ -201,6 +206,33 @@ async function fetchTdnetHtml(date: string): Promise<string> {
       },
     }
   );
+}
+
+/**
+ * Shift_JISバイト配列をUTF-8文字列にデコード
+ *
+ * @param buffer Shift_JISエンコードされたバイト配列またはUTF-8文字列
+ * @returns UTF-8文字列
+ */
+function decodeShiftJIS(buffer: ArrayBuffer | string): string {
+  // 既に文字列の場合はそのまま返す（テスト互換性のため）
+  if (typeof buffer === 'string') {
+    return buffer;
+  }
+
+  try {
+    // TextDecoderを使用してShift_JISをデコード
+    const decoder = new TextDecoder('shift_jis');
+    return decoder.decode(buffer);
+  } catch (error) {
+    logger.error('Failed to decode Shift_JIS', {
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
+      error_message: error instanceof Error ? error.message : String(error),
+    });
+    // フォールバック: UTF-8として解釈
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(buffer);
+  }
 }
 
 /**

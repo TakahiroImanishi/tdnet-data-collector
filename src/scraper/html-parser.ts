@@ -42,10 +42,11 @@ export interface DisclosureMetadata {
  * TDnet開示情報リストページのHTMLをパース
  *
  * @param html HTMLコンテンツ
+ * @param requestDate リクエスト日付（YYYY-MM-DD形式）- disclosed_at生成に使用
  * @returns 開示情報メタデータの配列
  * @throws ValidationError HTMLが不正な場合
  */
-export function parseDisclosureList(html: string): DisclosureMetadata[] {
+export function parseDisclosureList(html: string, requestDate: string): DisclosureMetadata[] {
   try {
     // HTMLの基本検証
     if (!html || html.trim().length === 0) {
@@ -57,7 +58,7 @@ export function parseDisclosureList(html: string): DisclosureMetadata[] {
     const disclosures: DisclosureMetadata[] = [];
 
     // HTML構造の検証（テーブルが存在するか）
-    const tables = $('table.disclosure-list');
+    const tables = $('table#main-list-table');
     if (tables.length === 0) {
       logger.warn('No disclosure table found in HTML', {
         html_length: html.length,
@@ -68,27 +69,52 @@ export function parseDisclosureList(html: string): DisclosureMetadata[] {
       return [];
     }
 
-    // TDnetのテーブル構造に基づいてパース
-    // 注: 実際のTDnetのHTML構造に合わせて調整が必要
-    $('table.disclosure-list tr').each((index, element) => {
-      if (index === 0) return; // ヘッダー行をスキップ
+    // ページヘッダーから日付を抽出（フォールバック用）
+    const pageDate = extractPageDate($) || requestDate;
 
+    // TDnetのテーブル構造に基づいてパース
+    // 実際のHTML構造: table#main-list-table > tr > td (7セル)
+    $('table#main-list-table tr').each((index, element) => {
       const $row = $(element);
       const cells = $row.find('td');
 
-      if (cells.length < 6) {
-        logger.warn('Invalid row structure', { index, cellCount: cells.length });
+      // 7セル未満の行はスキップ（ヘッダーまたは不正な行）
+      if (cells.length < 7) {
+        if (cells.length > 0) {
+          logger.debug('Skipping row with insufficient cells', { 
+            index, 
+            cellCount: cells.length 
+          });
+        }
         return;
       }
 
       try {
+        // Cell 0: kjTime - 時刻（HH:MM形式）
+        const time = $(cells[0]).text().trim();
+        
+        // Cell 1: kjCode - 企業コード（5桁）
+        const companyCode = $(cells[1]).text().trim();
+        
+        // Cell 2: kjName - 企業名
+        const companyName = $(cells[2]).text().trim();
+        
+        // Cell 3: kjTitle - タイトル（PDFリンク付き）
+        const $titleCell = $(cells[3]);
+        const title = $titleCell.text().trim();
+        const pdfUrl = $titleCell.find('a').attr('href') || '';
+        
+        // Cell 4: kjXbrl - XBRL（オプション、スキップ）
+        // Cell 5: kjPlace - 取引所（オプション、スキップ）
+        // Cell 6: kjHistroy - 履歴（オプション、スキップ）
+
         const disclosure: DisclosureMetadata = {
-          company_code: $(cells[0]).text().trim(),
-          company_name: $(cells[1]).text().trim(),
-          disclosure_type: $(cells[2]).text().trim(),
-          title: $(cells[3]).text().trim(),
-          disclosed_at: parseDisclosedAt($(cells[4]).text().trim()),
-          pdf_url: $(cells[5]).find('a').attr('href') || '',
+          company_code: companyCode,
+          company_name: companyName,
+          disclosure_type: extractDisclosureType(title),
+          title: title,
+          disclosed_at: parseDisclosedAt(pageDate, time),
+          pdf_url: buildAbsolutePdfUrl(pdfUrl),
         };
 
         // バリデーション
@@ -105,8 +131,9 @@ export function parseDisclosureList(html: string): DisclosureMetadata[] {
     });
 
     logger.info('HTML parsing completed', {
-      total_rows: $('table.disclosure-list tr').length - 1, // ヘッダー行を除く
+      total_rows: $('table#main-list-table tr').length,
       parsed_disclosures: disclosures.length,
+      page_date: pageDate,
     });
 
     return disclosures;
@@ -121,21 +148,99 @@ export function parseDisclosureList(html: string): DisclosureMetadata[] {
 }
 
 /**
+ * ページヘッダーから日付を抽出
+ *
+ * @param $ cheerioインスタンス
+ * @returns 日付文字列（YYYY-MM-DD形式）、抽出失敗時はnull
+ *
+ * @example
+ * HTML: <div id="kaiji-date-1">2026年02月13日</div>
+ * Result: "2026-02-13"
+ */
+function extractPageDate($: cheerio.CheerioAPI): string | null {
+  try {
+    const dateText = $('#kaiji-date-1').text().trim();
+    // "2026年02月13日" → "2026-02-13"
+    const match = dateText.match(/(\d{4})年(\d{2})月(\d{2})日/);
+    if (match) {
+      const [, year, month, day] = match;
+      return `${year}-${month}-${day}`;
+    }
+    return null;
+  } catch (error) {
+    logger.warn('Failed to extract page date', {
+      error_message: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+/**
+ * タイトルから開示種類を抽出
+ *
+ * @param title タイトル文字列
+ * @returns 開示種類
+ *
+ * @remarks
+ * タイトルから開示種類を推測する簡易実装。
+ * より正確な分類が必要な場合は、TDnetのカテゴリ情報を使用する。
+ */
+function extractDisclosureType(title: string): string {
+  // 決算関連
+  if (title.includes('決算') || title.includes('業績')) {
+    return '決算短信';
+  }
+  // 適時開示
+  if (title.includes('適時開示')) {
+    return '適時開示';
+  }
+  // IR資料
+  if (title.includes('説明資料') || title.includes('プレゼンテーション')) {
+    return 'IR資料';
+  }
+  // その他
+  return 'その他';
+}
+
+/**
+ * 相対PDFURLを絶対URLに変換
+ *
+ * @param relativePath 相対パス（例: "140120260213562187.pdf"）
+ * @returns 絶対URL
+ */
+function buildAbsolutePdfUrl(relativePath: string): string {
+  if (!relativePath) {
+    return '';
+  }
+  
+  // 既に絶対URLの場合はそのまま返す
+  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+    return relativePath;
+  }
+  
+  // TDnetのベースURL
+  const baseUrl = 'https://www.release.tdnet.info/inbs';
+  
+  // 相対パスを絶対URLに変換
+  return `${baseUrl}/${relativePath}`;
+}
+
+/**
  * 開示日時をISO 8601形式（UTC）に変換
  *
- * @param dateStr 日時文字列（例: "2024/01/15 10:30"）
+ * @param date 日付文字列（YYYY-MM-DD形式）
+ * @param time 時刻文字列（HH:MM形式）
  * @returns ISO 8601形式の日時文字列
  */
-function parseDisclosedAt(dateStr: string): string {
-  // TDnetの日時形式（JST）をUTCに変換
-  // 例: "2024/01/15 10:30" → "2024-01-15T01:30:00Z"
-  const match = dateStr.match(/(\d{4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})/);
-  if (!match) {
-    throw new ValidationError(`Invalid date format: ${dateStr}`);
+function parseDisclosedAt(date: string, time: string): string {
+  // 日付と時刻を結合してJST日時を作成
+  // 例: "2026-02-13" + "22:00" → "2026-02-13T22:00:00+09:00"
+  const jstDate = new Date(`${date}T${time}:00+09:00`);
+  
+  if (isNaN(jstDate.getTime())) {
+    throw new ValidationError(`Invalid date/time: ${date} ${time}`);
   }
-
-  const [, year, month, day, hour, minute] = match;
-  const jstDate = new Date(`${year}-${month}-${day}T${hour}:${minute}:00+09:00`);
+  
   return jstDate.toISOString();
 }
 
@@ -146,7 +251,8 @@ function parseDisclosedAt(dateStr: string): string {
  * @throws ValidationError バリデーションエラー
  */
 function validateDisclosureMetadata(disclosure: DisclosureMetadata): void {
-  if (!disclosure.company_code || !/^\d{4}$/.test(disclosure.company_code)) {
+  // 企業コードは4桁または5桁の英数字（数字とA-Z）
+  if (!disclosure.company_code || !/^[0-9A-Z]{4,5}$/.test(disclosure.company_code)) {
     throw new ValidationError(`Invalid company_code: ${disclosure.company_code}`);
   }
 
@@ -182,9 +288,10 @@ function validateDisclosureMetadata(disclosure: DisclosureMetadata): void {
  */
 function detectHtmlStructureChange($: cheerio.CheerioAPI): boolean {
   const expectedSelectors = [
-    'table.disclosure-list',
-    'table.disclosure-list tr',
-    'table.disclosure-list td',
+    'table#main-list-table',
+    'table#main-list-table tr',
+    'table#main-list-table td',
+    'div#kaiji-date-1',
   ];
 
   let structureChanged = false;

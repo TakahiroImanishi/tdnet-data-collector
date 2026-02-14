@@ -84,7 +84,7 @@ describe('scrapeTdnetList', () => {
           }),
         })
       );
-      expect(mockParseDisclosureList).toHaveBeenCalledWith(mockHtml);
+      expect(mockParseDisclosureList).toHaveBeenCalledWith(mockHtml, '2024-01-15');
     });
 
     it('should apply rate limiting before each request', async () => {
