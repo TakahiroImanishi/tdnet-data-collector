@@ -33,7 +33,7 @@ const HTTP_TIMEOUT_MS = 30000;
 const USER_AGENT = 'TDnet-Data-Collector/1.0 (https://github.com/your-org/tdnet-data-collector)';
 
 /**
- * 指定日のTDnet開示情報リストを取得
+ * 指定日のTDnet開示情報リストを取得（全ページ）
  *
  * @param date 日付（YYYY-MM-DD形式）
  * @returns 開示情報メタデータの配列
@@ -53,26 +53,54 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
   try {
     logger.info('Scraping TDnet list', { date });
 
-    // レート制限を適用
-    await rateLimiter.waitIfNeeded();
+    const allDisclosures: DisclosureMetadata[] = [];
+    let pageNumber = 1;
+    let hasMorePages = true;
 
-    // TDnetからHTMLを取得（再試行あり）
-    const html = await fetchTdnetHtml(date);
+    // すべてのページを取得
+    while (hasMorePages) {
+      // レート制限を適用
+      await rateLimiter.waitIfNeeded();
 
-    // HTMLをパース（日付を渡す）
-    const disclosures = parseDisclosureList(html, date);
+      // TDnetからHTMLを取得（再試行あり）
+      const html = await fetchTdnetHtml(date, pageNumber);
+
+      // HTMLをパース（日付を渡す）
+      const disclosures = parseDisclosureList(html, date);
+
+      if (disclosures.length === 0) {
+        // 開示情報がない場合は終了
+        hasMorePages = false;
+      } else {
+        allDisclosures.push(...disclosures);
+        logger.info('TDnet page scraped', {
+          date,
+          page: pageNumber,
+          count: disclosures.length,
+          total: allDisclosures.length,
+        });
+
+        // 100件未満の場合は最終ページ
+        if (disclosures.length < 100) {
+          hasMorePages = false;
+        } else {
+          pageNumber++;
+        }
+      }
+    }
 
     logger.info('TDnet list scraped successfully', {
       date,
-      count: disclosures.length,
+      total_pages: pageNumber,
+      total_count: allDisclosures.length,
     });
 
     // 成功メトリクス送信
-    await sendSuccessMetric(disclosures.length, 'ScrapeTdnetList', {
+    await sendSuccessMetric(allDisclosures.length, 'ScrapeTdnetList', {
       Date: date,
     });
 
-    return disclosures;
+    return allDisclosures;
   } catch (error) {
     logger.error(
       'Failed to scrape TDnet list',
@@ -155,11 +183,12 @@ function validateDateFormat(date: string): void {
  * TDnetからHTMLを取得（再試行あり）
  *
  * @param date 日付（YYYY-MM-DD形式）
+ * @param pageNumber ページ番号（デフォルト: 1）
  * @returns HTMLコンテンツ（UTF-8にデコード済み）
  * @throws RetryableError ネットワークエラーまたはHTTPエラー
  */
-async function fetchTdnetHtml(date: string): Promise<string> {
-  const url = buildTdnetUrl(date);
+async function fetchTdnetHtml(date: string, pageNumber: number = 1): Promise<string> {
+  const url = buildTdnetUrl(date, pageNumber);
 
   return await retryWithBackoff(
     async () => {
@@ -262,17 +291,23 @@ function decodeShiftJIS(buffer: ArrayBuffer | string): string {
  * TDnet URLを構築
  *
  * @param date 日付（YYYY-MM-DD形式）
+ * @param pageNumber ページ番号（デフォルト: 1）
  * @returns TDnet URL
  *
  * @remarks
- * TDnetの実際のURL形式: https://www.release.tdnet.info/inbs/I_list_001_YYYYMMDD.html
+ * TDnetの実際のURL形式:
+ * - 1ページ目: https://www.release.tdnet.info/inbs/I_list_001_YYYYMMDD.html
+ * - 2ページ目: https://www.release.tdnet.info/inbs/I_list_002_YYYYMMDD.html
+ * - 3ページ目: https://www.release.tdnet.info/inbs/I_list_003_YYYYMMDD.html
  * 日付はハイフンなしの8桁形式（例: 20260214）
  */
-function buildTdnetUrl(date: string): string {
+function buildTdnetUrl(date: string, pageNumber: number = 1): string {
   const baseUrl = process.env.TDNET_BASE_URL || 'https://www.release.tdnet.info/inbs';
   // YYYY-MM-DD → YYYYMMDD に変換
   const dateWithoutHyphens = date.replace(/-/g, '');
-  return `${baseUrl}/I_list_001_${dateWithoutHyphens}.html`;
+  // ページ番号を3桁にゼロパディング（例: 1 → 001, 2 → 002）
+  const pageNumberPadded = String(pageNumber).padStart(3, '0');
+  return `${baseUrl}/I_list_${pageNumberPadded}_${dateWithoutHyphens}.html`;
 }
 
 /**

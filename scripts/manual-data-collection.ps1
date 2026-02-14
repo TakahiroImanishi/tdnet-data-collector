@@ -1,0 +1,145 @@
+# 手動データ収集スクリプト
+# タスク31.6: 初回データ収集の実行
+
+param(
+    [Parameter(Mandatory=$false)]
+    [string]$StartDate = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd"),
+    
+    [Parameter(Mandatory=$false)]
+    [string]$EndDate = (Get-Date).ToString("yyyy-MM-dd"),
+    
+    [Parameter(Mandatory=$false)]
+    [int]$MaxItems = 10
+)
+
+# 本番環境設定
+$ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod"
+$ApiKey = "l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "TDnet Data Collector - 手動データ収集" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "収集期間: $StartDate 〜 $EndDate" -ForegroundColor Yellow
+Write-Host "最大件数: $MaxItems 件" -ForegroundColor Yellow
+Write-Host ""
+
+# 1. データ収集リクエスト送信
+Write-Host "[1/4] データ収集リクエストを送信中..." -ForegroundColor Green
+
+$collectBody = @{
+    start_date = $StartDate
+    end_date = $EndDate
+    max_items = $MaxItems
+} | ConvertTo-Json
+
+$headers = @{
+    "x-api-key" = $ApiKey
+    "Content-Type" = "application/json"
+}
+
+try {
+    $collectResponse = Invoke-RestMethod `
+        -Uri "$ApiEndpoint/collect" `
+        -Method Post `
+        -Headers $headers `
+        -Body $collectBody `
+        -ErrorAction Stop
+    
+    $executionId = $collectResponse.execution_id
+    Write-Host "✅ データ収集開始: execution_id = $executionId" -ForegroundColor Green
+    Write-Host ""
+} catch {
+    Write-Host "❌ データ収集リクエスト失敗: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
+# 2. 実行状態をポーリング
+Write-Host "[2/4] 実行状態を確認中..." -ForegroundColor Green
+
+$maxRetries = 60  # 最大5分間（5秒間隔）
+$retryCount = 0
+
+while ($retryCount -lt $maxRetries) {
+    Start-Sleep -Seconds 5
+    
+    try {
+        $statusResponse = Invoke-RestMethod `
+            -Uri "$ApiEndpoint/collect/$executionId" `
+            -Method Get `
+            -Headers @{ "x-api-key" = $ApiKey } `
+            -ErrorAction Stop
+        
+        $status = $statusResponse.status
+        $progress = $statusResponse.progress_percentage
+        $collected = $statusResponse.collected_count
+        $failed = $statusResponse.failed_count
+        
+        Write-Host "  進捗: $progress% | 収集: $collected 件 | 失敗: $failed 件 | 状態: $status" -ForegroundColor Cyan
+        
+        if ($status -eq "completed") {
+            Write-Host "✅ データ収集完了" -ForegroundColor Green
+            Write-Host ""
+            break
+        } elseif ($status -eq "failed") {
+            Write-Host "❌ データ収集失敗" -ForegroundColor Red
+            Write-Host "エラー: $($statusResponse.error_message)" -ForegroundColor Red
+            exit 1
+        }
+        
+        $retryCount++
+    } catch {
+        Write-Host "⚠️ 実行状態取得エラー: $($_.Exception.Message)" -ForegroundColor Yellow
+        $retryCount++
+    }
+}
+
+if ($retryCount -ge $maxRetries) {
+    Write-Host "⚠️ タイムアウト: 実行状態の確認に失敗しました" -ForegroundColor Yellow
+}
+
+# 3. 収集結果を確認
+Write-Host "[3/4] 収集結果を確認中..." -ForegroundColor Green
+
+try {
+    $disclosuresResponse = Invoke-RestMethod `
+        -Uri "$ApiEndpoint/disclosures?limit=10&start_date=$StartDate&end_date=$EndDate" `
+        -Method Get `
+        -Headers @{ "x-api-key" = $ApiKey } `
+        -ErrorAction Stop
+    
+    $totalCount = $disclosuresResponse.total_count
+    $items = $disclosuresResponse.items
+    
+    Write-Host "✅ 収集データ確認: 合計 $totalCount 件" -ForegroundColor Green
+    Write-Host ""
+    
+    if ($items.Count -gt 0) {
+        Write-Host "最新の開示情報（最大10件）:" -ForegroundColor Yellow
+        foreach ($item in $items) {
+            Write-Host "  - [$($item.company_code)] $($item.company_name): $($item.title)" -ForegroundColor White
+        }
+        Write-Host ""
+    }
+} catch {
+    Write-Host "⚠️ 収集結果確認エラー: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
+# 4. 最終結果サマリー
+Write-Host "[4/4] 最終結果" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "実行ID: $executionId" -ForegroundColor White
+Write-Host "収集期間: $StartDate 〜 $EndDate" -ForegroundColor White
+Write-Host "収集件数: $collected 件" -ForegroundColor White
+Write-Host "失敗件数: $failed 件" -ForegroundColor White
+Write-Host "状態: $status" -ForegroundColor White
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+if ($status -eq "completed" -and $collected -gt 0) {
+    Write-Host "✅ データ収集が正常に完了しました" -ForegroundColor Green
+    exit 0
+} else {
+    Write-Host "⚠️ データ収集に問題がありました" -ForegroundColor Yellow
+    exit 1
+}
