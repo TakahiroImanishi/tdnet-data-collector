@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Template, Match } from 'aws-cdk-lib/assertions';
 import { CloudWatchAlarms } from '../lib/constructs/cloudwatch-alarms';
 
@@ -202,10 +203,10 @@ describe('CloudWatchAlarms Construct', () => {
     // Assert
     const template = Template.fromStack(stack);
 
-    // 各Lambda関数に対して3つのアラーム（Error Rate, Duration, Throttles）が作成される
+    // 各Lambda関数に対して4つのアラーム（Error Rate, Duration Warning, Duration Critical, Throttles）が作成される
     // + カスタムメトリクスアラーム3つ（CollectionSuccessRate, NoData, CollectionFailure）
-    // = 2 * 3 + 3 = 9個のアラーム
-    template.resourceCountIs('AWS::CloudWatch::Alarm', 9);
+    // = 2 * 4 + 3 = 11個のアラーム
+    template.resourceCountIs('AWS::CloudWatch::Alarm', 11);
   });
 
   test('すべてのアラームにSNSアクションが設定されること', () => {
@@ -250,12 +251,20 @@ describe('CloudWatchAlarms Construct', () => {
       EvaluationPeriods: 1,
     });
 
-    // Duration: 840秒 = 840000ミリ秒 (AlarmNameはトークンなのでMatch.anyValue()を使用)
+    // Duration Warning: 600秒 = 600000ミリ秒 (AlarmNameはトークンなのでMatch.anyValue()を使用)
     template.hasResourceProperties('AWS::CloudWatch::Alarm', {
       AlarmName: Match.anyValue(),
-      Threshold: 840000,
+      Threshold: 600000,
       ComparisonOperator: 'GreaterThanThreshold',
       EvaluationPeriods: 2,
+    });
+
+    // Duration Critical: 780秒 = 780000ミリ秒 (AlarmNameはトークンなのでMatch.anyValue()を使用)
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: Match.anyValue(),
+      Threshold: 780000,
+      ComparisonOperator: 'GreaterThanThreshold',
+      EvaluationPeriods: 1,
     });
 
     // CollectionSuccessRate: 95%
@@ -299,5 +308,49 @@ describe('CloudWatchAlarms Construct', () => {
       AlarmName: 'tdnet-collection-success-rate-test',
       Threshold: 90,
     });
+  });
+
+  test('DLQアラームが正しく作成されること', () => {
+    // Arrange
+    const dlqQueue = new sqs.Queue(stack, 'TestDLQ', {
+      queueName: 'test-dlq',
+    });
+
+    // Act
+    new CloudWatchAlarms(stack, 'TestAlarms', {
+      lambdaFunctions: [testLambdaFunction],
+      environment: 'test',
+      dlqQueue,
+    });
+
+    // Assert
+    const template = Template.fromStack(stack);
+
+    // DLQアラームが作成されていることを確認
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'tdnet-dlq-messages-test',
+      AlarmDescription: 'DLQにメッセージが送信されました（Critical）',
+      Threshold: 0,
+      ComparisonOperator: 'GreaterThanThreshold',
+      EvaluationPeriods: 1,
+      TreatMissingData: 'notBreaching',
+    });
+  });
+
+  test('DLQキューが指定されていない場合、DLQアラームは作成されないこと', () => {
+    // Arrange & Act
+    new CloudWatchAlarms(stack, 'TestAlarms', {
+      lambdaFunctions: [testLambdaFunction],
+      environment: 'test',
+      // dlqQueueを指定しない
+    });
+
+    // Assert
+    const template = Template.fromStack(stack);
+    const alarms = template.findResources('AWS::CloudWatch::Alarm');
+    const alarmNames = Object.values(alarms).map((alarm: any) => alarm.Properties.AlarmName);
+
+    // DLQアラームが存在しないことを確認
+    expect(alarmNames).not.toContain('tdnet-dlq-messages-test');
   });
 });

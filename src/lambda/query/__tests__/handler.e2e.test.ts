@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lambda Query Handler E2E Tests
  *
  * Property 9: APIキー認証の必須性
@@ -50,8 +50,8 @@ describe('Lambda Query Handler E2E Tests - Property 9: API Key Authentication', 
       title: '2024年3月期 第3四半期決算短信',
       disclosed_at: '2024-01-15T10:30:00Z',
       pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-      s3_key: '2024/01/15/TD20240115001_7203.pdf',
-      collected_at: '2024-01-15T10:35:00Z',
+      pdf_s3_key: '2024/01/15/TD20240115001_7203.pdf',
+      downloaded_at: '2024-01-15T10:35:00Z',
       date_partition: '2024-01',
     };
 

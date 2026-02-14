@@ -28,9 +28,7 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
     'disclosure_type',
     'title',
     'disclosed_at',
-    'pdf_url',
-    's3_key',
-    'collected_at',
+    'downloaded_at',
     'date_partition',
   ];
 
@@ -46,8 +44,8 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
   // disclosed_atのフォーマット検証
   validateDisclosedAt(disclosure.disclosed_at!);
 
-  // collected_atのフォーマット検証
-  validateDisclosedAt(disclosure.collected_at!);
+  // downloaded_atのフォーマット検証
+  validateDisclosedAt(disclosure.downloaded_at!);
 
   // company_codeのフォーマット検証（4桁の数字）
   const companyCodeRegex = /^\d{4}$/;
@@ -83,18 +81,26 @@ export function toDynamoDBItem(disclosure: Disclosure): DynamoDBItem {
   validateDisclosure(disclosure);
 
   // DynamoDBアイテムに変換
-  return {
+  const item: DynamoDBItem = {
     disclosure_id: { S: disclosure.disclosure_id },
     company_code: { S: disclosure.company_code },
     company_name: { S: disclosure.company_name },
     disclosure_type: { S: disclosure.disclosure_type },
     title: { S: disclosure.title },
     disclosed_at: { S: disclosure.disclosed_at },
-    pdf_url: { S: disclosure.pdf_url },
-    s3_key: { S: disclosure.s3_key },
-    collected_at: { S: disclosure.collected_at },
+    downloaded_at: { S: disclosure.downloaded_at },
     date_partition: { S: disclosure.date_partition },
   };
+
+  // オプショナルフィールド
+  if (disclosure.pdf_url) {
+    item.pdf_url = { S: disclosure.pdf_url };
+  }
+  if (disclosure.pdf_s3_key) {
+    item.pdf_s3_key = { S: disclosure.pdf_s3_key };
+  }
+
+  return item;
 }
 
 /**
@@ -113,9 +119,7 @@ export function fromDynamoDBItem(item: DynamoDBItem): Disclosure {
     'disclosure_type',
     'title',
     'disclosed_at',
-    'pdf_url',
-    's3_key',
-    'collected_at',
+    'downloaded_at',
     'date_partition',
   ];
 
@@ -136,11 +140,17 @@ export function fromDynamoDBItem(item: DynamoDBItem): Disclosure {
     disclosure_type: item.disclosure_type.S ?? '',
     title: item.title.S ?? '',
     disclosed_at: item.disclosed_at.S ?? '',
-    pdf_url: item.pdf_url.S ?? '',
-    s3_key: item.s3_key.S ?? '',
-    collected_at: item.collected_at.S ?? '',
+    downloaded_at: item.downloaded_at.S ?? '',
     date_partition: item.date_partition.S ?? '',
   };
+
+  // オプショナルフィールド
+  if (item.pdf_url?.S) {
+    disclosure.pdf_url = item.pdf_url.S;
+  }
+  if (item.pdf_s3_key?.S) {
+    disclosure.pdf_s3_key = item.pdf_s3_key.S;
+  }
 
   // バリデーション
   validateDisclosure(disclosure);
@@ -151,29 +161,29 @@ export function fromDynamoDBItem(item: DynamoDBItem): Disclosure {
 /**
  * Disclosureを作成する際のヘルパー関数
  *
- * date_partitionを自動生成し、collected_atを現在時刻に設定します。
+ * date_partitionを自動生成し、downloaded_atを現在時刻に設定します。
  * Two-Phase Commit原則に従い、date_partitionは保存前に生成されます。
  *
- * @param params - Disclosure作成パラメータ（date_partition、collected_atは省略可能）
+ * @param params - Disclosure作成パラメータ（date_partition、downloaded_atは省略可能）
  * @returns 完全なDisclosure
  * @throws {ValidationError} バリデーションエラーの場合
  */
 export function createDisclosure(
-  params: Omit<Disclosure, 'date_partition' | 'collected_at'> & {
+  params: Omit<Disclosure, 'date_partition' | 'downloaded_at'> & {
     date_partition?: string;
-    collected_at?: string;
+    downloaded_at?: string;
   }
 ): Disclosure {
   // date_partitionが指定されていない場合は自動生成
   const date_partition = params.date_partition || generateDatePartition(params.disclosed_at);
 
-  // collected_atが指定されていない場合は現在時刻を使用
-  const collected_at = params.collected_at || new Date().toISOString();
+  // downloaded_atが指定されていない場合は現在時刻を使用
+  const downloaded_at = params.downloaded_at || new Date().toISOString();
 
   const disclosure: Disclosure = {
     ...params,
     date_partition,
-    collected_at,
+    downloaded_at,
   };
 
   // バリデーション

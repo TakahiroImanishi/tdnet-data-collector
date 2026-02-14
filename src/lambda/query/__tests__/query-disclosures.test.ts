@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Query Disclosures Unit Tests
  *
  * Requirements: 要件4.1（検索API）、要件14.1（ユニットテスト）
@@ -37,8 +37,8 @@ describe('queryDisclosures', () => {
       title: '2024年3月期 第3四半期決算短信',
       disclosed_at: '2024-01-15T10:30:00Z',
       pdf_url: 'https://example.com/pdf/20240115_1234_001.pdf',
-      s3_key: 'pdfs/2024/01/15/20240115_1234_001.pdf',
-      collected_at: '2024-01-15T10:35:00Z',
+      pdf_s3_key: 'pdfs/2024/01/15/20240115_1234_001.pdf',
+      downloaded_at: '2024-01-15T10:35:00Z',
       date_partition: '2024-01',
     },
     {
@@ -49,8 +49,8 @@ describe('queryDisclosures', () => {
       title: '第50期有価証券報告書',
       disclosed_at: '2024-01-15T11:00:00Z',
       pdf_url: 'https://example.com/pdf/20240115_1234_002.pdf',
-      s3_key: 'pdfs/2024/01/15/20240115_1234_002.pdf',
-      collected_at: '2024-01-15T11:05:00Z',
+      pdf_s3_key: 'pdfs/2024/01/15/20240115_1234_002.pdf',
+      downloaded_at: '2024-01-15T11:05:00Z',
       date_partition: '2024-01',
     },
     {
@@ -61,8 +61,8 @@ describe('queryDisclosures', () => {
       title: '2024年3月期 第3四半期決算短信',
       disclosed_at: '2024-01-16T09:00:00Z',
       pdf_url: 'https://example.com/pdf/20240116_5678_001.pdf',
-      s3_key: 'pdfs/2024/01/16/20240116_5678_001.pdf',
-      collected_at: '2024-01-16T09:05:00Z',
+      pdf_s3_key: 'pdfs/2024/01/16/20240116_5678_001.pdf',
+      downloaded_at: '2024-01-16T09:05:00Z',
       date_partition: '2024-01',
     },
   ];

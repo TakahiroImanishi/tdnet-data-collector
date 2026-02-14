@@ -101,7 +101,7 @@ export async function handler(
 
     // S3署名付きURLを生成（PDFが存在する場合）
     let pdfUrl: string | null = null;
-    if (disclosure.s3_key) {
+    if (disclosure.pdf_s3_key) {
       const expirationParam = event.queryStringParameters?.expiration;
       const expiration = expirationParam ? parseInt(expirationParam, 10) : 3600;
       
@@ -110,7 +110,7 @@ export async function handler(
         throw new Error('Expiration must be between 1 and 604800 seconds');
       }
 
-      pdfUrl = await generateSignedUrl(disclosure.s3_key, expiration);
+      pdfUrl = await generateSignedUrl(disclosure.pdf_s3_key, expiration);
     }
 
     const duration = Date.now() - startTime;

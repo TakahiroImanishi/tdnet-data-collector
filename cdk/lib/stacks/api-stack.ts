@@ -1,9 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { Environment } from '../config/environment-config';
+import { WafConstruct } from '../constructs/waf';
 
 /**
  * API Stack - API Gateway, WAF
@@ -25,7 +25,7 @@ export interface TdnetApiStackProps extends cdk.StackProps {
 export class TdnetApiStack extends cdk.Stack {
   public readonly api: apigateway.RestApi;
   public readonly apiKey: apigateway.ApiKey;
-  public readonly webAcl: wafv2.CfnWebACL;
+  public readonly wafConstruct: WafConstruct;
 
   constructor(scope: Construct, id: string, props: TdnetApiStackProps) {
     super(scope, id, props);
@@ -94,87 +94,10 @@ export class TdnetApiStack extends cdk.Stack {
     // WAF Web ACL
     // ========================================
 
-    this.webAcl = new wafv2.CfnWebACL(this, 'TdnetWebAcl', {
-      name: `tdnet-web-acl-${env}`,
-      scope: 'REGIONAL',
-      defaultAction: { allow: {} },
-      description: 'Web ACL for TDnet Data Collector API',
-      visibilityConfig: {
-        sampledRequestsEnabled: true,
-        cloudWatchMetricsEnabled: true,
-        metricName: 'TdnetWebAcl',
-      },
-      rules: [
-        {
-          name: 'RateLimitRule',
-          priority: 1,
-          statement: {
-            rateBasedStatement: {
-              limit: 2000,
-              aggregateKeyType: 'IP',
-            },
-          },
-          action: {
-            block: {
-              customResponse: {
-                responseCode: 429,
-                customResponseBodyKey: 'RateLimitExceeded',
-              },
-            },
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: 'RateLimitRule',
-          },
-        },
-        {
-          name: 'AWSManagedRulesCommonRuleSet',
-          priority: 2,
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesCommonRuleSet',
-            },
-          },
-          overrideAction: { none: {} },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: 'AWSManagedRulesCommonRuleSet',
-          },
-        },
-        {
-          name: 'AWSManagedRulesKnownBadInputsRuleSet',
-          priority: 3,
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesKnownBadInputsRuleSet',
-            },
-          },
-          overrideAction: { none: {} },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: 'AWSManagedRulesKnownBadInputsRuleSet',
-          },
-        },
-      ],
-      customResponseBodies: {
-        RateLimitExceeded: {
-          contentType: 'APPLICATION_JSON',
-          content: JSON.stringify({
-            error_code: 'RATE_LIMIT_EXCEEDED',
-            message: 'Too many requests. Please try again later.',
-          }),
-        },
-      },
-    });
-
-    new wafv2.CfnWebACLAssociation(this, 'TdnetWebAclAssociation', {
-      resourceArn: this.api.deploymentStage.stageArn,
-      webAclArn: this.webAcl.attrArn,
+    this.wafConstruct = new WafConstruct(this, 'Waf', {
+      environment: env,
+      api: this.api,
+      rateLimitPerFiveMinutes: 2000,
     });
 
     // ========================================
@@ -274,11 +197,6 @@ export class TdnetApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiKeyId', {
       value: this.apiKey.keyId,
       exportName: `TdnetApiKeyId-${env}`,
-    });
-
-    new cdk.CfnOutput(this, 'WebAclArn', {
-      value: this.webAcl.attrArn,
-      exportName: `TdnetWebAclArn-${env}`,
     });
   }
 }

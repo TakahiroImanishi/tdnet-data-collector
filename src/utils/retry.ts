@@ -205,6 +205,17 @@ export function isRetryableError(error: unknown): boolean {
     return true;
   }
 
+  // HTTP 5xxエラー（サーバーエラー）
+  const http5xxErrors = ['500', '502', '503', '504'];
+  if (http5xxErrors.some((code) => error.message.includes(code))) {
+    return true;
+  }
+
+  // HTTP 429エラー（Too Many Requests）
+  if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+    return true;
+  }
+
   // AWS一時的エラー
   const awsErrors = ['ThrottlingException', 'ServiceUnavailable', 'RequestTimeout'];
   if (awsErrors.some((code) => error.message.includes(code))) {

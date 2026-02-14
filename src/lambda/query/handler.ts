@@ -23,6 +23,7 @@ export interface QueryEvent extends APIGatewayProxyEvent {
     company_code?: string;
     start_date?: string;
     end_date?: string;
+    month?: string;
     disclosure_type?: string;
     format?: 'json' | 'csv';
     limit?: string;
@@ -167,6 +168,7 @@ function parseQueryParameters(event: QueryEvent): {
   company_code?: string;
   start_date?: string;
   end_date?: string;
+  month?: string;
   disclosure_type?: string;
   format: 'json' | 'csv';
   limit: number;
@@ -204,23 +206,37 @@ function parseQueryParameters(event: QueryEvent): {
     }
   }
 
-  // 日付フォーマットのバリデーション
-  if (params.start_date) {
-    validateDateFormat(params.start_date, 'start_date');
-  }
-  if (params.end_date) {
-    validateDateFormat(params.end_date, 'end_date');
+  // monthパラメータのバリデーション
+  if (params.month) {
+    validateMonthFormat(params.month);
   }
 
-  // 日付範囲の順序性チェック（Property 8）
-  if (params.start_date && params.end_date) {
-    const startDate = new Date(params.start_date);
-    const endDate = new Date(params.end_date);
+  // monthが指定された場合、start_dateとend_dateは無視
+  if (params.month) {
+    logger.info('month parameter specified, ignoring start_date and end_date', {
+      month: params.month,
+      start_date: params.start_date,
+      end_date: params.end_date,
+    });
+  } else {
+    // 日付フォーマットのバリデーション
+    if (params.start_date) {
+      validateDateFormat(params.start_date, 'start_date');
+    }
+    if (params.end_date) {
+      validateDateFormat(params.end_date, 'end_date');
+    }
 
-    if (startDate > endDate) {
-      throw new ValidationError(
-        `start_date (${params.start_date}) must be before or equal to end_date (${params.end_date})`
-      );
+    // 日付範囲の順序性チェック（Property 8）
+    if (params.start_date && params.end_date) {
+      const startDate = new Date(params.start_date);
+      const endDate = new Date(params.end_date);
+
+      if (startDate > endDate) {
+        throw new ValidationError(
+          `start_date (${params.start_date}) must be before or equal to end_date (${params.end_date})`
+        );
+      }
     }
   }
 
@@ -236,8 +252,9 @@ function parseQueryParameters(event: QueryEvent): {
 
   return {
     company_code: params.company_code,
-    start_date: params.start_date,
-    end_date: params.end_date,
+    start_date: params.month ? undefined : params.start_date,
+    end_date: params.month ? undefined : params.end_date,
+    month: params.month,
     disclosure_type: params.disclosure_type,
     format,
     limit,
@@ -278,6 +295,37 @@ function validateDateFormat(date: string, fieldName: string): void {
   ) {
     throw new ValidationError(
       `Invalid ${fieldName}: ${date}. Date does not exist.`
+    );
+  }
+}
+
+/**
+ * 月フォーマットのバリデーション
+ *
+ * @param month 月文字列（YYYY-MM）
+ * @throws ValidationError バリデーションエラー
+ */
+function validateMonthFormat(month: string): void {
+  // YYYY-MM形式のチェック
+  const monthRegex = /^\d{4}-\d{2}$/;
+  if (!monthRegex.test(month)) {
+    throw new ValidationError(
+      `Invalid month format: ${month}. Expected YYYY-MM format.`
+    );
+  }
+
+  // 有効な月かチェック
+  const [year, monthNum] = month.split('-').map(Number);
+  if (monthNum < 1 || monthNum > 12) {
+    throw new ValidationError(
+      `Invalid month: ${month}. Month must be between 01 and 12.`
+    );
+  }
+
+  // 年の妥当性チェック（1900-2100）
+  if (year < 1900 || year > 2100) {
+    throw new ValidationError(
+      `Invalid month: ${month}. Year must be between 1900 and 2100.`
     );
   }
 }

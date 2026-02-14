@@ -115,7 +115,6 @@ export class TdnetComputeStack extends cdk.Stack {
       environment: {
         DYNAMODB_TABLE_NAME: props.disclosuresTable.tableName,
         S3_BUCKET_NAME: props.pdfsBucket.bucketName,
-        API_KEY_SECRET_ARN: props.apiKeySecret.secretArn,
         LOG_LEVEL: envConfig.query.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
@@ -130,7 +129,6 @@ export class TdnetComputeStack extends cdk.Stack {
 
     props.disclosuresTable.grantReadData(this.queryFunction);
     props.pdfsBucket.grantRead(this.queryFunction);
-    props.apiKeySecret.grantRead(this.queryFunction);
 
     this.queryFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -157,7 +155,6 @@ export class TdnetComputeStack extends cdk.Stack {
         DYNAMODB_TABLE_NAME: props.disclosuresTable.tableName,
         EXPORT_STATUS_TABLE_NAME: props.exportStatusTable.tableName,
         EXPORT_BUCKET_NAME: props.exportsBucket.bucketName,
-        API_KEY_SECRET_ARN: props.apiKeySecret.secretArn,
         LOG_LEVEL: envConfig.export.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
@@ -174,7 +171,6 @@ export class TdnetComputeStack extends cdk.Stack {
     props.exportStatusTable.grantReadWriteData(this.exportFunction);
     props.exportsBucket.grantPut(this.exportFunction);
     props.exportsBucket.grantRead(this.exportFunction);
-    props.apiKeySecret.grantRead(this.exportFunction);
 
     this.exportFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -199,7 +195,6 @@ export class TdnetComputeStack extends cdk.Stack {
       memorySize: envConfig.collect.memorySize,
       environment: {
         COLLECTOR_FUNCTION_NAME: this.collectorFunction.functionName,
-        API_KEY_SECRET_ARN: props.apiKeySecret.secretArn,
         LOG_LEVEL: envConfig.collect.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
@@ -213,7 +208,6 @@ export class TdnetComputeStack extends cdk.Stack {
     });
 
     this.collectorFunction.grantInvoke(this.collectFunction);
-    props.apiKeySecret.grantRead(this.collectFunction);
 
     this.collectFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -238,7 +232,6 @@ export class TdnetComputeStack extends cdk.Stack {
       memorySize: envConfig.collectStatus.memorySize,
       environment: {
         DYNAMODB_EXECUTIONS_TABLE: props.executionsTable.tableName,
-        S3_BUCKET: props.pdfsBucket.bucketName,
         LOG_LEVEL: envConfig.collectStatus.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
@@ -252,7 +245,6 @@ export class TdnetComputeStack extends cdk.Stack {
     });
 
     props.executionsTable.grantReadData(this.collectStatusFunction);
-    props.pdfsBucket.grantRead(this.collectStatusFunction);
 
     this.collectStatusFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -277,7 +269,6 @@ export class TdnetComputeStack extends cdk.Stack {
       memorySize: envConfig.exportStatus.memorySize,
       environment: {
         EXPORT_STATUS_TABLE_NAME: props.exportStatusTable.tableName,
-        API_KEY_SECRET_ARN: props.apiKeySecret.secretArn,
         LOG_LEVEL: envConfig.exportStatus.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
@@ -291,7 +282,6 @@ export class TdnetComputeStack extends cdk.Stack {
     });
 
     props.exportStatusTable.grantReadData(this.exportStatusFunction);
-    props.apiKeySecret.grantRead(this.exportStatusFunction);
 
     this.exportStatusFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({
@@ -317,7 +307,6 @@ export class TdnetComputeStack extends cdk.Stack {
       environment: {
         DYNAMODB_TABLE_NAME: props.disclosuresTable.tableName,
         S3_BUCKET_NAME: props.pdfsBucket.bucketName,
-        API_KEY_SECRET_ARN: props.apiKeySecret.secretArn,
         LOG_LEVEL: envConfig.pdfDownload.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
@@ -332,7 +321,6 @@ export class TdnetComputeStack extends cdk.Stack {
 
     props.disclosuresTable.grantReadData(this.pdfDownloadFunction);
     props.pdfsBucket.grantRead(this.pdfDownloadFunction);
-    props.apiKeySecret.grantRead(this.pdfDownloadFunction);
 
     this.pdfDownloadFunction.addToRolePolicy(
       new cdk.aws_iam.PolicyStatement({

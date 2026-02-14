@@ -17,7 +17,7 @@ import { Disclosure } from '../../types';
  * @example
  * ```typescript
  * const csv = formatAsCsv(disclosures);
- * // => "disclosure_id,company_code,company_name,disclosure_type,title,disclosed_at,pdf_url,collected_at\n..."
+ * // => "disclosure_id,company_code,company_name,disclosure_type,title,disclosed_at,pdf_url,pdf_s3_key,downloaded_at\n..."
  * ```
  */
 export function formatAsCsv(disclosures: Disclosure[]): string {
@@ -30,8 +30,8 @@ export function formatAsCsv(disclosures: Disclosure[]): string {
     'title',
     'disclosed_at',
     'pdf_url',
-    's3_key',
-    'collected_at',
+    'pdf_s3_key',
+    'downloaded_at',
     'date_partition',
   ];
 
@@ -47,9 +47,9 @@ export function formatAsCsv(disclosures: Disclosure[]): string {
       escapeCsvField(disclosure.disclosure_type),
       escapeCsvField(disclosure.title),
       escapeCsvField(disclosure.disclosed_at),
-      escapeCsvField(disclosure.pdf_url),
-      escapeCsvField(disclosure.s3_key),
-      escapeCsvField(disclosure.collected_at),
+      escapeCsvField(disclosure.pdf_url || ''),
+      escapeCsvField(disclosure.pdf_s3_key || ''),
+      escapeCsvField(disclosure.downloaded_at),
       escapeCsvField(disclosure.date_partition),
     ].join(',');
   });

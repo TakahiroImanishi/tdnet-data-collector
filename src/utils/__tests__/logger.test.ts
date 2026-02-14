@@ -243,6 +243,8 @@ describe('createErrorContext', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', 'Test error');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
     expect(context).toHaveProperty('stack_trace');
     expect(context.stack_trace).toContain('Test error');
   });
@@ -253,10 +255,12 @@ describe('createErrorContext', () => {
 
     expect(context).toHaveProperty('error_type', 'ValidationError');
     expect(context).toHaveProperty('error_message', 'Invalid date format');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
     expect(context).toHaveProperty('stack_trace');
   });
 
-  it('should merge additional context', () => {
+  it('should wrap additional context in context property', () => {
     const error = new RetryableError('Network error');
     const additionalContext = {
       disclosure_id: 'TD20240115001',
@@ -268,17 +272,18 @@ describe('createErrorContext', () => {
     expect(context).toHaveProperty('error_type', 'RetryableError');
     expect(context).toHaveProperty('error_message', 'Network error');
     expect(context).toHaveProperty('stack_trace');
-    expect(context).toHaveProperty('disclosure_id', 'TD20240115001');
-    expect(context).toHaveProperty('retry_count', 2);
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({
+      disclosure_id: 'TD20240115001',
+      retry_count: 2,
+    });
   });
 
   it('should handle nested context objects', () => {
     const error = new Error('Test error');
     const additionalContext = {
-      context: {
-        disclosure_id: 'TD20240115001',
-        execution_id: 'exec-123',
-      },
+      disclosure_id: 'TD20240115001',
+      execution_id: 'exec-123',
     };
 
     const context = createErrorContext(error, additionalContext);
@@ -697,6 +702,8 @@ describe('createErrorContext - エッジケース', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', 'Test error');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
     expect(context).toHaveProperty('stack_trace', undefined);
   });
 
@@ -706,6 +713,8 @@ describe('createErrorContext - エッジケース', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', '');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
     expect(context).toHaveProperty('stack_trace');
   });
 
@@ -716,6 +725,8 @@ describe('createErrorContext - エッジケース', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', longMessage);
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
   });
 
   it('追加コンテキストがnullでも処理できる', () => {
@@ -724,6 +735,8 @@ describe('createErrorContext - エッジケース', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', 'Test error');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
   });
 
   it('追加コンテキストがundefinedでも処理できる', () => {
@@ -732,6 +745,8 @@ describe('createErrorContext - エッジケース', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', 'Test error');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
   });
 
   it('追加コンテキストが空オブジェクトでも処理できる', () => {
@@ -740,6 +755,8 @@ describe('createErrorContext - エッジケース', () => {
 
     expect(context).toHaveProperty('error_type', 'Error');
     expect(context).toHaveProperty('error_message', 'Test error');
+    expect(context).toHaveProperty('context');
+    expect(context.context).toEqual({});
   });
 });
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 重複収集の冪等性テスト
  *
  * Property 5: 重複収集の冪等性
@@ -43,8 +43,8 @@ describe('Property 5: 重複収集の冪等性', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -76,8 +76,8 @@ describe('Property 5: 重複収集の冪等性', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -92,7 +92,7 @@ describe('Property 5: 重複収集の冪等性', () => {
       // Assert
       expect(logger.warn).toHaveBeenCalledWith('Duplicate disclosure detected', {
         disclosure_id: 'TD20240115001',
-        s3_key: '2024/01/15/TD20240115001.pdf',
+        pdf_s3_key: '2024/01/15/TD20240115001.pdf',
       });
     });
 
@@ -106,8 +106,8 @@ describe('Property 5: 重複収集の冪等性', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
 
@@ -119,8 +119,8 @@ describe('Property 5: 重複収集の冪等性', () => {
         title: '2024年3月期 有価証券報告書',
         disclosed_at: '2024-01-15T11:00:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115002.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
 
@@ -156,8 +156,8 @@ describe('Property 5: 重複収集の冪等性', () => {
             dynamoMock.reset();
             const disclosure: Disclosure = {
               ...disclosureData,
-              s3_key: '',
-              collected_at: '',
+              pdf_s3_key: '',
+              downloaded_at: '',
               date_partition: '',
             };
             const s3_key = `2024/01/15/${disclosure.disclosure_id}.pdf`;
@@ -208,8 +208,8 @@ describe('Property 5: 重複収集の冪等性', () => {
             for (const disclosureData of disclosuresData) {
               const disclosure: Disclosure = {
                 ...disclosureData,
-                s3_key: '',
-                collected_at: '',
+                pdf_s3_key: '',
+                downloaded_at: '',
                 date_partition: '',
               };
               const s3_key = `2024/01/15/${disclosure.disclosure_id}.pdf`;

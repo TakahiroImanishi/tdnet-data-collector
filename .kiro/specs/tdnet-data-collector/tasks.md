@@ -2856,8 +2856,240 @@
   - _完了: 2026-02-14 23:40:38_
   - _結果: ✅ html_previewをBase64エンコードして出力。エンコーディングエラー解消。ユニットテスト17個成功_
   - _作業記録: work-log-20260214-233836-task31-2-6-12-cloudwatch-encoding.md_
+
+- [ ] 31.3 設計と実装の整合性修正（Phase 1: Critical）
+  - 設計書と実装の不整合を修正（26件発見）
+  - サブエージェント並列実行で効率化
+  - _Requirements: 全要件_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 14-21時間（並列実行で5-7時間）_
+  - _関連: work-log-20260215-001524-design-implementation-alignment-summary.md_
   
-- [ ] 31.3 Webダッシュボードの本番環境デプロイ（High）
+  - [ ] 31.3.1 Disclosureモデルのフィールド修正（Critical）
+    - `pdf_url` と `s3_key` をオプショナルに変更
+    - `s3_key` → `pdf_s3_key` にリネーム
+    - `collected_at` → `downloaded_at` にリネーム
+    - `src/models/disclosure.ts` のフィールド定義修正
+    - `src/types/index.ts` の型定義修正
+    - 全Lambda関数でフィールド名の変更に対応
+    - DynamoDBデータ移行スクリプト作成
+    - ユニットテスト更新
+    - E2Eテスト更新
+    - _Requirements: 要件2.1, 2.2, 2.3（メタデータ管理）_
+    - _優先度: � Critical_
+    - _推定工数: 8-12時間_
+    - _破壊的変更: 既存データの移行が必要_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合1, 2, 5）_
+  
+  - [ ] 31.3.2 CloudWatch Logsの保持期間設定（Critical）
+    - `cdk/lib/stacks/monitoring-stack.ts` にLogGroup追加
+    - 9個のLambda関数のログ保持期間を設定
+      - 本番環境: 3ヶ月（Collector）、1ヶ月（その他）
+      - 開発環境: 1週間
+    - RemovalPolicy設定（本番: RETAIN、開発: DESTROY）
+    - CDKテスト追加
+    - _Requirements: 要件6.3（ロギング）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 2-3時間_
+    - _影響: コスト削減_
+    - _関連: work-log-20260215-000859-subagent-b-lambda-cdk.md（不整合1）_
+  
+  - [ ] 31.3.3 WAF Construct分離（Critical）
+    - `cdk/lib/constructs/waf.ts` を新規作成
+    - `api-stack.ts` からWAF設定を移動
+    - 再利用可能なConstructとして実装
+    - CDKテスト追加
+    - _Requirements: 要件13.1（WAF保護）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 3-4時間_
+    - _影響: コードの再利用性向上_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合C-1）_
+  
+  - [ ] 31.3.4 DynamoDBスキーマドキュメント化（Critical）
+    - モデル定義とDynamoDB定義の対応関係を明示的にドキュメント化
+    - `docs/database-schema.md` を作成
+    - フィールド定義、GSI、TTL設定を記載
+    - _Requirements: 要件2.5（データベース）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1-2時間_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合3）_
+  
+  - [x] 31.3.5 不要なSecrets Manager環境変数と権限の削除（High）
+    - Query, Export, Collect, ExportStatus, PdfDownload Lambdaから削除
+    - `cdk/lib/stacks/compute-stack.ts` 修正
+      - `API_KEY_SECRET_ARN` 環境変数を削除
+      - `grantRead(apiKeySecret)` 権限を削除
+    - CDKテスト更新
+    - _Requirements: 要件11.1, 13.1（API認証、最小権限）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+    - _影響: セキュリティリスク軽減_
+    - _関連: work-log-20260215-000859-subagent-b-lambda-cdk.md（不整合2, 3）_
+  
+  - [ ] 31.3.6 エラーログ構造の修正（High）
+    - `src/utils/logger.ts` の `createErrorContext` 関数修正
+    - `additionalContext` を `context` でラップ
+    - 全Lambda関数でログ出力を確認
+    - ユニットテスト更新
+    - _Requirements: 要件6.3（ロギング）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+    - _影響: CloudWatch Logs Insightsでのクエリ改善_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合H-1）_
+  
+  - [ ] 31.3.7 CloudWatch Alarmsの閾値修正（High）
+    - `cdk/lib/constructs/cloudwatch-alarms.ts` 修正
+    - Lambda Duration アラーム閾値を変更
+      - 警告: 10分（600秒）
+      - 重大: 13分（780秒）
+    - CDKテスト更新
+    - _Requirements: 要件12.2（アラート）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合H-2）_
+  
+  - [ ] 31.3.8 DLQアラームの実装（High）
+    - `cdk/lib/constructs/cloudwatch-alarms.ts` にDLQアラーム追加
+    - DLQメッセージ数 > 0 でCriticalアラート
+    - SNS通知設定
+    - CDKテスト追加
+    - _Requirements: 要件6.1, 12.2（エラーハンドリング、アラート）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合H-3）_
+  
+  - [x] 31.3.9 APIレスポンス形式の統一（High）
+    - OpenAPI仕様から `status` フィールドを削除（API設計書に合わせる）
+    - 全Lambda関数のレスポンス形式を確認
+    - E2Eテスト更新
+    - _完了: 2026-02-15, OpenAPI仕様の `DisclosureListResponse` から `status` フィールドを削除_
+    - _決定: API設計書に従い、GET /disclosures は `status` フィールドなしで統一_
+    - _Requirements: 要件4.3（API仕様）_
+    - _優先度: 🟠 High_
+    - _関連: work-log-20260215-063142-subagent-c-remaining-tasks.md_
+  
+  - [x] 31.3.10 `month` パラメータの実装（High）
+    - `src/lambda/query/handler.ts` に `month` パラメータの処理を追加
+    - `month` が指定された場合、`start_date` と `end_date` を無視
+    - `date_partition` GSIを使用してクエリを実行
+    - ユニットテスト追加
+    - E2Eテスト追加
+    - _完了: 2026-02-15, monthパラメータ実装完了、バリデーション追加、ユニットテスト5件追加_
+    - _実装: validateMonthFormat(), queryByMonth() 関数追加_
+    - _テスト: 全5テスト合格_
+    - _Requirements: 要件4.1（検索API）_
+    - _優先度: 🟠 High_
+    - _関連: work-log-20260215-063142-subagent-c-remaining-tasks.md_
+  
+  - [x] 31.3.11 エラー分類ヘルパー関数の拡張（High）
+    - `src/utils/retry.ts` の `isRetryableError` 関数修正
+    - HTTP 5xxエラー（500, 503など）の判定を追加
+    - HTTP 429エラー（Too Many Requests）の判定を追加
+    - ユニットテスト追加
+    - _完了: 2026-02-15, HTTP 5xx/429エラー判定追加、ユニットテスト7件追加_
+    - _追加判定: 500, 502, 503, 504, 429, "Too Many Requests"_
+    - _テスト: 全7テスト合格_
+    - _Requirements: 要件6.1（エラーハンドリング）_
+    - _優先度: 🟠 High_
+    - _関連: work-log-20260215-063142-subagent-c-remaining-tasks.md_
+  
+  - [x] 31.3.12 不要なS3環境変数の削除（Medium）
+    - Collect Status LambdaからS3_BUCKET環境変数を削除
+    - `cdk/lib/stacks/compute-stack.ts` 修正
+    - `grantRead(pdfsBucket)` 権限を削除
+    - CDKテスト更新
+    - _完了: 2026-02-15, S3_BUCKET環境変数と権限を削除_
+    - _理由: Collect Status Lambdaは実行状態のみを返すため、S3アクセス不要_
+    - _Requirements: 要件13.1（最小権限）_
+    - _優先度: 🟡 Medium_
+    - _関連: work-log-20260215-063142-subagent-c-remaining-tasks.md_
+  
+  - [ ] 31.3.13 DLQ設定の方針確認（Medium）
+    - 設計書の意図を明確化
+    - API Lambda関数にDLQが必要か判断
+    - 必要に応じてCDK修正
+    - _Requirements: 要件6.1（エラーハンドリング）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 2-3時間_
+    - _関連: work-log-20260215-000859-subagent-b-lambda-cdk.md（不整合5）_
+  
+  - [ ] 31.3.14 Secrets Managerローテーション実装（Medium）
+    - `src/lambda/api-key-rotation/index.ts` を作成
+    - または、ローテーション機能をPhase 4まで無効化
+    - _Requirements: 要件11.4（APIキー管理）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 4-6時間（Phase 4で実施予定）_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合M-1）_
+  
+  - [ ] 31.3.15 WAFレート制限の仕様確認（Medium）
+    - AWS WAFの `limit` パラメータの仕様を確認
+    - Steering Filesの記述を明確化
+    - 必要に応じてCDK修正
+    - _Requirements: 要件13.1（WAF保護）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 1-2時間_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合M-2）_
+  
+  - [ ] 31.3.16 エラーレスポンス形式の修正（Medium）
+    - API Gatewayの `requestContext.requestId` を使用
+    - 全Lambda関数のエラーレスポンスを修正
+    - E2Eテスト更新
+    - _Requirements: 要件4.3（API仕様）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 1-2時間_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合7）_
+  
+  - [ ] 31.3.17 ファイルサイズバリデーション追加（Medium）
+    - `src/models/disclosure.ts` にファイルサイズのバリデーションを追加
+    - 10MBを超えるファイルを拒否
+    - ユニットテスト追加
+    - _Requirements: 要件3.3（整合性検証）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 1-2時間_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合8）_
+  
+  - [ ] 31.3.18 API設計書の更新（Medium）
+    - `design/api-design.md` に `total_count` フィールドを追加
+    - OpenAPI仕様との整合性を確認
+    - _Requirements: 要件4.1（API設計）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 30分_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合9）_
+  
+  - [ ] 31.3.19 レート制限ヘッダーの実装（Low）
+    - Lambda関数でレート制限ヘッダーを返却
+    - または、OpenAPI仕様から削除（将来実装予定として記載）
+    - _Requirements: 要件11.2（レート制限）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 2-3時間_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合10）_
+  
+  - [ ] 31.3.20 OpenAPI仕様のデフォルト値追加（Low）
+    - `docs/openapi.yaml` に `format` パラメータの `default: json` を追加
+    - _Requirements: 要件4.1（API設計）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 10分_
+    - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合11）_
+  
+  - [ ] 31.3.21 DownloadErrorクラスの追加（Low）
+    - `src/errors/index.ts` に `DownloadError` クラスを追加
+    - Steering Filesの例を実行可能にする
+    - ユニットテスト追加
+    - _Requirements: 要件6.1（エラーハンドリング）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 30分_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合L-1）_
+  
+  - [ ] 31.3.22 Logger環境判定ロジックの簡略化（Low）
+    - `src/utils/logger.ts` の環境判定を簡略化
+    - `!!process.env.AWS_LAMBDA_FUNCTION_NAME` のみ使用
+    - ユニットテスト更新
+    - _Requirements: 要件6.3（ロギング）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 10分_
+    - _関連: work-log-20260215-000852-error-security-consistency.md（不整合L-2）_
+
+- [ ] 31.4 Webダッシュボードの本番環境デプロイ（High）
   - dashboardディレクトリのビルド実行
   - S3バケット（tdnet-dashboard-prod-803879841964）へのアップロード
   - CloudFront Invalidation実行
@@ -2884,24 +3116,24 @@
   - _問題: CloudFront URLにアクセスすると"Access Denied"エラーが表示される_
   - _原因: ダッシュボードが本番環境にデプロイされていない_
 
-- [ ] 31.4 本番環境の監視開始
+- [ ] 31.5 本番環境の監視開始
   - CloudWatchダッシュボードの確認
   - アラート設定の確認
   - ログ出力の確認
   - _Requirements: 要件12.1（監視）_
 
-- [ ] 31.5 初回データ収集の実行
+- [ ] 31.6 初回データ収集の実行
   - 手動でデータ収集を実行
   - 収集結果の確認
   - エラーがないことを確認
   - _Requirements: 要件1.1（データ収集）_
 
-- [ ] 31.6 日次バッチの動作確認
+- [ ] 31.7 日次バッチの動作確認
   - EventBridgeスケジュールの確認
   - 翌日の自動実行を確認
   - _Requirements: 要件4.1（バッチ処理）_
 
-- [ ] 31.7 運用開始
+- [ ] 31.8 運用開始
   - 運用マニュアルの共有
   - アラート対応体制の確認
   - 定期レビュースケジュールの設定

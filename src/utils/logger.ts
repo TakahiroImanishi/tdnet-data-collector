@@ -231,8 +231,8 @@ export function createErrorContext(
   return {
     error_type: error.constructor.name,
     error_message: error.message,
+    context: additionalContext || {},
     stack_trace: error.stack,
-    ...additionalContext,
   };
 }
 

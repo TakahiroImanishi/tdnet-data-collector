@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 部分的失敗のユニットテスト
  *
  * Property 7: エラー時の部分的成功
@@ -34,8 +34,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示1',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://example.com/test1.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
         {
@@ -46,8 +46,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示2',
           disclosed_at: '2024-01-15T11:00:00Z',
           pdf_url: 'https://example.com/test2.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
         {
@@ -58,8 +58,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示3',
           disclosed_at: '2024-01-15T12:00:00Z',
           pdf_url: 'https://example.com/test3.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
       ];
@@ -101,8 +101,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示1',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://example.com/test1.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
         {
@@ -113,8 +113,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示2',
           disclosed_at: '2024-01-15T11:00:00Z',
           pdf_url: 'https://example.com/test2.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
       ];
@@ -152,8 +152,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示1',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://example.com/test1.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
         {
@@ -164,8 +164,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示2',
           disclosed_at: '2024-01-15T11:00:00Z',
           pdf_url: 'https://example.com/test2.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
       ];
@@ -207,8 +207,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示1',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://example.com/test1.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
         {
@@ -219,8 +219,8 @@ describe('Property 7: エラー時の部分的成功', () => {
           title: 'テスト開示2',
           disclosed_at: '2024-01-15T11:00:00Z',
           pdf_url: 'https://example.com/test2.pdf',
-          s3_key: '',
-          collected_at: '',
+          pdf_s3_key: '',
+          downloaded_at: '',
           date_partition: '',
         },
       ];
@@ -258,8 +258,8 @@ describe('Property 7: エラー時の部分的成功', () => {
         title: `テスト開示${i + 1}`,
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: `https://example.com/test${i + 1}.pdf`,
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       }));
 

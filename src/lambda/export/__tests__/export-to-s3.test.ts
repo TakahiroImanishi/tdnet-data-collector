@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Export to S3 Unit Tests
  *
  * Requirements: 要件14.1（ユニットテスト）
@@ -36,8 +36,8 @@ describe('exportToS3', () => {
       title: '2024年3月期 第3四半期決算短信',
       disclosed_at: '2024-01-15T10:30:00Z',
       pdf_url: 'https://example.com/pdf/20240115_1234_001.pdf',
-      s3_key: 'pdfs/2024/01/15/20240115_1234_001.pdf',
-      collected_at: '2024-01-15T10:35:00Z',
+      pdf_s3_key: 'pdfs/2024/01/15/20240115_1234_001.pdf',
+      downloaded_at: '2024-01-15T10:35:00Z',
       date_partition: '2024-01',
     },
     {
@@ -48,8 +48,8 @@ describe('exportToS3', () => {
       title: '第50期有価証券報告書',
       disclosed_at: '2024-01-15T11:00:00Z',
       pdf_url: 'https://example.com/pdf/20240115_5678_001.pdf',
-      s3_key: 'pdfs/2024/01/15/20240115_5678_001.pdf',
-      collected_at: '2024-01-15T11:05:00Z',
+      pdf_s3_key: 'pdfs/2024/01/15/20240115_5678_001.pdf',
+      downloaded_at: '2024-01-15T11:05:00Z',
       date_partition: '2024-01',
     },
   ];

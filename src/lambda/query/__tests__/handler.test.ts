@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lambda Query Handler Tests
  *
  * Requirements: 要件14.1（ユニットテスト）
@@ -108,8 +108,8 @@ describe('Lambda Query Handler', () => {
           title: '2024年3月期 第3四半期決算短信',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://www.release.tdnet.info/...',
-          s3_key: '2024/01/15/TD20240115001_7203.pdf',
-          collected_at: '2024-01-15T10:35:00Z',
+          pdf_s3_key: '2024/01/15/TD20240115001_7203.pdf',
+          downloaded_at: '2024-01-15T10:35:00Z',
           date_partition: '2024-01',
         },
       ];
@@ -350,6 +350,103 @@ describe('Lambda Query Handler', () => {
       expect(body.error.message).toContain('Invalid offset');
       expect(body.request_id).toBe('test-request-id');
     });
+
+    it('monthパラメータでフィルタリング', async () => {
+      mockEvent.queryStringParameters = {
+        month: '2024-01',
+      };
+
+      (queryDisclosures.queryDisclosures as jest.Mock).mockResolvedValue({
+        disclosures: [],
+        total: 0,
+        count: 0,
+        offset: 0,
+        limit: 100,
+      });
+
+      const result = await handler(mockEvent, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      expect(queryDisclosures.queryDisclosures).toHaveBeenCalledWith(
+        expect.objectContaining({
+          month: '2024-01',
+          start_date: undefined,
+          end_date: undefined,
+        })
+      );
+    });
+
+    it('monthが指定された場合、start_dateとend_dateは無視される', async () => {
+      mockEvent.queryStringParameters = {
+        month: '2024-01',
+        start_date: '2024-01-01',
+        end_date: '2024-01-31',
+      };
+
+      (queryDisclosures.queryDisclosures as jest.Mock).mockResolvedValue({
+        disclosures: [],
+        total: 0,
+        count: 0,
+        offset: 0,
+        limit: 100,
+      });
+
+      const result = await handler(mockEvent, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      expect(queryDisclosures.queryDisclosures).toHaveBeenCalledWith(
+        expect.objectContaining({
+          month: '2024-01',
+          start_date: undefined,
+          end_date: undefined,
+        })
+      );
+    });
+
+    it('不正なmonth形式でバリデーションエラー', async () => {
+      mockEvent.queryStringParameters = {
+        month: '2024/01', // YYYY-MM形式でない
+      };
+
+      const result = await handler(mockEvent, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Invalid month format');
+      expect(body.request_id).toBe('test-request-id');
+    });
+
+    it('monthの月が範囲外の場合はバリデーションエラー', async () => {
+      mockEvent.queryStringParameters = {
+        month: '2024-13', // 13月は存在しない
+      };
+
+      const result = await handler(mockEvent, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Month must be between 01 and 12');
+      expect(body.request_id).toBe('test-request-id');
+    });
+
+    it('monthの年が範囲外の場合はバリデーションエラー', async () => {
+      mockEvent.queryStringParameters = {
+        month: '1899-01', // 1900年未満
+      };
+
+      const result = await handler(mockEvent, mockContext);
+
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('VALIDATION_ERROR');
+      expect(body.error.message).toContain('Year must be between 1900 and 2100');
+      expect(body.request_id).toBe('test-request-id');
+    });
   });
 
   describe('レスポンス形式', () => {
@@ -363,8 +460,8 @@ describe('Lambda Query Handler', () => {
           title: '2024年3月期 第3四半期決算短信',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://www.release.tdnet.info/...',
-          s3_key: '2024/01/15/TD20240115001_7203.pdf',
-          collected_at: '2024-01-15T10:35:00Z',
+          pdf_s3_key: '2024/01/15/TD20240115001_7203.pdf',
+          downloaded_at: '2024-01-15T10:35:00Z',
           date_partition: '2024-01',
         },
       ];
@@ -404,8 +501,8 @@ describe('Lambda Query Handler', () => {
           title: '2024年3月期 第3四半期決算短信',
           disclosed_at: '2024-01-15T10:30:00Z',
           pdf_url: 'https://www.release.tdnet.info/...',
-          s3_key: '2024/01/15/TD20240115001_7203.pdf',
-          collected_at: '2024-01-15T10:35:00Z',
+          pdf_s3_key: '2024/01/15/TD20240115001_7203.pdf',
+          downloaded_at: '2024-01-15T10:35:00Z',
           date_partition: '2024-01',
         },
       ];

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Disclosureモデルのプロパティベーステスト
  *
  * Property 3: メタデータの必須フィールド
@@ -51,7 +51,7 @@ const disclosureArbitrary = (): fc.Arbitrary<Disclosure> => {
       .webUrl()
       .map((url) => `${url}/disclosure.pdf`)
       .filter((url) => url.length <= 500),
-    s3_key: fc
+    pdf_s3_key: fc
       .tuple(
         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
         fc.integer({ min: 1000, max: 9999 }),
@@ -66,7 +66,7 @@ const disclosureArbitrary = (): fc.Arbitrary<Disclosure> => {
         const seqStr = String(seq).padStart(3, '0');
         return `pdfs/${year}/${month}/${dateStr}_${companyCodeStr}_${seqStr}.pdf`;
       }),
-    collected_at: fc
+    downloaded_at: fc
       .date({ min: new Date('2020-01-01'), max: new Date(Date.now()) })
       .map((date) => date.toISOString()),
     date_partition: fc
@@ -98,8 +98,8 @@ describe('Disclosure Property Tests', () => {
             'title',
             'disclosed_at',
             'pdf_url',
-            's3_key',
-            'collected_at',
+            'pdf_s3_key',
+            'downloaded_at',
             'date_partition',
           ];
 
@@ -171,8 +171,8 @@ describe('Disclosure Property Tests', () => {
         'title',
         'disclosed_at',
         'pdf_url',
-        's3_key',
-        'collected_at',
+        'pdf_s3_key',
+        'downloaded_at',
         'date_partition',
       ];
 
@@ -233,7 +233,7 @@ describe('Disclosure Property Tests', () => {
               title: title,
               disclosed_at: disclosedAt,
               pdf_url: pdfUrl,
-              s3_key: `pdfs/${disclosureId}.pdf`,
+              pdf_s3_key: `pdfs/${disclosureId}.pdf`,
             });
 
             // 必須フィールドが存在することを確認

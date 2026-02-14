@@ -30,14 +30,14 @@ export interface Disclosure {
   /** 開示日時（ISO 8601形式、UTC推奨）: "2024-01-15T10:30:00Z" */
   disclosed_at: string;
 
-  /** PDF URL */
-  pdf_url: string;
+  /** PDF URL（オプショナル） */
+  pdf_url?: string;
 
-  /** S3キー（PDFファイルの保存先） */
-  s3_key: string;
+  /** S3キー（PDFファイルの保存先、オプショナル） */
+  pdf_s3_key?: string;
 
-  /** 収集日時（ISO 8601形式、UTC）: "2024-01-15T10:35:00Z" */
-  collected_at: string;
+  /** ダウンロード日時（ISO 8601形式、UTC）: "2024-01-15T10:35:00Z" */
+  downloaded_at: string;
 
   /** date_partition（YYYY-MM形式、JST基準）: "2024-01" */
   date_partition: string;

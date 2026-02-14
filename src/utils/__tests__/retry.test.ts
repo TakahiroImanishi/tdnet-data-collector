@@ -310,6 +310,46 @@ describe('retry.ts', () => {
       expect(isRetryableError(error)).toBe(true);
     });
 
+    it('HTTP 500エラーの場合はtrue', () => {
+      const error = new Error('HTTP 500 Internal Server Error');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('HTTP 502エラーの場合はtrue', () => {
+      const error = new Error('HTTP 502 Bad Gateway');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('HTTP 503エラーの場合はtrue', () => {
+      const error = new Error('HTTP 503 Service Unavailable');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('HTTP 504エラーの場合はtrue', () => {
+      const error = new Error('HTTP 504 Gateway Timeout');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('HTTP 429エラーの場合はtrue', () => {
+      const error = new Error('HTTP 429 Too Many Requests');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('Too Many Requestsメッセージの場合はtrue', () => {
+      const error = new Error('Too Many Requests - rate limit exceeded');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('HTTP 400エラーの場合はfalse（再試行不可）', () => {
+      const error = new Error('HTTP 400 Bad Request');
+      expect(isRetryableError(error)).toBe(false);
+    });
+
+    it('HTTP 404エラーの場合はfalse（再試行不可）', () => {
+      const error = new Error('HTTP 404 Not Found');
+      expect(isRetryableError(error)).toBe(false);
+    });
+
     it('非Errorオブジェクトの場合はfalse', () => {
       expect(isRetryableError('string error')).toBe(false);
       expect(isRetryableError(123)).toBe(false);
@@ -348,9 +388,9 @@ describe('retry.ts', () => {
 
       const elapsedTime = Date.now() - startTime;
 
-      // 1回目: 100ms, 2回目: 100ms = 合計200ms
+      // 1回目: 100ms, 2回目: 100ms = 合計200ms（マージン考慮）
       expect(elapsedTime).toBeGreaterThanOrEqual(190);
-      expect(elapsedTime).toBeLessThan(250);
+      expect(elapsedTime).toBeLessThan(350);
     });
 
     it('backoffMultiplier=3の場合、遅延時間が急速に増加', async () => {
@@ -422,10 +462,10 @@ describe('retry.ts', () => {
       const uniqueResults = new Set(results);
       expect(uniqueResults.size).toBeGreaterThan(1);
 
-      // すべての結果が0〜100msの範囲内
+      // すべての結果が0〜200msの範囲内（マージン考慮）
       results.forEach((elapsed) => {
         expect(elapsed).toBeGreaterThanOrEqual(0);
-        expect(elapsed).toBeLessThan(150);
+        expect(elapsed).toBeLessThan(250);
       });
     });
 

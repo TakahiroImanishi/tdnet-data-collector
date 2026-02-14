@@ -4,6 +4,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { Environment } from '../config/environment-config';
 import { CloudWatchAlarms } from '../constructs/cloudwatch-alarms';
@@ -50,6 +51,81 @@ export class TdnetMonitoringStack extends cdk.Stack {
     super(scope, id, props);
 
     const env = props.environment;
+
+    // ========================================
+    // CloudWatch Logs - Log Groups with Retention
+    // ========================================
+
+    // Lambda関数のログ保持期間を設定
+    const logRetentionConfig = {
+      collector: env === 'prod' ? logs.RetentionDays.THREE_MONTHS : logs.RetentionDays.ONE_WEEK,
+      other: env === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+    };
+
+    const removalPolicy = env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
+
+    // Collector Lambda（スクレイピング処理、長期保持）
+    new logs.LogGroup(this, 'CollectorLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.collector.functionName}`,
+      retention: logRetentionConfig.collector,
+      removalPolicy,
+    });
+
+    // Query Lambda
+    new logs.LogGroup(this, 'QueryLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.query.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // Export Lambda
+    new logs.LogGroup(this, 'ExportLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.export.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // Collect Lambda
+    new logs.LogGroup(this, 'CollectLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.collect.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // Collect Status Lambda
+    new logs.LogGroup(this, 'CollectStatusLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.collectStatus.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // Export Status Lambda
+    new logs.LogGroup(this, 'ExportStatusLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.exportStatus.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // PDF Download Lambda
+    new logs.LogGroup(this, 'PdfDownloadLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.pdfDownload.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // Health Lambda
+    new logs.LogGroup(this, 'HealthLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.health.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
+
+    // Stats Lambda
+    new logs.LogGroup(this, 'StatsLogGroup', {
+      logGroupName: `/aws/lambda/${props.lambdaFunctions.stats.functionName}`,
+      retention: logRetentionConfig.other,
+      removalPolicy,
+    });
 
     // ========================================
     // CloudWatch Alarms

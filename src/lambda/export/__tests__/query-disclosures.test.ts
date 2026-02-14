@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Export Lambda query-disclosures.ts のテスト
  *
  * カバレッジ目標: 80%以上
@@ -22,8 +22,8 @@ const mockDisclosure1: Disclosure = {
   title: '2024年3月期 決算短信',
   disclosed_at: '2024-01-15T10:00:00Z',
   pdf_url: 'https://example.com/pdf1.pdf',
-  s3_key: 'pdfs/2024/01/TD20240115001.pdf',
-  collected_at: '2024-01-15T10:05:00Z',
+  pdf_s3_key: 'pdfs/2024/01/TD20240115001.pdf',
+  downloaded_at: '2024-01-15T10:05:00Z',
   date_partition: '2024-01',
 };
 
@@ -35,8 +35,8 @@ const mockDisclosure2: Disclosure = {
   title: '第100期 有価証券報告書',
   disclosed_at: '2024-02-15T14:00:00Z',
   pdf_url: 'https://example.com/pdf2.pdf',
-  s3_key: 'pdfs/2024/02/TD20240215002.pdf',
-  collected_at: '2024-02-15T14:05:00Z',
+  pdf_s3_key: 'pdfs/2024/02/TD20240215002.pdf',
+  downloaded_at: '2024-02-15T14:05:00Z',
   date_partition: '2024-02',
 };
 
@@ -48,8 +48,8 @@ const mockDisclosure3: Disclosure = {
   title: '第50期 有価証券報告書',
   disclosed_at: '2024-01-31T16:00:00Z',
   pdf_url: 'https://example.com/pdf3.pdf',
-  s3_key: 'pdfs/2024/01/TD20240131003.pdf',
-  collected_at: '2024-01-31T16:05:00Z',
+  pdf_s3_key: 'pdfs/2024/01/TD20240131003.pdf',
+  downloaded_at: '2024-01-31T16:05:00Z',
   date_partition: '2024-01',
 };
 
@@ -63,8 +63,8 @@ function toDynamoDBItem(disclosure: Disclosure): Record<string, any> {
     title: { S: disclosure.title },
     disclosed_at: { S: disclosure.disclosed_at },
     pdf_url: { S: disclosure.pdf_url },
-    s3_key: { S: disclosure.s3_key },
-    collected_at: { S: disclosure.collected_at },
+    pdf_s3_key: { S: disclosure.s3_key },
+    downloaded_at: { S: disclosure.collected_at },
     date_partition: { S: disclosure.date_partition },
   };
 }
@@ -689,8 +689,8 @@ describe('Export Lambda query-disclosures', () => {
             title: { S: '2024年3月期 決算短信' },
             disclosed_at: { S: '2024-01-15T10:00:00Z' },
             pdf_url: { S: 'https://example.com/pdf1.pdf' },
-            s3_key: { S: 'pdfs/2024/01/TD20240115001.pdf' },
-            collected_at: { S: '2024-01-15T10:05:00Z' },
+            pdf_s3_key: { S: 'pdfs/2024/01/TD20240115001.pdf' },
+            downloaded_at: { S: '2024-01-15T10:05:00Z' },
             // date_partitionが欠けている
           },
         ],
@@ -721,8 +721,8 @@ describe('Export Lambda query-disclosures', () => {
             title: { S: '' },
             disclosed_at: { S: '2024-01-15T10:00:00Z' },
             pdf_url: { S: '' },
-            s3_key: { S: '' },
-            collected_at: { S: '2024-01-15T10:05:00Z' },
+            pdf_s3_key: { S: '' },
+            downloaded_at: { S: '2024-01-15T10:05:00Z' },
             date_partition: { S: '2024-01' },
           },
         ],
@@ -771,8 +771,8 @@ describe('Export Lambda query-disclosures', () => {
             title: { S: '2024年3月期 決算短信' },
             disclosed_at: { S: '2024-01-15T10:00:00Z' },
             pdf_url: { S: 'https://example.com/pdf1.pdf' },
-            s3_key: { S: 'pdfs/2024/01/TD20240115001.pdf' },
-            collected_at: { S: '2024-01-15T10:05:00Z' },
+            pdf_s3_key: { S: 'pdfs/2024/01/TD20240115001.pdf' },
+            downloaded_at: { S: '2024-01-15T10:05:00Z' },
             // date_partitionが欠けている
           },
         ],
@@ -803,8 +803,8 @@ describe('Export Lambda query-disclosures', () => {
             title: { S: '' },
             disclosed_at: { S: '2024-01-15T10:00:00Z' },
             pdf_url: { S: '' },
-            s3_key: { S: '' },
-            collected_at: { S: '2024-01-15T10:05:00Z' },
+            pdf_s3_key: { S: '' },
+            downloaded_at: { S: '2024-01-15T10:05:00Z' },
             date_partition: { S: '2024-01' },
           },
         ],
@@ -866,8 +866,8 @@ describe('Export Lambda query-disclosures', () => {
         { field: 'disclosure_type', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
         { field: 'title', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
         { field: 'pdf_url', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 's3_key', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'collected_at', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'pdf_s3_key', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        { field: 'downloaded_at', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
         { field: 'date_partition', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
       ];
 

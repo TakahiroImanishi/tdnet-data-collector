@@ -1,4 +1,4 @@
-/**
+﻿/**
  * disclosure.test.ts
  *
  * Disclosureモデルと変換関数のテスト
@@ -30,8 +30,8 @@ describe('validateDisclosure', () => {
     title: '2024年3月期 第3四半期決算短信',
     disclosed_at: '2024-01-15T10:30:00Z',
     pdf_url: 'https://www.release.tdnet.info/inbs/example.pdf',
-    s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-    collected_at: '2024-01-15T10:35:00Z',
+    pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+    downloaded_at: '2024-01-15T10:35:00Z',
     date_partition: '2024-01',
   };
 
@@ -81,8 +81,8 @@ describe('validateDisclosure', () => {
       expect(() => validateDisclosure(invalid)).toThrow(/Invalid disclosed_at format/);
     });
 
-    it('collected_atが不正なフォーマットの場合はValidationErrorをスロー', () => {
-      const invalid = { ...validDisclosure, collected_at: '2024/01/15 10:35:00' };
+    it('downloaded_atが不正なフォーマットの場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, downloaded_at: '2024/01/15 10:35:00' };
       expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
     });
 
@@ -121,8 +121,8 @@ describe('toDynamoDBItem', () => {
     title: '2024年3月期 第3四半期決算短信',
     disclosed_at: '2024-01-15T10:30:00Z',
     pdf_url: 'https://www.release.tdnet.info/inbs/example.pdf',
-    s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-    collected_at: '2024-01-15T10:35:00Z',
+    pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+    downloaded_at: '2024-01-15T10:35:00Z',
     date_partition: '2024-01',
   };
 
@@ -136,9 +136,9 @@ describe('toDynamoDBItem', () => {
       expect(item.disclosure_type.S).toBe('決算短信');
       expect(item.title.S).toBe('2024年3月期 第3四半期決算短信');
       expect(item.disclosed_at.S).toBe('2024-01-15T10:30:00Z');
-      expect(item.pdf_url.S).toBe('https://www.release.tdnet.info/inbs/example.pdf');
-      expect(item.s3_key.S).toBe('pdfs/2024/01/20240115_1234_001.pdf');
-      expect(item.collected_at.S).toBe('2024-01-15T10:35:00Z');
+      expect(item.pdf_url?.S).toBe('https://www.release.tdnet.info/inbs/example.pdf');
+      expect(item.pdf_s3_key?.S).toBe('pdfs/2024/01/20240115_1234_001.pdf');
+      expect(item.downloaded_at.S).toBe('2024-01-15T10:35:00Z');
       expect(item.date_partition.S).toBe('2024-01');
     });
   });
@@ -160,8 +160,8 @@ describe('fromDynamoDBItem', () => {
     title: { S: '2024年3月期 第3四半期決算短信' },
     disclosed_at: { S: '2024-01-15T10:30:00Z' },
     pdf_url: { S: 'https://www.release.tdnet.info/inbs/example.pdf' },
-    s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
-    collected_at: { S: '2024-01-15T10:35:00Z' },
+    pdf_s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+    downloaded_at: { S: '2024-01-15T10:35:00Z' },
     date_partition: { S: '2024-01' },
   };
 
@@ -208,8 +208,8 @@ describe('fromDynamoDBItem', () => {
         title: { S: '2024年3月期 第3四半期決算短信' },
         disclosed_at: { S: '2024-01-15T10:30:00Z' },
         pdf_url: { S: undefined as any }, // Sがundefined
-        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
-        collected_at: { S: '2024-01-15T10:35:00Z' },
+        pdf_s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        downloaded_at: { S: '2024-01-15T10:35:00Z' },
         date_partition: { S: '2024-01' },
       };
 
@@ -226,8 +226,8 @@ describe('fromDynamoDBItem', () => {
         title: { S: undefined as any },
         disclosed_at: { S: undefined as any },
         pdf_url: { S: undefined as any },
-        s3_key: { S: undefined as any },
-        collected_at: { S: undefined as any },
+        pdf_s3_key: { S: undefined as any },
+        downloaded_at: { S: undefined as any },
         date_partition: { S: undefined as any },
       };
 
@@ -244,8 +244,8 @@ describe('fromDynamoDBItem', () => {
         title: { S: '2024年3月期 第3四半期決算短信' },
         disclosed_at: { S: '2024-01-15T10:30:00Z' },
         pdf_url: { S: 'https://www.release.tdnet.info/inbs/example.pdf' },
-        s3_key: { S: undefined as any },
-        collected_at: { S: '2024-01-15T10:35:00Z' },
+        pdf_s3_key: { S: undefined as any },
+        downloaded_at: { S: '2024-01-15T10:35:00Z' },
         date_partition: { S: '2024-01' },
       };
 
@@ -262,8 +262,8 @@ describe('fromDynamoDBItem', () => {
         title: { S: '2024年3月期 第3四半期決算短信' },
         disclosed_at: { S: '2024-01-15T10:30:00Z' },
         pdf_url: { S: 'https://www.release.tdnet.info/inbs/example.pdf' },
-        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
-        collected_at: { S: '2024-01-15T10:35:00Z' },
+        pdf_s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        downloaded_at: { S: '2024-01-15T10:35:00Z' },
         date_partition: { S: '2024-01' },
       };
 
@@ -280,8 +280,8 @@ describe('fromDynamoDBItem', () => {
         title: { S: null as any },
         disclosed_at: { S: '2024-01-15T10:30:00Z' },
         pdf_url: { S: undefined as any },
-        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
-        collected_at: { S: null as any },
+        pdf_s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        downloaded_at: { S: null as any },
         date_partition: { S: '2024-01' },
       };
 
@@ -300,7 +300,7 @@ describe('createDisclosure', () => {
     title: '2024年3月期 第3四半期決算短信',
     disclosed_at: '2024-01-15T10:30:00Z',
     pdf_url: 'https://www.release.tdnet.info/inbs/example.pdf',
-    s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+    pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
   };
 
   describe('正常系: date_partitionの自動生成', () => {
@@ -321,13 +321,13 @@ describe('createDisclosure', () => {
       expect(disclosure.date_partition).toBe('2024-02');
     });
 
-    it('collected_atが指定されている場合はそれを使用', () => {
+    it('downloaded_atが指定されている場合はそれを使用', () => {
       const disclosure = createDisclosure({
         ...baseParams,
-        collected_at: '2024-01-15T10:35:00Z',
+        downloaded_at: '2024-01-15T10:35:00Z',
       });
 
-      expect(disclosure.collected_at).toBe('2024-01-15T10:35:00Z');
+      expect(disclosure.downloaded_at).toBe('2024-01-15T10:35:00Z');
     });
   });
 

@@ -132,7 +132,6 @@ paths:
                 success:
                   summary: 成功レスポンス例
                   value:
-                    status: success
                     disclosures:
                       - disclosure_id: '20240115_7203_001'
                         company_code: '7203'
@@ -746,16 +745,12 @@ components:
     DisclosureListResponse:
       type: object
       required:
-        - status
         - disclosures
         - total
         - count
         - offset
         - limit
       properties:
-        status:
-          type: string
-          enum: [success]
         disclosures:
           type: array
           items:

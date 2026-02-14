@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Property 10: エクスポートファイルの有効期限
  *
  * Validates: Requirements 7.2, 12.4
@@ -57,8 +57,8 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
               .date({ min: new Date('2020-01-01'), max: new Date('2025-12-31') })
               .map((d) => d.toISOString()),
             pdf_url: fc.webUrl(),
-            s3_key: fc.string({ minLength: 10, maxLength: 100 }),
-            collected_at: fc
+            pdf_s3_key: fc.string({ minLength: 10, maxLength: 100 }),
+            downloaded_at: fc
               .date({ min: new Date('2020-01-01'), max: new Date('2025-12-31') })
               .map((d) => d.toISOString()),
             date_partition: fc
@@ -120,8 +120,8 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
               .date({ min: new Date('2020-01-01'), max: new Date('2025-12-31') })
               .map((d) => d.toISOString()),
             pdf_url: fc.webUrl(),
-            s3_key: fc.string({ minLength: 10, maxLength: 100 }),
-            collected_at: fc
+            pdf_s3_key: fc.string({ minLength: 10, maxLength: 100 }),
+            downloaded_at: fc
               .date({ min: new Date('2020-01-01'), max: new Date('2025-12-31') })
               .map((d) => d.toISOString()),
             date_partition: fc
@@ -180,8 +180,8 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
               .date({ min: new Date('2020-01-01'), max: new Date('2025-12-31') })
               .map((d) => d.toISOString()),
             pdf_url: fc.webUrl(),
-            s3_key: fc.string({ minLength: 10, maxLength: 100 }),
-            collected_at: fc
+            pdf_s3_key: fc.string({ minLength: 10, maxLength: 100 }),
+            downloaded_at: fc
               .date({ min: new Date('2020-01-01'), max: new Date('2025-12-31') })
               .map((d) => d.toISOString()),
             date_partition: fc
@@ -246,8 +246,8 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
               title: titleWithComma,
               disclosed_at: '2024-01-15T10:30:00Z',
               pdf_url: 'https://example.com/pdf/20240115_1234_001.pdf',
-              s3_key: 'pdfs/2024/01/15/20240115_1234_001.pdf',
-              collected_at: '2024-01-15T10:35:00Z',
+              pdf_s3_key: 'pdfs/2024/01/15/20240115_1234_001.pdf',
+              downloaded_at: '2024-01-15T10:35:00Z',
               date_partition: '2024-01',
             },
           ];

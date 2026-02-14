@@ -4,6 +4,7 @@ import * as cloudwatch_actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
 /**
@@ -37,7 +38,7 @@ export interface CloudWatchAlarmsProps {
   errorRateThreshold?: number;
 
   /**
-   * Lambda Duration閾値（秒、デフォルト: 840秒 = 14分）
+   * Lambda Duration閾値（秒、デフォルト: 600秒 = 10分）
    */
   durationThreshold?: number;
 
@@ -45,6 +46,12 @@ export interface CloudWatchAlarmsProps {
    * CollectionSuccessRate閾値（デフォルト: 95%）
    */
   collectionSuccessRateThreshold?: number;
+
+  /**
+   * DLQキュー（オプション）
+   * 指定された場合、DLQメッセージ数のアラームを作成
+   */
+  dlqQueue?: sqs.IQueue;
 }
 
 /**
@@ -74,7 +81,7 @@ export class CloudWatchAlarms extends Construct {
 
     // デフォルト値の設定
     const errorRateThreshold = props.errorRateThreshold ?? 10; // 10%
-    const durationThreshold = props.durationThreshold ?? 840; // 14分 = 840秒
+    const durationThreshold = props.durationThreshold ?? 600; // 10分 = 600秒
     const collectionSuccessRateThreshold = props.collectionSuccessRateThreshold ?? 95; // 95%
 
     // ========================================
@@ -120,10 +127,10 @@ export class CloudWatchAlarms extends Construct {
       errorRateAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(errorRateAlarm);
 
-      // 2. Lambda Duration アラーム（Warning）
+      // 2. Lambda Duration アラーム（Warning - 10分）
       const durationAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}DurationAlarm`, {
-        alarmName: `${functionName}-duration-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} の実行時間が ${durationThreshold} 秒を超えました`,
+        alarmName: `${functionName}-duration-warning-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} の実行時間が ${durationThreshold} 秒を超えました（警告）`,
         metric: lambdaFunction.metricDuration({
           statistic: 'Average',
           period: cdk.Duration.minutes(5),
@@ -136,6 +143,23 @@ export class CloudWatchAlarms extends Construct {
 
       durationAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(durationAlarm);
+
+      // 2-2. Lambda Duration アラーム（Critical - 13分）
+      const durationCriticalAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}DurationCriticalAlarm`, {
+        alarmName: `${functionName}-duration-critical-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} の実行時間が 780 秒を超えました（重大）`,
+        metric: lambdaFunction.metricDuration({
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 780 * 1000, // 13分 = 780秒をミリ秒に変換
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      durationCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(durationCriticalAlarm);
 
       // 3. Lambda Throttles アラーム（Critical）
       const throttleAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleAlarm`, {
@@ -222,6 +246,28 @@ export class CloudWatchAlarms extends Construct {
 
     collectionFailureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
     this.alarms.push(collectionFailureAlarm);
+
+    // ========================================
+    // DLQアラーム（オプション）
+    // ========================================
+    if (props.dlqQueue) {
+      // 7. DLQメッセージアラーム（Critical）
+      const dlqAlarm = new cloudwatch.Alarm(this, 'DLQMessagesAlarm', {
+        alarmName: `tdnet-dlq-messages-${props.environment}`,
+        alarmDescription: 'DLQにメッセージが送信されました（Critical）',
+        metric: props.dlqQueue.metricApproximateNumberOfMessagesVisible({
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 0,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      dlqAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(dlqAlarm);
+    }
 
     // ========================================
     // CloudFormation Outputs

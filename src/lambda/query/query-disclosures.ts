@@ -38,6 +38,7 @@ export interface QueryParams {
   company_code?: string;
   start_date?: string;
   end_date?: string;
+  month?: string;
   disclosure_type?: string;
   format: 'json' | 'csv';
   limit: number;
@@ -67,7 +68,10 @@ export async function queryDisclosures(params: QueryParams): Promise<QueryResult
   let disclosures: Disclosure[];
 
   // クエリ戦略の選択
-  if (params.company_code) {
+  if (params.month) {
+    // 月でクエリ（GSI_DatePartition使用）
+    disclosures = await queryByMonth(params);
+  } else if (params.company_code) {
     // 企業コードでクエリ（GSI_CompanyCode_DiscloseDate使用）
     disclosures = await queryByCompanyCode(params);
   } else if (params.start_date && params.end_date) {
@@ -153,6 +157,21 @@ async function queryByCompanyCode(params: QueryParams): Promise<Disclosure[]> {
   }
 
   return await executeQuery(queryInput);
+}
+
+/**
+ * 月でクエリ
+ *
+ * GSI_DatePartition（パーティションキー: date_partition、ソートキー: disclosed_at）を使用
+ * 単一の月のデータを効率的に取得
+ *
+ * @param params クエリパラメータ
+ * @returns 開示情報リスト
+ */
+async function queryByMonth(params: QueryParams): Promise<Disclosure[]> {
+  logger.info('Querying by month', { month: params.month });
+
+  return await queryByPartition(params.month!, params);
 }
 
 /**

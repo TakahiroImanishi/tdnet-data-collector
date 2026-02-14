@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lambda PDF Download Handler Unit Tests
  *
  * Requirements: 要件14.1（ユニットテスト）
@@ -77,7 +77,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -111,7 +111,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -353,7 +353,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -390,7 +390,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -462,7 +462,7 @@ describe('Lambda PDF Download Handler', () => {
             disclosure_id: { S: '20240115_7203_001' },
             company_code: { S: '7203' },
             company_name: { S: 'トヨタ自動車株式会社' },
-            pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+            pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
           },
         });
 
@@ -516,7 +516,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -550,7 +550,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -585,7 +585,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -615,7 +615,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -644,7 +644,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 

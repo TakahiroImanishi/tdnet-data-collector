@@ -1,4 +1,4 @@
-/**
+﻿/**
  * saveMetadata関数のユニットテスト
  *
  * Requirements: 要件1.4, 2.4（メタデータ保存、重複チェック）
@@ -36,8 +36,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -73,8 +73,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -104,8 +104,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-31T15:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240131001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/02/01/TD20240131001.pdf';
@@ -132,8 +132,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2023-12-31T15:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120231231001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/01/TD20231231001.pdf';
@@ -160,8 +160,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -199,8 +199,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -224,8 +224,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15 10:30:00', // 不正なフォーマット
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -245,8 +245,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-02-30T10:30:00Z', // 存在しない日付
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240230001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/02/30/TD20240230001.pdf';
@@ -266,8 +266,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -290,8 +290,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-02-29T15:00:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240229001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/03/01/TD20240229001.pdf';
@@ -319,8 +319,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -345,8 +345,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -390,8 +390,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -423,8 +423,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -451,8 +451,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -478,8 +478,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -505,8 +505,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -530,8 +530,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -555,8 +555,8 @@ describe('saveMetadata', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
-        s3_key: '',
-        collected_at: '',
+        pdf_s3_key: '',
+        downloaded_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';

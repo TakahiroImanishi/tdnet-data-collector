@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TypeScript型定義とインターフェースのテスト
  *
  * Task 2.1の実装を検証します。
@@ -33,8 +33,8 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-        collected_at: '2024-01-15T10:35:00Z',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        downloaded_at: '2024-01-15T10:35:00Z',
         date_partition: '2024-01',
       };
 
@@ -116,8 +116,8 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-        collected_at: '2024-01-15T10:35:00Z',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        downloaded_at: '2024-01-15T10:35:00Z',
         date_partition: '2024-01',
       };
 
@@ -149,8 +149,8 @@ describe('TypeScript型定義とインターフェース', () => {
         title: { S: '2024年3月期 第3四半期決算短信' },
         disclosed_at: { S: '2024-01-15T10:30:00Z' },
         pdf_url: { S: 'https://example.com/pdf/test.pdf' },
-        s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
-        collected_at: { S: '2024-01-15T10:35:00Z' },
+        pdf_s3_key: { S: 'pdfs/2024/01/20240115_1234_001.pdf' },
+        downloaded_at: { S: '2024-01-15T10:35:00Z' },
         date_partition: { S: '2024-01' },
       };
 
@@ -293,7 +293,7 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
       });
 
       expect(disclosure.date_partition).toBe('2024-01');
@@ -309,7 +309,7 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
         date_partition: '2024-02',
       });
 
@@ -369,8 +369,8 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-        collected_at: '2024-01-15T10:35:00Z',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        downloaded_at: '2024-01-15T10:35:00Z',
         date_partition: '2024-01',
       };
 
@@ -395,8 +395,8 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-        collected_at: '2024-01-15T10:35:00Z',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        downloaded_at: '2024-01-15T10:35:00Z',
         date_partition: '2024-01',
       };
 
@@ -412,8 +412,8 @@ describe('TypeScript型定義とインターフェース', () => {
         title: '2024年3月期 第3四半期決算短信',
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://example.com/pdf/test.pdf',
-        s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
-        collected_at: '2024-01-15T10:35:00Z',
+        pdf_s3_key: 'pdfs/2024/01/20240115_1234_001.pdf',
+        downloaded_at: '2024-01-15T10:35:00Z',
         date_partition: '2024-1', // Invalid: not YYYY-MM format
       };
 
