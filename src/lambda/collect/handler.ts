@@ -4,11 +4,12 @@
  * POST /collect エンドポイントのハンドラー。
  * Lambda Collectorを非同期で呼び出し、実行IDを返却します。
  *
- * Requirements: タスク13.1
+ * Requirements: タスク13.1, タスク31.2.6.9
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { randomUUID } from 'crypto';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric } from '../../utils/cloudwatch-metrics';
 import { ValidationError } from '../../errors';
@@ -222,56 +223,42 @@ async function invokeCollector(
   request: CollectRequest,
   context: Context
 ): Promise<string> {
+  // 実行IDを事前に生成（API Gatewayタイムアウト回避のため）
+  const execution_id = randomUUID();
+
   // Lambda Collectorのイベント
   const collectorEvent = {
+    execution_id, // 生成したexecution_idを渡す
     mode: 'on-demand',
     start_date: request.start_date,
     end_date: request.end_date,
   };
 
-  logger.info('Invoking Lambda Collector', {
+  logger.info('Invoking Lambda Collector asynchronously', {
     requestId: context.awsRequestId,
     functionName: COLLECTOR_FUNCTION_NAME,
+    execution_id,
     event: collectorEvent,
   });
 
   try {
-    // Lambda Collectorを同期で呼び出し（InvocationType: RequestResponse）
-    // これにより、Collectorが生成した実際のexecution_idを取得できます
+    // Lambda Collectorを非同期で呼び出し（InvocationType: Event）
+    // API Gatewayタイムアウト（29秒）を回避し、即座にexecution_idを返却
     const command = new InvokeCommand({
       FunctionName: COLLECTOR_FUNCTION_NAME,
-      InvocationType: 'RequestResponse', // 同期呼び出し
+      InvocationType: 'Event', // 非同期呼び出し
       Payload: Buffer.from(JSON.stringify(collectorEvent)),
     });
 
     const response = await lambdaClient.send(command);
 
-    logger.info('Lambda Collector invoked successfully', {
+    logger.info('Lambda Collector invoked successfully (async)', {
       requestId: context.awsRequestId,
+      execution_id,
       statusCode: response.StatusCode,
     });
 
-    // Lambda Collectorのレスポンスをパース
-    if (!response.Payload) {
-      throw new Error('Lambda Collector returned empty response');
-    }
-
-    const payloadString = Buffer.from(response.Payload).toString('utf-8');
-    const collectorResponse = JSON.parse(payloadString);
-
-    // Lambda Collectorが生成した実際のexecution_idを使用
-    const execution_id = collectorResponse.execution_id;
-
-    if (!execution_id) {
-      throw new Error('Lambda Collector did not return execution_id');
-    }
-
-    logger.info('Received execution_id from Lambda Collector', {
-      requestId: context.awsRequestId,
-      execution_id,
-      status: collectorResponse.status,
-    });
-
+    // 非同期呼び出しのため、即座にexecution_idを返却
     return execution_id;
   } catch (error) {
     logger.error(
@@ -279,6 +266,7 @@ async function invokeCollector(
       createErrorContext(error as Error, {
         requestId: context.awsRequestId,
         functionName: COLLECTOR_FUNCTION_NAME,
+        execution_id,
       })
     );
     throw new Error('Failed to start data collection');

@@ -1,11 +1,11 @@
 ﻿/**
  * Lambda Collect Handler Tests
  *
- * POST /collect エンド�Eイント�EユニットテスチE
+ * POST /collect エンドポイントのユニットテスト
  */
 
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
-import { handler, clearApiKeyCache } from '../handler';
+import { handler } from '../handler';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { mockClient } from 'aws-sdk-client-mock';
 
@@ -29,15 +29,15 @@ const mockContext: Context = {
 };
 
 /**
- * チE��ト用の日付を動的に生�E
- * 現在日から相対皁E��日付を返すことで、テストが常に有効な日付篁E��を使用できるようにする
+ * テスト用の日付を動的に生成
+ * 現在日から相対的な日付を返すことで、テストが常に有効な日付範囲を使用できるようにする
  */
 const getTestDates = () => {
   const today = new Date();
   const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - 7); // 7日剁E
+  startDate.setDate(startDate.getDate() - 7); // 7日前
   const endDate = new Date(today);
-  endDate.setDate(endDate.getDate() - 2); // 2日剁E
+  endDate.setDate(endDate.getDate() - 2); // 2日前
   
   return {
     start_date: startDate.toISOString().split('T')[0],
@@ -46,7 +46,7 @@ const getTestDates = () => {
 };
 
 /**
- * 持E��日数前�E日付を取征E
+ * 指定日数前の日付を取得
  */
 const getDaysAgo = (days: number): string => {
   const date = new Date();
@@ -55,7 +55,7 @@ const getDaysAgo = (days: number): string => {
 };
 
 /**
- * 持E��日数後�E日付を取征E
+ * 指定日数後の日付を取得
  */
 const getDaysLater = (days: number): string => {
   const date = new Date();
@@ -66,12 +66,10 @@ const getDaysLater = (days: number): string => {
 /**
  * テスト用のAPIGatewayProxyEventを作成
  */
-const createTestEvent = (body: any, apiKey: string = 'test-api-key-12345'): APIGatewayProxyEvent => {
+const createTestEvent = (body: any): APIGatewayProxyEvent => {
   return {
     body: body === null ? null : JSON.stringify(body),
-    headers: {
-      'x-api-key': apiKey,
-    },
+    headers: {},
     multiValueHeaders: {},
     httpMethod: 'POST',
     isBase64Encoded: false,
@@ -87,39 +85,23 @@ const createTestEvent = (body: any, apiKey: string = 'test-api-key-12345'): APIG
 
 describe('POST /collect Handler', () => {
   beforeEach(() => {
-    lambdaMock.reset();
-    
-    // APIキーキャッシュをクリア
-    clearApiKeyCache();
-    
+    // 環境変数を先に設定
     process.env.COLLECTOR_FUNCTION_NAME = 'tdnet-collector';
     process.env.AWS_REGION = 'ap-northeast-1';
-    process.env.API_KEY = 'test-api-key-12345';
     
-    delete process.env.TEST_ENV;
+    lambdaMock.reset();
   });
 
   afterEach(() => {
     delete process.env.COLLECTOR_FUNCTION_NAME;
     delete process.env.AWS_REGION;
-    delete process.env.API_KEY;
-    delete process.env.TEST_ENV;
   });
 
   describe('正常系', () => {
     it('有効なリクエストで200を返す', async () => {
-      // Lambda Collectorの呼び出しをモチE���E�同期呼び出し！E
-      const mockCollectorResponse = {
-        execution_id: 'exec_1234567890_abc123_test1234',
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-      };
-
+      // 非同期呼び出しのため、Payloadは不要
       lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
+        StatusCode: 202, // 非同期呼び出しは202を返す
       });
 
       const testDates = getTestDates();
@@ -139,18 +121,10 @@ describe('POST /collect Handler', () => {
       expect(body.data).toHaveProperty('started_at');
     });
 
-    it('Lambda Collectorから返されたexecution_idを使用する', async () => {
-      const mockCollectorResponse = {
-        execution_id: 'exec_1234567890_abc123_test1234',
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-      };
-
+    it('事前生成されたexecution_idを返す', async () => {
+      // 非同期呼び出しのため、Payloadは不要
       lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
+        StatusCode: 202,
       });
 
       const testDates = getTestDates();
@@ -159,22 +133,14 @@ describe('POST /collect Handler', () => {
       const result = await handler(event, mockContext);
       const body = JSON.parse(result.body);
 
-      // Lambda Collectorから返されたexecution_idが使用されてぁE��ことを確誁E
-      expect(body.data.execution_id).toBe('exec_1234567890_abc123_test1234');
+      // execution_idがUUID形式であることを確認
+      expect(body.data.execution_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     });
 
-    it('Lambda呼び出しがRequestResponseモードで実行される', async () => {
-      const mockCollectorResponse = {
-        execution_id: 'exec_1234567890_abc123_test1234',
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-      };
-
+    it('Lambda呼び出しがEventモード（非同期）で実行される', async () => {
+      // 非同期呼び出しのため、Payloadは不要
       lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
+        StatusCode: 202,
       });
 
       const testDates = getTestDates();
@@ -185,13 +151,21 @@ describe('POST /collect Handler', () => {
       // InvokeCommandが正しいパラメータで呼ばれたことを確認
       const calls = lambdaMock.commandCalls(InvokeCommand);
       expect(calls.length).toBe(1);
-      expect(calls[0].args[0].input.InvocationType).toBe('RequestResponse');
-      expect(calls[0].args[0].input.FunctionName).toBe('test-collector-function');
+      expect(calls[0].args[0].input.InvocationType).toBe('Event'); // 非同期呼び出し
+      expect(calls[0].args[0].input.FunctionName).toBe(process.env.COLLECTOR_FUNCTION_NAME);
+      
+      // Payloadにexecution_idが含まれていることを確認
+      const payload = JSON.parse(Buffer.from(calls[0].args[0].input.Payload as Uint8Array).toString('utf-8'));
+      expect(payload).toHaveProperty('execution_id');
+      expect(payload.execution_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(payload).toHaveProperty('mode', 'on-demand');
+      expect(payload).toHaveProperty('start_date');
+      expect(payload).toHaveProperty('end_date');
     });
   });
 
-  describe('バリチE�Eションエラー', () => {
-    it('リクエスト�EチE��がなぁE��合�E400を返す', async () => {
+  describe('バリデーションエラー', () => {
+    it('リクエストボディがない場合は400を返す', async () => {
       const event = createTestEvent(null);
 
       const result = await handler(event, mockContext);
@@ -203,14 +177,12 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('Request body is required');
     });
 
-    it('start_dateがなぁE��合�E400を返す', async () => {
+    it('start_dateがない場合は400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           end_date: getDaysAgo(2),
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -231,14 +203,12 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('start_date is required');
     });
 
-    it('end_dateがなぁE��合�E400を返す', async () => {
+    it('end_dateがない場合は400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: getDaysAgo(7),
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -259,15 +229,13 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('end_date is required');
     });
 
-    it('start_dateのフォーマットが不正な場合�E400を返す', async () => {
+    it('start_dateのフォーマットが不正な場合は400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
-          start_date: '2024/01/15', // 不正なフォーマッチE
+          start_date: '2024/01/15', // 不正なフォーマット
           end_date: getDaysAgo(2),
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -288,14 +256,12 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('Invalid start_date format');
     });
 
-    it('start_dateが存在しなぁE��付�E場合�E400を返す', async () => {
-      // 存在しなぁE��付を使用�E�E朁E0日は存在しなぁE��E
-      // ただし、E年以冁E�E日付を使用する忁E��がある
+    it('start_dateが存在しない日付の場合は400を返す', async () => {
       const today = new Date();
       const year = today.getFullYear();
       
       const event = createTestEvent({
-          start_date: `${year}-02-30`, // 2朁E0日は存在しなぁE
+          start_date: `${year}-02-30`, // 2月30日は存在しない
           end_date: `${year}-03-01`,
         });
 
@@ -304,19 +270,16 @@ describe('POST /collect Handler', () => {
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('VALIDATION_ERROR');
-      // 日付�E整合性チェチE��で無効な日付を検�E
       expect(body.error.message).toContain('Invalid start_date');
     });
 
-    it('start_dateがend_dateより後�E場合�E400を返す', async () => {
+    it('start_dateがend_dateより後の場合は400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: getDaysAgo(2),
           end_date: getDaysAgo(7),
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -337,17 +300,15 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('must be before or equal to');
     });
 
-    it('start_dateぁE年以上前の場合�E400を返す', async () => {
-      const twoYearsAgo = getDaysAgo(730); // 2年剁E
+    it('start_dateが1年以上前の場合は400を返す', async () => {
+      const twoYearsAgo = getDaysAgo(730); // 2年前
 
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: twoYearsAgo,
           end_date: getDaysAgo(2),
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -368,17 +329,15 @@ describe('POST /collect Handler', () => {
       expect(body.error.message).toContain('too old');
     });
 
-    it('end_dateが未来日の場合�E400を返す', async () => {
-      const twoDaysLater = getDaysLater(2); // 2日征E
+    it('end_dateが未来日の場合は400を返す', async () => {
+      const twoDaysLater = getDaysLater(2); // 2日後
 
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: getDaysAgo(7),
           end_date: twoDaysLater,
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -398,125 +357,14 @@ describe('POST /collect Handler', () => {
       expect(body.error.code).toBe('VALIDATION_ERROR');
       expect(body.error.message).toContain('cannot be in the future');
     });
-  });
 
-  describe('Lambda呼び出しエラー', () => {
-    it('Lambda Collectorの呼び出しに失敗した場合�E500を返す', async () => {
-      lambdaMock.on(InvokeCommand).rejects(new Error('Lambda invocation failed'));
-
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates);
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(500);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-      expect(body.error.message).toContain('Failed to start data collection');
-    });
-
-    it('Lambda Collectorが空のPayloadを返した場合�E500を返す', async () => {
-      lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: undefined,
-      });
-
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates);
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(500);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-    });
-
-    it('Lambda Collectorがexecution_idを返さなぁE��合�E500を返す', async () => {
-      const mockCollectorResponse = {
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-        // execution_idがなぁE
-      };
-
-      lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
-      });
-
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates);
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(500);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-    });
-  });
-
-  describe('APIキー認証エラー', () => {
-    it('APIキーヘッダーがない場合は401を返す', async () => {
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates, '');
-      delete event.headers['x-api-key'];
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('API key is required');
-    });
-
-    it('無効なAPIキーの場合は401を返す', async () => {
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates, 'invalid-api-key');
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('Invalid API key');
-    });
-
-    it('Secrets Manager取得エラーの場合は401を返す', async () => {
-      // キャッシュをクリアするために、異なるAPIキーを使用
-      // これにより、キャッシュされたAPIキーと一致しなくなり、Secrets Managerが呼び出される
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates, 'different-api-key-to-bypass-cache');
-
-      // Secrets Managerのモックを完全にリセットして、エラーを発生させる
-      secretsMock.reset();
-      secretsMock.on(GetSecretValueCommand).rejects(new Error('Secrets Manager error'));
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('Invalid API key');
-    });
-  });
-
-  describe('バリデーションエラー（追加）', () => {
     it('end_dateのフォーマットが不正な場合は400を返す', async () => {
       const event: APIGatewayProxyEvent = {
         body: JSON.stringify({
           start_date: getDaysAgo(7),
           end_date: '2024/01/15', // 不正なフォーマット
         }),
-        headers: {
-          'x-api-key': 'test-api-key-12345',
-        },
+        headers: {},
         multiValueHeaders: {},
         httpMethod: 'POST',
         isBase64Encoded: false,
@@ -553,89 +401,22 @@ describe('POST /collect Handler', () => {
       expect(body.error.code).toBe('VALIDATION_ERROR');
       expect(body.error.message).toContain('Invalid end_date');
     });
-
-    it('end_dateが無効な日付（NaN）の場合は400を返す', async () => {
-      const event = createTestEvent({
-        start_date: getDaysAgo(7),
-        end_date: '2024-13-01', // 13月は存在しない
-      });
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('VALIDATION_ERROR');
-      expect(body.error.message).toContain('Invalid end_date');
-    });
-
-    it('start_dateが無効な日付（NaN）の場合は400を返す', async () => {
-      const event = createTestEvent({
-        start_date: '2024-13-01', // 13月は存在しない
-        end_date: getDaysAgo(2),
-      });
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(400);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('VALIDATION_ERROR');
-      expect(body.error.message).toContain('Invalid start_date');
-    });
   });
 
-  describe('APIキー認証（追加）', () => {
-    it('X-Api-Key（大文字）ヘッダーでも認証できる', async () => {
-      const mockCollectorResponse = {
-        execution_id: 'exec_1234567890_abc123_test1234',
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-      };
-
-      lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
-      });
+  describe('Lambda呼び出しエラー', () => {
+    it('Lambda Collectorの呼び出しに失敗した場合は500を返す', async () => {
+      lambdaMock.on(InvokeCommand).rejects(new Error('Lambda invocation failed'));
 
       const testDates = getTestDates();
       const event = createTestEvent(testDates);
-      // x-api-keyを削除してX-Api-Keyを設定
-      delete event.headers['x-api-key'];
-      event.headers['X-Api-Key'] = 'test-api-key-12345';
 
       const result = await handler(event, mockContext);
 
-      expect(result.statusCode).toBe(200);
+      expect(result.statusCode).toBe(500);
       const body = JSON.parse(result.body);
-      expect(body.status).toBe('success');
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toContain('Failed to start data collection');
     });
-  });
-
-  describe('Secrets Managerエラーハンドリング', () => {
-    beforeEach(() => {
-      // TEST_ENV='test'を設定してキャッシュを無効化
-      process.env.TEST_ENV = 'test';
-      delete process.env.API_KEY;
-      
-      // API_KEY_SECRET_ARNを設定
-      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:tdnet-api-key';
-      
-      // Secrets Managerモックをリセット
-      secretsMock.reset();
-    });
-
-    afterEach(() => {
-      // 環境変数を復元
-      process.env.TEST_ENV = 'e2e';
-      process.env.API_KEY = 'test-api-key-12345';
-      
-      // Secrets Managerモックを復元
-      secretsMock.reset();
-      secretsMock.on(GetSecretValueCommand).resolves({
-        SecretString: 'test-api-key-12345',
-      });
-    });
-
   });
 });

@@ -92,12 +92,17 @@ export class LambdaCollector extends Construct {
     props.pdfsBucket.grantPut(this.function);
     props.pdfsBucket.grantRead(this.function);
 
-    // CloudWatch Metrics: カスタムメトリクス送信権限
+    // CloudWatch Metrics: カスタムメトリクス送信権限（TDnet namespaceに限定）
     this.function.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['cloudwatch:PutMetricData'],
         resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet',
+          },
+        },
       })
     );
 

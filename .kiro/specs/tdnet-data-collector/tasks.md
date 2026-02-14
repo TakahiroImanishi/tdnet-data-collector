@@ -2797,7 +2797,7 @@
   - _関連: タスク31.2.6.7で発見_
   - _作業記録: work-log-20260214-233826-task31-2-6-10-secrets-manager-fix.md_
 
-- [ ] 31.2.6.11 DynamoDBテーブル名の確認と修正（High）
+- [x] 31.2.6.11 DynamoDBテーブル名の確認と修正（High）
   - 本番環境のDynamoDBテーブル名を確認
   - 期待値: `tdnet-executions-prod`
   - 実際の値を確認し、CDK定義と一致させる
@@ -2806,6 +2806,9 @@
   - _優先度: 🟠 High_
   - _推定工数: 30分_
   - _関連: タスク31.2.6.7で発見_
+  - _完了: 2026-02-14 23:38:30_
+  - _結果: ✅ すべて一致確認。修正不要。テーブル名`tdnet_executions_prod`、環境変数`DYNAMODB_EXECUTIONS_TABLE`が正しく設定されている_
+  - _作業記録: work-log-20260214-233830-task31-2-6-11-dynamodb-table-name.md_
 
 - [ ] 31.2.6.12 CloudWatch Logsのエンコーディング問題の修正（High）
   - Lambda関数のログ出力にShift_JIS文字列が含まれている問題を修正

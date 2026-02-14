@@ -60,9 +60,14 @@ export function parseDisclosureList(html: string, requestDate: string): Disclosu
     // HTML構造の検証（テーブルが存在するか）
     const tables = $('table#main-list-table');
     if (tables.length === 0) {
+      // HTMLプレビューをBase64エンコードしてログ出力（エンコーディングエラー回避）
+      const htmlPreview = html.substring(0, 200);
+      const htmlPreviewBase64 = Buffer.from(htmlPreview, 'utf-8').toString('base64');
+      
       logger.warn('No disclosure table found in HTML', {
         html_length: html.length,
-        html_preview: html.substring(0, 200),
+        html_preview_base64: htmlPreviewBase64,
+        decode_instruction: 'Use Buffer.from(html_preview_base64, "base64").toString("utf-8") to decode',
       });
       // HTML構造が変更された可能性を検知
       detectHtmlStructureChange($);

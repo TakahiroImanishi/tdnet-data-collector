@@ -28,6 +28,9 @@ import { DisclosureMetadata } from '../../scraper/html-parser';
  * Lambda Collectorイベント
  */
 export interface CollectorEvent {
+  /** 実行ID（Collect関数から渡される） */
+  execution_id?: string;
+
   /** モード（batch: 日次バッチ、on-demand: オンデマンド） */
   mode: 'batch' | 'on-demand';
 
@@ -82,7 +85,8 @@ export async function handler(
   event: CollectorEvent,
   context: Context
 ): Promise<CollectorResponse> {
-  const execution_id = generateExecutionId(context);
+  // Collect関数から渡されたexecution_idを使用、なければ生成
+  const execution_id = event.execution_id || generateExecutionId(context);
   const startTime = Date.now();
 
   try {
