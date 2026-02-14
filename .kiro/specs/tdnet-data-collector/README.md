@@ -7,7 +7,15 @@
 ```
 .kiro/specs/tdnet-data-collector/
 ├── README.md                    # このファイル
-├── docs/                        # 設計ドキュメント
+├── completed-phases/            # 完了Phaseレポート
+│   ├── README.md                # Phase完了レポート一覧
+│   ├── PHASE2-COMPLETION-SUMMARY.md
+│   ├── PHASE3-COMPLETION-SUMMARY.md
+│   └── PHASE4-COMPLETION-REPORT.md
+├── design/                      # 設計ドキュメント
+│   ├── architecture.md          # システムアーキテクチャ
+│   └── api-design.md            # API設計
+├── docs/                        # 実装ガイド・チェックリスト
 │   ├── requirements.md          # 要件定義書（要件1-15）
 │   ├── design.md                # 詳細設計書
 │   ├── implementation-checklist.md  # 実装開始前チェックリスト（100項目以上）
@@ -15,23 +23,32 @@
 │   ├── environment-setup.md     # 環境セットアップ手順
 │   ├── troubleshooting.md       # トラブルシューティングガイド
 │   └── metrics-and-kpi.md       # メトリクスとKPI定義
-├── work-logs/                   # 作業記録（タスク実行履歴）
+├── work-logs/                   # 作業記録（Phase5進行中）
 │   ├── README.md                # 作業記録の記録方法
 │   ├── create-work-log.ps1      # 作業記録ファイル作成スクリプト
+│   ├── archive/                 # 完了Phase作業記録
+│   │   ├── README.md            # アーカイブ説明
+│   │   └── phase1-4/            # Phase1-4完了分（267ファイル）
 │   └── work-log-[YYYYMMDD-HHMMSS]-[作業概要].md  # 各作業記録
-├── improvements/                # 改善履歴（フィードバックループ）
+├── improvements/                # 改善履歴（Phase5進行中）
 │   ├── README.md                # 改善履歴の記録方法
 │   ├── create-improvement.ps1   # 改善履歴ファイル作成スクリプト
+│   ├── archive/                 # 完了Phase改善記録
+│   │   └── phase1/              # Phase1完了分（22ファイル）
 │   └── task-*-improvement-*.md  # 各改善記録
-└── templates/                   # テンプレートファイル
-    ├── package.json.example     # package.jsonのテンプレート
-    ├── .env.example             # 環境変数テンプレート
-    ├── cdk.context.json.example # CDK Context設定テンプレート
-    ├── test-fixtures/           # テスト用フィクスチャ
-    └── github-workflows/        # GitHub Actionsワークフロー
-        ├── test.yml             # テストワークフロー
-        ├── deploy.yml           # デプロイワークフロー
-        └── dependency-update.yml # 依存関係更新ワークフロー
+├── templates/                   # テンプレートファイル
+│   ├── package.json.example     # package.jsonのテンプレート
+│   ├── .env.example             # 環境変数テンプレート
+│   ├── cdk.context.json.example # CDK Context設定テンプレート
+│   ├── test-fixtures/           # テスト用フィクスチャ
+│   └── github-workflows/        # GitHub Actionsワークフロー
+│       ├── test.yml             # テストワークフロー
+│       ├── deploy.yml           # デプロイワークフロー
+│       └── dependency-update.yml # 依存関係更新ワークフロー
+├── .config.kiro                 # Kiro設定
+├── CHANGELOG.md                 # 変更履歴
+├── tasks-phase1-4.md            # Phase1-4タスク一覧（完了）
+└── tasks-phase5.md              # Phase5タスク一覧（進行中）
 ```
 
 ## 📚 ドキュメント体系

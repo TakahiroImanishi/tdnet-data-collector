@@ -520,3 +520,30 @@ steeringファイル（実装ガイドライン）の改善記録。
 
 - 2026-02-07: 初版作成
 - 2026-02-07: 改善記録の目的と使い分けを強化（判断基準、具体例、ベストプラクティスを追加）
+
+
+## アーカイブ
+
+完了したPhaseの改善記録は`archive/`に移動されます：
+
+### Phase1アーカイブ（22ファイル）
+
+- `archive/phase1/`: Phase1完了分
+  - docs-improvement-1～5
+  - general-improvement-10～11
+  - steering-improvement-1～3, 9
+  - steering-optimization-improvement-1
+  - task-1-improvement-1
+  - task-9.1-improvement-1～3
+  - task-9.1-comprehensive-analysis
+  - task-9.15-improvement-1
+  - task-15.7-improvement-1
+  - task-requirements-design-review-improvement-1
+  - task-review-improvement-1
+  - SUMMARY-phase1-completion
+
+### アーカイブ基準
+
+- Phase完了後、該当Phaseの改善記録を移動
+- 現在進行中のPhaseの改善記録は親フォルダに残す
+- SUMMARYファイルもアーカイブに含める
