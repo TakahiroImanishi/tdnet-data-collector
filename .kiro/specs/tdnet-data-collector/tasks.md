@@ -2418,7 +2418,7 @@
     - _推定工数: 2-3時間_
     - _関連: タスク15.18（Lambda関数実装済み）_
 
-  - [ ] 31.2.2 データ収集失敗の原因調査と修正（Critical）
+  - [-] 31.2.2 データ収集失敗の原因調査と修正（Critical）
     - CloudWatch Logsの詳細確認（全ログストリーム）
     - 環境変数の確認（TDNET_BASE_URL、S3_BUCKET、DYNAMODB_TABLE）
     - IAMロールの権限確認（S3、DynamoDB、CloudWatch Logs）
@@ -2438,6 +2438,26 @@
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
     - _関連: steering/core/error-handling-patterns.md_
+
+  - [x] 31.2.4 設計書の包括的更新（High）
+    - Lambda関数リストを7個に更新（Collector, Query, Export, Collect, Collect Status, Export Status, PDF Download）
+    - API認証方式を「API Gateway認証のみ」に変更（Lambda二重認証を削除）
+    - date_partition形式を`YYYY-MM`に統一（設計書: YYYY-MM-DD → 実装: YYYY-MM）
+    - DynamoDB GSI名を`GSI_DatePartition`に修正（設計書: GSI_DateRange → 実装: GSI_DatePartition）
+    - CloudFormation Outputsの詳細を追加（API Endpoint, API Key ID, Dashboard URL）
+    - API Keyのセキュリティベストプラクティスを明記（コスト最適化の理由を含む）
+    - 対象ファイル:
+      - `.kiro/specs/tdnet-data-collector/docs/design.md`
+      - `docs/architecture.md`（存在する場合）
+      - `README.md`（API認証の説明）
+    - _Requirements: 要件13.1（ドキュメント）_
+    - _優先度: 🟠 High_
+    - _推定工数: 2-3時間_
+    - _前提条件: タスク31.1.3.1完了_
+    - _関連: work-log-20260214-175135-design-implementation-gap-analysis.md_
+    - _完了: 2026-02-14 18:05_
+    - _成果物: design.md更新（Lambda関数リスト、API認証方式、date_partition形式、GSI名、コスト見積もり）_
+    - _注意: CloudFormation Outputsは既に詳細に記載されていることを確認_
 
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認

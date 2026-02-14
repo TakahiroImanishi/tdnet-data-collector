@@ -52,6 +52,15 @@ graph TB
         LPD[Lambda: PDF Download<br/>PDF署名付きURL生成<br/>30秒, 256MB]
     end
     
+    %% 注: 実装では7個のLambda関数が存在
+    %% 1. Collector: データ収集（TDnetスクレイピング、PDF保存）
+    %% 2. Query: データクエリ（DynamoDB検索、CSV/JSON変換）
+    %% 3. Export: データエクスポート（大量データの非同期エクスポート）
+    %% 4. Collect: 収集トリガー（POST /collect エンドポイント）
+    %% 5. Collect Status: 収集状態取得（GET /collect/{execution_id} エンドポイント）
+    %% 6. Export Status: エクスポート状態取得（GET /exports/{export_id} エンドポイント）
+    %% 7. PDF Download: PDF署名付きURL生成（GET /disclosures/{disclosure_id}/pdf エンドポイント）
+    
     subgraph "ストレージ層"
         DDB[(DynamoDB<br/>メタデータ)]
         DDBEX[(DynamoDB<br/>実行状態)]
@@ -645,6 +654,11 @@ GET /disclosures/{disclosure_id}/pdf
   - 理由: 二重認証は冗長であり、API Gateway認証のみで十分
   - 理由: Secrets Managerの使用を削減してコスト最適化（$0.81/月 → $0.40/月）
 
+**現在の認証方式（2026-02-14以降）:**
+- API Gateway: 使用量プランとAPIキー機能で認証
+- Lambda関数: 認証処理なし（API Gatewayで認証済み）
+- コスト削減: Secrets Manager API呼び出し削減（約$0.41/月削減）
+
 ### 5. DynamoDB（メタデータストレージ）
 
 **テーブル1: tdnet_disclosures（開示情報）**
@@ -671,10 +685,11 @@ GET /disclosures/{disclosure_id}/pdf
    - 用途: 企業コードと日付範囲での検索
 
 2. GSI_DatePartition
-   - パーティションキー: date_partition (String) # YYYY-MM形式
+   - パーティションキー: date_partition (String) # YYYY-MM形式（月単位パーティション）
    - ソートキー: disclosed_at
    - 用途: 月単位での効率的な検索
    - 備考: 月単位でパーティション分割し、日付範囲クエリを最適化
+   - 注意: 設計当初はYYYY-MM-DD形式を想定していたが、実装時にYYYY-MM形式に変更（クエリ効率向上のため）
 ```
 
 **テーブル2: tdnet_executions（実行状態）**
@@ -908,16 +923,23 @@ const webAcl = new wafv2.CfnWebACL(this, 'ApiWaf', {
 
 ```
 シークレット:
-- /tdnet/api-key: APIキー（API Gateway使用量プラン用、将来的なローテーション対応）
-- /tdnet/encryption-key: データ暗号化キー（将来的な機密データ用）
+- /tdnet/api-key: APIキー（API Gateway使用量プラン用）
+  - 用途: API Gateway認証のみ（Lambda関数からのアクセスは不要）
+  - ローテーション: 90日ごとに自動ローテーション（Phase 4で実装予定）
+  - アクセス制御: CDKデプロイ時のみ読み取り権限が必要
+- /tdnet/encryption-key: データ暗号化キー（将来的な機密データ用、現在未使用）
 
 アクセス制御:
 - CDKデプロイ時のみ読み取り権限が必要
 - Lambda関数からのアクセスは不要（API Gateway認証のみ）
 - ローテーション: 90日ごとに自動ローテーション（Phase 4で実装予定）
 
-注意: 2026-02-14以前はLambda関数でもSecrets Managerを使用していたが、
-      二重認証の冗長性とコスト最適化のため、API Gateway認証のみに統一。
+認証方式の変更履歴（2026-02-14）:
+- 変更前: API Gateway + Lambda二重認証（両方でSecrets Manager使用）
+- 変更後: API Gateway認証のみ（Lambda関数では認証処理なし）
+- 理由: API GatewayとLambda関数で異なるAPIキーを使用していた（設計ミス）
+- 理由: 二重認証は冗長であり、API Gateway認証のみで十分
+- 理由: Secrets Managerの使用を削減してコスト最適化（$0.81/月 → $0.40/月）
 ```
 
 **API Keyセキュリティベストプラクティス（非推奨・削除済み）**
@@ -1551,6 +1573,9 @@ export function generateDatePartition(disclosedAt: string): string {
      * 
      * @param disclosedAt - ISO8601形式の開示日時（例: "2024-01-15T15:00:00+09:00"）
      * @returns YYYY-MM形式の日付パーティション（例: "2024-01"）
+     * 
+     * @note 設計当初はYYYY-MM-DD形式を想定していたが、実装時にYYYY-MM形式に変更
+     *       理由: 月単位パーティションの方がDynamoDB GSIクエリ効率が高い
      * 
      * @example
      * generateDatePartition('2024-01-15T15:00:00+09:00') // => '2024-01'
@@ -2723,9 +2748,12 @@ describe('Smoke Tests', () => {
 
 | 項目 | 使用量 | 単価 | 月額 |
 |------|--------|------|------|
-| シークレット保存 | 2個 | $0.40/個 | $0.80 |
-| API呼び出し | 1,000回/月 | $0.05/10000 | $0.01 |
-| **Secrets Manager合計** | | | **$0.81** |
+| シークレット保存 | 1個（/tdnet/api-key） | $0.40/個 | $0.40 |
+| API呼び出し | 100回/月（CDKデプロイ時のみ） | $0.05/10000 | $0.00 |
+| **Secrets Manager合計** | | | **$0.40** |
+
+**注意**: 2026-02-14以前は2個のシークレット（$0.81/月）を使用していたが、
+Lambda関数での認証を削除したため、1個（$0.40/月）に削減。
 
 #### CloudTrail
 
@@ -2744,8 +2772,11 @@ describe('Smoke Tests', () => {
 | ストレージ（S3） | $0.34 |
 | ネットワーク（API Gateway + CloudFront） | $0.16 |
 | 監視（CloudWatch） | $7.50 |
-| セキュリティ（WAF + Secrets Manager + CloudTrail） | $7.82 |
-| **合計** | **$16.07/月** |
+| セキュリティ（WAF + Secrets Manager + CloudTrail） | $7.42 |
+| **合計** | **$15.67/月** |
+
+**注意**: 2026-02-14にSecrets Manager使用量を削減（$0.81 → $0.40）したため、
+総コストが$16.07/月から$15.67/月に削減されました（$0.40/月削減）。
 
 ### コスト最適化の提案
 
