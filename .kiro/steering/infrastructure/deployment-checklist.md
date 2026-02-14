@@ -53,8 +53,15 @@ fileMatchPattern: '**/cdk/**/*.ts|**/.github/workflows/**/*'
 
 ## ロールバック手順
 
-1. **緊急ロールバック**: `git checkout v1.2.3 && cdk deploy --profile prod`
-2. **データ整合性確認**: DynamoDB・S3のレコード数確認
+### 緊急ロールバック
+1. **CDKスタック**: `git checkout v1.2.3 && npm ci && npm run build && cdk deploy --context environment=prod`
+2. **DynamoDB PITR**: 最大35日前まで復元可能（`aws dynamodb restore-table-to-point-in-time`）
+3. **S3バージョニング**: 削除されたオブジェクトを復元可能
+
+### 詳細手順
+- **完全なロールバック手順**: `docs/rollback-procedures.md`を参照
+- **データ整合性確認**: DynamoDB・S3のレコード数確認
+- **CloudTrailログ**: 7年間保存（監査用）
 
 ## 環境別設定
 
