@@ -2785,15 +2785,17 @@
   - _推定工数: 1時間_
   - _関連: タスク31.2.6.7で発見_
 
-- [ ] 31.2.6.10 Secrets Manager APIキー形式の修正（Critical）
+- [x] 31.2.6.10 Secrets Manager APIキー形式の修正（Critical）
   - Secrets Managerの `/tdnet/api-key` の値を正しいJSON形式に修正
   - 現在: `{api_key:FOLg2JPZkvKSC83exwa7jWEhbVcNT4AD}` （無効）
-  - 修正後: `{"api_key":"FOLg2JPZkvKSC83exwa7jWEhbVcNT4AD"}` （有効）
-  - または、API Gateway APIキー値と同期: `{"api_key":"l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"}`
+  - 修正後: `{"api_key":"l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"}` （有効、prod環境APIキーと同期）
   - _Requirements: 要件11.4（APIキー管理）_
   - _優先度: 🔴 Critical_
   - _推定工数: 15分_
+  - _実績工数: 10分_
+  - _完了: 2026-02-14 23:38:26_
   - _関連: タスク31.2.6.7で発見_
+  - _作業記録: work-log-20260214-233826-task31-2-6-10-secrets-manager-fix.md_
 
 - [ ] 31.2.6.11 DynamoDBテーブル名の確認と修正（High）
   - 本番環境のDynamoDBテーブル名を確認
