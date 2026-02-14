@@ -11,9 +11,8 @@
 1. [前提条件](#前提条件)
 2. [デプロイ前準備](#デプロイ前準備)
 3. [CDK Bootstrap実行手順](#cdk-bootstrap実行手順)
-4. [Secrets Manager初期設定](#secrets-manager初期設定)
-5. [環境変数設定](#環境変数設定)
-6. [デプロイ実行](#デプロイ実行)
+4. [環境変数設定](#環境変数設定)
+5. [デプロイ実行](#デプロイ実行)
 7. [デプロイ後の動作確認](#デプロイ後の動作確認)
 8. [ロールバック手順](#ロールバック手順)
 9. [トラブルシューティング](#トラブルシューティング)
@@ -39,7 +38,6 @@
 - DynamoDB（テーブル作成・更新）
 - S3（バケット作成・管理）
 - IAM（ロール・ポリシー作成）
-- Secrets Manager（シークレット作成・読み取り）
 - CloudWatch（ログ・メトリクス・アラーム）
 - API Gateway（API作成・デプロイ）
 
@@ -163,60 +161,6 @@ aws s3 ls | Select-String "cdk"
 
 ---
 
-## Secrets Manager初期設定
-
-### 1. TDnet APIキーの登録
-
-TDnet APIキーをSecrets Managerに安全に保存します。
-
-```powershell
-# APIキーをSecrets Managerに登録
-aws secretsmanager create-secret `
-    --name /tdnet/api-key `
-    --description "TDnet API Key for production environment" `
-    --secret-string '{"api_key":"YOUR_ACTUAL_API_KEY_HERE"}' `
-    --region ap-northeast-1 `
-    --profile prod
-```
-
-**重要**: `YOUR_ACTUAL_API_KEY_HERE`を実際のAPIキーに置き換えてください。
-
-### 2. シークレットの確認
-
-```powershell
-# シークレットの存在確認
-aws secretsmanager describe-secret `
-    --secret-id /tdnet/api-key `
-    --region ap-northeast-1 `
-    --profile prod
-
-# シークレットの値を確認（テスト用）
-aws secretsmanager get-secret-value `
-    --secret-id /tdnet/api-key `
-    --region ap-northeast-1 `
-    --profile prod `
-    --query SecretString `
-    --output text
-```
-
-### 3. シークレットARNの取得
-
-```powershell
-# シークレットARNを取得（環境変数設定で使用）
-$secretArn = aws secretsmanager describe-secret `
-    --secret-id /tdnet/api-key `
-    --region ap-northeast-1 `
-    --profile prod `
-    --query ARN `
-    --output text
-
-Write-Host "Secret ARN: $secretArn"
-```
-
-**詳細手順**: [Secrets Manager設定手順書](./secrets-manager-setup.md)を参照
-
----
-
 ## 環境変数設定
 
 ### 1. .env.productionファイルの作成
@@ -262,11 +206,6 @@ S3_EXPORTS_BUCKET=tdnet-data-collector-exports-prod-123456789012
 S3_DASHBOARD_BUCKET=tdnet-dashboard-prod-123456789012
 
 # ========================================
-# Secrets Manager Configuration
-# ========================================
-API_KEY_SECRET_ARN=arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:/tdnet/api-key  # ← 実際のARNに置き換え
-
-# ========================================
 # Monitoring & Alerts
 # ========================================
 ALERT_SNS_TOPIC_ARN=arn:aws:sns:ap-northeast-1:123456789012:tdnet-alerts-prod  # ← 実際のARNに置き換え
@@ -296,8 +235,7 @@ if (Test-Path ".env.production") {
 # 必須項目の確認
 $requiredVars = @(
     "AWS_ACCOUNT_ID",
-    "AWS_REGION",
-    "API_KEY_SECRET_ARN"
+    "AWS_REGION"
 )
 
 $envContent = Get-Content ".env.production"
@@ -418,6 +356,255 @@ aws cloudformation describe-stacks `
     --query "Stacks[0].StackStatus"
 
 # 期待される出力: "CREATE_COMPLETE" または "UPDATE_COMPLETE"
+```
+
+---
+
+## Webダッシュボードのデプロイ
+
+### 概要
+
+Webダッシュボードは、TDnet Data Collectorの管理画面です。React製のSPAで、S3 + CloudFrontでホスティングされます。
+
+### 前提条件
+
+- CDKスタックのデプロイが完了していること
+- S3バケット（`tdnet-dashboard-prod-{account-id}`）が作成されていること
+- CloudFront Distributionが作成されていること
+- Node.js 20.x以上がインストールされていること
+
+### デプロイ手順
+
+#### ステップ1: ダッシュボードのビルド
+
+```powershell
+# dashboardディレクトリに移動
+cd dashboard
+
+# 依存関係のインストール（初回のみ）
+npm install
+
+# 本番環境用にビルド
+npm run build
+```
+
+**確認ポイント**:
+- ✅ `dashboard/build/` フォルダが作成される
+- ✅ `dashboard/build/index.html` が存在する
+- ✅ `dashboard/build/static/` フォルダが存在する
+- ✅ ビルドエラーがない
+
+**ビルド時間**: 約1-2分
+
+#### ステップ2: S3へのアップロード
+
+```powershell
+# プロジェクトルートに戻る
+cd ..
+
+# デプロイスクリプトを実行（本番環境）
+.\scripts\deploy-dashboard.ps1 -Environment prod
+```
+
+**スクリプトの実行内容**:
+1. AWS Account IDを取得
+2. ダッシュボードをビルド（`npm run build`）
+3. S3バケット（`tdnet-dashboard-prod-{account-id}`）の存在確認
+4. ビルドファイルをS3にアップロード
+   - 静的ファイル: `Cache-Control: public, max-age=31536000`（1年）
+   - `index.html`: `Cache-Control: public, max-age=60`（1分）
+5. CloudFront Distribution IDを取得
+6. CloudFront Invalidation実行（`/*`）
+7. CloudFront URLを表示
+
+**実行時間**: 約2-3分
+
+**期待される出力**:
+```
+AWS Account IDを取得中...
+Account ID: 123456789012
+
+ダッシュボードをビルド中...
+ビルド完了
+
+S3バケットの存在確認中...
+S3バケット確認完了
+
+S3へファイルをアップロード中...
+index.htmlをアップロード中...
+S3アップロード完了
+
+CloudFront Distribution IDを取得中...
+Distribution ID: E1234567890ABC
+
+CloudFront Invalidationを実行中...
+Invalidation ID: I1234567890ABC
+
+デプロイ完了!
+CloudFront URLでダッシュボードにアクセスできます
+
+ダッシュボードURL: https://d1vjw7l2clz6ji.cloudfront.net
+```
+
+#### ステップ3: CloudFront Invalidationの完了待機
+
+CloudFront Invalidationは通常5-10分かかります。完了を待機する場合：
+
+```powershell
+# Invalidation状態を確認
+$distributionId = "E1234567890ABC"  # 実際のDistribution IDに置き換え
+$invalidationId = "I1234567890ABC"  # 実際のInvalidation IDに置き換え
+
+aws cloudfront get-invalidation `
+    --distribution-id $distributionId `
+    --id $invalidationId `
+    --query "Invalidation.Status"
+
+# 期待される出力: "InProgress" → "Completed"
+```
+
+#### ステップ4: ダッシュボードの動作確認
+
+ブラウザでCloudFront URLにアクセスし、以下を確認：
+
+**基本動作確認**:
+- [ ] ダッシュボードが正常に表示される
+- [ ] ログイン画面が表示される（APIキー入力）
+- [ ] APIキーを入力してログインできる
+
+**機能確認**:
+- [ ] データ収集機能が動作する（POST /collect）
+- [ ] 開示情報検索機能が動作する（GET /disclosures）
+- [ ] PDFダウンロード機能が動作する（GET /disclosures/{id}/pdf）
+- [ ] データエクスポート機能が動作する（POST /exports）
+- [ ] 実行状態確認機能が動作する（GET /collect/{execution_id}）
+
+**パフォーマンス確認**:
+- [ ] ページ読み込み時間 < 3秒
+- [ ] API応答時間 < 2秒
+- [ ] PDFダウンロード時間 < 5秒
+
+### トラブルシューティング
+
+#### 問題1: "Access Denied"エラー
+
+**症状**: CloudFront URLにアクセスすると"Access Denied"エラーが表示される
+
+**原因**:
+- S3バケットポリシーが正しく設定されていない
+- CloudFront OAI（Origin Access Identity）が正しく設定されていない
+- ダッシュボードがS3にアップロードされていない
+
+**解決策**:
+
+```powershell
+# S3バケットの存在確認
+$accountId = aws sts get-caller-identity --query Account --output text
+aws s3 ls s3://tdnet-dashboard-prod-$accountId/
+
+# S3バケットポリシーの確認
+aws s3api get-bucket-policy --bucket tdnet-dashboard-prod-$accountId
+
+# CloudFront OAIの確認
+$distributionId = aws cloudfront list-distributions --query "DistributionList.Items[?contains(Origins.Items[0].DomainName, 'tdnet-dashboard')].Id | [0]" --output text
+aws cloudfront get-distribution --id $distributionId --query "Distribution.DistributionConfig.Origins.Items[0].S3OriginConfig.OriginAccessIdentity"
+
+# ダッシュボードを再デプロイ
+.\scripts\deploy-dashboard.ps1 -Environment prod
+```
+
+#### 問題2: API接続エラー
+
+**症状**: ダッシュボードは表示されるが、API呼び出しでエラーが発生
+
+**原因**:
+- API GatewayのCORS設定が正しくない
+- APIキーが正しくない
+- API Gatewayエンドポイントが正しくない
+
+**解決策**:
+
+```powershell
+# API Gatewayエンドポイントを確認
+aws cloudformation describe-stacks `
+    --stack-name TdnetDataCollectorStack-prod `
+    --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" `
+    --output text
+
+# APIキーを確認
+aws secretsmanager get-secret-value `
+    --secret-id /tdnet/api-key `
+    --query SecretString `
+    --output text
+
+# CORS設定を確認（API Gatewayコンソールで確認）
+# https://console.aws.amazon.com/apigateway/home?region=ap-northeast-1
+```
+
+#### 問題3: 404エラー
+
+**症状**: 特定のページで404エラーが発生
+
+**原因**:
+- CloudFront Invalidationが完了していない
+- SPAのルーティング設定が正しくない
+
+**解決策**:
+
+```powershell
+# CloudFront Invalidationを再実行
+$distributionId = aws cloudfront list-distributions --query "DistributionList.Items[?contains(Origins.Items[0].DomainName, 'tdnet-dashboard')].Id | [0]" --output text
+aws cloudfront create-invalidation --distribution-id $distributionId --paths "/*"
+
+# Invalidation完了を待機（5-10分）
+aws cloudfront wait invalidation-completed --distribution-id $distributionId --id <invalidation-id>
+```
+
+#### 問題4: ビルドエラー
+
+**症状**: `npm run build`でエラーが発生
+
+**原因**:
+- Node.jsバージョンが古い
+- 依存関係が正しくインストールされていない
+- TypeScriptコンパイルエラー
+
+**解決策**:
+
+```powershell
+# Node.jsバージョン確認
+node --version  # 20.x以上が必要
+
+# 依存関係を再インストール
+cd dashboard
+Remove-Item -Recurse -Force node_modules
+Remove-Item package-lock.json
+npm install
+
+# ビルド再実行
+npm run build
+```
+
+### デプロイ後の確認
+
+#### CloudFront URLの取得
+
+```powershell
+# CloudFront Distribution IDを取得
+$accountId = aws sts get-caller-identity --query Account --output text
+$bucketName = "tdnet-dashboard-prod-$accountId"
+$distributionId = aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?DomainName=='$bucketName.s3.amazonaws.com']].Id | [0]" --output text
+
+# CloudFront URLを取得
+$distributionDomain = aws cloudfront get-distribution --id $distributionId --query "Distribution.DomainName" --output text
+Write-Host "ダッシュボードURL: https://$distributionDomain"
+```
+
+#### アクセスログの確認
+
+```powershell
+# CloudFrontアクセスログを確認（ログが有効化されている場合）
+aws s3 ls s3://tdnet-cloudfront-logs-prod-$accountId/ --recursive
 ```
 
 ---
@@ -747,38 +934,7 @@ aws configure get region --profile prod
 aws configure set region ap-northeast-1 --profile prod
 ```
 
-### 問題2: Secrets Managerにアクセスできない
-
-**症状**: Lambda関数がSecrets ManagerからAPIキーを取得できない
-
-**原因**:
-- シークレットが存在しない
-- IAMロールに権限がない
-- シークレットARNが正しくない
-
-**解決策**:
-
-```powershell
-# シークレットの存在を確認
-aws secretsmanager describe-secret `
-    --secret-id /tdnet/api-key `
-    --region ap-northeast-1 `
-    --profile prod
-
-# Lambda実行ロールの権限を確認
-aws iam get-role-policy `
-    --role-name tdnet-collector-prod-role `
-    --policy-name SecretsManagerAccess `
-    --profile prod
-
-# 環境変数のシークレットARNを確認
-aws lambda get-function-configuration `
-    --function-name tdnet-collector-prod `
-    --profile prod `
-    --query "Environment.Variables.API_KEY_SECRET_ARN"
-```
-
-### 問題3: Lambda関数が実行されない
+### 問題2: Lambda関数が実行されない
 
 **症状**: Lambda関数の実行でエラーが発生
 
@@ -812,7 +968,7 @@ aws lambda get-function `
 aws logs tail /aws/lambda/tdnet-collector-prod --follow --profile prod
 ```
 
-### 問題4: DynamoDBにデータが保存されない
+### 問題3: DynamoDBにデータが保存されない
 
 **症状**: DynamoDBテーブルが空
 
@@ -845,7 +1001,7 @@ aws dynamodb scan `
     --profile prod
 ```
 
-### 問題5: S3にファイルが保存されない
+### 問題4: S3にファイルが保存されない
 
 **症状**: S3バケットが空
 
@@ -875,7 +1031,7 @@ aws s3api get-bucket-policy `
     --profile prod
 ```
 
-### 問題6: デプロイが途中で失敗する
+### 問題5: デプロイが途中で失敗する
 
 **症状**: `cdk deploy`が途中で失敗する
 
@@ -908,7 +1064,7 @@ aws cloudformation delete-stack `
 .\scripts\deploy-prod.ps1
 ```
 
-### 問題7: コストが予想より高い
+### 問題6: コストが予想より高い
 
 **症状**: AWS Budgetsアラートが頻繁に発生
 
@@ -1021,7 +1177,6 @@ aws sns list-subscriptions-by-topic `
 ## 関連ドキュメント
 
 - [CDK Bootstrapガイド](./cdk-bootstrap-guide.md)
-- [Secrets Manager設定手順書](./secrets-manager-setup.md)
 - [環境変数設定ガイド](./ssm-parameter-store-setup.md)
 - [スモークテストガイド](./.kiro/specs/tdnet-data-collector/docs/deployment-smoke-test.md)
 - [コスト監視ガイド](./cost-monitoring.md)

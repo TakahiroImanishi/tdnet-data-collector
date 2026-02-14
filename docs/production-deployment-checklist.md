@@ -26,7 +26,6 @@
 ### 3. セキュリティ確認
 
 - [x] IAMロール最小権限化
-- [x] Secrets Manager設定
 - [x] WAF設定
 - [x] CloudTrail有効化
 - [x] S3バケット暗号化
@@ -64,10 +63,6 @@
    - 本番環境のAWSアカウントIDを設定
    - 本番環境のリージョンを設定
 
-3. **Secrets Managerの準備**
-   - TDnet APIキーを登録
-   - シークレットARNを取得
-
 ### ステップ1: CDK Bootstrap（初回のみ）
 
 ```powershell
@@ -85,27 +80,7 @@ npx cdk bootstrap aws://$accountId/ap-northeast-1
 aws cloudformation describe-stacks --stack-name CDKToolkit
 ```
 
-### ステップ2: Secrets Manager設定
-
-```powershell
-# TDnet APIキーを登録
-aws secretsmanager create-secret `
-    --name /tdnet/api-key `
-    --description "TDnet API Key for production environment" `
-    --secret-string '{"api_key":"YOUR_ACTUAL_API_KEY_HERE"}' `
-    --region ap-northeast-1
-
-# シークレットARNを取得
-$secretArn = aws secretsmanager describe-secret `
-    --secret-id /tdnet/api-key `
-    --region ap-northeast-1 `
-    --query ARN `
-    --output text
-
-Write-Host "Secret ARN: $secretArn"
-```
-
-### ステップ3: 環境変数設定
+### ステップ2: 環境変数設定
 
 `.env.production`ファイルを編集：
 
@@ -113,10 +88,11 @@ Write-Host "Secret ARN: $secretArn"
 ENVIRONMENT=prod
 AWS_REGION=ap-northeast-1
 AWS_ACCOUNT_ID=123456789012  # 実際のアカウントIDに置き換え
-API_KEY_SECRET_ARN=arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:/tdnet/api-key  # 実際のARNに置き換え
 ```
 
-### ステップ4: TypeScriptビルド（必須）
+**注意**: API認証は API Gateway レベルで実施されるため、Lambda関数内での認証設定は不要です。
+
+### ステップ3: TypeScriptビルド（必須）
 
 ```powershell
 # Lambda関数をビルド
@@ -134,7 +110,7 @@ Test-Path dist/src/lambda/query/index.js
 
 **重要**: このステップを省略すると、Lambda関数のデプロイに失敗します。
 
-### ステップ5: CDK Synth（検証）
+### ステップ4: CDK Synth（検証）
 
 ```powershell
 cd cdk
@@ -143,7 +119,7 @@ npx cdk synth --context environment=prod
 
 **確認**: エラーなくCloudFormationテンプレートが生成されること
 
-### ステップ6: CDK Diff（差分確認）
+### ステップ5: CDK Diff（差分確認）
 
 ```powershell
 cd cdk
@@ -152,7 +128,7 @@ npx cdk diff --context environment=prod
 
 **確認**: 意図しないリソースの削除がないこと
 
-### ステップ7: CDK Deploy（デプロイ実行）
+### ステップ6: CDK Deploy（デプロイ実行）
 
 #### 方法A: 分割スタックデプロイ（推奨）
 
@@ -193,7 +169,7 @@ npx cdk deploy --context environment=prod --require-approval always
 - すべてのDynamoDBテーブルが作成された
 - すべてのS3バケットが作成された
 
-### ステップ8: Webダッシュボードのデプロイ（必須）
+### ステップ7: Webダッシュボードのデプロイ（必須）
 
 #### 8.1 ダッシュボードのビルド
 
@@ -262,7 +238,7 @@ Write-Host "ダッシュボードURL: https://$distributionDomain"
 - API接続エラー → API GatewayのCORS設定とAPIキーを確認
 - 404エラー → CloudFront Invalidationが完了しているか確認
 
-### ステップ9: デプロイ後確認
+### ステップ8: デプロイ後確認
 
 #### 9.1 リソース確認
 
@@ -418,21 +394,7 @@ npx cdk deploy --context environment=prod
 - CloudFormation、Lambda、DynamoDB、S3、IAMの権限を確認
 - AdministratorAccessまたは同等の権限が必要
 
-### 問題2: Secrets Managerアクセスエラー
-
-**原因**: シークレットが存在しない、またはARNが間違っている
-
-**解決策**:
-```powershell
-# シークレット確認
-aws secretsmanager describe-secret --secret-id /tdnet/api-key
-
-# シークレット再作成
-aws secretsmanager delete-secret --secret-id /tdnet/api-key --force-delete-without-recovery
-aws secretsmanager create-secret --name /tdnet/api-key --secret-string '{"api_key":"YOUR_KEY"}'
-```
-
-### 問題3: Lambda実行エラー
+### 問題2: Lambda実行エラー
 
 **原因**: 環境変数未設定、IAM権限不足
 
@@ -470,7 +432,6 @@ aws logs tail /aws/lambda/tdnet-collector-prod --follow
 
 - [本番環境デプロイ手順書](./production-deployment-guide.md)
 - [スタック分割設計](./stack-split-design.md) - 推奨デプロイ方式
-- [スモークテストガイド](./smoke-test-guide.md)
 - [運用マニュアル](./operations-manual.md)
 - [トラブルシューティングガイド](./troubleshooting-guide.md)
 - [ロールバック手順](./rollback-procedures.md)

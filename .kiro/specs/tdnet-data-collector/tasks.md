@@ -1,4 +1,4 @@
-# Implementation Plan: TDnet Data Collector
+﻿# Implementation Plan: TDnet Data Collector
 
 ## Overview
 
@@ -2857,15 +2857,18 @@
   - _結果: ✅ html_previewをBase64エンコードして出力。エンコーディングエラー解消。ユニットテスト17個成功_
   - _作業記録: work-log-20260214-233836-task31-2-6-12-cloudwatch-encoding.md_
 
-- [ ] 31.3 設計と実装の整合性修正（Phase 1: Critical）
+- [x] 31.3 設計と実装の整合性修正（Phase 1: Critical）
   - 設計書と実装の不整合を修正（26件発見）
   - サブエージェント並列実行で効率化
   - _Requirements: 全要件_
   - _優先度: 🔴 Critical_
   - _推定工数: 14-21時間（並列実行で5-7時間）_
   - _関連: work-log-20260215-001524-design-implementation-alignment-summary.md_
+  - _完了: 2026-02-15 06:57, 全22個のサブタスク完了_
+  - _作業記録: work-log-20260215-065016-task31-3-remaining-critical.md_
+  - _テスト結果: プロパティテスト7/7、CloudWatch Logsテスト9/9、WAF Constructテスト10/10_
   
-  - [ ] 31.3.1 Disclosureモデルのフィールド修正（Critical）
+  - [x] 31.3.1 Disclosureモデルのフィールド修正（Critical）
     - `pdf_url` と `s3_key` をオプショナルに変更
     - `s3_key` → `pdf_s3_key` にリネーム
     - `collected_at` → `downloaded_at` にリネーム
@@ -2881,7 +2884,7 @@
     - _破壊的変更: 既存データの移行が必要_
     - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合1, 2, 5）_
   
-  - [ ] 31.3.2 CloudWatch Logsの保持期間設定（Critical）
+  - [x] 31.3.2 CloudWatch Logsの保持期間設定（Critical）
     - `cdk/lib/stacks/monitoring-stack.ts` にLogGroup追加
     - 9個のLambda関数のログ保持期間を設定
       - 本番環境: 3ヶ月（Collector）、1ヶ月（その他）
