@@ -8,6 +8,7 @@
  */
 
 import axios, { AxiosError } from 'axios';
+import * as iconv from 'iconv-lite';
 import { parseDisclosureList, DisclosureMetadata } from '../../scraper/html-parser';
 import { RateLimiter } from '../../utils/rate-limiter';
 import { retryWithBackoff } from '../../utils/retry';
@@ -221,17 +222,39 @@ function decodeShiftJIS(buffer: ArrayBuffer | string): string {
   }
 
   try {
-    // TextDecoderを使用してShift_JISをデコード
-    const decoder = new TextDecoder('shift_jis');
-    return decoder.decode(buffer);
+    // iconv-liteを使用してShift_JISをデコード
+    // ArrayBufferをBufferに変換
+    const uint8Array = new Uint8Array(buffer);
+    const nodeBuffer = Buffer.from(uint8Array);
+    
+    // Shift_JISからUTF-8にデコード
+    const decoded = iconv.decode(nodeBuffer, 'shift_jis');
+    
+    logger.debug('Shift_JIS decoded successfully', {
+      buffer_size: nodeBuffer.length,
+      decoded_length: decoded.length,
+    });
+    
+    return decoded;
   } catch (error) {
     logger.error('Failed to decode Shift_JIS', {
       error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
+    
     // フォールバック: UTF-8として解釈
-    const decoder = new TextDecoder('utf-8');
-    return decoder.decode(buffer);
+    try {
+      const uint8Array = new Uint8Array(buffer);
+      const nodeBuffer = Buffer.from(uint8Array);
+      return iconv.decode(nodeBuffer, 'utf-8');
+    } catch (fallbackError) {
+      logger.error('Fallback UTF-8 decode also failed', {
+        error_type: fallbackError instanceof Error ? fallbackError.constructor.name : 'Unknown',
+        error_message: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+      });
+      // 最終フォールバック: 空文字列を返す
+      return '';
+    }
   }
 }
 
