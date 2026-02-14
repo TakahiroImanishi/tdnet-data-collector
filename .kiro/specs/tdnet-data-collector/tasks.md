@@ -2661,14 +2661,73 @@
   - [-] 31.2.6.6 ユニットテスト実施（High）
     - 修正内容のユニットテストを実行
     - テスト手順:
-      - [ ] ユニットテストを実行（`npm test`）
+      - [x] ユニットテストを実行（`npm test`）
       - [ ] テスト結果を確認（すべてのテストが成功すること）
       - [ ] カバレッジレポートを確認（80%以上）
+    - テスト結果:
+      - Shift_JISデコード: 35/35テスト成功 ✅
+      - HTMLパーサー: 17/17テスト成功 ✅
+      - 全体: 1000/1175テスト成功（85.1%）
+      - 失敗: 175件（CloudTrail未実装、セキュリティ強化未実装、retry.test.ts構文エラー、pdf-download handler 3件）
     - _Requirements: 要件14.1（ユニットテスト）_
-    - _優先度: � High_
+    - _優先度: 🟠 High_
     - _推定工数: 30分_
     - _前提条件: タスク31.2.6.3, 31.2.6.4完了（修正実装完了）_
+    - _完了: 2026-02-14 22:40（部分的完了）_
+    - _作業記録: work-log-20260214-223540-unit-test-execution.md_
+    - _次のアクション: タスク31.2.6.6.1でテスト失敗を修正_
 
+  - [ ] 31.2.6.6.1 retry.test.ts構文エラー修正（High）
+    - TypeScript構文エラーを修正
+    - 修正対象ファイル:
+      - `src/utils/__tests__/retry.test.ts` - 538行目の構文エラー
+    - エラー内容:
+      - `error TS1128: Declaration or statement expected.`
+      - 538行目: `});` の位置が不正
+    - 修正内容:
+      - [ ] 538行目周辺のコードを確認
+      - [ ] 閉じ括弧の位置を修正
+      - [ ] テストを再実行して成功を確認
+    - _Requirements: 要件14.1（ユニットテスト）_
+    - _優先度: 🟠 High_
+    - _推定工数: 15分_
+
+  - [ ] 31.2.6.6.2 pdf-download handlerテスト修正（Medium）
+    - Secrets Manager関連のテスト失敗を修正（3件）
+    - 修正対象ファイル:
+      - `src/lambda/api/pdf-download/__tests__/handler.test.ts`
+    - 失敗テスト:
+      - API_KEY_SECRET_ARN環境変数が未設定の場合は500エラーを返す → 401エラーが返される
+      - Secrets Managerからの取得に失敗した場合は500エラーを返す → 401エラーが返される
+      - Secrets ManagerのSecretStringが空の場合は500エラーを返す → 401エラーが返される
+    - 修正方針:
+      - [ ] API Gateway認証のみに変更したため、Secrets Managerエラーは発生しない
+      - [ ] テストケースを削除または期待値を401に変更
+    - _Requirements: 要件11.1（API認証）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 30分_
+
+  - [ ] 31.2.6.6.3 CloudTrailテスト無効化（Low）
+    - CloudTrailはPhase 4の機能で未実装のため、テストを無効化
+    - 修正対象ファイル:
+      - `cdk/__tests__/cloudtrail.test.ts`
+    - 修正内容:
+      - [ ] テストファイル全体を`describe.skip`で無効化
+      - [ ] コメントで「Phase 4で実装予定」と記載
+    - _Requirements: 要件13.2（監査ログ）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 5分_
+
+  - [ ] 31.2.6.6.4 セキュリティ強化テスト無効化（Low）
+    - APIキーローテーション機能はPhase 4で未実装のため、テストを無効化
+    - 修正対象ファイル:
+      - `cdk/__tests__/security-hardening.test.ts`
+    - 修正内容:
+      - [ ] ローテーション関連のテストを`describe.skip`で無効化
+      - [ ] コメントで「Phase 4で実装予定」と記載
+    - _Requirements: 要件11.4（APIキー管理）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 5分_
   - [ ] 31.2.6.7 本番環境でのデータ収集検証（Critical）
     - 本番環境でデータ収集テストを実行
     - データ収集テスト:
