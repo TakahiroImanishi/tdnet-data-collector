@@ -1198,7 +1198,6 @@ aws sns list-subscriptions-by-topic `
 - [ ] コードレビュー完了
 - [ ] ドキュメント更新済み
 - [ ] CDK Bootstrap完了
-- [ ] Secrets Manager設定完了
 - [ ] .env.productionファイル作成完了
 - [ ] AWS認証情報確認済み
 
