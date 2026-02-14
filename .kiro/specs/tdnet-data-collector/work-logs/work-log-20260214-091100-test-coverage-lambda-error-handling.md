@@ -97,3 +97,87 @@
 
 ### 09:35 - テスト実行・カバレッジ確認
 
+
+
+**カバレッジ結果:**
+- Branches: 78.62% (目標80%未達)
+
+**問題点:**
+1. Secrets Managerのエラーハンドリングテストが複雑
+   - グローバルスコープのキャッシュ変数により、TEST_ENV=e2eが優先される
+   - jest.isolateModulesを使用した複雑なモック設定が必要
+   
+2. 追加したテストケースだけでは不十分
+   - createExportJob失敗テスト: 追加済み
+   - queryDisclosures失敗テスト: 追加済み
+   - しかし、カバレッジは0.13%しか向上せず
+
+### 09:40 - 代替アプローチの検討
+
+**カバレッジ向上のための代替案:**
+
+1. **他のLambda関数のエラーハンドリングテスト追加**
+   - `src/lambda/api/pdf-download/handler.ts` (76% branches)
+   - `src/lambda/collect-status/handler.ts` (76.92% branches)
+   - `src/lambda/dlq-processor/index.ts` (76.47% branches)
+
+2. **未使用のエラークラステスト追加**
+   - `src/errors/index.ts` (80.95% lines, 71.42% functions)
+   - `RateLimitError`と`ConfigurationError`が未使用
+
+3. **他のユーティリティ関数のエッジケーステスト**
+   - `src/utils/cloudwatch-metrics.ts` (80% branches)
+   - `src/utils/logger.ts` (87.5% branches)
+
+**結論:**
+- 現在のアプローチでは80%達成が困難
+- より多くのファイルに対して、簡単にカバレッジを向上できるテストを追加する必要がある
+- 時間制約を考慮し、最も効果的なファイルに焦点を当てる
+
+### 09:45 - 作業完了・申し送り
+
+**成果物:**
+1. Lambda関数エラーハンドリングテスト追加
+   - `src/lambda/export/__tests__/handler.test.ts`: createExportJob失敗テスト
+   - `src/lambda/query/__tests__/handler.test.ts`: queryDisclosures失敗テスト
+
+2. カバレッジ結果
+   - Branches: 78.62% (開始時: 78.75%)
+   - 目標80%未達
+
+**問題点:**
+- Secrets Managerのグローバルキャッシュにより、本番環境モードのテストが困難
+- 追加したテストケースだけでは、カバレッジ向上効果が限定的
+
+**申し送り事項:**
+
+1. **Secrets Managerテストの改善方法:**
+   - handler.tsのグローバル変数をリセットする仕組みを追加
+   - または、APIキー取得ロジックを別モジュールに分離してモック可能にする
+   - 例: `src/utils/api-key-manager.ts`を作成し、依存性注入パターンを使用
+
+2. **カバレッジ80%達成のための追加作業:**
+   - pdf-download/handler.ts: S3エラーハンドリングテスト追加
+   - collect-status/handler.ts: DynamoDBエラーハンドリングテスト追加
+   - dlq-processor/index.ts: DLQ処理エラーハンドリングテスト追加
+   - cloudwatch-metrics.ts: メトリクス送信失敗テスト追加
+
+3. **推奨される次のステップ:**
+   - 各Lambda関数のエラーハンドリングパスを体系的に洗い出す
+   - カバレッジレポートの詳細を確認し、未カバーの分岐を特定
+   - 優先度の高い順にテストを追加（影響範囲が大きいファイルから）
+
+**テスト実行コマンド:**
+```powershell
+# カバレッジ確認
+npm run test:coverage
+
+# 特定のファイルのみテスト
+npm test -- src/lambda/export/__tests__/handler.test.ts
+npm test -- src/lambda/query/__tests__/handler.test.ts
+```
+
+**Git commit未実施:**
+- カバレッジ目標未達のため、コミットは保留
+- 追加作業完了後にまとめてコミット推奨
+
