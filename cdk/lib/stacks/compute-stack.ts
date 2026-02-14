@@ -34,6 +34,8 @@ export class TdnetComputeStack extends cdk.Stack {
   public readonly collectStatusFunction: lambda.Function;
   public readonly exportStatusFunction: lambda.Function;
   public readonly pdfDownloadFunction: lambda.Function;
+  public readonly healthFunction: lambda.Function;
+  public readonly statsFunction: lambda.Function;
   public readonly dlq: LambdaDLQ;
 
   constructor(scope: Construct, id: string, props: TdnetComputeStackProps) {
@@ -344,6 +346,97 @@ export class TdnetComputeStack extends cdk.Stack {
       })
     );
 
+    // 8. Health Function
+    this.healthFunction = new NodejsFunction(this, 'HealthFunction', {
+      functionName: `tdnet-health-${env}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: 'src/lambda/health/handler.ts',
+      handler: 'handler',
+      timeout: cdk.Duration.seconds(envConfig.health.timeout),
+      memorySize: envConfig.health.memorySize,
+      environment: {
+        DYNAMODB_TABLE_NAME: props.disclosuresTable.tableName,
+        S3_BUCKET_NAME: props.pdfsBucket.bucketName,
+        LOG_LEVEL: envConfig.health.logLevel,
+        ENVIRONMENT: env,
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
+      },
+    });
+
+    // DynamoDBテーブルのDescribe権限を付与
+    this.healthFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['dynamodb:DescribeTable'],
+        resources: [props.disclosuresTable.tableArn],
+      })
+    );
+
+    // S3バケットのHeadBucket権限を付与
+    this.healthFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['s3:HeadBucket'],
+        resources: [props.pdfsBucket.bucketArn],
+      })
+    );
+
+    this.healthFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/Health',
+          },
+        },
+      })
+    );
+
+    // 9. Stats Function
+    this.statsFunction = new NodejsFunction(this, 'StatsFunction', {
+      functionName: `tdnet-stats-${env}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: 'src/lambda/stats/handler.ts',
+      handler: 'handler',
+      timeout: cdk.Duration.seconds(envConfig.stats.timeout),
+      memorySize: envConfig.stats.memorySize,
+      environment: {
+        DYNAMODB_TABLE_NAME: props.disclosuresTable.tableName,
+        LOG_LEVEL: envConfig.stats.logLevel,
+        ENVIRONMENT: env,
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
+      },
+    });
+
+    props.disclosuresTable.grantReadData(this.statsFunction);
+
+    this.statsFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['cloudwatch:PutMetricData'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'cloudwatch:namespace': 'TDnet/Stats',
+          },
+        },
+      })
+    );
+
     // ========================================
     // CloudFormation Outputs
     // ========================================
@@ -381,6 +474,16 @@ export class TdnetComputeStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'PdfDownloadFunctionArn', {
       value: this.pdfDownloadFunction.functionArn,
       exportName: `TdnetPdfDownloadFunctionArn-${env}`,
+    });
+
+    new cdk.CfnOutput(this, 'HealthFunctionArn', {
+      value: this.healthFunction.functionArn,
+      exportName: `TdnetHealthFunctionArn-${env}`,
+    });
+
+    new cdk.CfnOutput(this, 'StatsFunctionArn', {
+      value: this.statsFunction.functionArn,
+      exportName: `TdnetStatsFunctionArn-${env}`,
     });
   }
 }

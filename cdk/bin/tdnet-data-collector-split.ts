@@ -86,6 +86,8 @@ const apiStack = new TdnetApiStack(app, `TdnetApi-${environment}`, {
   collectStatusFunction: computeStack.collectStatusFunction,
   exportStatusFunction: computeStack.exportStatusFunction,
   pdfDownloadFunction: computeStack.pdfDownloadFunction,
+  healthFunction: computeStack.healthFunction,
+  statsFunction: computeStack.statsFunction,
 });
 
 // API StackはCompute Stackに依存
@@ -106,6 +108,8 @@ const monitoringStack = new TdnetMonitoringStack(app, `TdnetMonitoring-${environ
     collectStatus: computeStack.collectStatusFunction,
     exportStatus: computeStack.exportStatusFunction,
     pdfDownload: computeStack.pdfDownloadFunction,
+    health: computeStack.healthFunction,
+    stats: computeStack.statsFunction,
   },
   dynamodbTables: {
     disclosures: foundationStack.disclosuresTable,

@@ -18,6 +18,8 @@ export interface TdnetApiStackProps extends cdk.StackProps {
   collectStatusFunction: lambda.IFunction;
   exportStatusFunction: lambda.IFunction;
   pdfDownloadFunction: lambda.IFunction;
+  healthFunction: lambda.IFunction;
+  statsFunction: lambda.IFunction;
 }
 
 export class TdnetApiStack extends cdk.Stack {
@@ -238,6 +240,26 @@ export class TdnetApiStack extends cdk.Stack {
 
     pdfResource.addMethod('GET', pdfDownloadIntegration, {
       apiKeyRequired: true,
+    });
+
+    // GET /health
+    const healthResource = this.api.root.addResource('health');
+    const healthIntegration = new apigateway.LambdaIntegration(props.healthFunction, {
+      proxy: true,
+    });
+
+    healthResource.addMethod('GET', healthIntegration, {
+      apiKeyRequired: false, // ヘルスチェックは認証不要
+    });
+
+    // GET /stats
+    const statsResource = this.api.root.addResource('stats');
+    const statsIntegration = new apigateway.LambdaIntegration(props.statsFunction, {
+      proxy: true,
+    });
+
+    statsResource.addMethod('GET', statsIntegration, {
+      apiKeyRequired: true, // 統計情報は認証必要
     });
 
     // ========================================

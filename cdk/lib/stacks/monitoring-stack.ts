@@ -25,6 +25,8 @@ export interface TdnetMonitoringStackProps extends cdk.StackProps {
     collectStatus: lambda.IFunction;
     exportStatus: lambda.IFunction;
     pdfDownload: lambda.IFunction;
+    health: lambda.IFunction;
+    stats: lambda.IFunction;
   };
   dynamodbTables: {
     disclosures: dynamodb.ITable;

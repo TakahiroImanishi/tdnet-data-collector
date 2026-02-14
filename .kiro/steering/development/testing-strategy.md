@@ -5,96 +5,42 @@ fileMatchPattern: '**/*.test.ts|**/*.spec.ts'
 
 # テスト戦略
 
-## テスト比率
+## テスト比率・カバレッジ
 
-- **ユニットテスト**: 70% - 個別関数、ビジネスロジック、バリデーション
-- **統合テスト**: 20% - AWS SDK、DynamoDB、S3との統合
-- **E2Eテスト**: 10% - API経由の完全なフロー
-
-## カバレッジ目標
-
-| 項目 | 目標 |
-|------|------|
-| ライン | 80%以上 |
-| ブランチ | 75%以上 |
-| 関数 | 85%以上 |
-
-## テストパターン
-
-### ユニットテスト
-
-```typescript
-describe('validateCompanyCode', () => {
-    it('有効な4桁コードを受け入れる', () => {
-        expect(() => validateCompanyCode('7203')).not.toThrow();
-    });
-});
-
-// プロパティテスト
-import fc from 'fast-check';
-fc.assert(fc.property(fc.integer({ min: 1000, max: 9999 }), (code) => {
-    expect(() => validateCompanyCode(code.toString())).not.toThrow();
-}));
-```
-
-### 統合テスト
-
-```typescript
-// DynamoDB Local使用
-const client = DynamoDBDocumentClient.from(new DynamoDBClient({
-    endpoint: 'http://localhost:8000',
-    region: 'ap-northeast-1',
-}));
-
-// Secrets Managerモック
-import { mockClient } from 'aws-sdk-client-mock';
-const secretsManagerMock = mockClient(SecretsManagerClient);
-secretsManagerMock.on(GetSecretValueCommand).resolves({
-    SecretString: JSON.stringify({ apiKey: 'test-key' }),
-});
-```
+| 種類 | 比率 | カバレッジ目標 |
+|------|------|---------------|
+| ユニット | 70% | ライン80%、ブランチ75%、関数85% |
+| 統合 | 20% | AWS SDK、DynamoDB、S3 |
+| E2E | 10% | API経由の完全フロー |
 
 ## テスト実行
 
 ```bash
-npm test                    # すべて
-npm run test:unit           # ユニットのみ
-npm run test:integration    # 統合のみ
-npm run test:coverage       # カバレッジ付き
-
-# CI/CD用（対話モード無効化）
-npm test -- --watchAll=false
-npm test -- --watchAll=false --coverage
+npm test                              # すべて
+npm run test:unit                     # ユニットのみ
+npm run test:integration              # 統合のみ
+npm test -- --watchAll=false          # CI/CD用
+npm test -- --watchAll=false --coverage  # カバレッジ付き
 ```
 
-### E2Eテスト実行（LocalStack必須）
+## E2Eテスト（LocalStack必須）
 
 ```bash
-# 1. LocalStack起動
-docker-compose up -d
-
-# 2. 起動待機（30秒）
-Start-Sleep -Seconds 30
-
-# 3. セットアップ実行
-.\scripts\localstack-setup.ps1
-
-# 4. E2Eテスト実行
-npm run test:e2e
-
-# 5. 停止
-docker-compose down
+docker-compose up -d                  # 1. 起動
+Start-Sleep -Seconds 30               # 2. 待機
+.\scripts\localstack-setup.ps1        # 3. セットアップ
+npm run test:e2e                      # 4. 実行
+docker-compose down                   # 5. 停止
 ```
 
 ## 必須ルール
 
-- [ ] 対話モード禁止（`--watchAll=false`必須）
-- [ ] 各テストは独立して実行可能
-- [ ] 外部依存はモック化
-- [ ] AAA パターン（Arrange → Act → Assert）
-- [ ] E2Eテスト前にLocalStack起動・セットアップ実行
+- [ ] 対話モード禁止（`--watchAll=false`）
+- [ ] 各テスト独立実行可能
+- [ ] 外部依存モック化
+- [ ] AAAパターン（Arrange → Act → Assert）
 
 ## 関連ドキュメント
 
-- **実装ルール**: `../core/tdnet-implementation-rules.md` - プロパティテストの例
-- **詳細な実装例**: `../../specs/tdnet-data-collector/templates/test-examples/` - バリデーション、スクレイピングテスト
+- `../core/tdnet-implementation-rules.md` - プロパティテスト例
+- `../../specs/tdnet-data-collector/templates/test-examples/` - 実装例

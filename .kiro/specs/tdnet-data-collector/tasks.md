@@ -2408,7 +2408,7 @@
   - _作業記録: work-log-20260214-154337-task31-2-smoke-test.md, work-log-20260214-171955-task31-2-smoke-test-continuation.md_
   - _注意: タスク31.2.1〜31.2.3で問題対応が必要_
 
-  - [ ] 31.2.1 未実装エンドポイントのAPI Gateway統合（Critical）
+  - [x] 31.2.1 未実装エンドポイントのAPI Gateway統合（Critical）
     - GET /health エンドポイントのCDK定義追加
     - GET /stats エンドポイントのCDK定義追加
     - API Gatewayへの統合設定
