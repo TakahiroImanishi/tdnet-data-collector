@@ -210,14 +210,14 @@ async function fetchTdnetHtml(date: string): Promise<string> {
  * @returns TDnet URL
  *
  * @remarks
- * 実際のTDnet URLに置き換える必要があります。
- * 例: https://www.release.tdnet.info/inbs/I_list_001_YYYY-MM-DD.html
+ * TDnetの実際のURL形式: https://www.release.tdnet.info/inbs/I_list_001_YYYYMMDD.html
+ * 日付はハイフンなしの8桁形式（例: 20260214）
  */
 function buildTdnetUrl(date: string): string {
-  // TODO: 実際のTDnet URLに置き換える
-  // 現在はプレースホルダーURL
   const baseUrl = process.env.TDNET_BASE_URL || 'https://www.release.tdnet.info/inbs';
-  return `${baseUrl}/I_list_001_${date}.html`;
+  // YYYY-MM-DD → YYYYMMDD に変換
+  const dateWithoutHyphens = date.replace(/-/g, '');
+  return `${baseUrl}/I_list_001_${dateWithoutHyphens}.html`;
 }
 
 /**

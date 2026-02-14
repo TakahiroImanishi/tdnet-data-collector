@@ -14,11 +14,6 @@ import { handler } from '../handler';
 import { ExportEvent } from '../types';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
-import { mockClient } from 'aws-sdk-client-mock';
-
-// Secrets Managerモック
-const secretsManagerMock = mockClient(SecretsManagerClient);
 
 // LocalStack環境設定
 const isLocalStack = process.env.AWS_ENDPOINT_URL !== undefined;
@@ -60,12 +55,6 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
   const exportTableName = process.env.EXPORT_STATUS_TABLE_NAME || 'tdnet_executions';
 
   beforeEach(() => {
-    // Secrets Managerモックのセットアップ
-    secretsManagerMock.reset();
-    secretsManagerMock.on(GetSecretValueCommand).resolves({
-      SecretString: 'test-api-key-e2e-export',
-    });
-
     // 環境変数設定
     process.env.API_KEY = 'test-api-key-e2e-export';
     process.env.DYNAMODB_TABLE_NAME = tableName;

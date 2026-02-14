@@ -9,17 +9,12 @@ import { handler } from '../handler';
 import { ExportEvent } from '../types';
 import * as createExportJob from '../create-export-job';
 import * as processExport from '../process-export';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
-import { mockClient } from 'aws-sdk-client-mock';
 
 // モック
 jest.mock('../create-export-job');
 jest.mock('../process-export');
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/cloudwatch-metrics');
-
-// Secrets Managerモック
-const secretsManagerMock = mockClient(SecretsManagerClient);
 
 describe('Lambda Export Handler', () => {
   const mockContext: Context = {
@@ -38,12 +33,6 @@ describe('Lambda Export Handler', () => {
   };
 
   beforeEach(() => {
-    // Secrets Managerモックのセットアップ
-    secretsManagerMock.reset();
-    secretsManagerMock.on(GetSecretValueCommand).resolves({
-      SecretString: 'test-api-key',
-    });
-
     jest.clearAllMocks();
     process.env.API_KEY = 'test-api-key';
   });

@@ -76,7 +76,7 @@ describe('scrapeTdnetList', () => {
       expect(result).toEqual(mockDisclosures);
       expect(mockWaitIfNeeded).toHaveBeenCalled();
       expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('2024-01-15'),
+        expect.stringContaining('20240115'),
         expect.objectContaining({
           timeout: 30000,
           headers: expect.objectContaining({
@@ -427,7 +427,7 @@ describe('scrapeTdnetList', () => {
       await scrapeTdnetList('2024-01-15');
 
       expect(mockAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('I_list_001_2024-01-15.html'),
+        expect.stringContaining('I_list_001_20240115.html'),
         expect.any(Object)
       );
     });

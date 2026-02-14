@@ -70,6 +70,7 @@ export class TdnetComputeStack extends cdk.Stack {
         DYNAMODB_TABLE: props.disclosuresTable.tableName,
         DYNAMODB_EXECUTIONS_TABLE: props.executionsTable.tableName,
         S3_BUCKET: props.pdfsBucket.bucketName,
+        TDNET_BASE_URL: 'https://www.release.tdnet.info/inbs',
         LOG_LEVEL: envConfig.collector.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',

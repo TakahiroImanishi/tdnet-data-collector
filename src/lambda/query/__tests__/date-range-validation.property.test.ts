@@ -12,8 +12,6 @@
 import * as fc from 'fast-check';
 import { Context, APIGatewayProxyEvent } from 'aws-lambda';
 import { handler } from '../handler';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
-import { mockClient } from 'aws-sdk-client-mock';
 
 // モック
 jest.mock('../query-disclosures');
@@ -21,20 +19,11 @@ jest.mock('../format-csv');
 jest.mock('../../../utils/logger');
 jest.mock('../../../utils/cloudwatch-metrics');
 
-// Secrets Managerモック
-const secretsManagerMock = mockClient(SecretsManagerClient);
-
 describe('Property 8: 日付範囲の順序性', () => {
   let mockContext: Context;
   let baseEvent: APIGatewayProxyEvent;
 
   beforeEach(() => {
-    // Secrets Managerモックのセットアップ
-    secretsManagerMock.reset();
-    secretsManagerMock.on(GetSecretValueCommand).resolves({
-      SecretString: 'test-api-key',
-    });
-
     // モックコンテキスト
     mockContext = {
       awsRequestId: 'test-request-id',

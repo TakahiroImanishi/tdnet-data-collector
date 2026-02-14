@@ -7,14 +7,12 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../pdf-download/handler';
 
 // モック
 const dynamoMock = mockClient(DynamoDBClient);
 const s3Mock = mockClient(S3Client);
-const secretsManagerMock = mockClient(SecretsManagerClient);
 
 // getSignedUrlのモック
 jest.mock('@aws-sdk/s3-request-presigner', () => ({

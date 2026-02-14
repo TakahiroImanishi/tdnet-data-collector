@@ -7,12 +7,10 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { handler, clearApiKeyCache } from '../handler';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
 
 // AWS SDK Mocks
 const lambdaMock = mockClient(LambdaClient);
-const secretsMock = mockClient(SecretsManagerClient);
 
 // Mock Context
 const mockContext: Context = {
@@ -90,33 +88,22 @@ const createTestEvent = (body: any, apiKey: string = 'test-api-key-12345'): APIG
 describe('POST /collect Handler', () => {
   beforeEach(() => {
     lambdaMock.reset();
-    secretsMock.reset();
     
     // APIキーキャッシュをクリア
     clearApiKeyCache();
     
-    // Secrets Managerのモック設定（APIキーを返す）
-    secretsMock.on(GetSecretValueCommand).resolves({
-      SecretString: 'test-api-key-12345',
-    });
-    
     process.env.COLLECTOR_FUNCTION_NAME = 'tdnet-collector';
     process.env.AWS_REGION = 'ap-northeast-1';
-    process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:tdnet-api-key';
+    process.env.API_KEY = 'test-api-key-12345';
     
-    // APIキーキャッシュをクリア（テスト間の影響を防ぐ）
-    // Note: キャッシュはモジュールスコープにあるため、直接アクセスできない
-    // 代わりに、各テストで新しいAPIキーを使用するか、TEST_ENVを設定する
     delete process.env.TEST_ENV;
-    delete process.env.API_KEY;
   });
 
   afterEach(() => {
     delete process.env.COLLECTOR_FUNCTION_NAME;
     delete process.env.AWS_REGION;
-    delete process.env.API_KEY_SECRET_ARN;
-    delete process.env.TEST_ENV;
     delete process.env.API_KEY;
+    delete process.env.TEST_ENV;
   });
 
   describe('正常系', () => {
@@ -516,52 +503,7 @@ describe('POST /collect Handler', () => {
       const body = JSON.parse(result.body);
       expect(body.status).toBe('error');
       expect(body.error.code).toBe('UNAUTHORIZED');
-      // Secrets Manager取得エラーの場合は"Failed to retrieve API key"が返される
-      expect(body.error.message).toContain('Failed to retrieve API key');
-    });
-
-    it('Secrets ManagerがSecretStringを返さない場合は401を返す', async () => {
-      // キャッシュをクリアするために、異なるAPIキーを使用
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates, 'another-different-api-key');
-
-      // Secrets Managerのモックをリセットして空のレスポンスを返す
-      secretsMock.reset();
-      secretsMock.on(GetSecretValueCommand).resolves({
-        SecretString: undefined,
-      });
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      // SecretStringが空の場合は"Failed to retrieve API key"が返される
-      expect(body.error.message).toContain('Failed to retrieve API key');
-    });
-
-    it('API_KEY_SECRET_ARN環境変数が設定されていない場合は401を返す', async () => {
-      const originalArn = process.env.API_KEY_SECRET_ARN;
-      delete process.env.API_KEY_SECRET_ARN;
-
-      // キャッシュをクリアするために、異なるAPIキーを使用
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates, 'yet-another-different-api-key');
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      // API_KEY_SECRET_ARNが未設定の場合は"Failed to retrieve API key"が返される
-      expect(body.error.message).toContain('Failed to retrieve API key');
-
-      // 環境変数を復元
-      if (originalArn) {
-        process.env.API_KEY_SECRET_ARN = originalArn;
-      }
+      expect(body.error.message).toContain('Invalid API key');
     });
   });
 
@@ -695,148 +637,5 @@ describe('POST /collect Handler', () => {
       });
     });
 
-    it('SecretStringが空の場合は401エラーを返す', async () => {
-      secretsMock.on(GetSecretValueCommand).resolves({
-        SecretString: '', // 空文字列
-      });
-
-      const testDates = getTestDates();
-      // 異なるAPIキーを使用してキャッシュをバイパス
-      const event = createTestEvent(testDates, 'unique-key-for-empty-secret-test');
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('Failed to retrieve API key');
-    });
-
-    it('Secrets Manager取得エラーの場合は401エラーを返す', async () => {
-      secretsMock.on(GetSecretValueCommand).rejects(
-        new Error('AccessDeniedException: User is not authorized')
-      );
-
-      const testDates = getTestDates();
-      // 異なるAPIキーを使用してキャッシュをバイパス
-      const event = createTestEvent(testDates, 'unique-key-for-access-denied-test');
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('Failed to retrieve API key');
-    });
-
-    it('Secrets Managerネットワークエラーの場合は401エラーを返す', async () => {
-      secretsMock.on(GetSecretValueCommand).rejects(
-        new Error('NetworkingError: Connection timeout')
-      );
-
-      const testDates = getTestDates();
-      // 異なるAPIキーを使用してキャッシュをバイパス
-      const event = createTestEvent(testDates, 'unique-key-for-network-error-test');
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('UNAUTHORIZED');
-    });
-  });
-
-  describe('APIキーキャッシュ', () => {
-    beforeEach(() => {
-      // キャッシュをクリア
-      delete process.env.TEST_ENV;
-      delete process.env.API_KEY;
-      
-      // Secrets Managerモックをリセット
-      secretsMock.reset();
-      secretsMock.on(GetSecretValueCommand).resolves({
-        SecretString: 'test-api-key-12345',
-      });
-    });
-
-    it('TEST_ENV=e2eの場合はAPI_KEY環境変数から取得する', async () => {
-      // TEST_ENV=e2eを設定
-      process.env.TEST_ENV = 'e2e';
-      process.env.API_KEY = 'e2e-test-api-key';
-
-      const mockCollectorResponse = {
-        execution_id: 'exec_1234567890_abc123_test1234',
-        status: 'success',
-        message: 'Collection started',
-        collected_count: 0,
-        failed_count: 0,
-      };
-
-      lambdaMock.on(InvokeCommand).resolves({
-        StatusCode: 200,
-        Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
-      });
-
-      const testDates = getTestDates();
-      const event = createTestEvent(testDates, 'e2e-test-api-key');
-
-      const result = await handler(event, mockContext);
-
-      expect(result.statusCode).toBe(200);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('success');
-      
-      // Secrets Managerが呼ばれていないことを確認
-      const secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
-      expect(secretsCalls.length).toBe(0);
-    });
-
-    it('キャッシュが有効な場合はSecrets Managerを呼ばない', async () => {
-      // テスト環境でキャッシュを有効化するため、NODE_ENVを一時的に変更
-      const originalNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      
-      try {
-        // 最初のリクエスト（キャッシュミス）
-        const mockCollectorResponse = {
-          execution_id: 'exec_1234567890_abc123_test1234',
-          status: 'success',
-          message: 'Collection started',
-          collected_count: 0,
-          failed_count: 0,
-        };
-
-        lambdaMock.on(InvokeCommand).resolves({
-          StatusCode: 200,
-          Payload: Buffer.from(JSON.stringify(mockCollectorResponse)) as any,
-        });
-
-        const testDates = getTestDates();
-        const event1 = createTestEvent(testDates, 'test-api-key-12345');
-
-        await handler(event1, mockContext);
-
-        // Secrets Managerが1回呼ばれたことを確認
-        let secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
-        expect(secretsCalls.length).toBe(1);
-
-        // 2回目のリクエスト（キャッシュヒット）
-        // モックをリセットして、呼ばれないことを確認
-        secretsMock.reset();
-        secretsMock.on(GetSecretValueCommand).resolves({
-          SecretString: 'test-api-key-12345',
-        });
-
-        const event2 = createTestEvent(testDates, 'test-api-key-12345');
-        await handler(event2, mockContext);
-
-        // Secrets Managerが呼ばれていないことを確認（キャッシュから取得）
-        secretsCalls = secretsMock.commandCalls(GetSecretValueCommand);
-        expect(secretsCalls.length).toBe(0);
-      } finally {
-        // NODE_ENVを元に戻す
-        process.env.NODE_ENV = originalNodeEnv;
-      }
-    });
   });
 });

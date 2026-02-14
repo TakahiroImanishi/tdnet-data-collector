@@ -2418,7 +2418,7 @@
     - _推定工数: 2-3時間_
     - _関連: タスク15.18（Lambda関数実装済み）_
 
-  - [-] 31.2.2 データ収集失敗の原因調査と修正（Critical）
+  - [x] 31.2.2 データ収集失敗の原因調査と修正（Critical）
     - CloudWatch Logsの詳細確認（全ログストリーム）
     - 環境変数の確認（TDNET_BASE_URL、S3_BUCKET、DYNAMODB_TABLE）
     - IAMロールの権限確認（S3、DynamoDB、CloudWatch Logs）
@@ -2458,6 +2458,51 @@
     - _完了: 2026-02-14 18:05_
     - _成果物: design.md更新（Lambda関数リスト、API認証方式、date_partition形式、GSI名、コスト見積もり）_
     - _注意: CloudFormation Outputsは既に詳細に記載されていることを確認_
+
+  - [ ] 31.2.5 設計と実装の差分解消
+    - 設計ドキュメント（design.md、requirements.md）と実装コードの差分を解消し、ドキュメントと実装の一貫性を確保
+    - _Requirements: 要件13.1（ドキュメント）_
+    - _関連: work-log-20260214-180203-design-implementation-gap-analysis.md_
+
+    - [ ] 31.2.5.1 テストコードのSecrets Manager依存削除（Critical）
+      - テストコードからSecrets Managerモックを削除
+      - API Gateway認証のみをテストするように修正
+      - 対象ファイル（5件）:
+        - `src/lambda/query/__tests__/handler.e2e.test.ts`
+        - `src/lambda/query/__tests__/date-range-validation.property.test.ts`
+        - `src/lambda/export/__tests__/handler.e2e.test.ts`
+        - `src/lambda/export/__tests__/handler.test.ts`
+        - `src/lambda/collect/__tests__/handler.test.ts`
+      - _Requirements: 要件11.1（API認証）_
+      - _優先度: 🔴 Critical_
+      - _推定工数: 2-3時間_
+
+    - [ ] 31.2.5.2 設計書の更新（Major）
+      - Lambda関数の数を7個→9個に更新（Health Function、Stats Function追加）
+      - DynamoDBテーブルの数を2個→3個に更新（tdnet_export_status追加）
+      - 設計書（design.md）のシステム構成図を更新
+      - 設計書（design.md）のDynamoDBセクションを更新
+      - _Requirements: 要件13.1（ドキュメント）_
+      - _優先度: 🟡 Medium_
+      - _推定工数: 2時間_
+
+    - [ ] 31.2.5.3 Object Lock設定の実装可否判断（Minor）
+      - 設計書ではPDFバケットでObject Lock有効化を記載
+      - 実装では未実装
+      - 選択肢A: Object Lock設定を実装（推定工数: 3-4時間）
+      - 選択肢B: 設計書から削除（推定工数: 30分）
+      - _Requirements: 要件3.5（ファイルストレージ）_
+      - _優先度: 🟢 Low_
+      - _推定工数: 30分〜4時間（選択肢による）_
+
+    - [ ] 31.2.5.4 temp/プレフィックス自動削除の実装可否判断（Minor）
+      - 設計書ではtemp/プレフィックスは1日後に自動削除を記載
+      - 実装では未実装
+      - 選択肢A: ライフサイクルポリシーを追加（推定工数: 1-2時間）
+      - 選択肢B: 設計書から削除（推定工数: 30分）
+      - _Requirements: 要件3.5（ファイルストレージ）_
+      - _優先度: 🟢 Low_
+      - _推定工数: 30分〜2時間（選択肢による）_
 
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
