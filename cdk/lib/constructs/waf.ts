@@ -18,7 +18,7 @@ export interface WafConstructProps {
   /** 保護対象のAPI Gateway */
   api: apigateway.IRestApi;
 
-  /** レート制限（リクエスト/5分）デフォルト: 2000 */
+  /** レート制限（リクエスト/5分）デフォルト: 500（100リクエスト/分相当） */
   rateLimitPerFiveMinutes?: number;
 }
 
@@ -39,7 +39,7 @@ export class WafConstruct extends Construct {
     super(scope, id);
 
     const env = props.environment;
-    const rateLimit = props.rateLimitPerFiveMinutes || 2000;
+    const rateLimit = props.rateLimitPerFiveMinutes || 500; // 100リクエスト/分相当
 
     // ========================================
     // WAF Web ACL

@@ -39,5 +39,5 @@ logger.error('Operation failed', {
 - [ ] カスタムエラークラス（`src/errors/index.ts`）
 - [ ] CloudWatchメトリクス（Lambda）
 - [ ] 部分的失敗処理（バッチ）
-- [ ] DLQ設定（SQS/Lambda）
+- [ ] DLQ設定（非同期Lambda/SQSのみ。API Gateway統合Lambdaは不要）
 - [ ] CloudWatch Alarms（エラー率、DLQメッセージ数）

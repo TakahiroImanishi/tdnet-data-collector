@@ -412,6 +412,10 @@ describe('Structured Logging Format', () => {
 
   it('should use NODE_ENV environment variable when set', () => {
     const originalNodeEnv = process.env.NODE_ENV;
+    const originalLambdaFunctionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
+    
+    // Lambda環境ではない場合のみWinstonが使用される
+    delete process.env.AWS_LAMBDA_FUNCTION_NAME;
     process.env.NODE_ENV = 'production';
 
     jest.resetModules();
@@ -430,6 +434,9 @@ describe('Structured Logging Format', () => {
       process.env.NODE_ENV = originalNodeEnv;
     } else {
       delete process.env.NODE_ENV;
+    }
+    if (originalLambdaFunctionName) {
+      process.env.AWS_LAMBDA_FUNCTION_NAME = originalLambdaFunctionName;
     }
   });
 
@@ -591,9 +598,15 @@ describe('logLambdaError', () => {
 describe('Logger - エッジケース', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Lambda環境ではないことを確認
+    delete process.env.AWS_LAMBDA_FUNCTION_NAME;
   });
 
   it('空文字列のメッセージでもログを記録', () => {
+    // モジュールを再読み込みしてWinstonを使用する環境にする
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     logger.info('');
     logger.warn('');
     logger.error('');
@@ -609,6 +622,9 @@ describe('Logger - エッジケース', () => {
   });
 
   it('非常に長いメッセージでもログを記録', () => {
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     const longMessage = 'a'.repeat(10000);
     logger.info(longMessage);
 
@@ -619,6 +635,9 @@ describe('Logger - エッジケース', () => {
   });
 
   it('特殊文字を含むメッセージでもログを記録', () => {
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     const specialMessage = 'Test\n\r\t"\'\\message';
     logger.info(specialMessage);
 
@@ -629,6 +648,9 @@ describe('Logger - エッジケース', () => {
   });
 
   it('非常に大きなコンテキストオブジェクトでもログを記録', () => {
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     const largeContext: any = {};
     for (let i = 0; i < 100; i++) {
       largeContext[`key${i}`] = `value${i}`;
@@ -643,6 +665,9 @@ describe('Logger - エッジケース', () => {
   });
 
   it('ネストされたコンテキストオブジェクトでもログを記録', () => {
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     const nestedContext = {
       level1: {
         level2: {
@@ -662,6 +687,9 @@ describe('Logger - エッジケース', () => {
   });
 
   it('配列を含むコンテキストでもログを記録', () => {
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     const contextWithArray = {
       items: ['item1', 'item2', 'item3'],
       numbers: [1, 2, 3],
@@ -676,6 +704,9 @@ describe('Logger - エッジケース', () => {
   });
 
   it('nullやundefinedを含むコンテキストでもログを記録', () => {
+    jest.resetModules();
+    const { logger } = require('../logger');
+    
     const contextWithNulls = {
       nullValue: null,
       undefinedValue: undefined,
@@ -845,7 +876,15 @@ describe('logLambdaError - エッジケース', () => {
 });
 
 describe('setLogLevel - エッジケース', () => {
+  beforeEach(() => {
+    // Lambda環境ではないことを確認
+    delete process.env.AWS_LAMBDA_FUNCTION_NAME;
+  });
+
   it('同じログレベルを複数回設定しても問題ない', () => {
+    jest.resetModules();
+    const { setLogLevel, LogLevel } = require('../logger');
+    
     setLogLevel(LogLevel.INFO);
     setLogLevel(LogLevel.INFO);
     setLogLevel(LogLevel.INFO);
@@ -856,16 +895,21 @@ describe('setLogLevel - エッジケース', () => {
   });
 
   it('ログレベルを順番に変更できる', () => {
+    jest.resetModules();
+    const { setLogLevel, LogLevel } = require('../logger');
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+
     setLogLevel(LogLevel.DEBUG);
-    expect(require('winston').createLogger().level).toBe('debug');
+    expect(mockLogger.level).toBe('debug');
 
     setLogLevel(LogLevel.INFO);
-    expect(require('winston').createLogger().level).toBe('info');
+    expect(mockLogger.level).toBe('info');
 
     setLogLevel(LogLevel.WARN);
-    expect(require('winston').createLogger().level).toBe('warn');
+    expect(mockLogger.level).toBe('warn');
 
     setLogLevel(LogLevel.ERROR);
-    expect(require('winston').createLogger().level).toBe('error');
+    expect(mockLogger.level).toBe('error');
   });
 });

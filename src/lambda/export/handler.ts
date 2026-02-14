@@ -141,7 +141,7 @@ export async function handler(
     );
 
     // エラーレスポンス
-    return handleError(error as Error, context.awsRequestId);
+    return handleError(error as Error, event.requestContext.requestId);
   }
 }
 

@@ -153,7 +153,7 @@ export async function handler(
       'Query'
     );
 
-    return handleError(error as Error, context.awsRequestId);
+    return handleError(error as Error, event.requestContext.requestId);
   }
 }
 
@@ -337,7 +337,7 @@ function validateMonthFormat(month: string): void {
  * API設計ガイドラインに準拠した形式でエラーレスポンスを返します。
  *
  * @param error エラーオブジェクト
- * @param requestId リクエストID
+ * @param requestId API GatewayリクエストID
  * @returns API Gateway Proxy Result
  */
 function handleError(error: Error, requestId: string): APIGatewayProxyResult {

@@ -134,3 +134,20 @@ export class ConfigurationError extends TDnetError {
     super(message);
   }
 }
+
+/**
+ * ダウンロードエラー
+ *
+ * ファイルダウンロード時のエラー。
+ * ネットワークエラーやタイムアウトなど、一時的な問題の可能性があるため再試行可能。
+ *
+ * 例：
+ * - PDFダウンロード失敗
+ * - ネットワークタイムアウト
+ * - 接続エラー
+ */
+export class DownloadError extends RetryableError {
+  constructor(message: string, cause?: Error) {
+    super(message, cause);
+  }
+}

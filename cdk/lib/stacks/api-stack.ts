@@ -97,7 +97,7 @@ export class TdnetApiStack extends cdk.Stack {
     this.wafConstruct = new WafConstruct(this, 'Waf', {
       environment: env,
       api: this.api,
-      rateLimitPerFiveMinutes: 2000,
+      rateLimitPerFiveMinutes: 500, // 100リクエスト/分相当
     });
 
     // ========================================

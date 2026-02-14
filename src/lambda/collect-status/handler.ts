@@ -128,7 +128,7 @@ export async function handler(
       {}
     );
 
-    return toErrorResponse(error as Error, context.awsRequestId);
+    return toErrorResponse(error as Error, event.requestContext.requestId);
   }
 }
 

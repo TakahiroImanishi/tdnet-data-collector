@@ -39,7 +39,7 @@ export interface Logger {
 /**
  * Winston ロガーの設定
  */
-const isLambdaEnvironment = !!process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production';
+const isLambdaEnvironment = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 // Lambda環境では、Winstonの代わりにconsole.logを使用
 // これにより、CloudWatch Logsに確実にログが出力される

@@ -109,6 +109,38 @@ describe('validateDisclosure', () => {
       const invalid3 = { ...validDisclosure, date_partition: '2024/01' }; // スラッシュ
       expect(() => validateDisclosure(invalid3)).toThrow(ValidationError);
     });
+
+    it('file_sizeが10MBを超える場合はValidationErrorをスロー', () => {
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      const invalid = { ...validDisclosure, file_size: MAX_FILE_SIZE + 1 };
+      expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
+      expect(() => validateDisclosure(invalid)).toThrow(/File size exceeds maximum allowed size/);
+    });
+
+    it('file_sizeが負の値の場合はValidationErrorをスロー', () => {
+      const invalid = { ...validDisclosure, file_size: -1 };
+      expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
+      expect(() => validateDisclosure(invalid)).toThrow(/File size must be non-negative/);
+    });
+
+    it('file_sizeが10MB以下の場合は成功', () => {
+      const valid1 = { ...validDisclosure, file_size: 0 };
+      expect(() => validateDisclosure(valid1)).not.toThrow();
+
+      const valid2 = { ...validDisclosure, file_size: 5 * 1024 * 1024 }; // 5MB
+      expect(() => validateDisclosure(valid2)).not.toThrow();
+
+      const valid3 = { ...validDisclosure, file_size: 10 * 1024 * 1024 }; // 10MB（境界値）
+      expect(() => validateDisclosure(valid3)).not.toThrow();
+    });
+
+    it('file_sizeがundefinedまたはnullの場合はバリデーションをスキップ', () => {
+      const valid1 = { ...validDisclosure, file_size: undefined };
+      expect(() => validateDisclosure(valid1)).not.toThrow();
+
+      const valid2 = { ...validDisclosure, file_size: null };
+      expect(() => validateDisclosure(valid2 as any)).not.toThrow();
+    });
   });
 });
 

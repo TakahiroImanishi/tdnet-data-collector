@@ -163,7 +163,7 @@ export async function handler(
       'GetDisclosure'
     );
 
-    return handleError(error as Error, context.awsRequestId);
+    return handleError(error as Error, event.requestContext.requestId);
   }
 }
 

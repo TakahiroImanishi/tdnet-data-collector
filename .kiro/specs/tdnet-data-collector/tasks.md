@@ -3064,22 +3064,26 @@
     - _推定工数: 30分_
     - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合9）_
   
-  - [ ] 31.3.19 レート制限ヘッダーの実装（Low）
+  - [x] 31.3.19 レート制限ヘッダーの実装（Low）
     - Lambda関数でレート制限ヘッダーを返却
     - または、OpenAPI仕様から削除（将来実装予定として記載）
     - _Requirements: 要件11.2（レート制限）_
     - _優先度: 🟢 Low_
     - _推定工数: 2-3時間_
     - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合10）_
+    - _完了日時: 2026-02-15 06:43:00_
+    - _実装内容: OpenAPI仕様に将来実装予定のコメントを追加_
   
-  - [ ] 31.3.20 OpenAPI仕様のデフォルト値追加（Low）
+  - [x] 31.3.20 OpenAPI仕様のデフォルト値追加（Low）
     - `docs/openapi.yaml` に `format` パラメータの `default: json` を追加
     - _Requirements: 要件4.1（API設計）_
     - _優先度: 🟢 Low_
     - _推定工数: 10分_
     - _関連: work-log-20260215-000853-data-model-api-consistency.md（不整合11）_
+    - _完了日時: 2026-02-15 06:43:00_
+    - _実装内容: format パラメータのデフォルト値を csv から json に変更_
   
-  - [ ] 31.3.21 DownloadErrorクラスの追加（Low）
+  - [x] 31.3.21 DownloadErrorクラスの追加（Low）
     - `src/errors/index.ts` に `DownloadError` クラスを追加
     - Steering Filesの例を実行可能にする
     - ユニットテスト追加
@@ -3087,8 +3091,10 @@
     - _優先度: 🟢 Low_
     - _推定工数: 30分_
     - _関連: work-log-20260215-000852-error-security-consistency.md（不整合L-1）_
+    - _完了日時: 2026-02-15 06:43:00_
+    - _テスト結果: 17/17 passed ✅_
   
-  - [ ] 31.3.22 Logger環境判定ロジックの簡略化（Low）
+  - [x] 31.3.22 Logger環境判定ロジックの簡略化（Low）
     - `src/utils/logger.ts` の環境判定を簡略化
     - `!!process.env.AWS_LAMBDA_FUNCTION_NAME` のみ使用
     - ユニットテスト更新
@@ -3096,6 +3102,8 @@
     - _優先度: 🟢 Low_
     - _推定工数: 10分_
     - _関連: work-log-20260215-000852-error-security-consistency.md（不整合L-2）_
+    - _完了日時: 2026-02-15 06:43:00_
+    - _テスト結果: 49/49 passed ✅_
 
 - [ ] 31.4 Webダッシュボードの本番環境デプロイ（High）
   - dashboardディレクトリのビルド実行
