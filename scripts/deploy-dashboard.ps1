@@ -107,7 +107,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-ColorOutput "Invalidation ID: $invalidationId" "Green"
-Write-ColorOutput "`nデプロイ完了！" "Green"
+Write-ColorOutput "`nデプロイ完了!" "Green"
 Write-ColorOutput "CloudFront URLでダッシュボードにアクセスできます" "Cyan"
 
 # CloudFront URLを表示
