@@ -2776,9 +2776,17 @@
   - _関連: タスク31.2.6.7で発見_
   - _完了: 2026-02-14 23:45, CDK定義修正完了、最小権限の原則に従いnamespace制限を実装_
 
-- [ ] 31.2.6.9 Lambda Collect関数の非同期呼び出しへの変更（Critical）
+- [x] 31.2.6.9 Lambda Collect関数の非同期呼び出しへの変更（Critical）
   - Lambda Collect関数からLambda Collectorへの呼び出しを同期から非同期に変更
   - InvocationType: `RequestResponse` → `Event`
+  - API Gatewayタイムアウト（29秒）を回避
+  - execution_idを即座に返却し、バックグラウンドで処理を継続
+  - _Requirements: 要件1.1（データ収集）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 1時間_
+  - _完了: 2026-02-14 23:45, 非同期呼び出し実装完了、14/14テスト成功_
+  - _成果物: src/lambda/collect/handler.ts（非同期呼び出し）, src/lambda/collector/handler.ts（execution_id受け取り）, src/lambda/collect/__tests__/handler.test.ts（テスト更新）_
+  - _注意: execution_idを事前生成（randomUUID）し、Lambda Collectorに渡す。Collectorはバックグラウンドで処理を継続_
   - API Gatewayタイムアウト（29秒）を回避
   - execution_idを即座に返却し、バックグラウンドで処理を継続
   - _Requirements: 要件1.1（データ収集）_
