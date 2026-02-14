@@ -39,31 +39,37 @@ export interface Logger {
 /**
  * Winston ロガーの設定
  */
-const winstonLogger = winston.createLogger({
-  level: process.env.LOG_LEVEL || LogLevel.INFO,
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
-    }),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: {
-    service: 'tdnet-data-collector',
-    environment: process.env.NODE_ENV || 'development',
-  },
-  transports: [
-    new winston.transports.Console({
+const isLambdaEnvironment = !!process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production';
+
+// Lambda環境では、Winstonの代わりにconsole.logを使用
+// これにより、CloudWatch Logsに確実にログが出力される
+const winstonLogger = isLambdaEnvironment
+  ? null
+  : winston.createLogger({
+      level: process.env.LOG_LEVEL || LogLevel.INFO,
       format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ timestamp, level, message, ...meta }) => {
-          const metaStr = Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : '';
-          return `${timestamp} [${level}]: ${message} ${metaStr}`;
-        })
+        winston.format.timestamp({
+          format: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
+        }),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
       ),
-    }),
-  ],
-});
+      defaultMeta: {
+        service: 'tdnet-data-collector',
+        environment: process.env.NODE_ENV || 'development',
+      },
+      transports: [
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.printf(({ timestamp, level, message, ...meta }) => {
+              const metaStr = Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : '';
+              return `${timestamp} [${level}]: ${message} ${metaStr}`;
+            })
+          ),
+        }),
+      ],
+    });
 
 /**
  * 構造化ロガー実装
@@ -84,7 +90,11 @@ class StructuredLogger implements Logger {
    * ```
    */
   debug(message: string, context?: LogContext): void {
-    winstonLogger.debug(message, context);
+    if (isLambdaEnvironment) {
+      console.log(JSON.stringify({ level: 'debug', message, ...context }));
+    } else {
+      winstonLogger!.debug(message, context);
+    }
   }
 
   /**
@@ -102,7 +112,11 @@ class StructuredLogger implements Logger {
    * ```
    */
   info(message: string, context?: LogContext): void {
-    winstonLogger.info(message, context);
+    if (isLambdaEnvironment) {
+      console.log(JSON.stringify({ level: 'info', message, ...context }));
+    } else {
+      winstonLogger!.info(message, context);
+    }
   }
 
   /**
@@ -119,7 +133,11 @@ class StructuredLogger implements Logger {
    * ```
    */
   warn(message: string, context?: LogContext): void {
-    winstonLogger.warn(message, context);
+    if (isLambdaEnvironment) {
+      console.warn(JSON.stringify({ level: 'warn', message, ...context }));
+    } else {
+      winstonLogger!.warn(message, context);
+    }
   }
 
   /**
@@ -141,7 +159,11 @@ class StructuredLogger implements Logger {
    * ```
    */
   error(message: string, context?: LogContext): void {
-    winstonLogger.error(message, context);
+    if (isLambdaEnvironment) {
+      console.error(JSON.stringify({ level: 'error', message, ...context }));
+    } else {
+      winstonLogger!.error(message, context);
+    }
   }
 }
 
@@ -176,7 +198,10 @@ export const logger: Logger = new StructuredLogger();
  * ```
  */
 export function setLogLevel(level: LogLevel): void {
-  winstonLogger.level = level;
+  if (winstonLogger) {
+    winstonLogger.level = level;
+  }
+  // Lambda環境では、LOG_LEVEL環境変数で制御されるため、何もしない
 }
 
 /**
