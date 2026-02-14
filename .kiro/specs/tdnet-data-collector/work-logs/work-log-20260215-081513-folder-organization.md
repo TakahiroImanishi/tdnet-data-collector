@@ -84,6 +84,12 @@
 - ✅ .kiro/specs/tdnet-data-collector/README.mdのフォルダ構成を更新
 - ✅ アーカイブ構造を反映
 
+### Phase E: design/とdocs/の統合（完了）
+- ✅ design/architecture.md → docs/architecture.md
+- ✅ design/api-design.md → docs/api-design.md
+- ✅ design/フォルダ削除
+- ✅ README.md更新（docs/の説明を追加）
+
 ## 整理後のフォルダ構造
 
 ```
@@ -93,8 +99,12 @@
 │   ├── PHASE2-COMPLETION-SUMMARY.md
 │   ├── PHASE3-COMPLETION-SUMMARY.md
 │   └── PHASE4-COMPLETION-REPORT.md
-├── design/              # 変更なし（2ファイル）
-├── docs/                # 変更なし（17ファイル）
+├── docs/                # 統合完了（19ファイル）
+│   ├── architecture.md  # design/から移動
+│   ├── api-design.md    # design/から移動
+│   ├── requirements.md
+│   ├── design.md
+│   └── [その他15ファイル]
 ├── improvements/        # 整理済み（4ファイル + archive/）
 │   ├── archive/
 │   │   └── phase1/      # 22ファイル移動
@@ -134,22 +144,24 @@
 2. improvements/: 22ファイル → archive/phase1/
 3. completed-phases/: 3ファイル（Phase2-4完了レポート）
 
-## 効果
+### 効果
 
-### ファイル数削減
+#### フォルダ数削減
+- トップレベルフォルダ: 8個 → 7個（design/を統合）
 - work-logs/: 約300ファイル → 約40ファイル（87%削減）
 - improvements/: 26ファイル → 4ファイル（85%削減）
-- ルートフォルダ: 8ファイル → 5ファイル（38%削減）
 
-### 可読性向上
+#### 構造の明確化
+- docs/に全ての設計・実装ドキュメントを集約
+- design/とdocs/の重複を解消
 - Phase5進行中のファイルのみが表示される
 - 完了Phaseの記録は専用フォルダに整理
-- アーカイブ構造が明確化
 
-### 検索性向上
+#### 可読性・検索性向上
 - アーカイブ内検索が容易（PowerShellスクリプト例を提供）
 - Phase別に記録が分類されている
 - README.mdで構造が明確に説明されている
+- docs/フォルダで全ドキュメントを一元管理
 
 ## 申し送り事項
 

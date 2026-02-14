@@ -12,10 +12,9 @@
 │   ├── PHASE2-COMPLETION-SUMMARY.md
 │   ├── PHASE3-COMPLETION-SUMMARY.md
 │   └── PHASE4-COMPLETION-REPORT.md
-├── design/                      # 設計ドキュメント
+├── docs/                        # 設計・実装ドキュメント
 │   ├── architecture.md          # システムアーキテクチャ
-│   └── api-design.md            # API設計
-├── docs/                        # 実装ガイド・チェックリスト
+│   ├── api-design.md            # API設計
 │   ├── requirements.md          # 要件定義書（要件1-15）
 │   ├── design.md                # 詳細設計書
 │   ├── implementation-checklist.md  # 実装開始前チェックリスト（100項目以上）
@@ -59,7 +58,7 @@
 TDnet Data Collector Project
 │
 ├── .kiro/specs/tdnet-data-collector/  ← このフォルダ（仕様書・設計）
-│   ├── docs/                          # 設計ドキュメント
+│   ├── docs/                          # 設計・実装ドキュメント
 │   ├── work-logs/                     # 作業記録
 │   ├── improvements/                  # 改善履歴
 │   └── templates/                     # テンプレート
@@ -77,6 +76,24 @@ TDnet Data Collector Project
 ```
 
 ## 📖 設計ドキュメント (docs/)
+
+### docs/architecture.md
+システムアーキテクチャの概要設計。
+
+**主要内容:**
+- サーバーレスアーキテクチャ概要
+- コンポーネント構成図
+- データフロー
+- AWS サービス構成
+
+### docs/api-design.md
+REST API設計の概要。
+
+**主要内容:**
+- エンドポイント一覧
+- リクエスト/レスポンス形式
+- 認証方式
+- エラーハンドリング
 
 ### docs/requirements.md
 プロジェクトの要件定義書（要件1-15）。すべての機能要件と非機能要件が記載されています。
