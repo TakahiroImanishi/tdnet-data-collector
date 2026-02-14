@@ -2630,7 +2630,7 @@
     - _作業記録: work-log-20260214-221933-shift-jis-decode-fix.md_
     - _成果物: package.json（iconv-lite追加）, scrape-tdnet-list.ts（decodeShiftJIS修正）_
 
-  - [ ] 31.2.6.4 IAMロール権限追加（High）
+  - [x] 31.2.6.4 IAMロール権限追加（High）
     - Collector Lambda関数のIAMロールに`cloudwatch:PutMetricData`権限を追加
     - 修正対象ファイル:
       - `cdk/lib/stacks/compute-stack.ts` - CollectorFunction IAMロール定義
@@ -2647,13 +2647,30 @@
     - _推定工数: 30分_
     - _前提条件: タスク31.2.6.2完了（根本原因特定）_
 
-  - [ ] 31.2.6.5 本番環境への再デプロイと検証（Critical）
-    - 修正内容を本番環境にデプロイし、データ収集テストを実行
+  - [ ] 31.2.6.5 本番環境への再デプロイ（Critical）
+    - 修正内容を本番環境にデプロイ
     - デプロイ手順:
       - [ ] ローカルでビルド（`npm run build`）
-      - [ ] ユニットテストを実行（`npm test`）
-      - [ ] 本番環境にデプロイ（`scripts/deploy-split-stacks.ps1 -Environment prod`）
+      - [ ] 本番環境にデプロイ（`scripts/deploy-split-stacks.ps1 -Environment prod -Action deploy`）
       - [ ] デプロイ完了を確認（CloudFormationスタック状態確認）
+    - _Requirements: 要件1.1, 1.3, 1.4（データ収集、PDFダウンロード、メタデータ保存）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 30分_
+    - _前提条件: タスク31.2.6.3, 31.2.6.4完了（修正実装完了）_
+
+  - [-] 31.2.6.6 ユニットテスト実施（High）
+    - 修正内容のユニットテストを実行
+    - テスト手順:
+      - [ ] ユニットテストを実行（`npm test`）
+      - [ ] テスト結果を確認（すべてのテストが成功すること）
+      - [ ] カバレッジレポートを確認（80%以上）
+    - _Requirements: 要件14.1（ユニットテスト）_
+    - _優先度: � High_
+    - _推定工数: 30分_
+    - _前提条件: タスク31.2.6.3, 31.2.6.4完了（修正実装完了）_
+
+  - [ ] 31.2.6.7 本番環境でのデータ収集検証（Critical）
+    - 本番環境でデータ収集テストを実行
     - データ収集テスト:
       - [ ] POST /collect で2026-02-13のデータ収集を実行
       - [ ] GET /collect/{execution_id} で実行状態を確認
@@ -2668,8 +2685,8 @@
       - [ ] PDFファイルがS3に保存されること
     - _Requirements: 要件1.1, 1.3, 1.4（データ収集、PDFダウンロード、メタデータ保存）_
     - _優先度: 🔴 Critical_
-    - _推定工数: 1-2時間_
-    - _前提条件: タスク31.2.6.3, 31.2.6.4完了（修正実装完了）_
+    - _推定工数: 1時間_
+    - _前提条件: タスク31.2.6.5完了（本番環境デプロイ完了）_
 
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
