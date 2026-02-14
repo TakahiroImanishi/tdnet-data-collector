@@ -171,10 +171,11 @@ because no identity-based policy allows the cloudwatch:PutMetricData action
 
 **影響**: CloudWatch Logsの表示が正常に動作しない、ログ解析ツールでエラーが発生する可能性
 
-**修正方法**: タスク31.2.6.12で対応
-- ログ出力時に日本語文字列をサニタイズ（ASCII範囲外の文字を除去または置換）
-- または、disclosure_idやcompany_codeなどの識別子のみをログに出力
-- title、company_nameなどの日本語フィールドはログに出力しない
+**修正方法**: タスク31.2.6.12で対応（情報量を削らない対処法）
+- Shift_JISからUTF-8に変換後、ログに出力
+- または、日本語フィールドをBase64エンコードしてログに出力（デコード可能）
+- ログ出力前に文字列を明示的にUTF-8に変換する処理を追加
+- `Buffer.from(str, 'utf-8').toString('utf-8')` で安全な文字列に変換
 
 ## 検証結果サマリー
 

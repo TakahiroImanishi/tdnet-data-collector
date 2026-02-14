@@ -2809,13 +2809,15 @@
   - Lambda関数のログ出力にShift_JIS文字列が含まれている問題を修正
   - エラー: `'cp932' codec can't encode character '\ufffd' in position 1051: illegal multibyte sequence`
   - 原因: TDnetから取得したShift_JISデータをログに出力している
-  - 修正方法:
-    - [ ] ログ出力時に日本語文字列をサニタイズ（ASCII範囲外の文字を除去または置換）
-    - [ ] または、disclosure_idやcompany_codeなどの識別子のみをログに出力
-    - [ ] title、company_nameなどの日本語フィールドはログに出力しない
+  - 修正方法（情報量を削らない対処法）:
+    - [ ] Shift_JISからUTF-8に変換後、ログに出力
+    - [ ] または、日本語フィールドをBase64エンコードしてログに出力（デコード可能）
+    - [ ] ログ出力前に文字列を明示的にUTF-8に変換する処理を追加
+    - [ ] Buffer.from(str, 'utf-8').toString('utf-8') で安全な文字列に変換
   - 検証:
     - [ ] CloudWatch Logsでエンコーディングエラーが発生しないことを確認
     - [ ] ログが正常に表示されることを確認
+    - [ ] 日本語文字列が正しく表示されることを確認（情報量が保持されている）
   - _Requirements: 要件6.3（ロギング）_
   - _優先度: 🟠 High_
   - _推定工数: 1時間_
