@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
@@ -56,11 +57,11 @@ export class TdnetComputeStack extends cdk.Stack {
     // ========================================
 
     // 1. Collector Function
-    this.collectorFunction = new lambda.Function(this, 'CollectorFunction', {
+    this.collectorFunction = new NodejsFunction(this, 'CollectorFunction', {
       functionName: `tdnet-collector-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/collector'),
+      entry: 'src/lambda/collector/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collector.timeout),
       memorySize: envConfig.collector.memorySize,
       environment: {
@@ -70,6 +71,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.collector.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
       deadLetterQueue: this.dlq.queue,
       deadLetterQueueEnabled: true,
@@ -95,11 +102,11 @@ export class TdnetComputeStack extends cdk.Stack {
     );
 
     // 2. Query Function
-    this.queryFunction = new lambda.Function(this, 'QueryFunction', {
+    this.queryFunction = new NodejsFunction(this, 'QueryFunction', {
       functionName: `tdnet-query-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/query'),
+      entry: 'src/lambda/query/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.query.timeout),
       memorySize: envConfig.query.memorySize,
       environment: {
@@ -109,6 +116,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.query.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
     });
 
@@ -130,11 +143,11 @@ export class TdnetComputeStack extends cdk.Stack {
     );
 
     // 3. Export Function
-    this.exportFunction = new lambda.Function(this, 'ExportFunction', {
+    this.exportFunction = new NodejsFunction(this, 'ExportFunction', {
       functionName: `tdnet-export-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/export'),
+      entry: 'src/lambda/export/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.export.timeout),
       memorySize: envConfig.export.memorySize,
       environment: {
@@ -145,6 +158,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.export.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
     });
 
@@ -168,11 +187,11 @@ export class TdnetComputeStack extends cdk.Stack {
     );
 
     // 4. Collect Function
-    this.collectFunction = new lambda.Function(this, 'CollectFunction', {
+    this.collectFunction = new NodejsFunction(this, 'CollectFunction', {
       functionName: `tdnet-collect-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/collect'),
+      entry: 'src/lambda/collect/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collect.timeout),
       memorySize: envConfig.collect.memorySize,
       environment: {
@@ -181,6 +200,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.collect.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
     });
 
@@ -201,11 +226,11 @@ export class TdnetComputeStack extends cdk.Stack {
     );
 
     // 5. Collect Status Function
-    this.collectStatusFunction = new lambda.Function(this, 'CollectStatusFunction', {
+    this.collectStatusFunction = new NodejsFunction(this, 'CollectStatusFunction', {
       functionName: `tdnet-collect-status-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/collect-status'),
+      entry: 'src/lambda/collect-status/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collectStatus.timeout),
       memorySize: envConfig.collectStatus.memorySize,
       environment: {
@@ -214,6 +239,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.collectStatus.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
     });
 
@@ -234,11 +265,11 @@ export class TdnetComputeStack extends cdk.Stack {
     );
 
     // 6. Export Status Function
-    this.exportStatusFunction = new lambda.Function(this, 'ExportStatusFunction', {
+    this.exportStatusFunction = new NodejsFunction(this, 'ExportStatusFunction', {
       functionName: `tdnet-export-status-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/api/export-status'),
+      entry: 'src/lambda/api/export-status/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.exportStatus.timeout),
       memorySize: envConfig.exportStatus.memorySize,
       environment: {
@@ -247,6 +278,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.exportStatus.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
     });
 
@@ -267,11 +304,11 @@ export class TdnetComputeStack extends cdk.Stack {
     );
 
     // 7. PDF Download Function
-    this.pdfDownloadFunction = new lambda.Function(this, 'PdfDownloadFunction', {
+    this.pdfDownloadFunction = new NodejsFunction(this, 'PdfDownloadFunction', {
       functionName: `tdnet-pdf-download-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/api/pdf-download'),
+      entry: 'src/lambda/api/pdf-download/handler.ts',
+      handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.pdfDownload.timeout),
       memorySize: envConfig.pdfDownload.memorySize,
       environment: {
@@ -281,6 +318,12 @@ export class TdnetComputeStack extends cdk.Stack {
         LOG_LEVEL: envConfig.pdfDownload.logLevel,
         ENVIRONMENT: env,
         NODE_OPTIONS: '--enable-source-maps',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: 'node20',
+        externalModules: ['@aws-sdk/*'],
       },
     });
 
