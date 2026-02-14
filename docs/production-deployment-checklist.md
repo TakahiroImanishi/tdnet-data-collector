@@ -10,6 +10,8 @@
 ### 1. コード品質確認
 
 - [x] TypeScriptビルドが成功（`npm run build`）
+  - **必須**: `dist/` フォルダにビルドファイルが生成されていること
+  - **確認コマンド**: `Test-Path dist/src/lambda/*/index.js`
 - [x] すべてのテストが成功（Phase 1-4完了）
 - [x] テストカバレッジが目標値達成（85.72%）
 - [x] Lintエラーなし
@@ -114,7 +116,25 @@ AWS_ACCOUNT_ID=123456789012  # 実際のアカウントIDに置き換え
 API_KEY_SECRET_ARN=arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:/tdnet/api-key  # 実際のARNに置き換え
 ```
 
-### ステップ4: CDK Synth（検証）
+### ステップ4: TypeScriptビルド（必須）
+
+```powershell
+# Lambda関数をビルド
+npm run build
+```
+
+**確認**: `dist/` フォルダにビルドファイルが生成されること
+
+```powershell
+# ビルド結果確認
+Test-Path dist/src/lambda/dlq-processor/index.js
+Test-Path dist/src/lambda/collector/index.js
+Test-Path dist/src/lambda/query/index.js
+```
+
+**重要**: このステップを省略すると、Lambda関数のデプロイに失敗します。
+
+### ステップ5: CDK Synth（検証）
 
 ```powershell
 cd cdk
@@ -123,7 +143,7 @@ npx cdk synth --context environment=prod
 
 **確認**: エラーなくCloudFormationテンプレートが生成されること
 
-### ステップ5: CDK Diff（差分確認）
+### ステップ6: CDK Diff（差分確認）
 
 ```powershell
 cd cdk
@@ -132,7 +152,7 @@ npx cdk diff --context environment=prod
 
 **確認**: 意図しないリソースの削除がないこと
 
-### ステップ6: CDK Deploy（デプロイ実行）
+### ステップ7: CDK Deploy（デプロイ実行）
 
 #### 方法A: 分割スタックデプロイ（推奨）
 
@@ -173,9 +193,9 @@ npx cdk deploy --context environment=prod --require-approval always
 - すべてのDynamoDBテーブルが作成された
 - すべてのS3バケットが作成された
 
-### ステップ7: デプロイ後確認
+### ステップ8: デプロイ後確認
 
-#### 7.1 リソース確認
+#### 8.1 リソース確認
 
 ```powershell
 # Lambda関数確認
@@ -188,14 +208,14 @@ aws dynamodb list-tables --query "TableNames[?starts_with(@, 'tdnet')]"
 aws s3 ls | Select-String "tdnet"
 ```
 
-#### 7.2 CloudWatch Logs確認
+#### 8.2 CloudWatch Logs確認
 
 ```powershell
 # ロググループ確認
 aws logs describe-log-groups --query "logGroups[?starts_with(logGroupName, '/aws/lambda/tdnet')].logGroupName"
 ```
 
-#### 7.3 CloudWatch Alarms確認
+#### 8.3 CloudWatch Alarms確認
 
 ```powershell
 # アラーム状態確認

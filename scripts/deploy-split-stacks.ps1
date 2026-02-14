@@ -60,12 +60,39 @@ Write-ColorOutput "アクション: $Action" "Yellow"
 Write-ColorOutput "対象スタック: $Stack`n" "Yellow"
 
 # ビルド実行
-Write-ColorOutput "Lambda関数をビルド中..." "Green"
+Write-ColorOutput "`nLambda関数をビルド中..." "Green"
 npm run build
 if ($LASTEXITCODE -ne 0) {
-    Write-ColorOutput "ビルドに失敗しました" "Red"
+    Write-ColorOutput "`nビルドに失敗しました" "Red"
+    Write-ColorOutput "エラー: TypeScriptのコンパイルエラーを確認してください" "Red"
     exit 1
 }
+
+# ビルド結果の確認
+Write-ColorOutput "`nビルド結果を確認中..." "Green"
+$criticalFiles = @(
+    "dist/src/lambda/dlq-processor/index.js",
+    "dist/src/lambda/collector/index.js",
+    "dist/src/lambda/query/index.js"
+)
+
+$missingFiles = @()
+foreach ($file in $criticalFiles) {
+    if (-not (Test-Path $file)) {
+        $missingFiles += $file
+    }
+}
+
+if ($missingFiles.Count -gt 0) {
+    Write-ColorOutput "`nエラー: 以下のビルドファイルが見つかりません:" "Red"
+    foreach ($file in $missingFiles) {
+        Write-ColorOutput "  - $file" "Red"
+    }
+    Write-ColorOutput "`n'npm run build' を実行してビルドファイルを生成してください" "Yellow"
+    exit 1
+}
+
+Write-ColorOutput "ビルド結果の確認完了" "Green"
 
 # CDKアプリケーションを指定
 $cdkApp = "cdk/bin/tdnet-data-collector-split.ts"

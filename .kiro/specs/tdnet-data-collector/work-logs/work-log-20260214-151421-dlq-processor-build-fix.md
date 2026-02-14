@@ -76,16 +76,45 @@ npm test -- src/lambda/dlq-processor/__tests__/index.test.ts
 
 ## 申し送り事項
 
-### デプロイ前の確認事項
-1. **環境変数の設定**: CDKスタックで `ALERT_TOPIC_ARN` が正しく設定されているか確認
-2. **IAM権限**: DLQプロセッサーに以下の権限が付与されているか確認
+### デプロイ前の必須確認事項
+
+#### 1. TypeScriptビルドの実行（最重要）
+```powershell
+# 必ず実行
+npm run build
+
+# ビルド結果確認
+Test-Path dist/src/lambda/dlq-processor/index.js
+Test-Path dist/src/lambda/collector/index.js
+Test-Path dist/src/lambda/query/index.js
+```
+
+**重要**: このステップを省略すると、Lambda関数のデプロイに失敗します。
+
+#### 2. 環境変数の設定
+CDKスタックで `ALERT_TOPIC_ARN` が正しく設定されているか確認
+
+#### 3. IAM権限
+DLQプロセッサーに以下の権限が付与されているか確認
    - SQS: `ReceiveMessage`, `DeleteMessage`
    - SNS: `Publish`
    - CloudWatch Logs: `CreateLogGroup`, `CreateLogStream`, `PutLogEvents`
 
+### デプロイ手順の改善
+
+#### 更新内容
+1. **ステップ4追加**: TypeScriptビルドを明示的に追加
+2. **ビルド確認コマンド追加**: `Test-Path` でビルドファイルの存在確認
+3. **デプロイスクリプト強化**: ビルドファイルの存在確認を追加
+
+#### 更新ファイル
+- `docs/production-deployment-checklist.md`: ステップ4にビルド手順を追加
+- `scripts/deploy-split-stacks.ps1`: ビルドファイルの存在確認を追加
+
 ### 今後のビルドプロセス
 - デプロイ前に必ず `npm run build` を実行
 - CI/CDパイプラインにビルドステップを追加することを推奨
+- デプロイスクリプトがビルドファイルの存在を自動確認
 
 ## 関連ファイル
 
