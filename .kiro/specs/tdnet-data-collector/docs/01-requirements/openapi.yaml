@@ -6,7 +6,7 @@ info:
     API for collecting and querying TDnet disclosure information from Japanese stock exchanges.
     
     **バージョン:** 1.0.0  
-    **最終更新:** 2026-02-07
+    **最終更新:** 2026-02-15
     
     ## Features
     - Query disclosure information by company, date, type
@@ -14,12 +14,6 @@ info:
     - Trigger data collection jobs
     - Export large datasets
     - Health checks and statistics
-    
-    ## 関連ドキュメント
-    - **要件定義書**: requirements.md - 機能要件と非機能要件
-    - **設計書**: design.md - システムアーキテクチャと詳細設計
-    - **API設計ガイドライン**: ../../steering/api/api-design-guidelines.md - API設計原則
-    - **エラーハンドリング**: ../../steering/core/error-handling-patterns.md - エラーコードとレスポンス形式
     
   contact:
     name: API Support

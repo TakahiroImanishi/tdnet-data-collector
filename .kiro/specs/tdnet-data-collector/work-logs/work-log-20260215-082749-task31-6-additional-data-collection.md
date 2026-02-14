@@ -170,3 +170,31 @@ npx cdk deploy --all --require-approval never --region ap-northeast-1 --context 
 cd cdk
 npx cdk deploy --all --require-approval never --region ap-northeast-1 --context environment=prod
 ```
+
+**デプロイ結果:**
+- ✅ TdnetFoundation-prod: 変更なし
+- ✅ TdnetCompute-prod: Lambda関数更新完了（CollectorFunction含む）
+- ❌ TdnetApi-prod: WAF WebACL重複エラー（既知の問題、API Gatewayには影響なし）
+
+**重要:** CollectorFunctionが正常に更新され、複数ページ対応コードが本番環境にデプロイされました。
+
+---
+
+## 14. データ収集の再実行（本番環境、2026-02-15 08:53:00）
+
+**目的:** 本番環境の最新コードで2026-02-13のデータを200件収集
+
+**実行コマンド:**
+```powershell
+$headers = @{
+    "x-api-key" = "l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"
+    "Content-Type" = "application/json"
+}
+$body = @{
+    start_date = "2026-02-13"
+    end_date = "2026-02-13"
+    max_items = 200
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod/collect" -Method POST -Headers $headers -Body $body
+```

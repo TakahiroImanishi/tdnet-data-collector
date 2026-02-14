@@ -6,33 +6,21 @@
 
 ---
 
-## 目次
-
-1. [概要](#概要)
-2. [Token Bucketアルゴリズムの実装](#token-bucketアルゴリズムの実装)
-3. [Lambda Reserved Concurrency設定](#lambda-reserved-concurrency設定)
-4. [テスト戦略](#テスト戦略)
-5. [監視とアラート](#監視とアラート)
-6. [関連ドキュメント](#関連ドキュメント)
-
----
-
 ## 概要
 
 ### レート制限の目的
 
-TDnet Data Collectorは、日本取引所グループのTDnetウェブサイトから開示情報を自動収集します。適切なレート制限を実装することで、以下を実現します：
+TDnet Data Collectorは、日本取引所グループのTDnetウェブサイトから開示情報を自動収集します。適切なレート制限により以下を実現します：
 
 **主要な目的:**
-- ✅ TDnetサーバーへの過度な負荷を防止
-- ✅ サービス提供者への配慮とマナーの遵守
-- ✅ アクセス制限やIP BAN のリスク回避
-- ✅ 安定した長期的なデータ収集の実現
+- TDnetサーバーへの過度な負荷を防止
+- サービス提供者への配慮とマナーの遵守
+- アクセス制限やIP BANのリスク回避
+- 安定した長期的なデータ収集の実現
 
 ### TDnetサーバーへの配慮
 
 **基本方針:**
-
 - **リクエスト間隔**: 最低2秒（0.5リクエスト/秒）
 - **同時実行数**: 1（並列リクエストなし）
 - **User-Agent**: 適切な識別情報を含む
@@ -40,48 +28,32 @@ TDnet Data Collectorは、日本取引所グループのTDnetウェブサイト�
 
 ### レート制限の2層アーキテクチャ
 
-本設計では、2つの独立したレート制限メカニズムを組み合わせて、確実な制御を実現します：
+2つの独立したレート制限メカニズムを組み合わせて、確実な制御を実現します：
 
 | レイヤー | メカニズム | 目的 | 実装場所 |
 |---------|-----------|------|---------|
 | **Layer 1** | Token Bucket | リクエスト間隔の制御 | Lambda関数内 |
 | **Layer 2** | Reserved Concurrency | 同時実行数の制限 | Lambda設定 |
 
-**なぜ2層で十分か？**
-
-1. **Reserved Concurrency = 1**: Lambda関数の同時実行を1インスタンスに制限することで、複数のToken Bucketインスタンスが同時に動作することを防止
-2. **Token Bucket**: 単一インスタンス内でリクエスト間隔を確実に2秒に制御
-3. **シンプルな設計**: 分散ロックを使用しないことで、実装とインフラの複雑性を削減
-
-**2層を組み合わせることで:**
-- ✅ 確実に2秒間隔を維持
-- ✅ 同時実行を完全に防止（Reserved Concurrency = 1）
-- ✅ シンプルで保守しやすい設計
+**2層で十分な理由:**
+1. **Reserved Concurrency = 1**: Lambda関数の同時実行を1インスタンスに制限
+2. **Token Bucket**: 単一インスタンス内でリクエスト間隔を2秒に制御
+3. **シンプルな設計**: 分散ロックを使用せず、実装とインフラの複雑性を削減
 
 ---
 
-## Token Bucketアルゴリズムの実装
+## Token Bucketアルゴリズム
 
 ### アルゴリズムの説明
 
 Token Bucketは、レート制限の標準的なアルゴリズムです：
 
 **動作原理:**
-
 1. **バケツ（Bucket）**: トークンを保持する容器（容量: capacity）
 2. **トークン（Token）**: リクエストを実行する権利
 3. **補充（Refill）**: 一定レートでトークンが補充される（refillRate）
 4. **消費（Consume）**: リクエスト時にトークンを1つ消費
 5. **待機（Wait）**: トークンがない場合、補充されるまで待機
-
-**視覚的な説明:**
-
-```
-時刻 0秒:  [●●●●●] (5トークン)
-時刻 1秒:  [●●●●◐] (4.5トークン) - リクエスト1回実行、0.5トークン補充
-時刻 2秒:  [●●●●●] (5トークン)   - 0.5トークン補充
-時刻 3秒:  [●●●●◐] (4.5トークン) - リクエスト1回実行、0.5トークン補充
-```
 
 ### 設定パラメータ
 
@@ -93,296 +65,82 @@ Token Bucketは、レート制限の標準的なアルゴリズムです：
 
 **計算根拠:**
 - リクエスト間隔2秒 = 0.5リクエスト/秒 = refillRate 0.5
-- バースト許容: 最大5リクエストまで連続実行可能（その後は2秒間隔に制限される）
+- バースト許容: 最大5リクエストまで連続実行可能（その後は2秒間隔に制限）
 
-### 完全な実装コード
+### 実装の要点
 
-**ファイル:** `src/scraper/rate-limiter.ts`
-
+**基本実装:**
 ```typescript
-/**
- * Token Bucket アルゴリズムによるレート制限
- * 
- * @example
- * const rateLimiter = new TokenBucket(5, 0.5);
- * await rateLimiter.acquire(); // トークンを取得（必要に応じて待機）
- * await fetchTdnetData(); // リクエスト実行
- */
-export class TokenBucket {
+class RateLimiter {
     private tokens: number;
-    private lastRefill: number;
-    private readonly capacity: number;
-    private readonly refillRate: number;
+    private lastRefillTime: number;
+    private readonly capacity: number = 5;
+    private readonly refillRate: number = 0.5;
     
-    /**
-     * Token Bucketを初期化
-     * 
-     * @param capacity - バケツの最大容量（トークン数）
-     * @param refillRate - 補充レート（トークン/秒）
-     */
-    constructor(capacity: number, refillRate: number) {
-        this.capacity = capacity;
-        this.refillRate = refillRate;
-        this.tokens = capacity; // 初期状態は満タン
-        this.lastRefill = Date.now();
-        
-        logger.info('TokenBucket initialized', {
-            capacity,
-            refillRate,
-            initialTokens: this.tokens,
-        });
+    constructor() {
+        this.tokens = this.capacity;
+        this.lastRefillTime = Date.now();
     }
     
-    /**
-     * トークンを取得（必要に応じて待機）
-     * 
-     * @param tokens - 取得するトークン数（デフォルト: 1）
-     * @returns Promise<void> - トークン取得完了時に解決
-     */
-    async acquire(tokens: number = 1): Promise<void> {
-        const startTime = Date.now();
-        
-        // トークンを補充
+    async waitIfNeeded(): Promise<void> {
         this.refill();
         
-        // トークンが不足している場合は待機
-        while (this.tokens < tokens) {
-            const waitTime = this.calculateWaitTime(tokens);
-            
-            logger.debug('Waiting for tokens', {
-                currentTokens: this.tokens,
-                requiredTokens: tokens,
-                waitTimeMs: waitTime,
-            });
-            
-            await this.sleep(waitTime);
+        if (this.tokens < 1) {
+            const waitTime = (1 - this.tokens) / this.refillRate * 1000;
+            await sleep(waitTime);
             this.refill();
         }
         
-        // トークンを消費
-        this.tokens -= tokens;
-        
-        const elapsedTime = Date.now() - startTime;
-        logger.debug('Token acquired', {
-            tokensConsumed: tokens,
-            remainingTokens: this.tokens,
-            elapsedTimeMs: elapsedTime,
-        });
+        this.tokens -= 1;
     }
     
-    /**
-     * トークンを補充
-     */
     private refill(): void {
         const now = Date.now();
-        const elapsed = (now - this.lastRefill) / 1000; // 秒単位
-        const tokensToAdd = elapsed * this.refillRate;
-        
-        this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
-        this.lastRefill = now;
-    }
-    
-    /**
-     * 待機時間を計算
-     * 
-     * @param tokens - 必要なトークン数
-     * @returns 待機時間（ミリ秒）
-     */
-    private calculateWaitTime(tokens: number): number {
-        const shortage = tokens - this.tokens;
-        const waitTimeSeconds = shortage / this.refillRate;
-        return Math.ceil(waitTimeSeconds * 1000);
-    }
-    
-    /**
-     * 指定時間待機
-     * 
-     * @param ms - 待機時間（ミリ秒）
-     */
-    private sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-    
-    /**
-     * 現在のトークン数を取得（デバッグ用）
-     */
-    getAvailableTokens(): number {
-        this.refill();
-        return this.tokens;
+        const elapsed = (now - this.lastRefillTime) / 1000;
+        this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
+        this.lastRefillTime = now;
     }
 }
 ```
 
-### 使用例
-
-**基本的な使用方法:**
-
+**使用例:**
 ```typescript
-import { TokenBucket } from './rate-limiter';
-import axios from 'axios';
+const rateLimiter = new RateLimiter();
 
-// グローバルインスタンス（Lambda関数全体で共有）
-const rateLimiter = new TokenBucket(5, 0.5);
-
-/**
- * レート制限付きでTDnetデータを取得
- */
-async function fetchTdnetData(url: string): Promise<any> {
-    // トークンを取得（必要に応じて待機）
-    await rateLimiter.acquire();
-    
-    // リクエスト実行
-    const response = await axios.get(url, {
-        headers: {
-            'User-Agent': 'TDnet-Data-Collector/1.0 (contact@example.com)',
-        },
-        timeout: 30000,
-    });
-    
-    return response.data;
-}
-
-// 使用例
-async function collectDisclosures(date: string): Promise<void> {
-    const url = `https://www.release.tdnet.info/inbs/I_list_001_${date}.html`;
-    
-    try {
-        const data = await fetchTdnetData(url);
-        logger.info('Data fetched successfully', { date });
-    } catch (error) {
-        logger.error('Failed to fetch data', { date, error });
-        throw error;
-    }
+for (const disclosure of disclosures) {
+    await rateLimiter.waitIfNeeded();
+    await scrapeTdnet(disclosure);
 }
 ```
 
-**複数リクエストの例:**
-
-```typescript
-async function fetchMultiplePages(dates: string[]): Promise<void> {
-    for (const date of dates) {
-        // 各リクエストは自動的に2秒間隔で実行される
-        await fetchTdnetData(`https://www.release.tdnet.info/inbs/I_list_001_${date}.html`);
-        logger.info('Fetched page', { date });
-    }
-}
-```
+**詳細実装**: `../../steering/development/tdnet-scraping-patterns.md`
 
 ---
 
 ## Lambda Reserved Concurrency設定
 
-### 設定の目的
+### 目的
 
-Lambda Reserved Concurrencyを1に設定することで、以下を実現します：
+Lambda Reserved Concurrencyを1に設定することで、同時実行を完全に防止します。
 
-
-**主要な目的:**
-- ✅ Lambda関数の同時実行を1インスタンスに制限
-- ✅ 複数のToken Bucketインスタンスが同時に動作することを防止
-- ✅ EventBridgeとAPI Gatewayからの同時トリガーを制御
-- ✅ 確実に2秒間隔を維持
-
-**なぜ必要か？**
-
-Token Bucketは各Lambda関数インスタンス内で独立して動作します。複数のLambda関数が同時実行されると、各インスタンスが独自のToken Bucketを持つため、全体のレート制限が効かなくなります。
-
-**例（Reserved Concurrencyなしの場合）:**
-```
-時刻 0秒: Lambda Instance 1 起動 → リクエスト実行
-時刻 0秒: Lambda Instance 2 起動 → リクエスト実行（同時！）
-時刻 0秒: Lambda Instance 3 起動 → リクエスト実行（同時！）
-→ 2秒間隔が守られない！
-```
-
-**例（Reserved Concurrency = 1の場合）:**
-```
-時刻 0秒: Lambda Instance 1 起動 → リクエスト実行
-時刻 2秒: Lambda Instance 1 → 次のリクエスト実行
-時刻 4秒: Lambda Instance 1 → 次のリクエスト実行
-→ 確実に2秒間隔を維持！
-```
-
-### CDK実装コード
-
-**ファイル:** `cdk/lib/tdnet-stack.ts`
+### CDK実装
 
 ```typescript
-import * as cdk from 'aws-cdk-lib';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as events from 'aws-cdk-lib/aws-events';
-import * as targets from 'aws-cdk-lib/aws-events-targets';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import { Construct } from 'constructs';
-
-export class TdnetStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-        super(scope, id, props);
-        
-        // Collector Lambda関数
-        const collectorFn = new lambda.Function(this, 'CollectorFunction', {
-            runtime: lambda.Runtime.NODEJS_20_X,
-            handler: 'index.handler',
-            code: lambda.Code.fromAsset('lambda/collector'),
-            timeout: cdk.Duration.minutes(15),
-            memorySize: 512,
-            
-            // 🔴 重要: Reserved Concurrencyを1に設定
-            reservedConcurrentExecutions: 1,
-            
-            environment: {
-                DYNAMODB_TABLE: process.env.DYNAMODB_TABLE || 'tdnet-disclosures',
-                S3_BUCKET: process.env.S3_BUCKET || 'tdnet-pdfs',
-            },
-        });
-        
-        // EventBridge Rule（毎日18:00に実行）
-        const dailyRule = new events.Rule(this, 'DailyCollectionRule', {
-            schedule: events.Schedule.cron({
-                hour: '9',  // UTC 9:00 = JST 18:00
-                minute: '0',
-            }),
-        });
-        
-        dailyRule.addTarget(new targets.LambdaFunction(collectorFn));
-        
-        // API Gateway（手動トリガー用）
-        const api = new apigateway.RestApi(this, 'CollectorApi', {
-            restApiName: 'TDnet Collector API',
-            description: 'API for triggering TDnet data collection',
-        });
-        
-        const collection = api.root.addResource('collect');
-        collection.addMethod('POST', new apigateway.LambdaIntegration(collectorFn));
-    }
-}
+const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
+    functionName: 'tdnet-collector',
+    entry: 'src/lambda/collector/handler.ts',
+    timeout: cdk.Duration.minutes(15),
+    memorySize: 512,
+    reservedConcurrentExecutions: 1,  // 同時実行数を1に制限
+});
 ```
 
-### 設定の確認
+**効果:**
+- 複数のEventBridgeトリガーやAPI呼び出しがあっても、1つのLambdaインスタンスのみが実行される
+- 他のリクエストはキューに入り、順次実行される
+- Token Bucketが複数インスタンスで動作することを防止
 
-**AWS CLIで確認:**
-
-```bash
-aws lambda get-function-concurrency --function-name tdnet-collector
-```
-
-**期待される出力:**
-```json
-{
-    "ReservedConcurrentExecutions": 1
-}
-```
-
-### 注意事項
-
-**Reserved Concurrencyの制限:**
-- アカウント全体の同時実行数から1を消費
-- 他のLambda関数の同時実行数に影響する可能性
-- 無料枠: 1,000同時実行（リージョンごと）
-
-**推奨事項:**
-- 本番環境では必ず設定
-- 開発環境でも設定を推奨（テスト時の予期しない並列実行を防止）
+**注意:** Reserved Concurrency = 1により、処理時間が長くなる可能性があります（最大15分）
 
 ---
 
@@ -390,142 +148,27 @@ aws lambda get-function-concurrency --function-name tdnet-collector
 
 ### ユニットテスト
 
-**Token Bucketのテスト:**
-
-**ファイル:** `src/scraper/__tests__/rate-limiter.test.ts`
-
-```typescript
-import { TokenBucket } from '../rate-limiter';
-
-describe('TokenBucket', () => {
-    test('should allow immediate request when tokens are available', async () => {
-        const bucket = new TokenBucket(5, 0.5);
-        
-        const startTime = Date.now();
-        await bucket.acquire();
-        const elapsedTime = Date.now() - startTime;
-        
-        // トークンがあるので即座に取得できる
-        expect(elapsedTime).toBeLessThan(100);
-    });
-    
-    test('should wait when tokens are exhausted', async () => {
-        const bucket = new TokenBucket(2, 0.5);
-        
-        // 2トークンを消費
-        await bucket.acquire();
-        await bucket.acquire();
-        
-        // 3つ目のトークンは待機が必要
-        const startTime = Date.now();
-        await bucket.acquire();
-        const elapsedTime = Date.now() - startTime;
-        
-        // 2秒待機するはず（0.5トークン/秒）
-        expect(elapsedTime).toBeGreaterThanOrEqual(1900);
-        expect(elapsedTime).toBeLessThan(2500);
-    });
-    
-    test('should refill tokens over time', async () => {
-        const bucket = new TokenBucket(5, 0.5);
-        
-        // すべてのトークンを消費
-        for (let i = 0; i < 5; i++) {
-            await bucket.acquire();
-        }
-        
-        // 4秒待機（2トークン補充）
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        
-        // 2トークン取得できるはず
-        const startTime = Date.now();
-        await bucket.acquire();
-        await bucket.acquire();
-        const elapsedTime = Date.now() - startTime;
-        
-        // 即座に取得できる
-        expect(elapsedTime).toBeLessThan(100);
-    });
-});
-```
+| テストケース | 検証内容 |
+|------------|---------|
+| Token Bucket基本動作 | トークン消費、補充、待機時間計算 |
+| バースト制御 | 5リクエスト連続実行後、2秒間隔に制限 |
+| 長時間待機 | トークン枯渇時の待機時間が正確 |
 
 ### 統合テスト
 
-**レート制限の統合テスト:**
+| テストケース | 検証内容 |
+|------------|---------|
+| リクエスト間隔測定 | 実際のHTTPリクエスト間隔が2秒以上 |
+| Reserved Concurrency | 同時実行が1に制限されることを確認 |
 
-**ファイル:** `tests/integration/rate-limiting.test.ts`
+### E2Eテスト
 
-```typescript
-import { handler } from '../../lambda/collector';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+| テストケース | 検証内容 |
+|------------|---------|
+| 大量データ収集 | 100件の開示情報を収集、レート制限遵守 |
+| 並列トリガー | 複数のEventBridgeトリガーでも順次実行 |
 
-describe('Rate Limiting Integration', () => {
-    test('should prevent concurrent executions', async () => {
-        const event = { date: '2024-01-15' };
-        const context = { requestId: 'test-request-1' };
-        
-        // 2つのLambda関数を同時実行
-        const [result1, result2] = await Promise.all([
-            handler(event, { ...context, requestId: 'request-1' }),
-            handler(event, { ...context, requestId: 'request-2' }),
-        ]);
-        
-        // 1つは成功、1つは409エラー
-        const statuses = [result1.statusCode, result2.statusCode].sort();
-        expect(statuses).toEqual([200, 409]);
-    });
-    
-    test('should maintain 2-second interval between requests', async () => {
-        const timestamps: number[] = [];
-        
-        // 5回リクエストを実行
-        for (let i = 0; i < 5; i++) {
-            timestamps.push(Date.now());
-            await fetchTdnetData('https://example.com');
-        }
-        
-        // 各リクエスト間隔を確認
-        for (let i = 1; i < timestamps.length; i++) {
-            const interval = timestamps[i] - timestamps[i - 1];
-            expect(interval).toBeGreaterThanOrEqual(1900); // 2秒 - 100ms
-            expect(interval).toBeLessThan(2500); // 2秒 + 500ms
-        }
-    });
-});
-```
-
-### 負荷テスト
-
-**負荷テストスクリプト:**
-
-**ファイル:** `tests/load/rate-limiting-load.test.ts`
-
-```typescript
-import axios from 'axios';
-
-describe('Rate Limiting Load Test', () => {
-    test('should handle 100 concurrent requests', async () => {
-        const apiUrl = process.env.API_URL || 'https://api.example.com/collect';
-        const results: any[] = [];
-        
-        // 100個の同時リクエスト
-        const promises = Array.from({ length: 100 }, (_, i) => 
-            axios.post(apiUrl, { date: '2024-01-15' })
-                .then(res => ({ status: res.status, index: i }))
-                .catch(err => ({ status: err.response?.status || 500, index: i }))
-        );
-        
-        const responses = await Promise.all(promises);
-        
-        // 1つだけ200、残りは409
-        const successCount = responses.filter(r => r.status === 200).length;
-        const conflictCount = responses.filter(r => r.status === 409).length;
-        
-        expect(successCount).toBe(1);
-        expect(conflictCount).toBe(99);
-    }, 60000); // 60秒タイムアウト
-});
-```
+**詳細**: `../../steering/development/testing-strategy.md`
 
 ---
 
@@ -533,247 +176,75 @@ describe('Rate Limiting Load Test', () => {
 
 ### CloudWatchメトリクス
 
-**カスタムメトリクスの定義:**
+| メトリクス | 説明 | アラート閾値 |
+|-----------|------|------------|
+| RequestInterval | リクエスト間隔（秒） | < 1.5秒でWarning |
+| ConcurrentExecutions | 同時実行数 | > 1でCritical |
+| ThrottledRequests | スロットリングされたリクエスト数 | > 0でWarning |
+| RateLimiterWaitTime | レート制限による待機時間 | > 10秒でInfo |
+
+### CloudWatch Alarms
 
 ```typescript
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
-
-const cloudwatch = new CloudWatchClient({ region: 'ap-northeast-1' });
-
-/**
- * レート制限メトリクスを送信
- */
-async function publishRateLimitMetrics(metrics: {
-    tokensAvailable: number;
-    waitTimeMs: number;
-    requestInterval: number;
-}): Promise<void> {
-    await cloudwatch.send(new PutMetricDataCommand({
-        Namespace: 'TDnet/RateLimiting',
-        MetricData: [
-            {
-                MetricName: 'TokensAvailable',
-                Value: metrics.tokensAvailable,
-                Unit: 'Count',
-                Timestamp: new Date(),
-            },
-            {
-                MetricName: 'WaitTime',
-                Value: metrics.waitTimeMs,
-                Unit: 'Milliseconds',
-                Timestamp: new Date(),
-            },
-            {
-                MetricName: 'RequestInterval',
-                Value: metrics.requestInterval,
-                Unit: 'Milliseconds',
-                Timestamp: new Date(),
-            },
-        ],
-    }));
-}
-```
-
-**監視すべきメトリクス:**
-
-| メトリクス | 説明 | 正常範囲 | アラート条件 |
-|-----------|------|---------|------------|
-| **TokensAvailable** | 利用可能なトークン数 | 0-5 | - |
-| **WaitTime** | トークン待機時間 | 0-2000ms | > 5000ms |
-| **RequestInterval** | リクエスト間隔 | 1900-2100ms | < 1500ms or > 3000ms |
-| **LockAcquisitionFailures** | ロック取得失敗回数 | 0-1/日 | > 5/時間 |
-| **ConcurrentExecutions** | 同時実行数 | 0-1 | > 1 |
-
-### CloudWatchアラーム設定
-
-**CDK実装:**
-
-```typescript
-import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
-import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
-import * as sns from 'aws-cdk-lib/aws-sns';
-
-// SNSトピック
-const alertTopic = new sns.Topic(this, 'RateLimitAlertTopic', {
-    displayName: 'TDnet Rate Limit Alerts',
-});
-
-// アラーム: リクエスト間隔が短すぎる
-const requestIntervalAlarm = new cloudwatch.Alarm(this, 'RequestIntervalAlarm', {
+const intervalAlarm = new cloudwatch.Alarm(this, 'RequestIntervalAlarm', {
     metric: new cloudwatch.Metric({
-        namespace: 'TDnet/RateLimiting',
+        namespace: 'TDnet/RateLimit',
         metricName: 'RequestInterval',
         statistic: 'Minimum',
-        period: cdk.Duration.minutes(5),
     }),
-    threshold: 1500, // 1.5秒未満
-    evaluationPeriods: 2,
+    threshold: 1.5,
     comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
-    alarmDescription: 'Request interval is too short (< 1.5s)',
+    evaluationPeriods: 2,
+    alarmDescription: 'リクエスト間隔が短すぎます',
 });
-
-requestIntervalAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
-
-// アラーム: ロック取得失敗が多い
-const lockFailureAlarm = new cloudwatch.Alarm(this, 'LockFailureAlarm', {
-    metric: new cloudwatch.Metric({
-        namespace: 'TDnet/RateLimiting',
-        metricName: 'LockAcquisitionFailures',
-        statistic: 'Sum',
-        period: cdk.Duration.hours(1),
-    }),
-    threshold: 5,
-    evaluationPeriods: 1,
-    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-    alarmDescription: 'Too many lock acquisition failures (> 5/hour)',
-});
-
-lockFailureAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
-
-// アラーム: 同時実行数が1を超える
-const concurrencyAlarm = new cloudwatch.Alarm(this, 'ConcurrencyAlarm', {
-    metric: collectorFn.metricInvocations({
-        statistic: 'Sum',
-        period: cdk.Duration.minutes(1),
-    }),
-    threshold: 1,
-    evaluationPeriods: 1,
-    comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-    alarmDescription: 'Concurrent executions detected (> 1)',
-});
-
-concurrencyAlarm.addAlarmAction(new actions.SnsAction(alertTopic));
 ```
 
-### ログベースのアラート
+**詳細**: `../../steering/infrastructure/monitoring-alerts.md`
 
-**CloudWatch Logs Insights クエリ:**
+---
 
-```sql
--- レート制限違反の検出
-fields @timestamp, @message
-| filter @message like /Rate limit violated/
-| stats count() as violations by bin(5m)
-| sort @timestamp desc
+## パフォーマンスへの影響
 
--- ロック取得失敗の検出
-fields @timestamp, requestId, lockKey
-| filter @message like /Lock acquisition failed/
-| stats count() as failures by lockKey
-| sort failures desc
+### 収集時間の試算
 
--- リクエスト間隔の分析
-fields @timestamp, requestInterval
-| filter @message like /Request completed/
-| stats avg(requestInterval) as avgInterval, 
-        min(requestInterval) as minInterval,
-        max(requestInterval) as maxInterval
-```
+**前提条件:**
+- 1日あたりの開示情報: 50件
+- リクエスト間隔: 2秒
+- 1件あたりの処理時間: 3秒（スクレイピング1秒 + PDFダウンロード2秒）
 
-### ダッシュボード
+**計算:**
+- 総処理時間 = 50件 × (2秒待機 + 3秒処理) = 250秒 = 約4分
 
-**CloudWatch Dashboard設定:**
+**結論:** レート制限により処理時間は増加しますが、Lambda実行時間制限（15分）内に十分収まります。
 
-```typescript
-import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+### コスト影響
 
-const dashboard = new cloudwatch.Dashboard(this, 'RateLimitDashboard', {
-    dashboardName: 'TDnet-RateLimiting',
-});
+**Lambda実行時間:**
+- レート制限なし: 50件 × 3秒 = 150秒
+- レート制限あり: 50件 × 5秒 = 250秒
+- 増加率: 67%
 
-dashboard.addWidgets(
-    // トークン数の推移
-    new cloudwatch.GraphWidget({
-        title: 'Available Tokens',
-        left: [
-            new cloudwatch.Metric({
-                namespace: 'TDnet/RateLimiting',
-                metricName: 'TokensAvailable',
-                statistic: 'Average',
-            }),
-        ],
-    }),
-    
-    // リクエスト間隔の推移
-    new cloudwatch.GraphWidget({
-        title: 'Request Interval',
-        left: [
-            new cloudwatch.Metric({
-                namespace: 'TDnet/RateLimiting',
-                metricName: 'RequestInterval',
-                statistic: 'Average',
-            }),
-        ],
-        leftYAxis: {
-            min: 0,
-            max: 3000,
-        },
-    }),
-    
-    // ロック取得失敗回数
-    new cloudwatch.SingleValueWidget({
-        title: 'Lock Acquisition Failures (24h)',
-        metrics: [
-            new cloudwatch.Metric({
-                namespace: 'TDnet/RateLimiting',
-                metricName: 'LockAcquisitionFailures',
-                statistic: 'Sum',
-                period: cdk.Duration.hours(24),
-            }),
-        ],
-    }),
-);
-```
+**コスト増加:**
+- Lambda実行時間: 150秒 → 250秒（+100秒）
+- 月間コスト影響: 約$0.01/月（無視できるレベル）
+
+**詳細**: `../../steering/infrastructure/performance-optimization.md`
 
 ---
 
 ## 関連ドキュメント
 
-### 実装チェックリスト
-
-実装時は以下のドキュメントを参照してください：
-
-- **実装チェックリスト**: `implementation-checklist.md` - Phase 1実装の詳細手順
-- **スクレイピングパターン**: `../../steering/development/tdnet-scraping-patterns.md` - TDnetスクレイピングの詳細
-- **エラーハンドリング**: `../../steering/core/error-handling-patterns.md` - エラー処理の基本原則
-
 ### 設計ドキュメント
+- **[Design Document](./design.md)** - システム全体設計
+- **[Requirements](./requirements.md)** - 要件定義（要件9.1, 9.2: レート制限）
 
-- **要件定義書**: `requirements.md` - レート制限の要件定義
-- **設計書**: `design.md` - システム全体の設計
-- **アーキテクチャ図**: `architecture.md` - システムアーキテクチャ
-
-### 改善記録
-
-- **改善記録**: `../improvements/task-requirements-design-review-improvement-1-20260207-160000.md` - レート制限実装の改善提案
-
----
-
-## まとめ
-
-### 2層レート制限アーキテクチャ
-
-| レイヤー | メカニズム | 実装場所 | 目的 |
-|---------|-----------|---------|------|
-| **Layer 1** | Token Bucket | Lambda関数内 | リクエスト間隔の制御（2秒） |
-| **Layer 2** | Reserved Concurrency | Lambda設定 | 同時実行数の制限（1） |
-
-### 実装のポイント
-
-1. **Token Bucket**: リクエスト間隔を確実に2秒に維持
-2. **Reserved Concurrency**: Lambda関数の同時実行を1に制限
-3. **監視とアラート**: レート制限違反を即座に検知
-
-### 次のステップ
-
-1. **Phase 1実装**: Token Bucket、Reserved Concurrencyを実装
-2. **テスト**: ユニットテスト、統合テスト、負荷テストを実施
-3. **監視設定**: CloudWatchメトリクス、アラーム、ダッシュボードを設定
-4. **本番デプロイ**: 段階的にデプロイし、動作を確認
+### 実装ガイドライン（Steering）
+- **[実装ルール](../../steering/core/tdnet-implementation-rules.md)** - レート制限基本方針
+- **[スクレイピングパターン](../../steering/development/tdnet-scraping-patterns.md)** - Token Bucket実装詳細
+- **[テスト戦略](../../steering/development/testing-strategy.md)** - レート制限テスト
+- **[パフォーマンス最適化](../../steering/infrastructure/performance-optimization.md)** - コスト影響分析
+- **[監視とアラート](../../steering/infrastructure/monitoring-alerts.md)** - レート制限監視
 
 ---
 
-**作成日:** 2026-02-07  
-**バージョン:** 1.0  
-**ステータス:** Draft  
-**次回レビュー:** Phase 1実装完了後
+**最終更新:** 2026-02-15
