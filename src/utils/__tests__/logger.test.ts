@@ -581,3 +581,274 @@ describe('logLambdaError', () => {
     );
   });
 });
+
+
+describe('Logger - エッジケース', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('空文字列のメッセージでもログを記録', () => {
+    logger.info('');
+    logger.warn('');
+    logger.error('');
+    logger.debug('');
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith('', undefined);
+    expect(mockLogger.warn).toHaveBeenCalledWith('', undefined);
+    expect(mockLogger.error).toHaveBeenCalledWith('', undefined);
+    expect(mockLogger.debug).toHaveBeenCalledWith('', undefined);
+  });
+
+  it('非常に長いメッセージでもログを記録', () => {
+    const longMessage = 'a'.repeat(10000);
+    logger.info(longMessage);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith(longMessage, undefined);
+  });
+
+  it('特殊文字を含むメッセージでもログを記録', () => {
+    const specialMessage = 'Test\n\r\t"\'\\message';
+    logger.info(specialMessage);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith(specialMessage, undefined);
+  });
+
+  it('非常に大きなコンテキストオブジェクトでもログを記録', () => {
+    const largeContext: any = {};
+    for (let i = 0; i < 100; i++) {
+      largeContext[`key${i}`] = `value${i}`;
+    }
+
+    logger.info('Large context test', largeContext);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith('Large context test', largeContext);
+  });
+
+  it('ネストされたコンテキストオブジェクトでもログを記録', () => {
+    const nestedContext = {
+      level1: {
+        level2: {
+          level3: {
+            value: 'deep',
+          },
+        },
+      },
+    };
+
+    logger.info('Nested context test', nestedContext);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith('Nested context test', nestedContext);
+  });
+
+  it('配列を含むコンテキストでもログを記録', () => {
+    const contextWithArray = {
+      items: ['item1', 'item2', 'item3'],
+      numbers: [1, 2, 3],
+    };
+
+    logger.info('Array context test', contextWithArray);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith('Array context test', contextWithArray);
+  });
+
+  it('nullやundefinedを含むコンテキストでもログを記録', () => {
+    const contextWithNulls = {
+      nullValue: null,
+      undefinedValue: undefined,
+      emptyString: '',
+      zero: 0,
+      false: false,
+    };
+
+    logger.info('Null context test', contextWithNulls);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.info).toHaveBeenCalledWith('Null context test', contextWithNulls);
+  });
+});
+
+describe('createErrorContext - エッジケース', () => {
+  it('スタックトレースがないエラーでも処理できる', () => {
+    const error = new Error('Test error');
+    delete error.stack;
+
+    const context = createErrorContext(error);
+
+    expect(context).toHaveProperty('error_type', 'Error');
+    expect(context).toHaveProperty('error_message', 'Test error');
+    expect(context).toHaveProperty('stack_trace', undefined);
+  });
+
+  it('空のエラーメッセージでも処理できる', () => {
+    const error = new Error('');
+    const context = createErrorContext(error);
+
+    expect(context).toHaveProperty('error_type', 'Error');
+    expect(context).toHaveProperty('error_message', '');
+    expect(context).toHaveProperty('stack_trace');
+  });
+
+  it('非常に長いエラーメッセージでも処理できる', () => {
+    const longMessage = 'Error: ' + 'a'.repeat(10000);
+    const error = new Error(longMessage);
+    const context = createErrorContext(error);
+
+    expect(context).toHaveProperty('error_type', 'Error');
+    expect(context).toHaveProperty('error_message', longMessage);
+  });
+
+  it('追加コンテキストがnullでも処理できる', () => {
+    const error = new Error('Test error');
+    const context = createErrorContext(error, null as any);
+
+    expect(context).toHaveProperty('error_type', 'Error');
+    expect(context).toHaveProperty('error_message', 'Test error');
+  });
+
+  it('追加コンテキストがundefinedでも処理できる', () => {
+    const error = new Error('Test error');
+    const context = createErrorContext(error, undefined);
+
+    expect(context).toHaveProperty('error_type', 'Error');
+    expect(context).toHaveProperty('error_message', 'Test error');
+  });
+
+  it('追加コンテキストが空オブジェクトでも処理できる', () => {
+    const error = new Error('Test error');
+    const context = createErrorContext(error, {});
+
+    expect(context).toHaveProperty('error_type', 'Error');
+    expect(context).toHaveProperty('error_message', 'Test error');
+  });
+});
+
+describe('logLambdaError - エッジケース', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('lambdaContextがundefinedでも処理できる', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new Error('Test error');
+
+    logLambdaError('Lambda execution failed', error, undefined);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Lambda execution failed',
+      expect.objectContaining({
+        error_type: 'Error',
+        error_message: 'Test error',
+        context: expect.objectContaining({
+          request_id: undefined,
+          function_name: undefined,
+        }),
+      })
+    );
+  });
+
+  it('lambdaContextが空オブジェクトでも処理できる', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new Error('Test error');
+
+    logLambdaError('Lambda execution failed', error, {});
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Lambda execution failed',
+      expect.objectContaining({
+        error_type: 'Error',
+        error_message: 'Test error',
+        context: expect.objectContaining({
+          request_id: undefined,
+          function_name: undefined,
+        }),
+      })
+    );
+  });
+
+  it('additionalContextがnullでも処理できる', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new Error('Test error');
+    const lambdaContext = {
+      requestId: 'test-request-id',
+      functionName: 'TestFunction',
+    };
+
+    logLambdaError('Lambda execution failed', error, lambdaContext, null as any);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalled();
+  });
+
+  it('空文字列のメッセージでも処理できる', () => {
+    const { logLambdaError } = require('../logger');
+    const error = new Error('Test error');
+
+    logLambdaError('', error);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      '',
+      expect.objectContaining({
+        error_type: 'Error',
+        error_message: 'Test error',
+      })
+    );
+  });
+});
+
+describe('setLogLevel - エッジケース', () => {
+  it('同じログレベルを複数回設定しても問題ない', () => {
+    setLogLevel(LogLevel.INFO);
+    setLogLevel(LogLevel.INFO);
+    setLogLevel(LogLevel.INFO);
+
+    const winston = require('winston');
+    const mockLogger = winston.createLogger();
+    expect(mockLogger.level).toBe('info');
+  });
+
+  it('ログレベルを順番に変更できる', () => {
+    setLogLevel(LogLevel.DEBUG);
+    expect(require('winston').createLogger().level).toBe('debug');
+
+    setLogLevel(LogLevel.INFO);
+    expect(require('winston').createLogger().level).toBe('info');
+
+    setLogLevel(LogLevel.WARN);
+    expect(require('winston').createLogger().level).toBe('warn');
+
+    setLogLevel(LogLevel.ERROR);
+    expect(require('winston').createLogger().level).toBe('error');
+  });
+});

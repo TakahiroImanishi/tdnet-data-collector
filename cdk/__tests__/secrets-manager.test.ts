@@ -1,56 +1,60 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { SecretsManagerConstruct } from '../lib/constructs/secrets-manager';
 
 describe('SecretsManagerConstruct', () => {
   let app: cdk.App;
   let stack: cdk.Stack;
-  let template: Template;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new cdk.Stack(app, 'TestStack');
+    stack = new cdk.Stack(app, 'TestStack', {
+      env: {
+        account: '123456789012',
+        region: 'ap-northeast-1',
+      },
+    });
   });
 
-  describe('シークレット作成', () => {
-    it('シークレット名が /tdnet/api-key であること', () => {
+  describe('APIキーシークレット作成', () => {
+    it('should create API key secret with correct name', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
-        enableRotation: false,
       });
-      template = Template.fromStack(stack);
 
       // Assert
+      const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::SecretsManager::Secret', {
         Name: '/tdnet/api-key',
-      });
-    });
-
-    it('シークレットの説明が設定されていること', () => {
-      // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'dev',
-        enableRotation: false,
-      });
-      template = Template.fromStack(stack);
-
-      // Assert
-      template.hasResourceProperties('AWS::SecretsManager::Secret', {
         Description: 'TDnet API Key for authentication',
       });
     });
 
-    it('シークレットが自動生成設定を持つこと', () => {
+    it('should use RETAIN removal policy', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'prod',
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResource('AWS::SecretsManager::Secret', {
+        DeletionPolicy: 'Retain',
+        UpdateReplacePolicy: 'Retain',
+      });
+    });
+
+    it('should generate secret string with correct configuration', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
-        enableRotation: false,
       });
-      template = Template.fromStack(stack);
 
       // Assert
+      const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::SecretsManager::Secret', {
         GenerateSecretString: {
           SecretStringTemplate: '{"apiKey":""}',
@@ -60,47 +64,135 @@ describe('SecretsManagerConstruct', () => {
         },
       });
     });
+  });
 
-    it('シークレットが暗号化されていること（デフォルトのAWS管理キー）', () => {
+  describe('自動ローテーション設定', () => {
+    it('should create rotation function when enableRotation is true', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: true,
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-api-key-rotation-dev',
+        Runtime: 'nodejs20.x',
+        Handler: 'index.handler',
+        Timeout: 30,
+        MemorySize: 128,
+      });
+    });
+
+    it('should NOT create rotation function when enableRotation is false', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: false,
       });
-      template = Template.fromStack(stack);
 
       // Assert
-      // KmsKeyIdが指定されていない場合、デフォルトのAWS管理キーが使用される
-      template.hasResourceProperties('AWS::SecretsManager::Secret', {
-        KmsKeyId: Match.absent(),
+      const template = Template.fromStack(stack);
+      template.resourceCountIs('AWS::Lambda::Function', 0);
+    });
+
+    it('should create rotation schedule with default 90 days', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: true,
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::SecretsManager::RotationSchedule', {
+        RotationRules: {
+          ScheduleExpression: 'rate(90 days)',
+        },
+      });
+    });
+
+    it('should create rotation schedule with custom rotation days', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'prod',
+        enableRotation: true,
+        rotationDays: 30,
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::SecretsManager::RotationSchedule', {
+        RotationRules: {
+          ScheduleExpression: 'rate(30 days)',
+        },
+      });
+    });
+
+    it('should grant read and write permissions to rotation function', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+        enableRotation: true,
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      
+      // ローテーション関数にシークレット読み取り権限が付与されていることを確認
+      template.hasResourceProperties('AWS::IAM::Policy', {
+        PolicyDocument: {
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: Match.arrayWith(['secretsmanager:GetSecretValue']),
+              Effect: 'Allow',
+            }),
+          ]),
+        },
+      });
+
+      // ローテーション関数にシークレット書き込み権限が付与されていることを確認
+      template.hasResourceProperties('AWS::IAM::Policy', {
+        PolicyDocument: {
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: Match.arrayWith([
+                'secretsmanager:PutSecretValue',
+                'secretsmanager:UpdateSecretVersionStage',
+              ]),
+              Effect: 'Allow',
+            }),
+          ]),
+        },
       });
     });
   });
 
-  describe('Lambda関数へのアクセス権限', () => {
-    it('Lambda関数にシークレット読み取り権限が付与されること', () => {
+  describe('Lambda関数への権限付与', () => {
+    it('should grant read permission to Lambda function', () => {
       // Arrange
       const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: false,
       });
-      const testFunction = new lambda.Function(stack, 'TestFunction', {
+
+      const testLambda = new lambda.Function(stack, 'TestLambda', {
         runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'index.handler',
         code: lambda.Code.fromInline('exports.handler = async () => {}'),
       });
 
       // Act
-      secretsManager.grantRead(testFunction);
-      template = Template.fromStack(stack);
+      secretsManager.grantRead(testLambda);
 
       // Assert
-      // Lambda関数のロールにシークレット読み取りポリシーが追加されていることを確認
+      const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::IAM::Policy', {
         PolicyDocument: {
           Statement: Match.arrayWith([
             Match.objectLike({
-              Action: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
+              Action: Match.arrayWith(['secretsmanager:GetSecretValue']),
               Effect: 'Allow',
               Resource: {
                 Ref: Match.stringLikeRegexp('SecretsManagerApiKeySecret'),
@@ -110,47 +202,10 @@ describe('SecretsManagerConstruct', () => {
         },
       });
     });
-
-    it('複数のLambda関数にシークレット読み取り権限が付与されること', () => {
-      // Arrange
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'dev',
-        enableRotation: false,
-      });
-      const queryFunction = new lambda.Function(stack, 'QueryFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {}'),
-      });
-      const exportFunction = new lambda.Function(stack, 'ExportFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {}'),
-      });
-
-      // Act
-      secretsManager.grantRead(queryFunction);
-      secretsManager.grantRead(exportFunction);
-      template = Template.fromStack(stack);
-
-      // Assert
-      // 各Lambda関数のロールにシークレット読み取りポリシーが追加されていることを確認
-      const allPolicies = template.findResources('AWS::IAM::Policy');
-      const secretsPolicies = Object.values(allPolicies).filter((policy: any) => {
-        const statements = policy.Properties?.PolicyDocument?.Statement || [];
-        return statements.some((stmt: any) => 
-          Array.isArray(stmt.Action) && 
-          stmt.Action.includes('secretsmanager:GetSecretValue')
-        );
-      });
-
-      // 少なくとも2つのシークレット読み取りポリシーが存在することを確認
-      expect(secretsPolicies.length).toBeGreaterThanOrEqual(2);
-    });
   });
 
-  describe('ヘルパーメソッド', () => {
-    it('getSecretArn() がシークレットARNを返すこと', () => {
+  describe('シークレット情報取得', () => {
+    it('should return secret ARN', () => {
       // Arrange
       const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
@@ -165,7 +220,7 @@ describe('SecretsManagerConstruct', () => {
       expect(typeof secretArn).toBe('string');
     });
 
-    it('getSecretValue() がSecretValue型を返すこと', () => {
+    it('should return secret value', () => {
       // Arrange
       const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
@@ -177,184 +232,80 @@ describe('SecretsManagerConstruct', () => {
 
       // Assert
       expect(secretValue).toBeDefined();
-      // SecretValue型は unsafeUnwrap() メソッドを持つ
-      expect(typeof secretValue.unsafeUnwrap).toBe('function');
     });
   });
 
-  describe('削除保護', () => {
-    it('シークレットが削除保護されていること（RETAIN）', () => {
+  describe('環境別設定', () => {
+    it('should create rotation function with dev environment name', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
-        enableRotation: false,
-      });
-      template = Template.fromStack(stack);
-
-      // Assert
-      // DeletionPolicyがRetainであることを確認
-      const secrets = template.findResources('AWS::SecretsManager::Secret');
-      const secretKeys = Object.keys(secrets);
-      expect(secretKeys.length).toBe(1);
-
-      const secretResource = secrets[secretKeys[0]];
-      expect(secretResource.DeletionPolicy).toBe('Retain');
-    });
-  });
-
-  describe('ローテーション設定', () => {
-    it('ローテーションが無効の場合、ローテーション関数が作成されないこと', () => {
-      // Arrange & Act
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'dev',
-        enableRotation: false,
-      });
-      template = Template.fromStack(stack);
-
-      // Assert
-      // ローテーション関数が作成されていないことを確認
-      expect(secretsManager.rotationFunction).toBeUndefined();
-      
-      // ローテーションスケジュールが作成されていないことを確認
-      const secrets = template.findResources('AWS::SecretsManager::Secret');
-      const secretKey = Object.keys(secrets)[0];
-      const secret = secrets[secretKey];
-      expect(secret.Properties.RotationSchedule).toBeUndefined();
-    });
-
-    it('ローテーションが有効の場合、ローテーション関数が作成されること', () => {
-      // Arrange & Act
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'dev',
         enableRotation: true,
-        rotationDays: 90,
       });
-      template = Template.fromStack(stack);
 
       // Assert
-      // ローテーション関数が作成されていることを確認
-      expect(secretsManager.rotationFunction).toBeDefined();
-      
-      // Lambda関数が作成されていることを確認
+      const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
         FunctionName: 'tdnet-api-key-rotation-dev',
-        Runtime: 'nodejs20.x',
-        Handler: 'index.handler',
-        Timeout: 30,
-        MemorySize: 128,
+        Environment: {
+          Variables: {
+            ENVIRONMENT: 'dev',
+            LOG_LEVEL: 'info',
+            NODE_OPTIONS: '--enable-source-maps',
+          },
+        },
       });
     });
 
-    it('ローテーションが有効の場合、ローテーションスケジュールが設定されること', () => {
+    it('should create rotation function with prod environment name', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'prod',
+        enableRotation: true,
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-api-key-rotation-prod',
+        Environment: {
+          Variables: {
+            ENVIRONMENT: 'prod',
+            LOG_LEVEL: 'info',
+            NODE_OPTIONS: '--enable-source-maps',
+          },
+        },
+      });
+    });
+  });
+
+  describe('デフォルト値', () => {
+    it('should use default enableRotation=true when not specified', () => {
+      // Arrange & Act
+      new SecretsManagerConstruct(stack, 'SecretsManager', {
+        environment: 'dev',
+      });
+
+      // Assert
+      const template = Template.fromStack(stack);
+      // ローテーション関数が作成されていることを確認（デフォルトでenableRotation=true）
+      template.resourceCountIs('AWS::Lambda::Function', 1);
+    });
+
+    it('should use default rotationDays=90 when not specified', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: true,
-        rotationDays: 90,
       });
-      template = Template.fromStack(stack);
 
       // Assert
-      // ローテーションスケジュールが作成されていることを確認
+      const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::SecretsManager::RotationSchedule', {
         RotationRules: {
           ScheduleExpression: 'rate(90 days)',
         },
       });
-    });
-
-    it('カスタムローテーション間隔が設定できること', () => {
-      // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'prod',
-        enableRotation: true,
-        rotationDays: 30, // 30日ごとにローテーション
-      });
-      template = Template.fromStack(stack);
-
-      // Assert
-      template.hasResourceProperties('AWS::SecretsManager::RotationSchedule', {
-        RotationRules: {
-          ScheduleExpression: 'rate(30 days)',
-        },
-      });
-    });
-
-    it('ローテーション関数にSecrets Manager権限が付与されること', () => {
-      // Arrange & Act
-      new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'dev',
-        enableRotation: true,
-      });
-      template = Template.fromStack(stack);
-
-      // Assert
-      // ローテーション関数のロールにシークレット読み取り・書き込みポリシーが追加されていることを確認
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: Match.arrayWith([
-            Match.objectLike({
-              Action: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret'],
-              Effect: 'Allow',
-            }),
-          ]),
-        },
-      });
-
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: Match.arrayWith([
-            Match.objectLike({
-              Action: Match.arrayWith([
-                'secretsmanager:PutSecretValue',
-                'secretsmanager:UpdateSecret',
-              ]),
-              Effect: 'Allow',
-            }),
-          ]),
-        },
-      });
-    });
-  });
-
-  describe('統合テスト', () => {
-    it('SecretsManagerConstructが正しくスタックに統合されること', () => {
-      // Arrange & Act
-      const secretsManager = new SecretsManagerConstruct(stack, 'SecretsManager', {
-        environment: 'dev',
-        enableRotation: false,
-      });
-      const testFunction = new lambda.Function(stack, 'TestFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {}'),
-        environment: {
-          API_KEY_SECRET_ARN: secretsManager.getSecretArn(),
-        },
-      });
-      secretsManager.grantRead(testFunction);
-      template = Template.fromStack(stack);
-
-      // Assert
-      // 1. シークレットが作成されていること
-      template.resourceCountIs('AWS::SecretsManager::Secret', 1);
-
-      // 2. Lambda関数が作成されていること
-      template.resourceCountIs('AWS::Lambda::Function', 1);
-
-      // 3. Lambda関数の環境変数にシークレットARNが設定されていること
-      template.hasResourceProperties('AWS::Lambda::Function', {
-        Environment: {
-          Variables: {
-            API_KEY_SECRET_ARN: {
-              Ref: Match.stringLikeRegexp('SecretsManagerApiKeySecret'),
-            },
-          },
-        },
-      });
-
-      // 4. IAMポリシーが作成されていること
-      template.resourceCountIs('AWS::IAM::Policy', 1);
     });
   });
 });

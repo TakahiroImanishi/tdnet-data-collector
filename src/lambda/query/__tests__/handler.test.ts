@@ -502,4 +502,21 @@ describe('Lambda Query Handler', () => {
       delete process.env.NODE_ENV;
     });
   });
+
+  describe('異常系: queryDisclosures失敗', () => {
+    it('queryDisclosuresが失敗した場合は500エラーを返す', async () => {
+      // Arrange
+      (queryDisclosures.queryDisclosures as jest.Mock).mockRejectedValue(
+        new Error('DynamoDB query failed')
+      );
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      expect(JSON.parse(result.body).error.code).toBe('INTERNAL_ERROR');
+      expect(JSON.parse(result.body).error.message).toContain('DynamoDB query failed');
+    });
+  });
 });

@@ -1,193 +1,339 @@
-/**
- * CloudWatch Logs Construct Tests
- * 
- * Tests for CloudWatch Logs configuration with environment-specific retention periods
- */
-
 import * as cdk from 'aws-cdk-lib';
+import { Template, Match } from 'aws-cdk-lib/assertions';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { Template } from 'aws-cdk-lib/assertions';
 import { CloudWatchLogs } from '../lib/constructs/cloudwatch-logs';
 
 describe('CloudWatchLogs Construct', () => {
-  describe('Development Environment', () => {
-    let app: cdk.App;
-    let stack: cdk.Stack;
-    let cloudWatchLogs: CloudWatchLogs;
+  let app: cdk.App;
+  let stack: cdk.Stack;
 
-    beforeEach(() => {
-      app = new cdk.App();
-      stack = new cdk.Stack(app, 'TestStack');
-      cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
-        environment: 'dev',
-      });
-    });
-
-    test('should set retention to 7 days for dev environment', () => {
-      expect(cloudWatchLogs.retentionDays).toBe(logs.RetentionDays.ONE_WEEK);
-      expect(cloudWatchLogs.getRetentionDaysAsNumber()).toBe(7);
-    });
-
-    test('should set removal policy to DESTROY for dev environment', () => {
-      expect(cloudWatchLogs.removalPolicy).toBe(cdk.RemovalPolicy.DESTROY);
-    });
-
-    test('should configure log group for Lambda function', () => {
-      // Lambda関数を作成
-      const testFunction = new lambda.Function(stack, 'TestFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {};'),
-        functionName: 'test-function',
-      });
-
-      // ログ設定を適用
-      const logGroup = cloudWatchLogs.configureForLambda(testFunction);
-
-      // CloudFormationテンプレートを検証
-      const template = Template.fromStack(stack);
-
-      // ログ保持期間が7日であることを確認
-      template.hasResourceProperties('AWS::Logs::LogGroup', {
-        RetentionInDays: 7,
-      });
-
-      // ロググループが作成されたことを確認
-      expect(logGroup).toBeDefined();
-      // LogGroupNameはCDKトークンとして生成されるため、文字列として検証できない
-      expect(logGroup.logGroupName).toContain('Token');
-    });
-
-    test('should configure log groups for multiple Lambda functions', () => {
-      // 複数のLambda関数を作成
-      const functions = [
-        new lambda.Function(stack, 'Function1', {
-          runtime: lambda.Runtime.NODEJS_20_X,
-          handler: 'index.handler',
-          code: lambda.Code.fromInline('exports.handler = async () => {};'),
-          functionName: 'function-1',
-        }),
-        new lambda.Function(stack, 'Function2', {
-          runtime: lambda.Runtime.NODEJS_20_X,
-          handler: 'index.handler',
-          code: lambda.Code.fromInline('exports.handler = async () => {};'),
-          functionName: 'function-2',
-        }),
-      ];
-
-      // ログ設定を適用
-      const logGroups = cloudWatchLogs.configureForLambdas(functions);
-
-      // CloudFormationテンプレートを検証
-      const template = Template.fromStack(stack);
-
-      // 2つのロググループが作成されたことを確認
-      template.resourceCountIs('AWS::Logs::LogGroup', 2);
-
-      // 各ロググループの設定を確認（保持期間のみ検証）
-      template.hasResourceProperties('AWS::Logs::LogGroup', {
-        RetentionInDays: 7,
-      });
-
-      // ロググループが作成されたことを確認
-      expect(logGroups).toHaveLength(2);
-      expect(logGroups[0].logGroupName).toContain('Token');
-      expect(logGroups[1].logGroupName).toContain('Token');
-    });
-
-    test('should support custom log group name', () => {
-      const testFunction = new lambda.Function(stack, 'CustomFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {};'),
-        functionName: 'custom-function',
-      });
-
-      // カスタムロググループ名を指定
-      const logGroup = cloudWatchLogs.configureForLambda(
-        testFunction,
-        '/custom/log/group'
-      );
-
-      // CloudFormationテンプレートを検証
-      const template = Template.fromStack(stack);
-
-      template.hasResourceProperties('AWS::Logs::LogGroup', {
-        RetentionInDays: 7,
-      });
-
-      expect(logGroup.logGroupName).toContain('Token');
+  beforeEach(() => {
+    app = new cdk.App();
+    stack = new cdk.Stack(app, 'TestStack', {
+      env: {
+        account: '123456789012',
+        region: 'ap-northeast-1',
+      },
     });
   });
 
-  describe('Production Environment', () => {
-    let app: cdk.App;
-    let stack: cdk.Stack;
-    let cloudWatchLogs: CloudWatchLogs;
-
-    beforeEach(() => {
-      app = new cdk.App();
-      stack = new cdk.Stack(app, 'TestStack');
-      cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+  describe('環境別ログ保持期間設定', () => {
+    it('should set 90 days retention for prod environment', () => {
+      // Arrange & Act
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
         environment: 'prod',
       });
-    });
 
-    test('should set retention to 90 days for prod environment', () => {
+      // Assert
       expect(cloudWatchLogs.retentionDays).toBe(logs.RetentionDays.THREE_MONTHS);
-      expect(cloudWatchLogs.getRetentionDaysAsNumber()).toBe(90);
-    });
-
-    test('should set removal policy to RETAIN for prod environment', () => {
       expect(cloudWatchLogs.removalPolicy).toBe(cdk.RemovalPolicy.RETAIN);
     });
 
-    test('should configure log group for Lambda function with 90 days retention', () => {
-      const testFunction = new lambda.Function(stack, 'ProdFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {};'),
-        functionName: 'prod-function',
-      });
-
-      cloudWatchLogs.configureForLambda(testFunction);
-
-      const template = Template.fromStack(stack);
-
-      // ログ保持期間が90日であることを確認
-      template.hasResourceProperties('AWS::Logs::LogGroup', {
-        RetentionInDays: 90,
-      });
-    });
-  });
-
-  describe('CloudFormation Outputs', () => {
-    test('should create CloudFormation output for log group', () => {
-      const app = new cdk.App();
-      const stack = new cdk.Stack(app, 'TestStack');
+    it('should set 7 days retention for dev environment', () => {
+      // Arrange & Act
       const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
         environment: 'dev',
       });
 
-      const testFunction = new lambda.Function(stack, 'OutputTestFunction', {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => {};'),
-        functionName: 'output-test-function',
+      // Assert
+      expect(cloudWatchLogs.retentionDays).toBe(logs.RetentionDays.ONE_WEEK);
+      expect(cloudWatchLogs.removalPolicy).toBe(cdk.RemovalPolicy.DESTROY);
+    });
+  });
+
+  describe('Lambda関数のログ設定', () => {
+    it('should configure log group for Lambda function with default name', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
       });
 
-      cloudWatchLogs.configureForLambda(testFunction);
+      const testLambda = new lambda.Function(stack, 'TestLambda', {
+        functionName: 'test-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      const logGroup = cloudWatchLogs.configureForLambda(testLambda);
+
+      // Assert
+      expect(logGroup).toBeDefined();
+      
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Logs::LogGroup', {
+        LogGroupName: Match.anyValue(), // トークンなので任意の値
+        RetentionInDays: 7, // dev環境
+      });
+    });
+
+    it('should configure log group for Lambda function with custom name', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'prod',
+      });
+
+      const testLambda = new lambda.Function(stack, 'TestLambda', {
+        functionName: 'test-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      const logGroup = cloudWatchLogs.configureForLambda(
+        testLambda,
+        '/custom/log/group'
+      );
+
+      // Assert
+      expect(logGroup).toBeDefined();
+      
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Logs::LogGroup', {
+        LogGroupName: '/custom/log/group',
+        RetentionInDays: 90, // prod環境
+      });
+    });
+
+    it('should apply RETAIN removal policy for prod environment', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'prod',
+      });
+
+      const testLambda = new lambda.Function(stack, 'TestLambda', {
+        functionName: 'test-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      cloudWatchLogs.configureForLambda(testLambda);
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResource('AWS::Logs::LogGroup', {
+        DeletionPolicy: 'Retain',
+        UpdateReplacePolicy: 'Retain',
+      });
+    });
+
+    it('should apply DESTROY removal policy for dev environment', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      const testLambda = new lambda.Function(stack, 'TestLambda', {
+        functionName: 'test-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      cloudWatchLogs.configureForLambda(testLambda);
+
+      // Assert
+      const template = Template.fromStack(stack);
+      template.hasResource('AWS::Logs::LogGroup', {
+        DeletionPolicy: 'Delete',
+        UpdateReplacePolicy: 'Delete',
+      });
+    });
+
+    it('should create CloudFormation output for log group', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      const testLambda = new lambda.Function(stack, 'TestLambda', {
+        functionName: 'test-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      cloudWatchLogs.configureForLambda(testLambda);
+
+      // Assert
+      const template = Template.fromStack(stack);
+      // CloudFormation Outputが作成されていることを確認
+      template.hasOutput('*', {
+        Description: Match.anyValue(),
+        Export: {
+          Name: Match.anyValue(),
+        },
+      });
+    });
+  });
+
+  describe('複数Lambda関数のログ設定', () => {
+    it('should configure log groups for multiple Lambda functions', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      const lambda1 = new lambda.Function(stack, 'Lambda1', {
+        functionName: 'function-1',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      const lambda2 = new lambda.Function(stack, 'Lambda2', {
+        functionName: 'function-2',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      const logGroups = cloudWatchLogs.configureForLambdas([lambda1, lambda2]);
+
+      // Assert
+      expect(logGroups).toHaveLength(2);
+      expect(logGroups[0]).toBeDefined();
+      expect(logGroups[1]).toBeDefined();
 
       const template = Template.fromStack(stack);
+      template.resourceCountIs('AWS::Logs::LogGroup', 2);
+    });
 
-      // CloudFormation Outputが作成されたことを確認
-      // Output名は動的に生成されるため、存在確認のみ
-      const outputs = template.findOutputs('*');
-      const outputKeys = Object.keys(outputs);
+    it('should handle empty Lambda functions array', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      // Act
+      const logGroups = cloudWatchLogs.configureForLambdas([]);
+
+      // Assert
+      expect(logGroups).toHaveLength(0);
+    });
+  });
+
+  describe('保持期間の数値取得', () => {
+    it('should return 7 for ONE_WEEK retention', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      // Act
+      const days = cloudWatchLogs.getRetentionDaysAsNumber();
+
+      // Assert
+      expect(days).toBe(7);
+    });
+
+    it('should return 90 for THREE_MONTHS retention', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'prod',
+      });
+
+      // Act
+      const days = cloudWatchLogs.getRetentionDaysAsNumber();
+
+      // Assert
+      expect(days).toBe(90);
+    });
+
+    it('should throw error for unexpected retention days', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      // 内部的にretentionDaysを不正な値に変更（テスト用）
+      // @ts-ignore - テストのために型チェックを無視
+      cloudWatchLogs.retentionDays = 999;
+
+      // Act & Assert
+      expect(() => {
+        cloudWatchLogs.getRetentionDaysAsNumber();
+      }).toThrow('Unexpected retention days: 999');
+    });
+  });
+
+  describe('環境別の統合テスト', () => {
+    it('should configure complete logging setup for prod environment', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'prod',
+      });
+
+      const testLambda = new lambda.Function(stack, 'ProdLambda', {
+        functionName: 'prod-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      cloudWatchLogs.configureForLambda(testLambda);
+
+      // Assert
+      const template = Template.fromStack(stack);
       
-      expect(outputKeys.length).toBeGreaterThan(0);
-      expect(outputKeys.some(key => key.includes('LogGroupName'))).toBe(true);
+      // ログ保持期間: 90日
+      template.hasResourceProperties('AWS::Logs::LogGroup', {
+        RetentionInDays: 90,
+      });
+
+      // 削除ポリシー: RETAIN
+      template.hasResource('AWS::Logs::LogGroup', {
+        DeletionPolicy: 'Retain',
+      });
+
+      // CloudFormation Output
+      template.hasOutput('*', {
+        Description: Match.anyValue(),
+      });
+    });
+
+    it('should configure complete logging setup for dev environment', () => {
+      // Arrange
+      const cloudWatchLogs = new CloudWatchLogs(stack, 'CloudWatchLogs', {
+        environment: 'dev',
+      });
+
+      const testLambda = new lambda.Function(stack, 'DevLambda', {
+        functionName: 'dev-function',
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromInline('exports.handler = async () => {}'),
+      });
+
+      // Act
+      cloudWatchLogs.configureForLambda(testLambda);
+
+      // Assert
+      const template = Template.fromStack(stack);
+      
+      // ログ保持期間: 7日
+      template.hasResourceProperties('AWS::Logs::LogGroup', {
+        RetentionInDays: 7,
+      });
+
+      // 削除ポリシー: DESTROY
+      template.hasResource('AWS::Logs::LogGroup', {
+        DeletionPolicy: 'Delete',
+      });
+
+      // CloudFormation Output
+      template.hasOutput('*', {
+        Description: Match.anyValue(),
+      });
     });
   });
 });

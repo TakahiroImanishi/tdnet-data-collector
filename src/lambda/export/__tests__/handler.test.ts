@@ -508,4 +508,34 @@ describe('Lambda Export Handler', () => {
       });
     });
   });
+
+  describe('異常系: createExportJob失敗', () => {
+    it('createExportJobが失敗した場合は500エラーを返す', async () => {
+      // Arrange
+      const event = {
+        headers: {
+          'x-api-key': 'test-api-key',
+        },
+        body: JSON.stringify({
+          format: 'json',
+          filter: {
+            start_date: '2024-01-15',
+            end_date: '2024-01-20',
+          },
+        }),
+      } as unknown as ExportEvent;
+
+      jest.spyOn(createExportJob, 'createExportJob').mockRejectedValue(
+        new Error('DynamoDB connection failed')
+      );
+
+      // Act
+      const result = await handler(event, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(500);
+      expect(JSON.parse(result.body).error.code).toBe('INTERNAL_ERROR');
+      expect(JSON.parse(result.body).error.message).toContain('DynamoDB connection failed');
+    });
+  });
 });

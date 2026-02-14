@@ -329,3 +329,210 @@ describe('retry.ts', () => {
     });
   });
 });
+
+  describe('エッジケース', () => {
+    it('backoffMultiplier=1の場合、遅延時間が一定', async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new RetryableError('Error 1'))
+        .mockRejectedValueOnce(new RetryableError('Error 2'))
+        .mockResolvedValueOnce('success');
+
+      const startTime = Date.now();
+
+      await retryWithBackoff(operation, {
+        maxRetries: 3,
+        initialDelay: 100,
+        backoffMultiplier: 1, // 遅延時間が一定
+        jitter: false,
+      });
+
+      const elapsedTime = Date.now() - startTime;
+
+      // 1回目: 100ms, 2回目: 100ms = 合計200ms
+      expect(elapsedTime).toBeGreaterThanOrEqual(190);
+      expect(elapsedTime).toBeLessThan(250);
+    });
+
+    it('backoffMultiplier=3の場合、遅延時間が急速に増加', async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new RetryableError('Error 1'))
+        .mockRejectedValueOnce(new RetryableError('Error 2'))
+        .mockResolvedValueOnce('success');
+
+      const startTime = Date.now();
+
+      await retryWithBackoff(operation, {
+        maxRetries: 3,
+        initialDelay: 50,
+        backoffMultiplier: 3, // 急速に増加
+        jitter: false,
+      });
+
+      const elapsedTime = Date.now() - startTime;
+
+      // 1回目: 50ms, 2回目: 150ms = 合計200ms
+      expect(elapsedTime).toBeGreaterThanOrEqual(190);
+      expect(elapsedTime).toBeLessThan(250);
+    });
+
+    it('initialDelay=0の場合、即座に再試行', async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new RetryableError('Error'))
+        .mockResolvedValueOnce('success');
+
+      const startTime = Date.now();
+
+      await retryWithBackoff(operation, {
+        maxRetries: 3,
+        initialDelay: 0, // 遅延なし
+        backoffMultiplier: 2,
+        jitter: false,
+      });
+
+      const elapsedTime = Date.now() - startTime;
+
+      // 遅延なしで即座に再試行
+      expect(elapsedTime).toBeLessThan(50);
+    });
+
+    it('ジッターありで複数回実行しても安定', async () => {
+      const results: number[] = [];
+
+      for (let i = 0; i < 5; i++) {
+        const operation = jest
+          .fn()
+          .mockRejectedValueOnce(new RetryableError('Error'))
+          .mockResolvedValueOnce('success');
+
+        const startTime = Date.now();
+
+        await retryWithBackoff(operation, {
+          maxRetries: 3,
+          initialDelay: 100,
+          backoffMultiplier: 2,
+          jitter: true,
+        });
+
+        results.push(Date.now() - startTime);
+      }
+
+      // ジッターにより各実行の時間が異なる
+      const uniqueResults = new Set(results);
+      expect(uniqueResults.size).toBeGreaterThan(1);
+
+      // すべての結果が0〜100msの範囲内
+      results.forEach((elapsed) => {
+        expect(elapsed).toBeGreaterThanOrEqual(0);
+        expect(elapsed).toBeLessThan(150);
+      });
+    });
+
+    it('nullエラーの場合、再試行不可能と判定', async () => {
+      const operation = jest.fn().mockRejectedValue(null);
+
+      await expect(
+        retryWithBackoff(operation, {
+          maxRetries: 3,
+          initialDelay: 10,
+          backoffMultiplier: 2,
+          jitter: false,
+        })
+      ).rejects.toThrow();
+
+      expect(operation).toHaveBeenCalledTimes(1);
+    });
+
+    it('undefinedエラーの場合、再試行不可能と判定', async () => {
+      const operation = jest.fn().mockRejectedValue(undefined);
+
+      await expect(
+        retryWithBackoff(operation, {
+          maxRetries: 3,
+          initialDelay: 10,
+          backoffMultiplier: 2,
+          jitter: false,
+        })
+      ).rejects.toThrow();
+
+      expect(operation).toHaveBeenCalledTimes(1);
+    });
+
+    it('数値エラーの場合、再試行不可能と判定', async () => {
+      const operation = jest.fn().mockRejectedValue(404);
+
+      await expect(
+        retryWithBackoff(operation, {
+          maxRetries: 3,
+          initialDelay: 10,
+          backoffMultiplier: 2,
+          jitter: false,
+        })
+      ).rejects.toThrow('404');
+
+      expect(operation).toHaveBeenCalledTimes(1);
+    });
+
+    it('オブジェクトエラーの場合、再試行不可能と判定', async () => {
+      const operation = jest.fn().mockRejectedValue({ code: 'ERROR', message: 'Failed' });
+
+      await expect(
+        retryWithBackoff(operation, {
+          maxRetries: 3,
+          initialDelay: 10,
+          backoffMultiplier: 2,
+          jitter: false,
+        })
+      ).rejects.toThrow();
+
+      expect(operation).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('isRetryableError() - 追加エッジケース', () => {
+    it('大文字小文字を区別してエラーコードを判定', () => {
+      const error1 = new Error('econnreset'); // 小文字
+      const error2 = new Error('ECONNRESET'); // 大文字
+      const error3 = new Error('EconnReset'); // 混在
+
+      expect(isRetryableError(error1)).toBe(false); // 小文字は一致しない
+      expect(isRetryableError(error2)).toBe(true); // 大文字は一致
+      expect(isRetryableError(error3)).toBe(false); // 混在は一致しない
+    });
+
+    it('エラーメッセージの途中にキーワードがある場合も検出', () => {
+      const error1 = new Error('Connection failed with ECONNRESET error');
+      const error2 = new Error('Request timeout occurred');
+      const error3 = new Error('AWS ThrottlingException: Rate exceeded');
+
+      expect(isRetryableError(error1)).toBe(true);
+      expect(isRetryableError(error2)).toBe(true);
+      expect(isRetryableError(error3)).toBe(true);
+    });
+
+    it('複数のキーワードを含む場合も正しく判定', () => {
+      const error = new Error('ECONNRESET timeout ThrottlingException');
+      expect(isRetryableError(error)).toBe(true);
+    });
+
+    it('空のErrorオブジェクトはfalse', () => {
+      const error = new Error();
+      expect(isRetryableError(error)).toBe(false);
+    });
+
+    it('配列はfalse', () => {
+      expect(isRetryableError([])).toBe(false);
+      expect(isRetryableError(['error'])).toBe(false);
+    });
+
+    it('関数はfalse', () => {
+      expect(isRetryableError(() => {})).toBe(false);
+    });
+
+    it('Symbolはfalse', () => {
+      expect(isRetryableError(Symbol('error'))).toBe(false);
+    });
+  });
+});
