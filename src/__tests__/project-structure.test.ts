@@ -43,7 +43,6 @@ describe('プロジェクト構造の検証', () => {
     const requiredFiles = [
       'package.json',
       'tsconfig.json',
-      'jest.config.js',
       '.eslintrc.json',
       '.prettierrc.json',
       '.gitignore',
@@ -183,11 +182,11 @@ describe('プロジェクト構造の検証', () => {
     });
   });
 
-  describe('jest.config.jsの検証', () => {
+  describe('test/jest.config.jsの検証', () => {
     let jestConfig: any;
 
     beforeAll(() => {
-      const jestConfigPath = path.join(rootDir, 'jest.config.js');
+      const jestConfigPath = path.join(rootDir, 'test', 'jest.config.js');
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       jestConfig = require(jestConfigPath);
     });

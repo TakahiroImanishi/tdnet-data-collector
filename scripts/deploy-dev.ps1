@@ -10,16 +10,16 @@ Write-Host "TDnet Data Collector - Development Deploy" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Check if .env.development exists
-if (-not (Test-Path ".env.development")) {
-    Write-Host "❌ Error: .env.development file not found" -ForegroundColor Red
-    Write-Host "Please create .env.development file in the project root" -ForegroundColor Yellow
+# Check if config/.env.development exists
+if (-not (Test-Path "config/.env.development")) {
+    Write-Host "❌ Error: config/.env.development file not found" -ForegroundColor Red
+    Write-Host "Please create config/.env.development file in the config folder" -ForegroundColor Yellow
     exit 1
 }
 
-# Load environment variables from .env.development
+# Load environment variables from config/.env.development
 Write-Host "📋 Loading development environment variables..." -ForegroundColor Yellow
-Get-Content ".env.development" | ForEach-Object {
+Get-Content "config/.env.development" | ForEach-Object {
     if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
         $name = $matches[1].Trim()
         $value = $matches[2].Trim()

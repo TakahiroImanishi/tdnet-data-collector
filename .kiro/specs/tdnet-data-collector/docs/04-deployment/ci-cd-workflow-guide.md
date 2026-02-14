@@ -1,7 +1,7 @@
 # CI/CD Workflow Guide
 
 **作成日**: 2026-02-08  
-**目的**: GitHub ActionsでのE2Eテスト自動実行ワークフローの使用方法を説明する
+**目的**: GitHub ActionsでのE2Eテスト自動実行ワークフローの使用方法
 
 ---
 
@@ -43,83 +43,20 @@ TDnet Data Collectorプロジェクトには、2つのGitHub Actionsワークフ
     done'
 ```
 
-**特徴:**
-- Docker Composeでサービスを起動
-- ヘルスチェックで起動を確認（最大120秒）
-- タイムアウト設定で無限待機を防止
-
 ### 2. 自動リソース作成
 
-```yaml
-- name: Create DynamoDB tables
-  env:
-    AWS_ENDPOINT_URL: http://localhost:4566
-  run: |
-    # tdnet_disclosures テーブル作成
-    aws dynamodb create-table ...
-    
-    # tdnet_executions テーブル作成
-    aws dynamodb create-table ...
-
-- name: Create S3 buckets
-  run: |
-    # PDFバケット作成
-    aws s3 mb s3://tdnet-data-collector-pdfs-local
-    
-    # エクスポートバケット作成
-    aws s3 mb s3://tdnet-data-collector-exports-local
-```
-
-**特徴:**
 - DynamoDBテーブル（2つ）を自動作成
 - S3バケット（2つ）を自動作成
 - エラーハンドリング（既存リソースの場合は警告のみ）
 
 ### 3. 詳細なテストレポート
 
-```yaml
-- name: Generate test report
-  run: |
-    # JSON結果を解析
-    TOTAL=$(jq '.numTotalTests' test-results/e2e-results.json)
-    PASSED=$(jq '.numPassedTests' test-results/e2e-results.json)
-    FAILED=$(jq '.numFailedTests' test-results/e2e-results.json)
-    
-    # GitHub Summaryに表示
-    echo "## Summary" >> $GITHUB_STEP_SUMMARY
-    echo "- **Total Tests**: $TOTAL" >> $GITHUB_STEP_SUMMARY
-    echo "- **Passed**: ✅ $PASSED" >> $GITHUB_STEP_SUMMARY
-    echo "- **Failed**: ❌ $FAILED" >> $GITHUB_STEP_SUMMARY
-```
-
-**特徴:**
 - JSON形式のテスト結果を解析
 - GitHub Summaryに統計情報を表示
 - 失敗したテストの詳細を表示
 
 ### 4. 包括的なアーティファクト収集
 
-```yaml
-- name: Collect LocalStack logs
-  run: |
-    docker-compose logs localstack > test-artifacts/logs/localstack.log
-
-- name: Collect test artifacts
-  run: |
-    # テスト結果をコピー
-    cp -r test-results test-artifacts/
-    
-    # 環境情報を作成
-    cat > test-artifacts/environment.txt << EOF
-    Node.js: $(node --version)
-    npm: $(npm --version)
-    OS: $(uname -a)
-    Date: $(date)
-    Commit: ${{ github.sha }}
-    EOF
-```
-
-**特徴:**
 - LocalStackログを保存
 - テスト結果（JSON）を保存
 - 環境情報（Node.js、npm、OS、コミット）を保存
@@ -127,13 +64,6 @@ TDnet Data Collectorプロジェクトには、2つのGitHub Actionsワークフ
 
 ### 5. 自動クリーンアップ
 
-```yaml
-- name: Stop LocalStack
-  if: always()
-  run: docker-compose down -v
-```
-
-**特徴:**
 - テスト成功・失敗に関わらず実行
 - ボリュームも削除（-v）
 - 次回実行時にクリーンな状態から開始
@@ -192,9 +122,6 @@ GitHub Actionsの画面から手動実行も可能です：
 - **Duration**: 15.3s
 
 ## ✅ All Tests Passed!
-
----
-Test completed at 2026-02-08 13:30:00
 ```
 
 ### アーティファクトのダウンロード
@@ -209,58 +136,12 @@ Test completed at 2026-02-08 13:30:00
 
 ## トラブルシューティング
 
-### LocalStackが起動しない
-
-**症状**: "Waiting for LocalStack..." が120秒タイムアウト
-
-**原因**:
-- Docker Composeの起動失敗
-- ヘルスチェックエンドポイントの応答なし
-
-**解決策**:
-1. docker-compose.ymlの設定を確認
-2. LocalStackのバージョンを確認
-3. GitHub Actionsのログを確認
-
-### テーブル作成に失敗
-
-**症状**: "ResourceNotFoundException" エラー
-
-**原因**:
-- AWS CLIのインストール失敗
-- LocalStackの起動未完了
-- 環境変数の設定ミス
-
-**解決策**:
-1. AWS CLIのインストールステップを確認
-2. LocalStackのヘルスチェックを確認
-3. 環境変数（AWS_ENDPOINT_URL、AWS_REGION）を確認
-
-### テストがタイムアウト
-
-**症状**: テストが60秒でタイムアウト
-
-**原因**:
-- LocalStackの応答遅延
-- テストケースの実装ミス
-
-**解決策**:
-1. jest.config.e2e.jsのtestTimeoutを延長
-2. テストケースのロジックを確認
-3. LocalStackのログを確認
-
-### JSON結果が生成されない
-
-**症状**: "Test results file not found" エラー
-
-**原因**:
-- Jestの実行失敗
-- --json --outputFileオプションの未指定
-
-**解決策**:
-1. npm run test:e2eコマンドを確認
-2. test-resultsディレクトリの存在を確認
-3. Jestの実行ログを確認
+| 問題 | 原因 | 解決策 |
+|------|------|--------|
+| LocalStackが起動しない | Docker Composeの起動失敗 | docker-compose.ymlの設定を確認 |
+| テーブル作成に失敗 | LocalStackの起動未完了 | LocalStackのヘルスチェックを確認 |
+| テストがタイムアウト | LocalStackの応答遅延 | jest.config.e2e.jsのtestTimeoutを延長 |
+| JSON結果が生成されない | Jestの実行失敗 | npm run test:e2eコマンドを確認 |
 
 ---
 
@@ -311,11 +192,7 @@ e2e-test.ymlとci.ymlを統合し、以下を実装予定：
    - 依存関係の脆弱性スキャン
    - コードの静的解析
 
-3. **パフォーマンステスト**
-   - 負荷テスト
-   - レスポンスタイム測定
-
-4. **通知機能**
+3. **通知機能**
    - Slack通知
    - メール通知
 
@@ -331,6 +208,7 @@ e2e-test.ymlワークフローは、LocalStackを使用したE2Eテストの自�
 - デバッグ時: アーティファクトをダウンロードして詳細確認
 
 **関連ドキュメント:**
-- [E2Eテスト実行ガイド](e2e-test-guide.md)
-- [LocalStackセットアップガイド](localstack-setup.md)
+- [CI/CD設定ガイド](./ci-cd-setup.md)
+- [環境構築ガイド](./environment-setup.md)
 - [GitHub Actions公式ドキュメント](https://docs.github.com/en/actions)
+

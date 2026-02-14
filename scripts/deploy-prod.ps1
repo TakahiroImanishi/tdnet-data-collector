@@ -10,16 +10,16 @@ Write-Host "TDnet Data Collector - Production Deploy" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Check if .env.production exists
-if (-not (Test-Path ".env.production")) {
-    Write-Host "❌ Error: .env.production file not found" -ForegroundColor Red
-    Write-Host "Please create .env.production file in the project root" -ForegroundColor Yellow
+# Check if config/.env.production exists
+if (-not (Test-Path "config/.env.production")) {
+    Write-Host "❌ Error: config/.env.production file not found" -ForegroundColor Red
+    Write-Host "Please create config/.env.production file in the config folder" -ForegroundColor Yellow
     exit 1
 }
 
-# Load environment variables from .env.production
+# Load environment variables from config/.env.production
 Write-Host "📋 Loading production environment variables..." -ForegroundColor Yellow
-Get-Content ".env.production" | ForEach-Object {
+Get-Content "config/.env.production" | ForEach-Object {
     if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
         $name = $matches[1].Trim()
         $value = $matches[2].Trim()

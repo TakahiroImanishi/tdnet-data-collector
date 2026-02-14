@@ -6,7 +6,7 @@ param(
     [string]$Region = "ap-northeast-1",
     
     [Parameter(Mandatory=$false)]
-    [string]$OutputFile = ".env.development",
+    [string]$OutputFile = "config/.env.development",
     
     [Parameter(Mandatory=$false)]
     [switch]$Force
