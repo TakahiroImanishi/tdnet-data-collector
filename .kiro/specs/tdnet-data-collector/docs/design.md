@@ -747,13 +747,6 @@ GET /disclosures/{disclosure_id}/pdf
 - バージョニング: 有効
 - アクセス: 署名付きURLのみ
 
-Object Lock設定:
-- バケット全体で有効化（objectLockEnabled: true）
-- デフォルト保持期間: 設定なし（オブジェクトごとに指定）
-- pdfs/プレフィックス: GOVERNANCE mode、1年間保持
-- temp/プレフィックス: Object Lock非適用（ライフサイクルポリシーで1日後に自動削除）
-- exports/プレフィックス: Object Lock非適用（ライフサイクルポリシーで7日後に自動削除）
-
 ライフサイクルポリシー:
 - temp/: 1日経過後に自動削除
 - exports/: 7日経過後に自動削除
