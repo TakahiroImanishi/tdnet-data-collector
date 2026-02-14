@@ -1,5 +1,5 @@
-# スタック分割デプロイスクリプト
-# 使用方法: .\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy
+# Stack Split Deploy Script
+# Usage: .\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy
 
 param(
     [Parameter(Mandatory=$true)]
@@ -15,10 +15,10 @@ param(
     [string]$Stack = 'all'
 )
 
-# エラー時に停止
+# Stop on error
 $ErrorActionPreference = "Stop"
 
-# カラー出力関数
+# Color output function
 function Write-ColorOutput {
     param(
         [string]$Message,
@@ -27,7 +27,7 @@ function Write-ColorOutput {
     Write-Host $Message -ForegroundColor $Color
 }
 
-# スタック名を取得
+# Get stack names
 function Get-StackNames {
     param([string]$Env, [string]$StackFilter)
     
@@ -45,31 +45,31 @@ function Get-StackNames {
     }
 }
 
-# デプロイ順序（依存関係順）
+# Deploy order (dependency order)
 $deployOrder = @('foundation', 'compute', 'api', 'monitoring')
 
-# 削除順序（依存関係の逆順）
+# Destroy order (reverse dependency order)
 $destroyOrder = @('monitoring', 'api', 'compute', 'foundation')
 
 Write-ColorOutput "`n========================================" "Cyan"
-Write-ColorOutput "TDnet Data Collector - スタック分割デプロイ" "Cyan"
+Write-ColorOutput "TDnet Data Collector - Stack Split Deploy" "Cyan"
 Write-ColorOutput "========================================`n" "Cyan"
 
-Write-ColorOutput "環境: $Environment" "Yellow"
-Write-ColorOutput "アクション: $Action" "Yellow"
-Write-ColorOutput "対象スタック: $Stack`n" "Yellow"
+Write-ColorOutput "Environment: $Environment" "Yellow"
+Write-ColorOutput "Action: $Action" "Yellow"
+Write-ColorOutput "Target Stack: $Stack`n" "Yellow"
 
-# ビルド実行
-Write-ColorOutput "`nLambda関数をビルド中..." "Green"
+# Build Lambda functions
+Write-ColorOutput "`nBuilding Lambda functions..." "Green"
 npm run build
 if ($LASTEXITCODE -ne 0) {
-    Write-ColorOutput "`nビルドに失敗しました" "Red"
-    Write-ColorOutput "エラー: TypeScriptのコンパイルエラーを確認してください" "Red"
+    Write-ColorOutput "`nBuild failed" "Red"
+    Write-ColorOutput "Error: Check TypeScript compilation errors" "Red"
     exit 1
 }
 
-# ビルド結果の確認
-Write-ColorOutput "`nビルド結果を確認中..." "Green"
+# Verify build results
+Write-ColorOutput "`nVerifying build results..." "Green"
 $criticalFiles = @(
     "dist/src/lambda/dlq-processor/index.js",
     "dist/src/lambda/collector/index.js",
@@ -84,38 +84,38 @@ foreach ($file in $criticalFiles) {
 }
 
 if ($missingFiles.Count -gt 0) {
-    Write-ColorOutput "`nエラー: 以下のビルドファイルが見つかりません:" "Red"
+    Write-ColorOutput "`nError: The following build files are missing:" "Red"
     foreach ($file in $missingFiles) {
         Write-ColorOutput "  - $file" "Red"
     }
-    Write-ColorOutput "`n'npm run build' を実行してビルドファイルを生成してください" "Yellow"
+    Write-ColorOutput "`nPlease run 'npm run build' to generate build files" "Yellow"
     exit 1
 }
 
-Write-ColorOutput "ビルド結果の確認完了" "Green"
+Write-ColorOutput "Build verification completed" "Green"
 
-# CDKアプリケーションを指定
+# Specify CDK application
 $cdkApp = "cdk/bin/tdnet-data-collector-split.ts"
 
-# アクション実行
+# Execute action
 switch ($Action) {
     'synth' {
-        Write-ColorOutput "`nCloudFormationテンプレートを生成中..." "Green"
+        Write-ColorOutput "`nGenerating CloudFormation templates..." "Green"
         npx cdk synth --app "npx ts-node $cdkApp" -c environment=$Environment
     }
     
     'diff' {
-        Write-ColorOutput "`n変更差分を確認中..." "Green"
+        Write-ColorOutput "`nChecking differences..." "Green"
         $stackNames = Get-StackNames -Env $Environment -StackFilter $Stack
         foreach ($stackName in $stackNames) {
-            Write-ColorOutput "`n--- $stackName の差分 ---" "Cyan"
+            Write-ColorOutput "`n--- Diff for $stackName ---" "Cyan"
             npx cdk diff $stackName --app "npx ts-node $cdkApp" -c environment=$Environment
         }
     }
     
     'deploy' {
         if ($Stack -eq 'all') {
-            # 全スタックを依存関係順にデプロイ
+            # Deploy all stacks in dependency order
             foreach ($stackType in $deployOrder) {
                 $stackName = "TdnetFoundation-$Environment"
                 if ($stackType -eq 'compute') { $stackName = "TdnetCompute-$Environment" }
@@ -123,31 +123,31 @@ switch ($Action) {
                 elseif ($stackType -eq 'monitoring') { $stackName = "TdnetMonitoring-$Environment" }
                 
                 Write-ColorOutput "`n========================================" "Cyan"
-                Write-ColorOutput "デプロイ中: $stackName" "Green"
+                Write-ColorOutput "Deploying: $stackName" "Green"
                 Write-ColorOutput "========================================`n" "Cyan"
                 
                 npx cdk deploy $stackName --app "npx ts-node $cdkApp" -c environment=$Environment --require-approval never
                 
                 if ($LASTEXITCODE -ne 0) {
-                    Write-ColorOutput "`n$stackName のデプロイに失敗しました" "Red"
+                    Write-ColorOutput "`nDeployment failed for $stackName" "Red"
                     exit 1
                 }
                 
-                Write-ColorOutput "`n$stackName のデプロイが完了しました`n" "Green"
+                Write-ColorOutput "`nDeployment completed for $stackName`n" "Green"
             }
             
             Write-ColorOutput "`n========================================" "Cyan"
-            Write-ColorOutput "全スタックのデプロイが完了しました！" "Green"
+            Write-ColorOutput "All stacks deployed successfully!" "Green"
             Write-ColorOutput "========================================`n" "Cyan"
         } else {
-            # 単一スタックをデプロイ
+            # Deploy single stack
             $stackNames = Get-StackNames -Env $Environment -StackFilter $Stack
             foreach ($stackName in $stackNames) {
-                Write-ColorOutput "`nデプロイ中: $stackName" "Green"
+                Write-ColorOutput "`nDeploying: $stackName" "Green"
                 npx cdk deploy $stackName --app "npx ts-node $cdkApp" -c environment=$Environment --require-approval never
                 
                 if ($LASTEXITCODE -ne 0) {
-                    Write-ColorOutput "$stackName のデプロイに失敗しました" "Red"
+                    Write-ColorOutput "Deployment failed for $stackName" "Red"
                     exit 1
                 }
             }
@@ -155,39 +155,39 @@ switch ($Action) {
     }
     
     'destroy' {
-        Write-ColorOutput "`n警告: スタックを削除します。この操作は取り消せません。" "Red"
-        $confirmation = Read-Host "続行しますか？ (yes/no)"
+        Write-ColorOutput "`nWarning: This will delete the stacks. This operation cannot be undone." "Red"
+        $confirmation = Read-Host "Continue? (yes/no)"
         
         if ($confirmation -ne 'yes') {
-            Write-ColorOutput "削除をキャンセルしました" "Yellow"
+            Write-ColorOutput "Deletion cancelled" "Yellow"
             exit 0
         }
         
         if ($Stack -eq 'all') {
-            # 全スタックを依存関係の逆順に削除
+            # Delete all stacks in reverse dependency order
             foreach ($stackType in $destroyOrder) {
                 $stackName = "TdnetMonitoring-$Environment"
                 if ($stackType -eq 'api') { $stackName = "TdnetApi-$Environment" }
                 elseif ($stackType -eq 'compute') { $stackName = "TdnetCompute-$Environment" }
                 elseif ($stackType -eq 'foundation') { $stackName = "TdnetFoundation-$Environment" }
                 
-                Write-ColorOutput "`n削除中: $stackName" "Yellow"
+                Write-ColorOutput "`nDeleting: $stackName" "Yellow"
                 npx cdk destroy $stackName --app "npx ts-node $cdkApp" -c environment=$Environment --force
                 
                 if ($LASTEXITCODE -ne 0) {
-                    Write-ColorOutput "$stackName の削除に失敗しました" "Red"
+                    Write-ColorOutput "Deletion failed for $stackName" "Red"
                     exit 1
                 }
             }
         } else {
-            # 単一スタックを削除
+            # Delete single stack
             $stackNames = Get-StackNames -Env $Environment -StackFilter $Stack
             foreach ($stackName in $stackNames) {
-                Write-ColorOutput "`n削除中: $stackName" "Yellow"
+                Write-ColorOutput "`nDeleting: $stackName" "Yellow"
                 npx cdk destroy $stackName --app "npx ts-node $cdkApp" -c environment=$Environment --force
                 
                 if ($LASTEXITCODE -ne 0) {
-                    Write-ColorOutput "$stackName の削除に失敗しました" "Red"
+                    Write-ColorOutput "Deletion failed for $stackName" "Red"
                     exit 1
                 }
             }
@@ -195,4 +195,4 @@ switch ($Action) {
     }
 }
 
-Write-ColorOutput "`n処理が完了しました`n" "Green"
+Write-ColorOutput "`nProcess completed`n" "Green"

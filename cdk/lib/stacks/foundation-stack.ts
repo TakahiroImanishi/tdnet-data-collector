@@ -4,6 +4,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { Environment } from '../config/environment-config';
 import { SecretsManagerConstruct } from '../constructs/secrets-manager';
+import { DashboardCloudFront } from '../constructs/cloudfront';
 
 /**
  * Foundation Stack - 基盤リソース（DynamoDB, S3, Secrets Manager）
@@ -24,6 +25,7 @@ export class TdnetFoundationStack extends cdk.Stack {
   public readonly dashboardBucket: s3.Bucket;
   public readonly cloudtrailLogsBucket: s3.Bucket;
   public readonly secretsManager: SecretsManagerConstruct;
+  public readonly dashboardCloudFront: DashboardCloudFront;
 
   constructor(scope: Construct, id: string, props: TdnetFoundationStackProps) {
     super(scope, id, props);
@@ -224,6 +226,15 @@ export class TdnetFoundationStack extends cdk.Stack {
       environment: env,
       enableRotation: false,
       useExistingSecret: true,
+    });
+
+    // ========================================
+    // CloudFront Distribution
+    // ========================================
+
+    this.dashboardCloudFront = new DashboardCloudFront(this, 'DashboardCloudFront', {
+      dashboardBucket: this.dashboardBucket,
+      environment: env,
     });
 
     // ========================================

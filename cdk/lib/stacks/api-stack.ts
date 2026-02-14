@@ -2,13 +2,11 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { Environment } from '../config/environment-config';
-import { DashboardCloudFront } from '../constructs/cloudfront';
 
 /**
- * API Stack - API Gateway, WAF, CloudFront
+ * API Stack - API Gateway, WAF
  * 変更頻度: 中（月数回）
  * 依存: Foundation Stack, Compute Stack
  */
@@ -20,7 +18,6 @@ export interface TdnetApiStackProps extends cdk.StackProps {
   collectStatusFunction: lambda.IFunction;
   exportStatusFunction: lambda.IFunction;
   pdfDownloadFunction: lambda.IFunction;
-  dashboardBucket: s3.IBucket;
 }
 
 export class TdnetApiStack extends cdk.Stack {
@@ -32,15 +29,6 @@ export class TdnetApiStack extends cdk.Stack {
     super(scope, id, props);
 
     const env = props.environment;
-
-    // ========================================
-    // CloudFront Distribution
-    // ========================================
-
-    new DashboardCloudFront(this, 'DashboardCloudFront', {
-      dashboardBucket: props.dashboardBucket,
-      environment: env,
-    });
 
     // ========================================
     // API Gateway

@@ -86,7 +86,6 @@ const apiStack = new TdnetApiStack(app, `TdnetApi-${environment}`, {
   collectStatusFunction: computeStack.collectStatusFunction,
   exportStatusFunction: computeStack.exportStatusFunction,
   pdfDownloadFunction: computeStack.pdfDownloadFunction,
-  dashboardBucket: foundationStack.dashboardBucket,
 });
 
 // API StackはCompute Stackに依存
