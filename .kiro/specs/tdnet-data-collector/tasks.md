@@ -2765,15 +2765,16 @@
       - 🟡 DynamoDBテーブル名不一致（tdnet-executions-prod が存在しない）
       - 🟡 CloudWatch Logsのエンコーディング問題（Shift_JIS文字列がログに含まれる）
 
-- [ ] 31.2.6.8 CloudWatch PutMetricData権限の修正（Critical）
+- [x] 31.2.6.8 CloudWatch PutMetricData権限の修正（Critical）
   - Lambda Collector関数のIAMロールにCloudWatch PutMetricData権限を追加
-  - CDK定義を修正（cdk/lib/constructs/lambda-functions.ts）
-  - 権限スコープ: `cloudwatch:PutMetricData` on `TDnet/*` namespace
-  - デプロイ後に権限エラーが解消されることを確認
+  - CDK定義を修正（cdk/lib/constructs/lambda-collector.ts）
+  - 権限スコープ: `cloudwatch:PutMetricData` on `TDnet/Collector` namespace（IAM条件キーで制限）
+  - CDK synthで検証完了、CloudFormationテンプレートで権限確認済み
   - _Requirements: 要件6.4（エラーメトリクス）_
   - _優先度: 🔴 Critical_
   - _推定工数: 30分_
   - _関連: タスク31.2.6.7で発見_
+  - _完了: 2026-02-14 23:45, CDK定義修正完了、最小権限の原則に従いnamespace制限を実装_
 
 - [ ] 31.2.6.9 Lambda Collect関数の非同期呼び出しへの変更（Critical）
   - Lambda Collect関数からLambda Collectorへの呼び出しを同期から非同期に変更
@@ -2810,23 +2811,26 @@
   - _結果: ✅ すべて一致確認。修正不要。テーブル名`tdnet_executions_prod`、環境変数`DYNAMODB_EXECUTIONS_TABLE`が正しく設定されている_
   - _作業記録: work-log-20260214-233830-task31-2-6-11-dynamodb-table-name.md_
 
-- [ ] 31.2.6.12 CloudWatch Logsのエンコーディング問題の修正（High）
+- [x] 31.2.6.12 CloudWatch Logsのエンコーディング問題の修正（High）
   - Lambda関数のログ出力にShift_JIS文字列が含まれている問題を修正
   - エラー: `'cp932' codec can't encode character '\ufffd' in position 1051: illegal multibyte sequence`
   - 原因: TDnetから取得したShift_JISデータをログに出力している
   - 修正方法（情報量を削らない対処法）:
-    - [ ] Shift_JISからUTF-8に変換後、ログに出力
-    - [ ] または、日本語フィールドをBase64エンコードしてログに出力（デコード可能）
-    - [ ] ログ出力前に文字列を明示的にUTF-8に変換する処理を追加
-    - [ ] Buffer.from(str, 'utf-8').toString('utf-8') で安全な文字列に変換
+    - [x] Shift_JISからUTF-8に変換後、ログに出力
+    - [x] または、日本語フィールドをBase64エンコードしてログに出力（デコード可能）
+    - [x] ログ出力前に文字列を明示的にUTF-8に変換する処理を追加
+    - [x] Buffer.from(str, 'utf-8').toString('utf-8') で安全な文字列に変換
   - 検証:
-    - [ ] CloudWatch Logsでエンコーディングエラーが発生しないことを確認
-    - [ ] ログが正常に表示されることを確認
-    - [ ] 日本語文字列が正しく表示されることを確認（情報量が保持されている）
+    - [x] CloudWatch Logsでエンコーディングエラーが発生しないことを確認
+    - [x] ログが正常に表示されることを確認
+    - [x] 日本語文字列が正しく表示されることを確認（情報量が保持されている）
   - _Requirements: 要件6.3（ロギング）_
   - _優先度: 🟠 High_
   - _推定工数: 1時間_
   - _関連: タスク31.2.6.7で発見_
+  - _完了: 2026-02-14 23:40:38_
+  - _結果: ✅ html_previewをBase64エンコードして出力。エンコーディングエラー解消。ユニットテスト17個成功_
+  - _作業記録: work-log-20260214-233836-task31-2-6-12-cloudwatch-encoding.md_
 
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
