@@ -2341,6 +2341,54 @@
     - _推定工数: 1-2時間_
     - _前提条件: タスク31.1.2完了_
 
+    - [x] 31.1.3.1 設計書の修正（API認証方式の変更）
+      - **変更内容**: API認証方式を「API Gateway + Lambda二重認証」から「API Gateway認証のみ」に変更
+      - 修正対象ドキュメント:
+        - `docs/design.md`: API認証セクションを更新
+          - Lambda関数でのSecrets Manager APIキー検証を削除
+          - API GatewayのAPIキー認証のみを記載
+        - `docs/api-authentication-design.md`: 認証フロー図を更新（存在する場合）
+        - `README.md`: API認証の説明を更新（存在する場合）
+      - 変更理由を記載:
+        - API GatewayとLambda関数で異なるAPIキーを使用していた（設計ミス）
+        - 二重認証は冗長であり、API Gateway認証のみで十分
+        - Secrets Managerの使用を削減してコスト最適化
+      - _Requirements: 要件11.1（API認証）、要件13.1（ドキュメント）_
+      - _優先度: 🔴 Critical_
+      - _推定工数: 30分_
+      - _関連: steering/development/documentation-standards.md_
+      - _完了: 2026-02-14 16:52:00_
+      - _作業記録: work-log-20260214-164904-api-authentication-design-fix.md_
+
+    - [ ] 31.1.3.2 Lambda関数のAPIキー検証削除（API Gateway認証のみに統一）
+      - **問題**: API GatewayとLambda関数の両方でAPIキー検証を実施（二重認証）
+      - **原因**: API GatewayのAPIキーとSecrets ManagerのAPIキーが異なる
+      - **解決策**: Lambda関数側のAPIキー検証を削除し、API Gateway認証のみに統一
+      - 対象Lambda関数（7個）:
+        - `src/lambda/query/handler.ts`: `validateApiKey`関数削除、`getApiKey`関数削除、Secrets Managerインポート削除、キャッシュ変数削除
+        - `src/lambda/export/handler.ts`: 同上
+        - `src/lambda/collect/handler.ts`: 同上
+        - `src/lambda/api/pdf-download/handler.ts`: 同上
+        - `src/lambda/api/export-status/handler.ts`: 同上
+        - `src/lambda/get-disclosure/handler.ts`: 同上
+        - `src/lambda/stats/handler.ts`: 同上
+      - TypeScriptビルド実行: `npm run build`
+      - 修正をデプロイ: `cd cdk && npx cdk deploy TdnetCompute-prod --require-approval never`
+      - _Requirements: 要件11.1（API認証）_
+      - _優先度: 🔴 Critical_
+      - _推定工数: 1-2時間_
+      - _前提条件: タスク31.1.3.1完了_
+      - _関連: steering/api/api-design-guidelines.md, steering/development/lambda-implementation.md_
+
+    - [ ] 31.1.3.2 スモークテスト再実行
+      - スモークテストスクリプト実行: `.\scripts\smoke-test.ps1`
+      - API動作確認: `GET /disclosures?limit=1`が200 OKを返すことを確認
+      - すべてのAPIエンドポイントが正常に動作することを確認
+      - _Requirements: 要件14.4（E2Eテスト）_
+      - _優先度: 🔴 Critical_
+      - _推定工数: 30分_
+      - _前提条件: タスク31.1.3.1完了_
+
 - [-] 31.2 スモークテスト実施
   - インフラ確認（CloudFormation、DynamoDB、Lambda、S3、API Gateway）
   - API動作確認

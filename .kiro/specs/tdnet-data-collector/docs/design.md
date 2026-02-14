@@ -637,6 +637,13 @@ GET /disclosures/{disclosure_id}/pdf
 - API Gatewayの使用量プランとAPIキー機能を使用
 - リクエストヘッダー `X-API-Key` でAPIキーを検証
 - 無効なキーの場合は401 Unauthorizedを返却
+- Lambda関数では認証を実施しない（API Gateway認証のみ）
+
+**認証方式の変更履歴:**
+- 2026-02-14: Lambda関数でのSecrets Manager APIキー検証を削除
+  - 理由: API GatewayとLambda関数で異なるAPIキーを使用していた（設計ミス）
+  - 理由: 二重認証は冗長であり、API Gateway認証のみで十分
+  - 理由: Secrets Managerの使用を削減してコスト最適化（$0.81/月 → $0.40/月）
 
 ### 5. DynamoDB（メタデータストレージ）
 
@@ -901,47 +908,40 @@ const webAcl = new wafv2.CfnWebACL(this, 'ApiWaf', {
 
 ```
 シークレット:
-- /tdnet/api-key: APIキー
+- /tdnet/api-key: APIキー（API Gateway使用量プラン用、将来的なローテーション対応）
 - /tdnet/encryption-key: データ暗号化キー（将来的な機密データ用）
 
 アクセス制御:
-- Lambda関数のIAMロールにのみ読み取り権限を付与
-- ローテーション: 90日ごとに自動ローテーション
+- CDKデプロイ時のみ読み取り権限が必要
+- Lambda関数からのアクセスは不要（API Gateway認証のみ）
+- ローテーション: 90日ごとに自動ローテーション（Phase 4で実装予定）
+
+注意: 2026-02-14以前はLambda関数でもSecrets Managerを使用していたが、
+      二重認証の冗長性とコスト最適化のため、API Gateway認証のみに統一。
 ```
 
-**API Keyセキュリティベストプラクティス**
+**API Keyセキュリティベストプラクティス（非推奨・削除済み）**
+
+以下の実装は2026-02-14に削除されました。API Gateway認証のみを使用してください。
 
 ```typescript
-// ✅ 推奨: Secrets Manager ARNを環境変数に設定
-const lambdaFunction = new lambda.Function(this, 'Function', {
-    environment: {
-        API_KEY_SECRET_ARN: apiKeySecret.secretArn,  // ARNのみを設定
-    },
-});
+// ❌ 削除済み: Lambda関数でのSecrets Manager使用
+// 理由: API GatewayとLambda関数で異なるAPIキーを使用していた
+// 理由: 二重認証は冗長、API Gateway認証のみで十分
+// 理由: コスト最適化（Secrets Manager API呼び出し削減）
 
-// Lambda関数内でシークレットを取得
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
-
-const secretsManager = new SecretsManagerClient({ region: 'ap-northeast-1' });
-const response = await secretsManager.send(new GetSecretValueCommand({
-    SecretId: process.env.API_KEY_SECRET_ARN,
-}));
-const apiKey = response.SecretString;
-
-// ❌ 非推奨: シークレット値を直接環境変数に設定
-// 理由: CloudWatch Logsやコンソールで露出するリスクがある
-const lambdaFunction = new lambda.Function(this, 'Function', {
-    environment: {
-        API_KEY: apiKeySecret.secretValue.unsafeUnwrap(),  // 直接展開は避ける
-    },
-});
+// 以前の実装（削除済み）:
+// const secretsManager = new SecretsManagerClient({ region: 'ap-northeast-1' });
+// const response = await secretsManager.send(new GetSecretValueCommand({
+//     SecretId: process.env.API_KEY_SECRET_ARN,
+// }));
+// const apiKey = response.SecretString;
 ```
 
-**セキュリティ上の理由:**
-1. **ログ露出の防止**: 環境変数はCloudWatch Logsに記録される可能性がある
-2. **コンソール露出の防止**: Lambda関数の設定画面で環境変数が表示される
-3. **監査証跡**: Secrets Manager経由のアクセスはCloudTrailで記録される
-4. **ローテーション対応**: シークレットローテーション時に再デプロイ不要
+**現在の認証方式:**
+- API Gateway: 使用量プランとAPIキー機能で認証
+- Lambda関数: 認証処理なし（API Gatewayで認証済み）
+- コスト削減: Secrets Manager API呼び出し削減（約$0.41/月削減）
 
 **CloudTrail**
 
