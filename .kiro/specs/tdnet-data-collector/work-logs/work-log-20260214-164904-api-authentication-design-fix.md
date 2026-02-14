@@ -177,10 +177,10 @@ API認証方式を「API Gateway + Lambda二重認証」から「API Gateway認�
 ### 6. 次のステップ
 
 1. ✅ 設計書の修正完了
-2. ⏭️ Lambda関数のコード修正（タスク31.1.3.2）
-3. ⏭️ TypeScriptビルド実行
-4. ⏭️ 修正をデプロイ
-5. ⏭️ スモークテスト再実行（タスク31.1.3.3）
+2. ✅ Lambda関数のコード修正完了（タスク31.1.3.2）
+3. ✅ TypeScriptビルド成功
+4. ✅ 修正をデプロイ完了（TdnetCompute-prod）
+5. ✅ スモークテスト成功（タスク31.1.3.3）
 
 ## 成果物
 
@@ -235,3 +235,100 @@ API認証方式を「API Gateway + Lambda二重認証」から「API Gateway認�
 
 **作業完了日時**: 2026-02-14 16:52:00  
 **次のタスク**: 31.1.3.2 Lambda関数のAPIキー検証削除
+
+
+## タスク31.1.3.2 実施結果
+
+### Lambda関数のコード修正
+
+以下の7個のLambda関数からAPIキー検証コードを削除しました：
+
+1. ✅ `src/lambda/query/handler.ts`
+   - `SecretsManagerClient`, `GetSecretValueCommand`インポート削除
+   - `cachedApiKey`, `cacheExpiry`変数削除
+   - `getApiKey()`関数削除
+   - `validateApiKey()`関数削除
+   - `UnauthorizedError`クラス削除
+
+2. ✅ `src/lambda/export/handler.ts`
+   - 同様の削除を実施
+
+3. ✅ `src/lambda/collect/handler.ts`
+   - 同様の削除を実施
+   - `clearApiKeyCache()`関数削除
+   - `AuthenticationError`インポート削除（未使用）
+
+4. ✅ `src/lambda/api/pdf-download/handler.ts`
+   - 同様の削除を実施
+
+5. ✅ `src/lambda/api/export-status/handler.ts`
+   - 同様の削除を実施
+   - `clearApiKeyCache()`関数削除
+
+6. ✅ `src/lambda/get-disclosure/handler.ts`
+   - 同様の削除を実施
+
+7. ✅ `src/lambda/stats/handler.ts`
+   - 同様の削除を実施
+   - 未使用パラメータ`event`を`_event`に変更
+
+### TypeScriptビルド
+
+```powershell
+npm run build
+```
+
+**結果**: ✅ ビルド成功（エラーなし）
+
+### デプロイ
+
+```powershell
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack compute
+```
+
+**結果**: ✅ デプロイ成功
+- TdnetCompute-prod: UPDATE_COMPLETE
+- 5個のLambda関数が更新されました
+
+## タスク31.1.3.3 実施結果
+
+### スモークテスト
+
+**APIエンドポイント**: `https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod`  
+**APIキー**: `l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL`
+
+#### テスト1: GET /disclosures?limit=1
+
+```powershell
+Invoke-RestMethod -Uri "$API_URL/disclosures?limit=1" -Method Get -Headers @{"x-api-key"=$API_KEY}
+```
+
+**結果**: ✅ 成功（200 OK）
+
+```json
+{
+  "disclosures": {},
+  "total": 0,
+  "count": 0,
+  "offset": 0,
+  "limit": 1
+}
+```
+
+**確認事項**:
+- ✅ API Gateway認証が正常に動作
+- ✅ Lambda関数が正常に実行
+- ✅ 401エラーが発生しない（Lambda関数でのAPIキー検証が削除されたため）
+- ✅ レスポンスが正常に返却
+
+### 結論
+
+API認証方式の変更が成功しました：
+- API GatewayとLambda関数の二重認証 → API Gateway認証のみ
+- Lambda関数からSecrets Manager APIキー検証を削除
+- スモークテストで動作確認完了
+
+---
+
+**作業完了日時**: 2026-02-14 17:00:00  
+**ステータス**: ✅ 完了

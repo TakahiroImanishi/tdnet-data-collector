@@ -2331,9 +2331,9 @@
     - _推定工数: 30分_
     - _前提条件: タスク31.1.1完了_
 
-  - [ ] 31.1.3 Lambda関数動作確認とスモークテスト再実行
+  - [x] 31.1.3 Lambda関数動作確認とスモークテスト再実行 - 完了: 2026-02-14 17:00:00
     - Lambda関数のログ確認（CloudWatch Logs）
-    - API動作確認: `GET /disclosures?limit=1`
+    - API動作確認: `GET /disclosures?limit=1` → ✅ 200 OK
     - スモークテスト再実行（docs/smoke-test-guide.md）
     - すべてのAPIエンドポイントが正常に動作することを確認
     - _Requirements: 要件14.4（E2Eテスト）_
@@ -2341,7 +2341,7 @@
     - _推定工数: 1-2時間_
     - _前提条件: タスク31.1.2完了_
 
-    - [x] 31.1.3.1 設計書の修正（API認証方式の変更）
+    - [x] 31.1.3.1 設計書の修正（API認証方式の変更） - 完了: 2026-02-14 16:52:00
       - **変更内容**: API認証方式を「API Gateway + Lambda二重認証」から「API Gateway認証のみ」に変更
       - 修正対象ドキュメント:
         - `docs/design.md`: API認証セクションを更新
@@ -2360,7 +2360,7 @@
       - _完了: 2026-02-14 16:52:00_
       - _作業記録: work-log-20260214-164904-api-authentication-design-fix.md_
 
-    - [ ] 31.1.3.2 Lambda関数のAPIキー検証削除（API Gateway認証のみに統一）
+    - [x] 31.1.3.2 Lambda関数のAPIキー検証削除（API Gateway認証のみに統一） - 完了: 2026-02-14 16:58:00
       - **問題**: API GatewayとLambda関数の両方でAPIキー検証を実施（二重認証）
       - **原因**: API GatewayのAPIキーとSecrets ManagerのAPIキーが異なる
       - **解決策**: Lambda関数側のAPIキー検証を削除し、API Gateway認証のみに統一
@@ -2380,14 +2380,15 @@
       - _前提条件: タスク31.1.3.1完了_
       - _関連: steering/api/api-design-guidelines.md, steering/development/lambda-implementation.md_
 
-    - [ ] 31.1.3.2 スモークテスト再実行
+    - [x] 31.1.3.3 スモークテスト再実行 - 完了: 2026-02-14 17:00:00
       - スモークテストスクリプト実行: `.\scripts\smoke-test.ps1`
-      - API動作確認: `GET /disclosures?limit=1`が200 OKを返すことを確認
+      - API動作確認: `GET /disclosures?limit=1`が200 OKを返すことを確認 → ✅ 成功
       - すべてのAPIエンドポイントが正常に動作することを確認
       - _Requirements: 要件14.4（E2Eテスト）_
       - _優先度: 🔴 Critical_
       - _推定工数: 30分_
       - _前提条件: タスク31.1.3.1完了_
+      - _作業記録: work-log-20260214-164904-api-authentication-design-fix.md_
 
 - [-] 31.2 スモークテスト実施
   - インフラ確認（CloudFormation、DynamoDB、Lambda、S3、API Gateway）

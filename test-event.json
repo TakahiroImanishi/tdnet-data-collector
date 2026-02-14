@@ -1,0 +1,10 @@
+﻿{
+    "path":  "/disclosures",
+    "queryStringParameters":  {
+                                  "limit":  "1"
+                              },
+    "headers":  {
+                    "x-api-key":  "l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"
+                },
+    "httpMethod":  "GET"
+}
