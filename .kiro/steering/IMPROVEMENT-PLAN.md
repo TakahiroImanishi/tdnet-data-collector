@@ -2,10 +2,12 @@
 
 ## 完了済み（Phase 1: Core）
 
-### ✅ README.md - 70%削減
+### ✅ README.md - 86%削減（2026-02-14追加最適化）
 - 冗長なDAG構造説明を削除
-- fileMatchパターン対応表を簡略化
+- fileMatchパターン対応表を簡略化（主要パターンのみ）
+- 詳細なファイル間参照関係を削除
 - トークン最適化の自明な説明を削除
+- 930語 → 132語
 
 ### ✅ core/tdnet-implementation-rules.md - 50%削減
 - 抽象的な原則を具体的なルールに変更
@@ -218,22 +220,22 @@
 ## 最終結果（2026-02-14検証・完了）
 
 ### トークン削減実績
-- **Phase 1（完了）**: 約2,610トークン削減
+- **Phase 1（完了）**: 約3,400トークン削減（README.md追加最適化含む）
 - **Phase 2（development/）**: 約11,450トークン削減（完了）
   - ✅ error-handling-implementation.md: 約3,432トークン削減 → 1,293語
   - ✅ error-handling-enforcement.md: 約2,894トークン削減 → 635語
-  - ✅ lambda-implementation.md: 約2,271トークン削減 → 739語 → 約350語（2026-02-14追加最適化）
-  - ✅ tdnet-scraping-patterns.md: 約1,120トークン削減 → 457語 → 約280語（2026-02-14追加最適化）
-  - ✅ testing-strategy.md: 約1,023トークン削減 → 222語 → 約150語（2026-02-14追加最適化）
-  - ✅ data-validation.md: 約710トークン削減 → 283語 → 約180語（2026-02-14追加最適化）
+  - ✅ lambda-implementation.md: 約2,271トークン削減 → 269語（2026-02-14追加最適化）
+  - ✅ tdnet-scraping-patterns.md: 約1,120トークン削減 → 297語（2026-02-14追加最適化）
+  - ✅ testing-strategy.md: 約1,023トークン削減 → 129語（2026-02-14追加最適化）
+  - ✅ data-validation.md: 約710トークン削減 → 180語（2026-02-14追加最適化）
 - **Phase 3（infrastructure/）**: 約1,411トークン削減（完了）
-  - ✅ deployment-checklist.md: 約359トークン削減 → 223語（既に最適化済み）
+  - ✅ deployment-checklist.md: 約359トークン削減 → 298語（既に最適化済み）
   - ✅ performance-optimization.md: 約1,052トークン削減 → 446語（既に最適化済み）
 - **Phase 4（その他）**: 約2,219トークン削減（完了）
   - ✅ security-best-practices.md: 約822トークン削減 → 462語（既に最適化済み）
   - ✅ api-design-guidelines.md: 約542トークン削減 → 227語（既に最適化済み）
   - ✅ api/error-codes.md: 約855トークン削減 → 309語（既に最適化済み）
-- **合計**: 約19,500トークン削減（全体の約60%削減）
+- **合計**: 約20,300トークン削減（全体の約62%削減）
 
 **全Phase完了！（2026-02-14追加最適化含む）**
 
@@ -241,19 +243,20 @@
 | ファイル | 語数 | 状態 |
 |---------|------|------|
 | core/error-handling-patterns.md | 129 | ✅ 最適 |
-| core/tdnet-data-collector.md | 131 | ✅ 最適 |
+| development/testing-strategy.md | 129 | ✅ 最適 |
+| README.md | 132 | ✅ 最適 |
+| core/tdnet-data-collector.md | 141 | ✅ 最適 |
 | core/tdnet-implementation-rules.md | 171 | ✅ 最適 |
-| development/testing-strategy.md | 222 | ✅ 最適 |
-| development/data-validation.md | 283 | ✅ 最適 |
-| development/tdnet-scraping-patterns.md | 457 | ✅ 最適 |
-| development/error-handling-enforcement.md | 635 | ✅ 最適 |
-| development/lambda-implementation.md | 739 | ✅ 最適 |
-| development/error-handling-implementation.md | 1,293 | ✅ 最適 |
-| infrastructure/deployment-checklist.md | 223 | ✅ 最適 |
+| development/data-validation.md | 180 | ✅ 最適 |
+| api/api-design-guidelines.md | 227 | ✅ 最適 |
+| development/lambda-implementation.md | 269 | ✅ 最適 |
+| development/tdnet-scraping-patterns.md | 297 | ✅ 最適 |
+| infrastructure/deployment-checklist.md | 298 | ✅ 最適 |
+| api/error-codes.md | 309 | ✅ 最適 |
 | infrastructure/performance-optimization.md | 446 | ✅ 最適 |
 | security/security-best-practices.md | 462 | ✅ 最適 |
-| api/api-design-guidelines.md | 227 | ✅ 最適 |
-| api/error-codes.md | 309 | ✅ 最適 |
+| development/error-handling-enforcement.md | 635 | ✅ 最適 |
+| development/error-handling-implementation.md | 1,293 | ✅ 最適 |
 
 ### 大きめのファイル（現状維持）
 | ファイル | 語数 | 理由 |
