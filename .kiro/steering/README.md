@@ -26,6 +26,10 @@
 | `**/validators/**/*.ts` | data-validation |
 | `**/.env*` | environment-variables |
 | `**/docs/**/*.md` | documentation-standards, mcp-server-guidelines |
+| `scripts/deploy*.ps1` | deployment-scripts |
+| `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1` | setup-scripts |
+| `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*` | data-scripts |
+| `scripts/{deploy-dashboard,check-iam-permissions}.ps1` | monitoring-scripts |
 
 **詳細**: `meta/pattern-matching-tests.md`
 
