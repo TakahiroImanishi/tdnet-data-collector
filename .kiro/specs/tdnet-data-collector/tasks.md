@@ -2182,6 +2182,22 @@
   - Secrets Managerにシークレットを登録
   - _Requirements: 要件8.1（設定管理）_
 
+- [x] 27.2.1 Utilsエッジケーステスト追加（テストカバレッジ向上）
+  - [x] rate-limiter.test.ts 新規作成（17テストケース、100%カバレッジ）
+  - [x] retry.test.ts エッジケース追加（9テストケース追加、86.66%カバレッジ）
+  - [x] logger.test.ts エッジケース追加（20テストケース追加、87.5%カバレッジ）
+  - _完了: 2026-02-14 09:11:06_
+  - _最終カバレッジ: Branches 78.75% (目標80%まであと1.25%)_
+  - _テスト結果: 全テスト成功_
+  - _成果物:_
+    - src/utils/__tests__/rate-limiter.test.ts（新規作成）
+    - src/utils/__tests__/retry.test.ts（エッジケース追加）
+    - src/utils/__tests__/logger.test.ts（エッジケース追加）
+  - _作業記録: work-log-20260214-091106-test-coverage-utils-edge-cases.md_
+  - _Requirements: 要件14.1（ユニットテスト）_
+  - _優先度: 🟠 High_
+  - _注意: Utilsファイルのカバレッジは大幅に向上したが、全体のBranchesカバレッジ80%達成には、Lambda関数やCDK Constructsのテスト改善が必要_
+
 - [ ] 27.3 バックアップ戦略の確認
   - データ再収集可能であることを確認
   - CloudTrailログが保存されていることを確認
