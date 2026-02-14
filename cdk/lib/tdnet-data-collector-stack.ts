@@ -241,12 +241,12 @@ export class TdnetDataCollectorStack extends cdk.Stack {
 
     // 4. CloudTrailログバケット - 監査ログの長期保存
     this.cloudtrailLogsBucket = new s3.Bucket(this, 'CloudTrailLogsBucket', {
-      bucketName: `tdnet-cloudtrail-logs-${this.account}`,
+      bucketName: getBucketName('tdnet-cloudtrail-logs'),
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       versioned: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      autoDeleteObjects: false,
+      removalPolicy: cdk.RemovalPolicy.RETAIN, // 本番環境では削除保護
+      autoDeleteObjects: false, // 自動削除無効
       lifecycleRules: [
         {
           id: 'ArchiveAndDelete',
@@ -301,11 +301,11 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // Phase 2: Secrets Manager（Lambda関数より前に初期化）
     // ========================================
 
-    // Secrets Manager Constructを作成（自動ローテーション有効）
+    // Secrets Manager Constructを作成（既存シークレットを参照）
     const secretsManagerConstruct = new SecretsManagerConstruct(this, 'SecretsManager', {
       environment: this.deploymentEnvironment,
-      enableRotation: true, // 自動ローテーション有効化
-      rotationDays: 90, // 90日ごとにローテーション
+      enableRotation: false, // 本番環境では既存シークレットを使用するためローテーション無効
+      useExistingSecret: true, // 既存の/tdnet/api-keyシークレットを参照
     });
 
     // IMPORTANT: apiKeyValueはLambda関数の環境変数で使用されるため、
@@ -313,10 +313,11 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     const apiKeyValue = secretsManagerConstruct.apiKeySecret;
 
     // ========================================
-    // Phase 1.6: SNS Topic for Alerts
+    // Phase 1.6: SNS Topic for Alerts（CloudWatchAlarms constructより前に作成）
     // ========================================
 
     // SNSトピック作成（アラート通知用）
+    // Note: CloudWatchAlarms constructとLambdaDLQ constructで共有
     const alertTopic = new sns.Topic(this, 'AlertTopic', {
       displayName: `TDnet Alerts - ${this.deploymentEnvironment}`,
       topicName: `tdnet-alerts-${this.deploymentEnvironment}`,
@@ -362,7 +363,8 @@ export class TdnetDataCollectorStack extends cdk.Stack {
         ENVIRONMENT: this.deploymentEnvironment,
         NODE_OPTIONS: '--enable-source-maps',
       },
-      reservedConcurrentExecutions: 1, // 同時実行数を1に制限（レート制限のため）
+      // Note: reservedConcurrentExecutionsを削除（アカウントの未予約同時実行数の最小値制約のため）
+      // レート制限は、Lambda関数内のRateLimiterで実装
       // DLQ設定
       deadLetterQueue: lambdaDLQ.queue,
       deadLetterQueueEnabled: true,
@@ -561,12 +563,14 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     });
 
     // 2. API Key生成
-    // Note: apiKeyValueは既にファイル先頭で初期化済み
+    // Note: 既存シークレットを参照する場合、API Keyの値は手動で設定する必要があります
+    // デプロイ後に以下のコマンドでAPI Keyの値を更新してください：
+    // aws apigateway update-api-key --api-key <API_KEY_ID> --patch-operations op=replace,path=/value,value=<SECRET_VALUE>
     this.apiKey = new apigateway.ApiKey(this, 'TdnetApiKey', {
       apiKeyName: `tdnet-api-key-${this.deploymentEnvironment}`,
       description: 'API Key for TDnet Data Collector',
       enabled: true,
-      value: apiKeyValue.secretValue.unsafeUnwrap(), // Secrets Managerから取得
+      // value: API Keyの値は手動で設定（既存シークレットからは自動取得不可）
     });
 
     // 3. Usage Plan設定
@@ -1346,10 +1350,11 @@ export class TdnetDataCollectorStack extends cdk.Stack {
       pdfDownloadFunction,
     ];
 
-    // CloudWatch Alarmsを作成
+    // CloudWatch Alarmsを作成（既存のalertTopicを使用）
     const cloudwatchAlarms = new CloudWatchAlarms(this, 'CloudWatchAlarms', {
       lambdaFunctions: allLambdaFunctions,
       environment: this.deploymentEnvironment,
+      existingAlertTopic: alertTopic, // 既存のSNS Topicを渡す
       // alertEmail: 'your-email@example.com', // オプション: メール通知先
       errorRateThreshold: 10, // 10%
       durationThreshold: 840, // 14分 = 840秒
@@ -1402,7 +1407,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     // ========================================
 
     // CloudTrail証跡を作成
-    const cloudTrail = new CloudTrailConstruct(this, 'CloudTrail', {
+    new CloudTrailConstruct(this, 'CloudTrail', {
       logsBucket: this.cloudtrailLogsBucket,
       environment: this.deploymentEnvironment,
       pdfsBucket: this.pdfsBucket,
@@ -1414,16 +1419,7 @@ export class TdnetDataCollectorStack extends cdk.Stack {
     });
 
     // CloudFormation Outputs
-    new cdk.CfnOutput(this, 'CloudTrailArn', {
-      value: cloudTrail.trail.trailArn,
-      description: 'CloudTrail ARN',
-      exportName: `TdnetCloudTrailArn-${this.deploymentEnvironment}`,
-    });
-
-    new cdk.CfnOutput(this, 'CloudTrailLogGroupName', {
-      value: cloudTrail.logGroup.logGroupName,
-      description: 'CloudTrail CloudWatch Logs group name',
-      exportName: `TdnetCloudTrailLogGroupName-${this.deploymentEnvironment}`,
-    });
+    // Note: CloudTrail outputs are defined in the CloudTrail construct
+    // Note: AlertTopic outputs are defined in the CloudWatchAlarms construct
   }
 }

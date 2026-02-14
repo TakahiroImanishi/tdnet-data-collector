@@ -15,7 +15,6 @@ import {
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { logger } from './logger';
 import { retryWithBackoff } from './retry';
-import { RetryableError } from '../errors';
 
 // DynamoDBクライアント（グローバルスコープで初期化）
 const dynamoClient = new DynamoDBClient({

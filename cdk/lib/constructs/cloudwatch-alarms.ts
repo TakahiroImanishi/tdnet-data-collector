@@ -21,6 +21,12 @@ export interface CloudWatchAlarmsProps {
   environment: string;
 
   /**
+   * 既存のSNS Topic（オプション）
+   * 指定された場合は新規作成せず、既存のトピックを使用
+   */
+  existingAlertTopic?: sns.ITopic;
+
+  /**
    * アラート通知先メールアドレス（オプション）
    */
   alertEmail?: string;
@@ -56,7 +62,7 @@ export class CloudWatchAlarms extends Construct {
   /**
    * SNS Topic（アラート通知用）
    */
-  public readonly alertTopic: sns.Topic;
+  public readonly alertTopic: sns.ITopic;
 
   /**
    * 作成されたアラームのリスト
@@ -74,10 +80,16 @@ export class CloudWatchAlarms extends Construct {
     // ========================================
     // SNS Topic作成（アラート通知用）
     // ========================================
-    this.alertTopic = new sns.Topic(this, 'AlertTopic', {
-      topicName: `tdnet-alerts-${props.environment}`,
-      displayName: `TDnet Data Collector Alerts (${props.environment})`,
-    });
+    if (props.existingAlertTopic) {
+      // 既存のSNS Topicを使用
+      this.alertTopic = props.existingAlertTopic;
+    } else {
+      // 新規にSNS Topicを作成
+      this.alertTopic = new sns.Topic(this, 'AlertTopic', {
+        topicName: `tdnet-alerts-${props.environment}`,
+        displayName: `TDnet Data Collector Alerts (${props.environment})`,
+      });
+    }
 
     // メール通知の追加（オプション）
     if (props.alertEmail) {
@@ -214,11 +226,14 @@ export class CloudWatchAlarms extends Construct {
     // ========================================
     // CloudFormation Outputs
     // ========================================
-    new cdk.CfnOutput(this, 'AlertTopicArn', {
-      value: this.alertTopic.topicArn,
-      description: 'SNS Topic ARN for alerts',
-      exportName: `TdnetAlertTopicArn-${props.environment}`,
-    });
+    // Note: 既存のSNS Topicを使用する場合は、Outputsを作成しない
+    if (!props.existingAlertTopic) {
+      new cdk.CfnOutput(this, 'AlertTopicArn', {
+        value: this.alertTopic.topicArn,
+        description: 'SNS Topic ARN for alerts',
+        exportName: `TdnetAlertTopicArn-${props.environment}`,
+      });
+    }
 
     new cdk.CfnOutput(this, 'AlarmCount', {
       value: this.alarms.length.toString(),

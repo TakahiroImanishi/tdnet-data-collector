@@ -376,6 +376,8 @@ npx cdk diff --context environment=prod
 本番環境にデプロイします。
 
 ```powershell
+cd cdk
+
 # デプロイを実行（承認プロンプトあり）
 npx cdk deploy --context environment=prod --require-approval always
 

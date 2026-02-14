@@ -28,5 +28,13 @@
     "types": ["node", "jest"]
   },
   "include": ["src/**/*", "cdk/**/*"],
-  "exclude": ["node_modules", "dist/**/*", "cdk/**/*.d.ts", "src/**/*.d.ts"]
+  "exclude": [
+    "node_modules",
+    "dist/**/*",
+    "cdk/**/*.d.ts",
+    "src/**/*.d.ts",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**/*"
+  ]
 }
