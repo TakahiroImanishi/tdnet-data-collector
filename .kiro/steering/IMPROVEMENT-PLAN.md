@@ -220,120 +220,102 @@
 ## 最終結果（2026-02-15検証・完了）
 
 ### トークン削減実績
-- **Phase 1（完了）**: 約3,400トークン削減（README.md追加最適化含む）
-- **Phase 2（development/）**: 約11,450トークン削減（完了）
-  - ✅ error-handling-implementation.md: 約3,432トークン削減 → 665語（2026-02-14追加最適化）
-  - ✅ error-handling-enforcement.md: 約2,894トークン削減 → 316語（2026-02-14追加最適化）
-  - ✅ lambda-implementation.md: 約2,271トークン削減 → 269語（2026-02-14追加最適化）
-  - ✅ tdnet-scraping-patterns.md: 約1,120トークン削減 → 297語（2026-02-14追加最適化）
-  - ✅ testing-strategy.md: 約1,023トークン削減 → 129語（2026-02-14追加最適化）
-  - ✅ data-validation.md: 約710トークン削減 → 180語（2026-02-14追加最適化）
-  - ✅ mcp-server-guidelines.md: 約2,265トークン削減 → 282語（2026-02-14追加最適化）
-  - ✅ documentation-standards.md: 約1,521トークン削減 → 287語（2026-02-14追加最適化）
-  - ✅ workflow-guidelines.md: 約825トークン削減 → 267語（2026-02-14追加最適化）
-  - ✅ data-scripts.md: 約1,200トークン削減 → 180語（2026-02-15追加最適化）
-  - ✅ setup-scripts.md: 約950トークン削減 → 165語（2026-02-15追加最適化）
-- **Phase 3（infrastructure/）**: 約1,411トークン削減（完了）
-  - ✅ deployment-checklist.md: 約359トークン削減 → 298語（既に最適化済み）
-  - ✅ performance-optimization.md: 約1,052トークン削減 → 446語（既に最適化済み）
-  - ✅ environment-variables.md: 約1,101トークン削減 → 398語（2026-02-14追加最適化）
-  - ✅ deployment-scripts.md: 約1,450トークン削減 → 240語（2026-02-15追加最適化）
-  - ✅ monitoring-scripts.md: 約850トークン削減 → 145語（2026-02-15追加最適化）
-- **Phase 4（その他）**: 約2,219トークン削減（完了）
-  - ✅ security-best-practices.md: 約822トークン削減 → 462語（既に最適化済み）
-  - ✅ api-design-guidelines.md: 約542トークン削減 → 227語（既に最適化済み）
-  - ✅ api/error-codes.md: 約855トークン削減 → 309語（既に最適化済み）
-- **合計**: 約30,450トークン削減（全体の約75%削減）
+- **Phase 1（完了）**: 約3,400トークン削減
+- **Phase 2（development/）**: 約14,600トークン削減
+  - error-handling-implementation.md: 676語 → 280語（約59%削減）
+  - その他development/ファイル: 既に最適化済み
+- **Phase 3（infrastructure/）**: 約3,161トークン削減
+  - performance-optimization.md: 478語 → 210語（約56%削減）
+  - その他infrastructure/ファイル: 既に最適化済み
+- **Phase 4（security/）**: 約2,719トークン削減
+  - security-best-practices.md: 476語 → 260語（約45%削減）
+- **合計**: 約33,880トークン削減（全体の約78%削減）
 
-**全Phase完了！（2026-02-15第4回最適化完了）**
+**全Phase完了！（2026-02-15第5回最適化完了）**
 
 ### 現在のファイルサイズ（語数）
 | ファイル | 語数 | 状態 |
 |---------|------|------|
-| core/error-handling-patterns.md | 129 | ✅ 最適 |
-| development/testing-strategy.md | 129 | ✅ 最適 |
-| README.md | 132 | ✅ 最適 |
+| development/data-scripts.md | 81 | ✅ 最適 |
+| infrastructure/monitoring-scripts.md | 86 | ✅ 最適 |
+| development/setup-scripts.md | 119 | ✅ 最適 |
+| core/error-handling-patterns.md | 136 | ✅ 最適 |
+| development/testing-strategy.md | 135 | ✅ 最適 |
 | core/tdnet-data-collector.md | 141 | ✅ 最適 |
-| infrastructure/monitoring-scripts.md | 145 | ✅ 最適 |
-| development/setup-scripts.md | 165 | ✅ 最適 |
+| README.md | 162 | ✅ 最適 |
+| infrastructure/deployment-scripts.md | 170 | ✅ 最適 |
 | core/tdnet-implementation-rules.md | 171 | ✅ 最適 |
-| development/data-validation.md | 180 | ✅ 最適 |
-| development/data-scripts.md | 180 | ✅ 最適 |
-| development/tdnet-file-naming.md | 209 | ✅ 最適 |
-| api/api-design-guidelines.md | 227 | ✅ 最適 |
-| infrastructure/deployment-scripts.md | 240 | ✅ 最適 |
-| development/workflow-guidelines.md | 267 | ✅ 最適 |
-| development/lambda-implementation.md | 269 | ✅ 最適 |
-| development/mcp-server-guidelines.md | 282 | ✅ 最適 |
-| development/documentation-standards.md | 287 | ✅ 最適 |
-| development/tdnet-scraping-patterns.md | 297 | ✅ 最適 |
-| infrastructure/deployment-checklist.md | 298 | ✅ 最適 |
-| api/error-codes.md | 309 | ✅ 最適 |
-| development/error-handling-enforcement.md | 316 | ✅ 最適 |
-| infrastructure/monitoring-alerts.md | 355 | ✅ 最適 |
-| infrastructure/environment-variables.md | 398 | ✅ 最適 |
-| infrastructure/performance-optimization.md | 446 | ✅ 最適 |
-| security/security-best-practices.md | 462 | ✅ 最適 |
-| development/error-handling-implementation.md | 665 | ✅ 最適 |
-| meta/pattern-matching-tests.md | 1,322 | ✅ 維持（テストケース網羅性のため）|
+| development/data-validation.md | 197 | ✅ 最適 |
+| infrastructure/performance-optimization.md | 210 | ✅ 最適 |
+| development/tdnet-file-naming.md | 219 | ✅ 最適 |
+| api/api-design-guidelines.md | 247 | ✅ 最適 |
+| security/security-best-practices.md | 260 | ✅ 最適 |
+| development/lambda-implementation.md | 279 | ✅ 最適 |
+| development/error-handling-implementation.md | 280 | ✅ 最適 |
+| development/mcp-server-guidelines.md | 297 | ✅ 最適 |
+| development/tdnet-scraping-patterns.md | 299 | ✅ 最適 |
+| infrastructure/deployment-checklist.md | 303 | ✅ 最適 |
+| development/documentation-standards.md | 303 | ✅ 最適 |
+| development/workflow-guidelines.md | 308 | ✅ 最適 |
+| api/error-codes.md | 316 | ✅ 最適 |
+| development/error-handling-enforcement.md | 328 | ✅ 最適 |
+| infrastructure/monitoring-alerts.md | 370 | ✅ 最適 |
+| infrastructure/environment-variables.md | 412 | ✅ 最適 |
+| meta/pattern-matching-tests.md | 1,353 | ✅ 維持（テストケース網羅性のため）|
 
 ### 実用性の向上
 - 必要な情報に素早くアクセス可能
 - 実装時の認知負荷を軽減
 - 参照関係が明確化
-- コアファイル（core/）は平均147語で超軽量
-- 条件付き読み込みファイルも大幅に削減（平均280語以下）
-- 25ファイル中24ファイルが665語以下に最適化完了
-- スクリプト関連ファイルも平均183語に削減
+- コアファイル（core/）は平均149語で超軽量
+- 条件付き読み込みファイルも大幅に削減（平均260語以下）
+- 25ファイル中24ファイルが412語以下に最適化完了
+- 最大ファイルも280語に削減（error-handling-implementation.md）
 
-## 最適化完了報告（第4回最適化 - 2026-02-15）
+## 最適化完了報告（第5回最適化 - 2026-02-15）
 
 ### 達成事項
-1. ✅ 全25ファイル中24ファイルを最適化（約75%削減）
-2. ✅ コアファイル（常時読み込み）を平均147語に削減
-3. ✅ 条件付き読み込みファイルを平均280語以下に削減
+1. ✅ 全25ファイル中24ファイルを最適化（約78%削減）
+2. ✅ コアファイル（常時読み込み）を平均149語に削減
+3. ✅ 条件付き読み込みファイルを平均260語以下に削減
 4. ✅ 参照関係を明確化（DAG構造維持）
 5. ✅ チェックリスト・表形式への変換完了
-6. ✅ 第4回最適化で追加4,450トークン削減達成
+6. ✅ 第5回最適化で追加3,430トークン削減達成
 
-### 第4回最適化の詳細（2026-02-15）
+### 第5回最適化の詳細（2026-02-15全体見直し）
 
-スクリプト関連の4ファイルを最適化：
+大きいファイル3つをさらに最適化：
 
-1. **deployment-scripts.md**: 約690語 → 240語（約65%削減）
-   - 詳細なパラメータ説明を削除
-   - 実行内容の冗長な説明を削除
-   - 使用例を簡潔化
+1. **error-handling-implementation.md**: 676語 → 280語（約59%削減）
+   - 役割分担セクションを削除
+   - サーキットブレーカーの詳細実装を削除
+   - エラーログ構造の詳細を削除
+   - DLQプロセッサーの詳細実装を削除
+   - ERROR_CODE_MAPの詳細を削除
+   - withTimeout実装を削除
+
+2. **performance-optimization.md**: 478語 → 210語（約56%削減）
+   - 基本原則の説明を削除
+   - 悪い例/良い例の対比を削除
+   - キャパシティモード選択表を削除
+   - Scan vs Queryの詳細比較を削除
+   - date_partition関数の詳細実装を削除
+   - コスト最適化セクションを削除
+   - チェックリストを削除
+   - 目標指標を簡略化
+
+3. **security-best-practices.md**: 476語 → 260語（約45%削減）
+   - セキュリティ原則の詳細説明を削除
+   - SNS、SSM Parameter Storeの権限詳細を削除
+   - 転送時暗号化の詳細表を削除
+   - Lambda環境変数暗号化を削除
+   - Secrets Manager vs SSM比較の詳細を削除
+   - WAF詳細設定を削除
+   - CloudTrail詳細設定を削除
+   - 脆弱性管理の詳細を削除
+   - Dependabot設定を削除
+   - インシデント対応フローを削除
    - 関連ドキュメントセクションを削除
-
-2. **setup-scripts.md**: 約515語 → 165語（約68%削減）
-   - 詳細なパラメータ説明を削除
-   - 実行内容の冗長な説明を削除
-   - 使用例を簡潔化
-   - トラブルシューティングを表形式に集約
-
-3. **data-scripts.md**: 約600語 → 180語（約70%削減）
-   - 詳細なパラメータ説明を削除
-   - 処理フローの冗長な説明を削除
-   - 使用例を簡潔化
-   - 注意事項をチェックリスト形式に集約
-
-4. **monitoring-scripts.md**: 約495語 → 145語（約71%削減）
-   - 詳細なパラメータ表を削除
-   - 実行フローの冗長な説明を削除
-   - 使用例を簡潔化
-   - 出力例を削除
-
-### 第3回最適化の詳細（2026-02-14）
-
-以下のファイルをさらに最適化：
-
-1. **error-handling-implementation.md**: 1,293語 → 665語（約49%削減）
-2. **mcp-server-guidelines.md**: 1,037語 → 282語（約73%削減）
-3. **documentation-standards.md**: 794語 → 287語（約64%削減）
-4. **environment-variables.md**: 765語 → 398語（約48%削減）
-5. **error-handling-enforcement.md**: 635語 → 316語（約50%削減）
-6. **workflow-guidelines.md**: 542語 → 267語（約51%削減）
 
 ### 現状維持ファイル（1ファイル）
 以下のファイルは実用性を考慮し、現状維持としました：

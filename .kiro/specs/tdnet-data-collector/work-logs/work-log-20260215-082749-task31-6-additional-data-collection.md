@@ -184,17 +184,23 @@ npx cdk deploy --all --require-approval never --region ap-northeast-1 --context 
 
 **目的:** 本番環境の最新コードで2026-02-13のデータを200件収集
 
-**実行コマンド:**
-```powershell
-$headers = @{
-    "x-api-key" = "l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"
-    "Content-Type" = "application/json"
-}
-$body = @{
-    start_date = "2026-02-13"
-    end_date = "2026-02-13"
-    max_items = 200
-} | ConvertTo-Json
+**実行結果:**
+- Execution ID: `1379ce5f-7021-470d-8674-a013cad72a4b`
+- Status: `running`（2分以上経過しても進捗なし）
+- Collected: 0件
+- Failed: 0件
 
-Invoke-RestMethod -Uri "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod/collect" -Method POST -Headers $headers -Body $body
-```
+**問題:** 実行が開始されているが、進捗が更新されていない
+
+**次のアクション:** CloudWatch Logsで詳細を確認
+
+---
+
+## 15. CloudWatch Logs確認（2026-02-15 08:58:00）
+
+**目的:** CollectorFunctionのログを確認し、複数ページ取得が動作しているか確認
+
+**確認項目:**
+- "TDnet page scraped" ログが2回表示されるか（page: 1, page: 2）
+- エラーログの有無
+- 実行時間
