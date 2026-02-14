@@ -50,9 +50,11 @@ graph TB
         LCS[Lambda: Collect Status<br/>収集状態取得<br/>30秒, 256MB]
         LES[Lambda: Export Status<br/>エクスポート状態取得<br/>30秒, 256MB]
         LPD[Lambda: PDF Download<br/>PDF署名付きURL生成<br/>30秒, 256MB]
+        LH[Lambda: Health<br/>ヘルスチェック<br/>30秒, 256MB]
+        LST[Lambda: Stats<br/>統計情報<br/>30秒, 256MB]
     end
     
-    %% 注: 実装では7個のLambda関数が存在
+    %% 注: 実装では9個のLambda関数が存在
     %% 1. Collector: データ収集（TDnetスクレイピング、PDF保存）
     %% 2. Query: データクエリ（DynamoDB検索、CSV/JSON変換）
     %% 3. Export: データエクスポート（大量データの非同期エクスポート）
@@ -60,10 +62,13 @@ graph TB
     %% 5. Collect Status: 収集状態取得（GET /collect/{execution_id} エンドポイント）
     %% 6. Export Status: エクスポート状態取得（GET /exports/{export_id} エンドポイント）
     %% 7. PDF Download: PDF署名付きURL生成（GET /disclosures/{disclosure_id}/pdf エンドポイント）
+    %% 8. Health: ヘルスチェック（GET /health エンドポイント）
+    %% 9. Stats: 統計情報（GET /stats エンドポイント）
     
     subgraph "ストレージ層"
         DDB[(DynamoDB<br/>メタデータ)]
         DDBEX[(DynamoDB<br/>実行状態)]
+        DDBEXP[(DynamoDB<br/>エクスポート状態)]
         S3P[S3 Bucket<br/>PDFファイル]
         S3E[S3 Bucket<br/>エクスポート]
     end
@@ -3041,6 +3046,25 @@ await docClient.send(new PutCommand({
     TableName: 'tdnet_executions',
     Item: {
         execution_id: executionId,
+        status: 'pending',
+        started_at: new Date().toISOString(),
+        ttl, // TTL属性
+
+##### tdnet_export_status（エクスポート状態）
+
+| データ種別 | 保持期間 | 削除方法 | 理由 |
+|-----------|---------|---------|------|
+| エクスポート状態 | 30日 | TTL自動削除 | 短期的なトラブルシューティングのみ必要 |
+
+**実装:**
+```typescript
+// エクスポート状態保存時にTTLを設定
+const ttl = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30日後
+
+await docClient.send(new PutCommand({
+    TableName: 'tdnet_export_status',
+    Item: {
+        export_id: exportId,
         status: 'pending',
         started_at: new Date().toISOString(),
         ttl, // TTL属性

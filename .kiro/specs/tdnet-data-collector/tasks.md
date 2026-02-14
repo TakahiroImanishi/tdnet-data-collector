@@ -2430,7 +2430,7 @@
     - _推定工数: 3-4時間_
     - _関連: steering/core/error-handling-patterns.md_
 
-  - [ ] 31.2.3 構造化ログ出力の改善（High）
+  - [x] 31.2.3 構造化ログ出力の改善（High）
     - LOG_LEVEL環境変数をDEBUGに変更
     - Lambda関数のログ出力確認
     - エラーログが正しく記録されることを確認
@@ -2438,6 +2438,9 @@
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
     - _関連: steering/core/error-handling-patterns.md_
+    - _完了: 2026-02-14, 4/4テスト成功（100%）_
+    - _成果物: environment-config.ts, .env.production, logger-debug-output.test.ts_
+    - _作業記録: work-log-20260214-181958-structured-logging-improvement.md_
 
   - [x] 31.2.4 設計書の包括的更新（High）
     - Lambda関数リストを7個に更新（Collector, Query, Export, Collect, Collect Status, Export Status, PDF Download）
@@ -2503,7 +2506,7 @@
       - _優先度: 🟢 Low_
       - _推定工数: 30分〜2時間（選択肢による）_
 
-    - [ ] 31.2.5.5 HTMLパーサーの修正（Critical）
+    - [ ] 31.2.6 HTMLパーサーの修正（Critical）
       - 実際のTDnet HTML構造に合わせてパーサーを修正
       - 現在のパーサー: `<table class="disclosure-list">` を探している
       - 実際のHTML: そのようなクラスが存在しない

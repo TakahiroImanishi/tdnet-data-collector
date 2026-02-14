@@ -57,6 +57,9 @@ export async function handler(
       disclosure_id: event.pathParameters?.disclosure_id,
     });
 
+    // API認証
+    validateApiKey(event);
+
     // disclosure_idの取得とバリデーション
     const disclosureId = validateDisclosureId(event);
 
@@ -141,6 +144,29 @@ export async function handler(
 
     // エラーレスポンス
     return handleError(error as Error, context.awsRequestId);
+  }
+}
+
+/**
+ * APIキー認証
+ *
+ * @param event APIGatewayProxyEvent
+ * @throws AuthenticationError APIキーが無効な場合
+ */
+function validateApiKey(event: APIGatewayProxyEvent): void {
+  const apiKey = event.headers?.['x-api-key'] || event.headers?.['X-Api-Key'];
+  const expectedApiKey = process.env.API_KEY;
+
+  if (!apiKey) {
+    throw new AuthenticationError('API key is required');
+  }
+
+  if (!expectedApiKey) {
+    throw new AuthenticationError('API key configuration is missing');
+  }
+
+  if (apiKey !== expectedApiKey) {
+    throw new AuthenticationError('Invalid API key');
   }
 }
 

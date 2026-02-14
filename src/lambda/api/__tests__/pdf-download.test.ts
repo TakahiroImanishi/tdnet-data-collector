@@ -39,10 +39,6 @@ describe('PDF Download Lambda Handler', () => {
   beforeEach(() => {
     dynamoMock.reset();
     s3Mock.reset();
-    secretsManagerMock.reset();
-    secretsManagerMock.on(GetSecretValueCommand).resolves({
-      SecretString: 'test-api-key',
-    });
     process.env.DYNAMODB_TABLE_NAME = 'tdnet_disclosures';
     process.env.S3_BUCKET_NAME = 'tdnet-data-collector-pdfs';
     process.env.API_KEY = 'test-api-key';
