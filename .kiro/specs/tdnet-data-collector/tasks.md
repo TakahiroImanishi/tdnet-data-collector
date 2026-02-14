@@ -2298,29 +2298,82 @@
   - スモークテストの実行
   - 動作確認
   - _Requirements: 要件13.1（デプロイ）_
-  - _完了: 2026-02-14, デプロイ準備完了_
-  - _注意: 既存のDynamoDBテーブルが存在するため、実際のデプロイは既存リソースの扱いを決定後に実施_
-  - _成果物: 循環参照問題解決、デプロイスクリプト修正、環境変数確認完了_
-  - _作業記録: work-log-20260214-151959-task31-1-production-deployment.md_
+  - _完了: 2026-02-14 15:31:28, 分割スタックデプロイ成功（4スタック、合計デプロイ時間約2分22秒）_
+  - _成果物: Foundation Stack（変更なし）、Compute Stack（変更なし）、API Stack（45リソース）、Monitoring Stack（32リソース）_
+  - _API Endpoint: https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod/_
+  - _API Key ID: mejj9kz01k_
+  - _API Key Value: l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL_
+  - _Dashboard URL: https://d1vjw7l2clz6ji.cloudfront.net_
+  - _作業記録: work-log-20260214-153128-task31-1-production-deployment-execution.md_
+  - _注意: Lambda関数のモジュールインポートエラーが発生（タスク31.1.1〜31.1.3で対応）_
 
-- [ ] 31.2 本番環境の監視開始
+  - [x] 31.1.1 Lambda関数のデプロイ方式修正
+    - `cdk/lib/stacks/compute-stack.ts`を修正
+    - `lambda.Function`を`lambda.NodejsFunction`に変更
+    - `code`プロパティを`entry`プロパティに変更
+    - `handler`プロパティを`handler: 'handler'`に変更
+    - esbuildバンドル設定を追加
+    - _Requirements: 要件12.1, 12.3（コスト最適化、サーバーレス）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 2-3時間_
+    - _問題: すべてのLambda関数で`Runtime.ImportModuleError: Cannot find module '../../utils/logger'`が発生_
+    - _根本原因: `lambda.Code.fromAsset()`は指定ディレクトリのみをデプロイ、依存関係がバンドルされない_
+    - _完了: 2026-02-14 16:07, 7個のLambda関数をNodejsFunctionに変更、CDK Synth成功_
+    - _作業記録: work-log-20260214-155153-task31-1-1-lambda-deploy-fix.md_
+
+  - [x] 31.1.2 Compute Stack再デプロイ
+    - TypeScriptビルド実行: `npm run build`
+    - CDK Synth実行: `cdk synth TdnetComputeStack-prod`
+    - CDK Deploy実行: `cdk deploy TdnetComputeStack-prod --profile imanishi-awssso`
+    - デプロイ完了確認
+    - _Requirements: 要件13.1（デプロイ）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 30分_
+    - _前提条件: タスク31.1.1完了_
+
+  - [ ] 31.1.3 Lambda関数動作確認とスモークテスト再実行
+    - Lambda関数のログ確認（CloudWatch Logs）
+    - API動作確認: `GET /disclosures?limit=1`
+    - スモークテスト再実行（docs/smoke-test-guide.md）
+    - すべてのAPIエンドポイントが正常に動作することを確認
+    - _Requirements: 要件14.4（E2Eテスト）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1-2時間_
+    - _前提条件: タスク31.1.2完了_
+
+- [-] 31.2 スモークテスト実施
+  - インフラ確認（CloudFormation、DynamoDB、Lambda、S3、API Gateway）
+  - API動作確認
+  - データ収集テスト
+  - エクスポート機能テスト
+  - 監視・アラート確認
+  - Webダッシュボード確認
+  - _Requirements: 要件14.4（E2Eテスト）_
+  - _状態: 中断（Lambda関数デプロイ問題により）_
+  - _完了項目: インフラ確認（4スタック、3テーブル、8関数、4バケット、API Gateway、API Key）_
+  - _未完了項目: API動作確認、データ収集テスト、エクスポート機能テスト、監視・アラート確認、Webダッシュボード確認_
+  - _発見された問題: すべてのLambda関数で`Runtime.ImportModuleError: Cannot find module '../../utils/logger'`が発生_
+  - _作業記録: work-log-20260214-154337-task31-2-smoke-test.md_
+  - _注意: タスク31.1.1〜31.1.3完了後に再開_
+
+- [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
   - アラート設定の確認
   - ログ出力の確認
   - _Requirements: 要件12.1（監視）_
 
-- [ ] 31.3 初回データ収集の実行
+- [ ] 31.4 初回データ収集の実行
   - 手動でデータ収集を実行
   - 収集結果の確認
   - エラーがないことを確認
   - _Requirements: 要件1.1（データ収集）_
 
-- [ ] 31.4 日次バッチの動作確認
+- [ ] 31.5 日次バッチの動作確認
   - EventBridgeスケジュールの確認
   - 翌日の自動実行を確認
   - _Requirements: 要件4.1（バッチ処理）_
 
-- [ ] 31.5 運用開始
+- [ ] 31.6 運用開始
   - 運用マニュアルの共有
   - アラート対応体制の確認
   - 定期レビュースケジュールの設定
