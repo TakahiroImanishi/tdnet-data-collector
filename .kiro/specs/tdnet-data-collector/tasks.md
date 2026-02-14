@@ -2605,6 +2605,69 @@
     - _作業記録: work-log-20260214-221221-data-collection-failure-analysis.md_
     - _次のアクション: タスク31.2.6.3でShift_JISデコード修正_
 
+  - [ ] 31.2.6.3 Shift_JISデコード修正（Critical）
+    - `iconv-lite`ライブラリを使用してShift_JISデコードを修正
+    - 修正対象ファイル:
+      - `src/lambda/collector/scrape-tdnet-list.ts` - `decodeShiftJIS`関数
+      - `package.json` - `iconv-lite`依存関係追加
+    - 実装内容:
+      - [ ] `iconv-lite`ライブラリをインストール（`npm install iconv-lite`）
+      - [ ] `@types/iconv-lite`をインストール（`npm install -D @types/iconv-lite`）
+      - [ ] `decodeShiftJIS`関数を`iconv-lite`を使用するように修正
+      - [ ] エラーハンドリングを強化（デコード失敗時はValidationErrorをスロー）
+      - [ ] ユニットテストを追加（`src/lambda/collector/__tests__/scrape-tdnet-list.test.ts`）
+      - [ ] ローカルテストで動作確認（100件成功を確認）
+    - 検証項目:
+      - [ ] Shift_JISデコードが正常に動作すること
+      - [ ] 不正な文字（`\ufffd`）が生成されないこと
+      - [ ] HTMLパーサーが正しくパースできること
+      - [ ] ユニットテストがすべて成功すること
+    - _Requirements: 要件1.1, 1.2（データ収集、メタデータ抽出）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1-2時間_
+    - _前提条件: タスク31.2.6.2完了（根本原因特定）_
+
+  - [ ] 31.2.6.4 IAMロール権限追加（High）
+    - Collector Lambda関数のIAMロールに`cloudwatch:PutMetricData`権限を追加
+    - 修正対象ファイル:
+      - `cdk/lib/stacks/compute-stack.ts` - CollectorFunction IAMロール定義
+    - 実装内容:
+      - [ ] IAMポリシーステートメントに`cloudwatch:PutMetricData`アクションを追加
+      - [ ] CDK synthで構文エラーがないことを確認
+      - [ ] CDK diffで変更内容を確認
+    - 検証項目:
+      - [ ] IAMロールに`cloudwatch:PutMetricData`権限が付与されていること
+      - [ ] CloudWatchメトリクス送信が成功すること
+      - [ ] CloudWatch Logsに権限エラーが出力されないこと
+    - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
+    - _優先度: 🟠 High_
+    - _推定工数: 30分_
+    - _前提条件: タスク31.2.6.2完了（根本原因特定）_
+
+  - [ ] 31.2.6.5 本番環境への再デプロイと検証（Critical）
+    - 修正内容を本番環境にデプロイし、データ収集テストを実行
+    - デプロイ手順:
+      - [ ] ローカルでビルド（`npm run build`）
+      - [ ] ユニットテストを実行（`npm test`）
+      - [ ] 本番環境にデプロイ（`scripts/deploy-split-stacks.ps1 -Environment prod`）
+      - [ ] デプロイ完了を確認（CloudFormationスタック状態確認）
+    - データ収集テスト:
+      - [ ] POST /collect で2026-02-13のデータ収集を実行
+      - [ ] GET /collect/{execution_id} で実行状態を確認
+      - [ ] CloudWatch Logsでエラーがないことを確認
+      - [ ] DynamoDBで収集データを確認（`collected_count > 0`）
+      - [ ] S3でPDFファイルを確認
+    - 検証項目:
+      - [ ] データ収集が成功すること（100件中100件成功）
+      - [ ] Shift_JISデコードエラーが発生しないこと
+      - [ ] CloudWatch PutMetricData権限エラーが発生しないこと
+      - [ ] メタデータがDynamoDBに保存されること
+      - [ ] PDFファイルがS3に保存されること
+    - _Requirements: 要件1.1, 1.3, 1.4（データ収集、PDFダウンロード、メタデータ保存）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1-2時間_
+    - _前提条件: タスク31.2.6.3, 31.2.6.4完了（修正実装完了）_
+
 - [ ] 31.3 本番環境の監視開始
   - CloudWatchダッシュボードの確認
   - アラート設定の確認
