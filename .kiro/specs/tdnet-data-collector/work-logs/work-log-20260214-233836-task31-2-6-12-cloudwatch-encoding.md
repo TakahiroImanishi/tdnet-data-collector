@@ -78,8 +78,8 @@ CloudWatch Logsへの送信時にエラーが発生する。
 - [x] E2Eテスト実行（エンコーディングエラーなし確認）
 - [x] CloudWatch Logsでエンコーディングエラーが発生しない
 - [x] 日本語文字列が正しく表示される（Base64デコード後）
-- [ ] tasks.mdのタスク31.2.6.12を[x]に更新
-- [ ] Git commit & push
+- [x] tasks.mdのタスク31.2.6.12を[x]に更新
+- [x] Git commit & push
 
 ## 問題と解決策
 
