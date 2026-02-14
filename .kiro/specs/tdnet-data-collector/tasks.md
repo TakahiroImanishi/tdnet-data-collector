@@ -2647,16 +2647,24 @@
     - _推定工数: 30分_
     - _前提条件: タスク31.2.6.2完了（根本原因特定）_
 
-  - [ ] 31.2.6.5 本番環境への再デプロイ（Critical）
+  - [x] 31.2.6.5 本番環境への再デプロイ（Critical）
     - 修正内容を本番環境にデプロイ
     - デプロイ手順:
-      - [ ] ローカルでビルド（`npm run build`）
-      - [ ] 本番環境にデプロイ（`scripts/deploy-split-stacks.ps1 -Environment prod -Action deploy`）
-      - [ ] デプロイ完了を確認（CloudFormationスタック状態確認）
+      - [x] ローカルでビルド（`npm run build`）
+      - [x] 本番環境にデプロイ（`scripts/deploy-split-stacks.ps1 -Environment prod -Action deploy`）
+      - [x] デプロイ完了を確認（CloudFormationスタック状態確認）
+    - デプロイ結果:
+      - すべてのスタックで「no changes」（修正内容は既に反映済み）
+      - TdnetFoundation-prod: ✅ no changes
+      - TdnetCompute-prod: ✅ no changes
+      - TdnetApi-prod: ✅ no changes
+      - TdnetMonitoring-prod: ✅ no changes
     - _Requirements: 要件1.1, 1.3, 1.4（データ収集、PDFダウンロード、メタデータ保存）_
     - _優先度: 🔴 Critical_
     - _推定工数: 30分_
     - _前提条件: タスク31.2.6.3, 31.2.6.4完了（修正実装完了）_
+    - _完了: 2026-02-14 23:00_
+    - _作業記録: work-log-20260214-225514-production-redeployment.md_
 
   - [x] 31.2.6.6 ユニットテスト実施（High）
     - 修正内容のユニットテストを実行
