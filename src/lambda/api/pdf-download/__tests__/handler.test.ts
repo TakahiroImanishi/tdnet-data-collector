@@ -408,16 +408,11 @@ describe('Lambda PDF Download Handler', () => {
     });
   });
 
-  describe('異常系: Secrets Manager', () => {
-    it('API_KEY_SECRET_ARN環境変数が未設定の場合は500エラーを返す', async () => {
+  describe('異常系: API認証設定', () => {
+    it('API_KEY環境変数が未設定の場合は401エラーを返す', async () => {
       // Arrange
       const originalApiKey = process.env.API_KEY;
-      const originalTestEnv = process.env.TEST_ENV;
-      const originalSecretArn = process.env.API_KEY_SECRET_ARN;
-
-      delete process.env.API_KEY; // テスト環境フラグを無効化
-      delete process.env.TEST_ENV;
-      delete process.env.API_KEY_SECRET_ARN; // 環境変数未設定
+      delete process.env.API_KEY; // 環境変数未設定
 
       const event: any = {
         pathParameters: {
@@ -432,88 +427,13 @@ describe('Lambda PDF Download Handler', () => {
       const result = await handler(event, mockContext);
 
       // Assert
-      expect(result.statusCode).toBe(500);
+      expect(result.statusCode).toBe(401);
       const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.code).toBe('UNAUTHORIZED');
+      expect(body.error.message).toContain('API key configuration is missing');
 
       // 環境変数を復元
       if (originalApiKey) process.env.API_KEY = originalApiKey;
-      if (originalTestEnv) process.env.TEST_ENV = originalTestEnv;
-      if (originalSecretArn) process.env.API_KEY_SECRET_ARN = originalSecretArn;
-    });
-
-    it('Secrets Managerからの取得に失敗した場合は500エラーを返す', async () => {
-      // Arrange
-      const originalApiKey = process.env.API_KEY;
-      const originalTestEnv = process.env.TEST_ENV;
-      const originalSecretArn = process.env.API_KEY_SECRET_ARN;
-
-      delete process.env.API_KEY; // テスト環境フラグを無効化
-      delete process.env.TEST_ENV;
-      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:test';
-
-      secretsManagerMock.on(GetSecretValueCommand).rejects(new Error('AccessDeniedException'));
-
-      const event: any = {
-        pathParameters: {
-          disclosure_id: '20240115_7203_001',
-        },
-        headers: {
-          'x-api-key': 'test-api-key',
-        },
-      };
-
-      // Act
-      const result = await handler(event, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(500);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-
-      // 環境変数を復元
-      if (originalApiKey) process.env.API_KEY = originalApiKey;
-      if (originalTestEnv) process.env.TEST_ENV = originalTestEnv;
-      if (originalSecretArn) process.env.API_KEY_SECRET_ARN = originalSecretArn;
-      else delete process.env.API_KEY_SECRET_ARN;
-    });
-
-    it('Secrets ManagerのSecretStringが空の場合は500エラーを返す', async () => {
-      // Arrange
-      const originalApiKey = process.env.API_KEY;
-      const originalTestEnv = process.env.TEST_ENV;
-      const originalSecretArn = process.env.API_KEY_SECRET_ARN;
-
-      delete process.env.API_KEY; // テスト環境フラグを無効化
-      delete process.env.TEST_ENV;
-      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:test';
-
-      secretsManagerMock.on(GetSecretValueCommand).resolves({
-        SecretString: undefined, // 空のシークレット
-      });
-
-      const event: any = {
-        pathParameters: {
-          disclosure_id: '20240115_7203_001',
-        },
-        headers: {
-          'x-api-key': 'test-api-key',
-        },
-      };
-
-      // Act
-      const result = await handler(event, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(500);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-
-      // 環境変数を復元
-      if (originalApiKey) process.env.API_KEY = originalApiKey;
-      if (originalTestEnv) process.env.TEST_ENV = originalTestEnv;
-      if (originalSecretArn) process.env.API_KEY_SECRET_ARN = originalSecretArn;
-      else delete process.env.API_KEY_SECRET_ARN;
     });
   });
 

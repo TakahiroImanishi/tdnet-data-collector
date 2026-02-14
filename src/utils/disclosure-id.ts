@@ -34,7 +34,7 @@ export function generateDisclosureId(
     throw new ValidationError(`Invalid disclosedAt format: ${disclosedAt}`);
   }
 
-  if (!companyCode || !/^\d{4}$/.test(companyCode)) {
+  if (!companyCode || !/^[0-9A-Z]{4,5}$/.test(companyCode)) {
     throw new ValidationError(`Invalid companyCode: ${companyCode}`);
   }
 

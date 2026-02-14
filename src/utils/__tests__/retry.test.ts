@@ -328,7 +328,6 @@ describe('retry.ts', () => {
       expect(isRetryableError(error)).toBe(false);
     });
   });
-});
 
   describe('エッジケース', () => {
     it('backoffMultiplier=1の場合、遅延時間が一定', async () => {

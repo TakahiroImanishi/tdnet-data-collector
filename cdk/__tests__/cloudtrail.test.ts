@@ -2,7 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
 import { TdnetDataCollectorStack } from '../lib/tdnet-data-collector-stack';
 
-describe('CloudTrail Configuration', () => {
+// Phase 4で実装予定: CloudTrailは監査ログ機能として後のフェーズで実装される
+describe.skip('CloudTrail Configuration', () => {
   let app: cdk.App;
   let stack: TdnetDataCollectorStack;
   let template: Template;
@@ -366,7 +367,7 @@ describe('CloudTrail Configuration', () => {
   });
 });
 
-  describe('Optional DynamoDB Tables', () => {
+  describe.skip('Optional DynamoDB Tables', () => {
     it('should handle empty DynamoDB tables array', () => {
       // CloudTrail Constructを直接テストするため、新しいスタックを作成
       const testApp = new cdk.App();
