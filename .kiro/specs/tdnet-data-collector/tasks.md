@@ -2739,7 +2739,7 @@
     - _優先度: 🟢 Low_
     - _推定工数: 5分_
     - _完了: 2026-02-14 22:47, APIキーローテーション関連4テストを無効化_
-  - [-] 31.2.6.7 本番環境でのデータ収集検証（Critical）
+  - [x] 31.2.6.7 本番環境でのデータ収集検証（Critical）
     - 本番環境でデータ収集テストを実行
     - データ収集テスト:
       - [x] POST /collect で2026-02-13のデータ収集を実行
@@ -2763,6 +2763,7 @@
       - 🔴 Lambda Collect関数タイムアウト（30秒）
       - 🔴 Secrets Manager APIキー形式エラー（無効なJSON形式）
       - 🟡 DynamoDBテーブル名不一致（tdnet-executions-prod が存在しない）
+      - 🟡 CloudWatch Logsのエンコーディング問題（Shift_JIS文字列がログに含まれる）
 
 - [ ] 31.2.6.8 CloudWatch PutMetricData権限の修正（Critical）
   - Lambda Collector関数のIAMロールにCloudWatch PutMetricData権限を追加
@@ -2802,6 +2803,22 @@
   - _Requirements: 要件2.5（データベース）_
   - _優先度: 🟠 High_
   - _推定工数: 30分_
+  - _関連: タスク31.2.6.7で発見_
+
+- [ ] 31.2.6.12 CloudWatch Logsのエンコーディング問題の修正（High）
+  - Lambda関数のログ出力にShift_JIS文字列が含まれている問題を修正
+  - エラー: `'cp932' codec can't encode character '\ufffd' in position 1051: illegal multibyte sequence`
+  - 原因: TDnetから取得したShift_JISデータをログに出力している
+  - 修正方法:
+    - [ ] ログ出力時に日本語文字列をサニタイズ（ASCII範囲外の文字を除去または置換）
+    - [ ] または、disclosure_idやcompany_codeなどの識別子のみをログに出力
+    - [ ] title、company_nameなどの日本語フィールドはログに出力しない
+  - 検証:
+    - [ ] CloudWatch Logsでエンコーディングエラーが発生しないことを確認
+    - [ ] ログが正常に表示されることを確認
+  - _Requirements: 要件6.3（ロギング）_
+  - _優先度: 🟠 High_
+  - _推定工数: 1時間_
   - _関連: タスク31.2.6.7で発見_
 
 - [ ] 31.3 本番環境の監視開始

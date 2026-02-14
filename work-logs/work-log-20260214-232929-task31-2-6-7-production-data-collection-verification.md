@@ -158,6 +158,24 @@ because no identity-based policy allows the cloudwatch:PutMetricData action
 
 **修正方法**: タスク31.2.6.11で確認・修正
 
+### 5. CloudWatch Logsのエンコーディング問題（High）
+
+**問題**: Lambda関数のログ出力にShift_JIS文字列が含まれており、CloudWatch Logsの表示時にエンコーディングエラーが発生
+
+**エラーメッセージ**:
+```
+'cp932' codec can't encode character '\ufffd' in position 1051: illegal multibyte sequence
+```
+
+**原因**: TDnetから取得したShift_JISデータ（title、company_nameなど）をログに出力している
+
+**影響**: CloudWatch Logsの表示が正常に動作しない、ログ解析ツールでエラーが発生する可能性
+
+**修正方法**: タスク31.2.6.12で対応
+- ログ出力時に日本語文字列をサニタイズ（ASCII範囲外の文字を除去または置換）
+- または、disclosure_idやcompany_codeなどの識別子のみをログに出力
+- title、company_nameなどの日本語フィールドはログに出力しない
+
 ## 検証結果サマリー
 
 | 検証項目 | 結果 | 備考 |
@@ -174,12 +192,13 @@ because no identity-based policy allows the cloudwatch:PutMetricData action
 2. タスク31.2.6.9: Lambda Collect関数の非同期呼び出しへの変更
 3. タスク31.2.6.10: Secrets Manager APIキー形式の修正
 4. タスク31.2.6.11: DynamoDBテーブル名の確認と修正
-5. タスク31.2.6.7の再実行: すべての検証項目を完了
+5. タスク31.2.6.12: CloudWatch Logsのエンコーディング問題の修正
+6. タスク31.2.6.7の再実行: すべての検証項目を完了
 
 ## 成果物
 
 - 作業記録: `work-logs/work-log-20260214-232929-task31-2-6-7-production-data-collection-verification.md`
-- 改善タスク: tasks.md（タスク31.2.6.8-31.2.6.11追加）
+- 改善タスク: tasks.md（タスク31.2.6.8-31.2.6.12追加）
 
 ## 申し送り事項
 
@@ -189,3 +208,4 @@ because no identity-based policy allows the cloudwatch:PutMetricData action
 - Lambda Collect関数の非同期呼び出しへの変更が必要（Critical）
 - Secrets Manager APIキー形式の修正が必要（Critical）
 - DynamoDBテーブル名の確認が必要（High）
+- CloudWatch Logsのエンコーディング問題の修正が必要（High）
