@@ -2,6 +2,12 @@
 
 **最終更新:** 2026-02-15
 
+## 実装状況サマリー
+
+- **実装済みプロパティ**: 6/15 (40%)
+- **テスト実装済み**: Property 2, 3, 4, 6, 9, 12
+- **未実装プロパティ**: Property 1, 5, 7, 8, 10, 11, 13, 14, 15
+
 ## 関連ドキュメント
 
 - `design.md` - Correctness Propertiesの詳細定義
@@ -41,11 +47,16 @@ fc.assert(
 
 **定義:** 開示情報のメタデータとPDFファイルが必ず同時に取得される
 
-**実装状況:** ❌ 未実装
+**実装状況:** ✅ 実装済み
+
+**実装場所:**
+- `src/lambda/collector/handler.ts` - `processDisclosure()`関数内で順次実行
+- `src/lambda/collector/download-pdf.ts` - PDF取得とS3保存
+- `src/lambda/collector/save-metadata.ts` - メタデータ保存
 
 **テスト実装:**
-- [ ] ユニットテスト
-- [ ] 統合テスト
+- [x] ユニットテスト - `src/lambda/collector/__tests__/handler.test.ts`
+- [x] 統合テスト - `src/lambda/collector/__tests__/handler.integration.test.ts`
 
 **検証方法:**
 ```typescript
@@ -63,10 +74,14 @@ test('メタデータとPDFが同時に取得される', async () => {
 
 **定義:** すべてのメタデータレコードが必須フィールドを含む
 
-**実装状況:** ❌ 未実装
+**実装状況:** ✅ 実装済み
+
+**実装場所:**
+- `src/models/disclosure.ts` - `validateDisclosure()`関数
+- 必須フィールド検証、company_code形式検証（4桁）、date_partition形式検証（YYYY-MM）
 
 **テスト実装:**
-- [ ] ユニットテスト
+- [x] ユニットテスト - `src/__tests__/type-definitions.test.ts`
 - [ ] プロパティベーステスト
 
 **検証方法:**
@@ -87,11 +102,15 @@ fc.assert(
 
 **定義:** すべての開示情報が一意の識別子を持つ
 
-**実装状況:** ❌ 未実装
+**実装状況:** ✅ 実装済み
+
+**実装場所:**
+- `src/utils/disclosure-id.ts` - `generateDisclosureId()`関数
+- JST変換、フォーマット検証、バリデーション実装
 
 **テスト実装:**
-- [ ] ユニットテスト
-- [ ] 統合テスト
+- [x] ユニットテスト - `src/__tests__/type-definitions.test.ts`
+- [x] 統合テスト - DynamoDB ConditionalCheckFailed検証
 
 **検証方法:**
 ```typescript
@@ -131,11 +150,15 @@ test('重複収集は冪等である', async () => {
 
 **定義:** ダウンロードされたPDFファイルが破損していない
 
-**実装状況:** ❌ 未実装
+**実装状況:** ✅ 実装済み
+
+**実装場所:**
+- `src/scraper/pdf-validator.ts` - `validatePdfFile()`関数
+- PDFヘッダー検証（%PDF-）、サイズ範囲検証（10KB〜50MB）
 
 **テスト実装:**
-- [ ] ユニットテスト
-- [ ] 統合テスト
+- [x] ユニットテスト - `src/scraper/__tests__/pdf-validator.test.ts`
+- [x] 統合テスト - `src/scraper/__tests__/pdf-downloader.test.ts`
 
 **検証方法:**
 ```typescript
@@ -201,11 +224,18 @@ fc.assert(
 
 **定義:** すべてのAPIリクエストが有効なAPIキーを含む
 
-**実装状況:** ❌ 未実装
+**実装状況:** ✅ 実装済み
+
+**実装場所:**
+- `src/lambda/api/` - 各APIハンドラーでx-api-keyヘッダー検証
+- UNAUTHORIZED エラーレスポンス実装
 
 **テスト実装:**
-- [ ] ユニットテスト
-- [ ] E2Eテスト
+- [x] ユニットテスト - 複数のAPIハンドラーテスト
+  - `src/lambda/api/__tests__/pdf-download.test.ts`
+  - `src/lambda/api/__tests__/export-status.test.ts`
+  - `src/lambda/api/pdf-download/__tests__/handler.test.ts`
+- [x] E2Eテスト - `src/__tests__/load/load-test.test.ts`
 
 **検証方法:**
 ```typescript
@@ -272,10 +302,14 @@ fc.assert(
 
 **定義:** TDnetへのリクエスト間隔が設定値以上である
 
-**実装状況:** ❌ 未実装
+**実装状況:** ✅ 実装済み
+
+**実装場所:**
+- `src/utils/rate-limiter.ts` - `RateLimiter`クラス
+- 最小遅延時間確保、構造化ログ実装
 
 **テスト実装:**
-- [ ] ユニットテスト
+- [x] ユニットテスト - `src/utils/__tests__/rate-limiter.test.ts`
 - [ ] プロパティベーステスト
 
 **検証方法:**

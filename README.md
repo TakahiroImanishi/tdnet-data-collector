@@ -89,12 +89,6 @@ tdnet-data-collector/
 ├── cdk/                          # CDKインフラコード（Phase 2以降）
 │   ├── bin/                      # CDKアプリエントリーポイント
 │   └── lib/                      # CDKスタック定義
-├── docs/                         # ドキュメント
-│   ├── architecture/             # アーキテクチャドキュメント
-│   │   └── lambda-collector.md  # Lambda Collectorアーキテクチャ
-│   └── guides/                   # 実装ガイド
-│       ├── lambda-error-logging.md  # Lambda エラーログガイド
-│       └── batch-metrics.md      # バッチメトリクスガイド
 ├── .kiro/                        # Kiro設定とSpec
 │   ├── specs/                    # 仕様書とタスク
 │   │   └── tdnet-data-collector/
@@ -708,18 +702,17 @@ aws logs filter-log-events \
 
 ### 仕様書
 
-- [要件定義書](.kiro/specs/tdnet-data-collector/docs/requirements.md) - システム要件と機能仕様
-- [設計書](.kiro/specs/tdnet-data-collector/docs/design.md) - アーキテクチャと設計判断
-- [タスクリスト](.kiro/specs/tdnet-data-collector/tasks.md) - 開発タスクと進捗
+- [要件定義書](.kiro/specs/tdnet-data-collector/docs/01-requirements/requirements.md) - システム要件と機能仕様
+- [設計書](.kiro/specs/tdnet-data-collector/docs/01-requirements/design.md) - アーキテクチャと設計判断
+- [タスクリスト](.kiro/specs/tdnet-data-collector/tasks-phase1-4.md) - 開発タスクと進捗
 
 ### アーキテクチャドキュメント
 
-- [Lambda Collector アーキテクチャ](docs/architecture/lambda-collector.md) - データフロー、コンポーネント構成、エラーハンドリング
+詳細なアーキテクチャ情報は [設計書](.kiro/specs/tdnet-data-collector/docs/01-requirements/design.md) を参照してください。
 
 ### 実装ガイド
 
-- [Lambda エラーログガイド](docs/guides/lambda-error-logging.md) - `logLambdaError()` の使用方法
-- [バッチメトリクスガイド](docs/guides/batch-metrics.md) - `sendBatchResultMetrics()` の使用方法
+実装の詳細は [Steeringファイル](.kiro/steering/) を参照してください。
 
 ### Steeringファイル（実装ガイドライン）
 
@@ -816,7 +809,7 @@ aws logs filter-log-events \
 | `completed_at` | String | 完了日時（completed/failedの場合のみ） |
 | `ttl` | Number | TTL（30日後に自動削除） |
 
-詳細は [Lambda Collector アーキテクチャ](docs/architecture/lambda-collector.md) を参照してください。
+詳細は [設計書](.kiro/specs/tdnet-data-collector/docs/01-requirements/design.md) を参照してください。
 
 ---
 

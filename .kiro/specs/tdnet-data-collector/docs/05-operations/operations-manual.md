@@ -22,7 +22,7 @@
 ### システム概要
 
 - **目的**: TDnetから上場企業の開示情報を自動収集
-- **実行頻度**: 毎日午前9時（JST）に自動実行
+- **実行頻度**: EventBridgeスケジュール（Phase 5で実装予定）
 - **データ保存先**: DynamoDB（メタデータ）、S3（PDFファイル）
 - **監視**: CloudWatch Logs、CloudWatch Alarms、SNS通知
 
@@ -44,6 +44,17 @@
 - Node.js 20.x以上がインストール済み
 - AWS CDK CLIがインストール済み（`npm install -g aws-cdk`）
 - 適切なIAM権限（CloudFormation、Lambda、DynamoDB、S3など）
+
+### 4スタック構成でのデプロイ
+
+本番環境では以下の4つのスタックに分割されています:
+
+1. **Foundation Stack**: DynamoDB、S3、CloudTrail
+2. **Compute Stack**: Lambda関数、EventBridge（Phase 5で実装予定）
+3. **API Stack**: API Gateway、WAF
+4. **Monitoring Stack**: CloudWatch Alarms、SNS
+
+詳細は [デプロイガイド](../04-deployment/deployment-guide.md) を参照してください。
 
 ### 開発環境へのデプロイ
 

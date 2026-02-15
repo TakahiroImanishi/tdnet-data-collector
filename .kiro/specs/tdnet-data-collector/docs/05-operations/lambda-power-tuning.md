@@ -1,8 +1,12 @@
 # Lambda Power Tuning ガイド
 
+**実施予定**: Phase 5以降
+
 ## 概要
 
 AWS Lambda Power Tuningは、Lambda関数の最適なメモリサイズを測定するツールです。コスト効率とパフォーマンスのバランスを見つけることができます。
+
+**注意**: 本ガイドはPhase 5以降の実施を想定しています。Phase 1-4では初期設定値を使用します。
 
 ## 前提条件
 
@@ -252,15 +256,18 @@ Power Tuning State Machineに以下の権限が必要:
 - [AWS Lambda Power Tuning Visualization](https://lambda-power-tuning.show/)
 - [AWS Lambda Pricing](https://aws.amazon.com/lambda/pricing/)
 
-## 現在の設定（2026-02-12時点）
+## 現在の設定（2026-02-15時点）
 
 | Lambda関数 | 環境 | メモリ | タイムアウト | 備考 |
 |-----------|------|--------|------------|------|
-| Collector | dev | 256MB | 5分 | Power Tuning未実施 |
-| Collector | prod | 512MB | 15分 | Power Tuning未実施 |
-| Query | dev | 128MB | 10秒 | Power Tuning未実施 |
-| Query | prod | 256MB | 30秒 | Power Tuning未実施 |
-| Export | dev | 256MB | 2分 | Power Tuning未実施 |
-| Export | prod | 512MB | 5分 | Power Tuning未実施 |
+| Collector | dev | 256MB | 5分 | Phase 5でPower Tuning実施予定 |
+| Collector | prod | 512MB | 15分 | Phase 5でPower Tuning実施予定 |
+| Query | dev | 128MB | 10秒 | Phase 5でPower Tuning実施予定 |
+| Query | prod | 256MB | 30秒 | Phase 5でPower Tuning実施予定 |
+| Export | dev | 256MB | 2分 | Phase 5でPower Tuning実施予定 |
+| Export | prod | 512MB | 5分 | Phase 5でPower Tuning実施予定 |
 
-**注意**: 実際のワークロードでPower Tuningを実行し、最適なメモリサイズを決定してください。
+**Phase 5での実施計画**:
+- 実際のワークロードでPower Tuningを実行
+- 最適なメモリサイズを決定
+- コスト効率とパフォーマンスのバランスを最適化

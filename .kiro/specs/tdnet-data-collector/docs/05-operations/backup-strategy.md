@@ -13,7 +13,7 @@ TDnet Data Collectorのバックアップ戦略は、データの再収集可能
 
 #### 1.1 基本方針
 
-TDnetから収集するデータは公開情報であり、データソース（TDnet）から再収集可能です。そのため、従来の定期バックアップではなく、**データ再収集による復旧**を基本戦略とします。
+TDnetから収集するデータは公開情報であり、データソース（TDnet）から再収集可能です。そのため、**データ再収集による復旧**を基本戦略とします。
 
 #### 1.2 再収集の実装
 
@@ -28,7 +28,7 @@ TDnetから収集するデータは公開情報であり、データソース（
   - 例: 1年分 = 約365日 × 平均50件/日 = 約18,250件 → 約5時間
 - **コスト**: Lambda実行時間とDynamoDB書き込みコストが発生
 
-### 2. DynamoDBポイントインタイムリカバリ
+### 2. DynamoDBポイントインタイムリカバリ（実装済み）
 
 #### 2.1 設定状況
 
@@ -53,7 +53,7 @@ aws dynamodb restore-table-to-point-in-time \
   --restore-date-time 2026-02-13T10:00:00Z
 ```
 
-### 3. S3バージョニング
+### 3. S3バージョニング（実装済み）
 
 #### 3.1 設定状況
 
@@ -78,7 +78,7 @@ aws s3api copy-object \
   --key 2024/01/15/file.pdf
 ```
 
-### 4. CloudTrail監査ログ
+### 4. CloudTrail監査ログ（実装済み）
 
 #### 4.1 記録対象
 
@@ -183,8 +183,8 @@ aws logs tail /aws/cloudtrail/tdnet-audit-trail-prod --follow
 ## 関連ドキュメント
 
 - [運用マニュアル](./operations-manual.md) - トラブルシューティング手順
-- [デプロイガイド](./production-deployment-guide.md) - 本番環境デプロイ手順
-- [コスト見積もり](./cost-estimation.md) - バックアップコストの詳細
+- [デプロイガイド](../04-deployment/deployment-guide.md) - 本番環境デプロイ手順
+- [コスト監視](./cost-monitoring.md) - コスト管理とバックアップコスト
 
 ## 変更履歴
 

@@ -535,4 +535,4 @@ aws cloudwatch put-metric-alarm `
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - 開発ガイドライン
 - [TESTING.md](./TESTING.md) - テスト戦略
 - [README.md](./README.md) - プロジェクト概要
-- [../docs/04-deployment/production-deployment-guide.md](../.kiro/specs/tdnet-data-collector/docs/04-deployment/production-deployment-guide.md) - 本番デプロイガイド
+- [本番デプロイチェックリスト](../.kiro/specs/tdnet-data-collector/docs/04-deployment/production-deployment-checklist.md) - 本番デプロイ手順
