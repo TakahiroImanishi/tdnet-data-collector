@@ -86,8 +86,8 @@ const NAMESPACE = 'TDnet'; // 'TDnetDataCollector'から変更
 - [x] 問題の修正実装
 
 #### 優先度: 中
-- [ ] ビルド・デプロイ
-- [ ] 本番環境での動作確認
+- [x] ビルド・デプロイ準備完了
+- [ ] 本番環境への再デプロイ（次回実施時に修正が反映される）
 
 ## 成果物
 
@@ -96,10 +96,12 @@ const NAMESPACE = 'TDnet'; // 'TDnetDataCollector'から変更
 - 修正ファイル:
   - `src/lambda/collector/update-execution-status.ts`
   - `src/utils/cloudwatch-metrics.ts`
+- Git commit完了: `292922e`
 
 ## 申し送り事項
 
 1. データ収集自体は正常に動作している（2,694件収集成功）
 2. 実行ステータス更新の不具合を修正（started_at保持）
-3. CloudWatchメトリクス名前空間の不一致を修正
-4. 次回デプロイ時に修正が反映される
+3. CloudWatchメトリクス名前空間の不一致を修正（TDnetDataCollector → TDnet）
+4. 修正はコミット済み、次回デプロイ時に本番環境に反映される
+5. 本番環境のスタックは既にデプロイ済みのため、環境変数設定後に再デプロイが必要

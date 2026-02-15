@@ -13,6 +13,35 @@ TDnetから上場企業の開示情報を自動収集するAWSサーバーレス
 
 Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWatch | WAF
 
+## プロジェクト構造
+
+### コアコンポーネント
+- **src/lambda/**: 11個のLambda関数
+  - `collector/` - TDnetスクレイピング・データ収集
+  - `query/` - データクエリAPI
+  - `export/` - データエクスポート
+  - `api/` - API Gateway統合
+  - `get-disclosure/` - 個別開示取得
+  - `collect-status/` - 収集ステータス確認
+  - `stats/` - 統計情報
+  - `health/` - ヘルスチェック
+  - `dlq-processor/` - DLQメッセージ処理
+  - `api-key-rotation/` - APIキーローテーション
+- **cdk/**: インフラコード（4スタック: Foundation, Compute, API, Monitoring）
+- **dashboard/**: React Webアプリ（開示情報検索UI、PDF生成、Playwright E2Eテスト）
+- **scripts/**: 運用スクリプト
+  - デプロイ: `deploy-*.ps1`, `deploy-split-stacks.ps1`
+  - セットアップ: `create-api-key-secret.ps1`, `generate-env-file.ps1`, `localstack-setup.ps1`
+  - データ操作: `fetch-data-range.ps1`, `manual-data-collection.ps1`, `migrate-disclosure-fields.ts`
+  - 監視: `check-iam-permissions.ps1`, `deploy-dashboard.ps1`
+- **config/**: 環境別設定（.env.development, .env.production, .env.load-test, .env.local）
+- **test/**: テスト設定（ユニット、統合、E2E）
+- **docker/**: LocalStack開発環境（docker-compose.yml）
+
+### 仕様・ドキュメント
+- **.kiro/specs/tdnet-data-collector/**: 要件、設計、タスク、作業記録
+- **.kiro/steering/**: 実装ルール（core, development, infrastructure, security, api）
+
 ## 必須実装ルール
 
 ### 1. コスト最適化

@@ -31,12 +31,13 @@ docs/
 
 ## 02-implementation/ - 実装ガイド
 
-実装開始前のチェックリストと検証項目。
+実装開始前のチェックリストと検証項目、CDKインフラストラクチャドキュメント。
 
 | ファイル | 内容 |
 |---------|------|
 | implementation-checklist.md | 実装開始前チェックリスト（100項目以上） |
 | correctness-properties-checklist.md | 設計検証項目（15項目） |
+| cdk-infrastructure.md | CDKインフラストラクチャ完全ガイド |
 
 ## 03-testing/ - テスト
 
@@ -78,9 +79,10 @@ docs/
 
 ### 実装者
 1. `02-implementation/implementation-checklist.md` - 実装前チェック
-2. `01-requirements/api-design.md` - API設計確認
-3. `01-requirements/openapi.yaml` - API仕様確認
-4. `04-deployment/environment-setup.md` - 環境構築
+2. `02-implementation/cdk-infrastructure.md` - CDKインフラ構成理解
+3. `01-requirements/api-design.md` - API設計確認
+4. `01-requirements/openapi.yaml` - API仕様確認
+5. `04-deployment/environment-setup.md` - 環境構築
 
 ### テスター
 1. `03-testing/localstack-setup.md` - テスト環境構築
@@ -89,9 +91,10 @@ docs/
 
 ### デプロイ担当者
 1. `04-deployment/environment-setup.md` - 環境構築
-2. `04-deployment/cdk-bootstrap-guide.md` - CDKブートストラップ
-3. `04-deployment/ci-cd-setup.md` - CI/CD構築
-4. `04-deployment/deployment-smoke-test.md` - デプロイ検証
+2. `02-implementation/cdk-infrastructure.md` - CDKインフラ構成理解
+3. `04-deployment/cdk-bootstrap-guide.md` - CDKブートストラップ
+4. `04-deployment/ci-cd-setup.md` - CI/CD構築
+5. `04-deployment/deployment-smoke-test.md` - デプロイ検証
 
 ### 運用担当者
 1. `05-operations/metrics-and-kpi.md` - メトリクス確認
