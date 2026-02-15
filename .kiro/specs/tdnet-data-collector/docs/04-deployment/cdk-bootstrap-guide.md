@@ -1,25 +1,72 @@
 # CDK Bootstrap ガイド
 
-AWS CDK Bootstrapの実行手順とトラブルシューティング。
+**最終更新**: 2026-02-15  
+**バージョン**: 2.0.0
 
-**作成日**: 2026-02-15  
-**対象**: Phase 2 環境準備
-
----
-
-## CDK Bootstrap とは
-
-CDKアプリケーションのデプロイに必要なAWSリソース（S3バケット、IAMロールなど）を準備するプロセス。
-
-**作成されるリソース:**
-- S3バケット: CDKアセット保存先
-- IAMロール: デプロイ実行ロール
-- ECRリポジトリ: Dockerイメージ用（必要時）
-- SSMパラメータ: Bootstrapバージョン情報
+AWS CDK Bootstrapの実行手順とトラブルシューティングを説明します。
 
 ---
 
-## Bootstrap 実行前の確認
+## 目次
+
+1. [CDK Bootstrapとは](#cdk-bootstrapとは)
+2. [自動化スクリプトの使用](#自動化スクリプトの使用)
+3. [手動セットアップ](#手動セットアップ)
+4. [Bootstrap実行結果の確認](#bootstrap実行結果の確認)
+5. [トラブルシューティング](#トラブルシューティング)
+6. [ベストプラクティス](#ベストプラクティス)
+
+---
+
+## CDK Bootstrapとは
+
+CDKアプリケーションのデプロイに必要なAWSリソースを初期化するプロセス。
+
+### 作成されるリソース
+
+- **S3バケット**: CDKアセット（Lambda関数コード、Dockerイメージなど）の保存先
+- **IAMロール**: CDKデプロイ時に使用するロール
+- **ECRリポジトリ**: Dockerイメージの保存先（該当する場合）
+- **CloudFormationスタック**: `CDKToolkit`という名前のスタック
+- **SSMパラメータ**: Bootstrapバージョン情報
+
+### Bootstrap実行タイミング
+
+**必要な場合**:
+- ✅ 初めてCDKを使用するAWSアカウント・リージョン
+- ✅ 新しいリージョンにデプロイする場合
+- ✅ CDKバージョンをアップグレードした場合（推奨）
+
+**不要な場合**:
+- ❌ 既にBootstrap済みのアカウント・リージョン
+- ❌ 同じアカウント・リージョンに複数のCDKアプリをデプロイする場合
+
+---
+
+## 自動化スクリプトの使用
+
+### クイックスタート（すべて自動）
+
+```powershell
+# すべてのステップを自動実行
+.\scripts\deploy.ps1 -Environment dev
+```
+
+このコマンドは以下を自動実行します：
+1. 前提条件チェック（Node.js, npm, AWS CLI, CDK）
+2. 依存関係のインストール
+3. テスト実行
+4. プロジェクトビルド
+5. API Key Secret作成（Secrets Manager）
+6. 環境変数ファイル生成（.env.development）
+7. CDK Bootstrap
+8. CDK Deploy
+
+---
+
+## 手動セットアップ
+
+### Bootstrap実行前の確認
 
 ### 1. AWS認証情報の確認
 
@@ -63,7 +110,7 @@ cdk bootstrap --show-template
 
 ---
 
-## Bootstrap 実行結果の確認
+## Bootstrap実行結果の確認
 
 ### CloudFormationスタックの確認
 
@@ -104,7 +151,41 @@ aws iam list-roles --query 'Roles[?contains(RoleName, `cdk`)].RoleName' --output
 
 ---
 
-## エラーと対処法
+## トラブルシューティング
+
+### Bootstrap が完了しない
+
+**症状**: Bootstrap が長時間（5分以上）完了しない
+
+**対処法**:
+1. CloudFormationコンソールでスタックの状態を確認
+2. スタックイベントでエラーメッセージを確認
+3. 必要に応じてスタックをロールバックして再実行
+
+```powershell
+# CloudFormationスタックの状態を確認
+aws cloudformation describe-stacks --stack-name CDKToolkit --query 'Stacks[0].StackStatus'
+
+# スタックイベントを確認
+aws cloudformation describe-stack-events --stack-name CDKToolkit --max-items 10
+```
+
+### Bootstrap の削除（クリーンアップ）
+
+**注意**: Bootstrapスタックを削除すると、CDKデプロイができなくなります。
+
+```powershell
+# Bootstrapスタックを削除
+aws cloudformation delete-stack --stack-name CDKToolkit
+
+# S3バケットを空にしてから削除
+aws s3 rm s3://cdk-hnb659fds-assets-{account-id}-{region} --recursive
+aws s3 rb s3://cdk-hnb659fds-assets-{account-id}-{region}
+```
+
+---
+
+## ベストプラクティス
 
 ### 認証エラー
 
@@ -250,42 +331,36 @@ aws s3api put-bucket-versioning `
 
 ---
 
-## トラブルシューティング
+## よくある質問
 
-### Bootstrap が完了しない
+### Q: Bootstrap は何回実行する必要がありますか？
 
-**症状**: Bootstrap が長時間（5分以上）完了しない
+A: 各AWSアカウント・リージョンごとに1回のみ実行します。既にBootstrap済みの場合は再実行不要です。
 
-**対処法:**
-1. CloudFormationコンソールでスタックの状態を確認
-2. スタックイベントでエラーメッセージを確認
-3. 必要に応じてスタックをロールバックして再実行
+### Q: Bootstrap を更新する必要はありますか？
 
-```powershell
-# CloudFormationスタックの状態を確認
-aws cloudformation describe-stacks --stack-name CDKToolkit --query 'Stacks[0].StackStatus'
+A: CDKのメジャーバージョンアップ時は、`cdk bootstrap --force` で更新することを推奨します。
 
-# スタックイベントを確認
-aws cloudformation describe-stack-events --stack-name CDKToolkit --max-items 10
-```
+### Q: Bootstrap で作成されたリソースを削除できますか？
 
-### Bootstrap の削除（クリーンアップ）
+A: 可能ですが、削除するとCDKデプロイができなくなります。削除する場合は、CloudFormationスタック `CDKToolkit` を削除してください。
 
-**注意**: Bootstrapスタックを削除すると、CDKデプロイができなくなります。
+### Q: Bootstrap のコストはどのくらいですか？
 
-```powershell
-# Bootstrapスタックを削除
-aws cloudformation delete-stack --stack-name CDKToolkit
-
-# S3バケットを空にしてから削除
-aws s3 rm s3://cdk-hnb659fds-assets-{account-id}-{region} --recursive
-aws s3 rb s3://cdk-hnb659fds-assets-{account-id}-{region}
-```
+A: S3バケットのストレージコストのみです。通常は月額$1未満です。
 
 ---
 
 ## 関連ドキュメント
 
-- **環境変数管理**: `../../steering/infrastructure/environment-variables.md`
-- **デプロイチェックリスト**: `../../steering/infrastructure/deployment-checklist.md`
+- **環境変数管理**: `../../steering/infrastructure/environment-variables.md` - 環境変数一覧と管理方法
+- **環境設定**: `environment-setup.md` - 環境変数とAWS設定
+- **デプロイ**: `deployment-guide.md` - デプロイ手順
+- **デプロイチェックリスト**: `../../steering/infrastructure/deployment-checklist.md` - デプロイ前後の確認事項
 - **AWS CDK公式ドキュメント**: https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html
+
+---
+
+**最終更新**: 2026-02-15  
+**バージョン**: 2.0.0  
+**作成者**: TDnet Data Collector Team

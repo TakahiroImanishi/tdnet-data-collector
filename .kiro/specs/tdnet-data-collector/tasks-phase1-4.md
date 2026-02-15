@@ -3188,6 +3188,22 @@
   - _発見された問題: 日本語の文字化け（Medium）- API応答のエンコーディング確認が必要_
   - _作業記録: work-log-20260215-073159-task31-6-data-collection.md_
 
+- [ ] 31.8 TdnetApi-prod: WAF WebACLの重複エラー解消
+  - CloudFormationスタックのドリフト検出を実行
+  - WAF WebACLリソースの重複を確認
+  - 重複の原因を特定（手動作成 vs CDK作成）
+  - 解決方法の選択:
+    - オプションA: 手動作成されたWebACLを削除し、CDK管理に統一
+    - オプションB: CDK定義を修正して既存WebACLをインポート
+    - オプションC: CDK定義からWebACLを削除し、手動管理に統一
+  - 選択した方法を実行してエラーを解消
+  - CloudFormationスタックの状態を確認（UPDATE_COMPLETE）
+  - WAF WebACLが正常に動作することを確認
+  - _Requirements: 要件13.1（WAF保護）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 2-3時間_
+  - _関連: TdnetApi-prod CloudFormationスタック_
+
 
 ## Notes
 

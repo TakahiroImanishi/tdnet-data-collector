@@ -1,8 +1,13 @@
 # コスト監視ガイド
 
+**最終更新日**: 2026-02-15  
+**対象環境**: 本番環境（prod）
+
 ## 概要
 
-TDnet Data Collectorプロジェクトのコストを継続的に監視し、最適化するためのガイドです。
+TDnet Data Collectorのコストを継続的に監視し、AWS無料枠内での運用を維持するためのガイドです。
+
+---
 
 ## コスト監視の目標
 
@@ -11,17 +16,135 @@ TDnet Data Collectorプロジェクトのコストを継続的に監視し、最
 - サービス別コストの可視化
 - 月次コストレポートの自動化
 
+---
+
+## 月間コスト見積もり
+
+### 前提条件
+
+| 項目 | 想定値 | 備考 |
+|------|--------|------|
+| 日次開示情報件数 | 100件/日 | 平日のみ（月20日） |
+| 月間開示情報件数 | 2,000件/月 | 100件/日 × 20日 |
+| PDF平均サイズ | 500KB | 開示資料のPDFファイル |
+| API呼び出し回数 | 10,000回/月 | 検索・エクスポートAPI |
+| エクスポート回数 | 100回/月 | CSV/JSONエクスポート |
+
+### AWS無料枠（12ヶ月間）
+
+| サービス | 無料枠 | 備考 |
+|---------|--------|------|
+| Lambda | 100万リクエスト/月、400,000 GB-秒/月 | 常時無料 |
+| DynamoDB | 25GB ストレージ、25 RCU、25 WCU | 常時無料 |
+| S3 | 5GB ストレージ、20,000 GETリクエスト、2,000 PUTリクエスト | 12ヶ月間 |
+| CloudWatch | 10カスタムメトリクス、10アラーム | 常時無料 |
+| API Gateway | 100万APIコール/月 | 12ヶ月間 |
+| Secrets Manager | 30日間無料トライアル | その後$0.40/シークレット/月 |
+
+### サービス別コスト見積もり
+
+| サービス | 月間コスト | 無料枠適用後 |
+|---------|-----------|------------|
+| Lambda | $0.193 | $0.00 |
+| DynamoDB | $0.044 | $0.00 |
+| S3 | $0.195 | $0.00 |
+| API Gateway | $0.041 | $0.00 |
+| Secrets Manager | $0.4025 | $0.4025 |
+| CloudWatch | $3.00 | $2.70 |
+| WAF | $8.007 | $8.007 |
+| CloudFront | $0.009 | $0.009 |
+| SNS | $0.000005 | $0.00 |
+| SQS | $0.000008 | $0.00 |
+| CloudTrail | $0.00 | $0.00 |
+| **合計** | **$11.89** | **$11.12** |
+
+### コスト最適化の提案
+
+**WAFの最適化（$8.00削減可能）**
+- 開発環境ではWAFを無効化
+- 本番環境のみWAFを有効化
+- レート制限をAPI Gatewayのスロットリング機能で代替（無料）
+
+**CloudWatchメトリクスの最適化（$2.70削減可能）**
+- 重要なメトリクスのみに絞る（10個以内）
+- Lambda Insightsを使用（無料枠内）
+- CloudWatch Logs Insightsでメトリクスを代替
+
+**Secrets Managerの最適化（$0.40削減可能）**
+- Systems Manager Parameter Store（無料）に移行
+- 暗号化パラメータとして保存
+
+**最適化後の月間コスト:**
+- 開発環境: $0.02（CloudFront + その他）
+- 本番環境: $8.02（WAF + CloudFront + その他）
+
+---
+
+## AWS Budgets設定
+
+### SNS通知トピックの作成
+
+```bash
+# SNSトピックの作成
+aws sns create-topic --name tdnet-budget-alerts
+
+# メールアドレスをサブスクライブ
+aws sns subscribe \
+  --topic-arn arn:aws:sns:ap-northeast-1:YOUR_ACCOUNT_ID:tdnet-budget-alerts \
+  --protocol email \
+  --notification-endpoint your-email@example.com
+```
+
+### 月次予算の設定
+
+**予算設定:**
+- 予算名: `tdnet-data-collector-monthly`
+- 期間: 月次
+- 予算額: `$5.00`（AWS無料枠を考慮した目標額）
+
+**アラート閾値:**
+- 50%到達時: 警告
+- 80%到達時: 注意
+- 100%到達時: 緊急
+
+```bash
+# 予算設定ファイルの作成
+cat > budget-monthly.json << 'EOF'
+{
+  "BudgetName": "tdnet-data-collector-monthly",
+  "BudgetType": "COST",
+  "TimeUnit": "MONTHLY",
+  "BudgetLimit": {
+    "Amount": "5.0",
+    "Unit": "USD"
+  },
+  "CostFilters": {},
+  "CostTypes": {
+    "IncludeTax": true,
+    "IncludeSubscription": true,
+    "UseBlended": false
+  }
+}
+EOF
+
+# 予算の作成
+aws budgets create-budget \
+  --account-id YOUR_ACCOUNT_ID \
+  --budget file://budget-monthly.json
+```
+
+### 推奨予算設定
+
+| 環境 | 月次予算 | 備考 |
+|------|---------|------|
+| 開発環境 | $5.00 | 無料枠内での運用 |
+| 本番環境 | $10.00 | バッファ含む |
+
+---
+
 ## Cost Explorerの使用方法
 
-### 1. Cost Explorerへのアクセス
-
-```
-https://console.aws.amazon.com/cost-management/home#/cost-explorer
-```
-
-### 2. 基本的なコスト分析
-
-#### サービス別コストの確認
+### サービス別コストの確認
 
 1. **フィルター設定**
    - 期間: 過去30日間
@@ -35,7 +158,7 @@ https://console.aws.amazon.com/cost-management/home#/cost-explorer
    - Amazon CloudWatch
    - Amazon API Gateway
 
-#### 日次コストトレンドの確認
+### 日次コストトレンドの確認
 
 1. **フィルター設定**
    - 期間: 過去30日間
@@ -46,21 +169,21 @@ https://console.aws.amazon.com/cost-management/home#/cost-explorer
    - 通常の2倍以上のコストが発生している日を特定
    - CloudWatch Logsで該当日のエラーログを確認
 
-### 3. タグベースのコスト分析
+### タグベースのコスト分析
 
-プロジェクトにタグを付けてコストを追跡します。
-
-**推奨タグ**:
+**推奨タグ:**
 - `Project`: `tdnet-data-collector`
 - `Environment`: `dev` / `prod`
 - `Component`: `lambda` / `dynamodb` / `s3` / `api`
 
-**Cost Explorerでのフィルタリング**:
+**Cost Explorerでのフィルタリング:**
 ```
 フィルター: タグ
 タグキー: Project
 タグ値: tdnet-data-collector
 ```
+
+---
 
 ## CloudWatchダッシュボードでのコスト監視
 
@@ -116,74 +239,22 @@ const costAlarm = new cloudwatch.Alarm(this, 'MonthlyCostAlarm', {
 costAlarm.addAlarmAction(new SnsAction(alarmTopic));
 ```
 
+---
+
 ## 月次コストレポートの作成
 
-### 1. AWS Cost and Usage Reportsの設定
-
-#### Management Consoleでの設定
-
-1. **Cost and Usage Reportsコンソールにアクセス**
-   ```
-   https://console.aws.amazon.com/billing/home#/reports
-   ```
-
-2. **レポートの作成**
-   - レポート名: `tdnet-cost-report`
-   - 時間単位: 日次
-   - レポート内容: すべてのコスト配分タグを含める
-   - S3バケット: `tdnet-cost-reports-YOUR_ACCOUNT_ID`
-   - レポート形式: CSV
-
-3. **配信設定**
-   - 圧縮: GZIP
-   - バージョニング: 既存のレポートを上書き
-
-#### AWS CLIでの設定
+### AWS Cost and Usage Reportsの設定
 
 ```bash
 # S3バケットの作成
 aws s3 mb s3://tdnet-cost-reports-YOUR_ACCOUNT_ID --region ap-northeast-1
-
-# バケットポリシーの設定
-cat > bucket-policy.json << 'EOF'
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "billingreports.amazonaws.com"
-      },
-      "Action": [
-        "s3:GetBucketAcl",
-        "s3:GetBucketPolicy"
-      ],
-      "Resource": "arn:aws:s3:::tdnet-cost-reports-YOUR_ACCOUNT_ID"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "billingreports.amazonaws.com"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::tdnet-cost-reports-YOUR_ACCOUNT_ID/*"
-    }
-  ]
-}
-EOF
-
-aws s3api put-bucket-policy \
-  --bucket tdnet-cost-reports-YOUR_ACCOUNT_ID \
-  --policy file://bucket-policy.json
 
 # Cost and Usage Reportの作成
 aws cur put-report-definition \
   --report-definition file://report-definition.json
 ```
 
-### 2. 月次レポートの自動生成
-
-#### Lambda関数での実装
+### 月次レポートの自動生成
 
 ```typescript
 // src/lambda/cost-report-generator/index.ts
@@ -228,23 +299,9 @@ export const handler = async () => {
 
   return { statusCode: 200, body: 'Cost report generated successfully' };
 };
-
-function generateCsvReport(data: any): string {
-  const lines = ['Service,Cost (USD)'];
-  
-  for (const result of data.ResultsByTime || []) {
-    for (const group of result.Groups || []) {
-      const service = group.Keys?.[0] || 'Unknown';
-      const cost = group.Metrics?.UnblendedCost?.Amount || '0';
-      lines.push(`${service},${parseFloat(cost).toFixed(2)}`);
-    }
-  }
-  
-  return lines.join('\n');
-}
 ```
 
-#### EventBridgeスケジュール設定
+### EventBridgeスケジュール設定
 
 ```typescript
 // cdk/lib/constructs/cost-reporting-construct.ts
@@ -266,49 +323,18 @@ const rule = new events.Rule(this, 'MonthlyCostReportRule', {
 rule.addTarget(new targets.LambdaFunction(costReportFunction));
 ```
 
-### 3. レポートの確認と分析
-
-#### レポートの内容
-
-月次レポートには以下の情報が含まれます:
-
-- サービス別コスト
-- 日次コストトレンド
-- 前月比較
-- 予算との差異
-- コスト最適化の推奨事項
-
-#### レポートの確認方法
-
-```bash
-# S3から最新のレポートをダウンロード
-aws s3 cp s3://tdnet-cost-reports-YOUR_ACCOUNT_ID/monthly-reports/2026-02.csv ./
-
-# レポートの内容を確認
-cat 2026-02.csv
-```
+---
 
 ## コスト最適化のベストプラクティス
 
 ### 1. Lambda関数の最適化
 
-#### メモリサイズの最適化
+**メモリサイズの最適化:**
+- CloudWatch Logsで実際のメモリ使用量を確認
+- Lambda Power Tuningツールを使用して最適なメモリサイズを特定
+- コストと実行時間のバランスを考慮
 
-```typescript
-// 適切なメモリサイズを設定
-const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
-  memorySize: 256, // 128MB → 256MBに増やすことで実行時間が短縮される場合がある
-  timeout: Duration.seconds(30),
-});
-```
-
-**最適化手順**:
-1. CloudWatch Logsで実際のメモリ使用量を確認
-2. Lambda Power Tuningツールを使用して最適なメモリサイズを特定
-3. コストと実行時間のバランスを考慮
-
-#### 不要なログの削減
-
+**不要なログの削減:**
 ```typescript
 // 本番環境ではDEBUGログを無効化
 const logLevel = process.env.STAGE === 'prod' ? 'INFO' : 'DEBUG';
@@ -316,8 +342,7 @@ const logLevel = process.env.STAGE === 'prod' ? 'INFO' : 'DEBUG';
 
 ### 2. DynamoDBの最適化
 
-#### オンデマンドモードの活用
-
+**オンデマンドモードの活用:**
 ```typescript
 // トラフィックが予測不可能な場合はオンデマンドモード
 const table = new dynamodb.Table(this, 'DisclosuresTable', {
@@ -325,24 +350,15 @@ const table = new dynamodb.Table(this, 'DisclosuresTable', {
 });
 ```
 
-#### TTLの設定
-
+**TTLの設定:**
 ```typescript
 // 古いデータを自動削除してストレージコストを削減
-table.addGlobalSecondaryIndex({
-  indexName: 'date-partition-index',
-  partitionKey: { name: 'date_partition', type: dynamodb.AttributeType.STRING },
-  sortKey: { name: 'disclosed_at', type: dynamodb.AttributeType.STRING },
-});
-
-// TTL属性の設定（90日後に自動削除）
 table.addProperty('timeToLiveAttribute', 'ttl');
 ```
 
 ### 3. S3の最適化
 
-#### ライフサイクルポリシーの設定
-
+**ライフサイクルポリシーの設定:**
 ```typescript
 // 古いPDFファイルをGlacierに移行
 bucket.addLifecycleRule({
@@ -358,26 +374,9 @@ bucket.addLifecycleRule({
 });
 ```
 
-#### Intelligent-Tieringの活用
-
-```typescript
-// アクセスパターンに応じて自動的にストレージクラスを変更
-bucket.addLifecycleRule({
-  id: 'intelligent-tiering',
-  enabled: true,
-  transitions: [
-    {
-      storageClass: s3.StorageClass.INTELLIGENT_TIERING,
-      transitionAfter: Duration.days(0),
-    },
-  ],
-});
-```
-
 ### 4. CloudWatch Logsの最適化
 
-#### ログ保持期間の設定
-
+**ログ保持期間の設定:**
 ```typescript
 // ログを30日間のみ保持
 const logGroup = new logs.LogGroup(this, 'CollectorLogs', {
@@ -386,18 +385,9 @@ const logGroup = new logs.LogGroup(this, 'CollectorLogs', {
 });
 ```
 
-#### ログフィルタリング
-
-```typescript
-// 不要なログをフィルタリング
-logger.info('Processing disclosure', { disclosure_id }); // 必要
-// logger.debug('Detailed processing info', { ... }); // 本番環境では不要
-```
-
 ### 5. API Gatewayの最適化
 
-#### キャッシュの有効化
-
+**キャッシュの有効化:**
 ```typescript
 // レスポンスをキャッシュしてLambda実行回数を削減
 const api = new apigateway.RestApi(this, 'TdnetApi', {
@@ -409,9 +399,11 @@ const api = new apigateway.RestApi(this, 'TdnetApi', {
 });
 ```
 
+---
+
 ## コスト異常の検知と対応
 
-### 1. AWS Cost Anomaly Detectionの設定
+### AWS Cost Anomaly Detectionの設定
 
 ```bash
 # コスト異常検知の有効化
@@ -423,25 +415,14 @@ aws ce create-anomaly-subscription \
   --anomaly-subscription file://anomaly-subscription.json
 ```
 
-### 2. 異常検知時の対応フロー
+### 異常検知時の対応フロー
 
-1. **アラート受信**
-   - SNS経由でメール通知
+1. **アラート受信** - SNS経由でメール通知
+2. **原因の特定** - Cost Explorerで異常なコスト増加を確認
+3. **対応策の実施** - 無限ループの停止、レート制限の強化
+4. **再発防止** - コードの修正、アラート閾値の調整
 
-2. **原因の特定**
-   - Cost Explorerで異常なコスト増加を確認
-   - CloudWatch Logsでエラーログを確認
-   - Lambda実行回数、DynamoDBリクエスト数を確認
-
-3. **対応策の実施**
-   - 無限ループの停止
-   - レート制限の強化
-   - 不要なリソースの削除
-
-4. **再発防止**
-   - コードの修正
-   - アラート閾値の調整
-   - 監視の強化
+---
 
 ## 定期的なコストレビュー
 
@@ -462,8 +443,10 @@ aws ce create-anomaly-subscription \
 - [ ] 新しいコスト最適化の機会を探索
 - [ ] アーキテクチャの見直し
 
+---
+
 ## 関連ドキュメント
 
-- [AWS Budgets設定手順書](./aws-budgets-setup.md)
-- [外部依存監視ガイド](./external-dependency-monitoring.md)
-- [パフォーマンス最適化ガイド](../.kiro/steering/infrastructure/performance-optimization.md)
+- **パフォーマンス最適化**: `../../.kiro/steering/infrastructure/performance-optimization.md`
+- **監視とアラート**: `../../.kiro/steering/infrastructure/monitoring-alerts.md`
+- **トラブルシューティング**: `./troubleshooting.md`

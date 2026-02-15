@@ -101,13 +101,17 @@ export async function updateExecutionStatus(
     // TTL: 30日後（Unix timestamp）
     const ttl = isCompleted ? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60 : undefined;
 
+    // 既存のレコードを取得してstarted_atを保持
+    const existingStatus = await getExecutionStatus(execution_id);
+    const started_at = existingStatus?.started_at || now;
+
     const item: ExecutionStatus = {
       execution_id,
       status,
       progress: clampedProgress,
       collected_count,
       failed_count,
-      started_at: now,
+      started_at,
       updated_at: now,
       ...(isCompleted ? { completed_at: now } : {}),
       ...(error_message ? { error_message } : {}),

@@ -72,21 +72,189 @@ graph TB
 
 ### データフロー
 
-**バッチ収集フロー:**
-1. EventBridgeが毎日指定時刻にLambda Collectorを起動
-2. TDnetのWebページから当日の開示情報リストを取得
-3. 各開示情報のメタデータを抽出し、PDFをダウンロード
-4. メタデータをDynamoDB、PDFをS3に保存
+#### 1. データ収集フロー
 
-**オンデマンド収集フロー:**
-1. API Gateway経由でリクエスト（APIキー認証）
-2. Lambda Collectorが日付範囲パラメータを受け取り収集
-3. 実行結果をJSON形式で返却
+```mermaid
+sequenceDiagram
+    participant User as ユーザー/スケジューラー
+    participant APIGW as API Gateway
+    participant Collect as Lambda: Collect
+    participant Collector as Lambda: Collector
+    participant TDnet as TDnet Website
+    participant DDB1 as DynamoDB: disclosures
+    participant DDB2 as DynamoDB: executions
+    participant S3 as S3: pdfs
+    participant CW as CloudWatch
+    participant DLQ as SQS: DLQ
 
-**クエリフロー:**
-1. ダッシュボードまたはAPI経由でクエリ（APIキー認証）
-2. Lambda QueryがDynamoDBから条件に合致するメタデータを取得
-3. 必要に応じてS3の署名付きURLを生成し、結果を返却
+    User->>APIGW: POST /collect<br/>{start_date, end_date}
+    APIGW->>APIGW: APIキー検証
+    APIGW->>Collect: リクエスト転送
+    
+    Collect->>DDB2: 実行レコード作成<br/>(status: running)
+    Collect->>Collector: 非同期呼び出し
+    Collect->>APIGW: 202 Accepted<br/>{execution_id}
+    APIGW->>User: レスポンス返却
+    
+    Note over Collector: バックグラウンド処理開始
+    
+    loop 日付範囲内の各日
+        Collector->>TDnet: 開示情報一覧取得<br/>(レート制限: 1req/秒)
+        TDnet-->>Collector: HTML (開示情報一覧)
+        
+        loop 各開示情報
+            Collector->>TDnet: PDF ダウンロード<br/>(レート制限: 1req/秒)
+            TDnet-->>Collector: PDF ファイル
+            
+            Collector->>S3: PDF アップロード<br/>(s3_key: YYYY/MM/DD/{disclosure_id}.pdf)
+            
+            Collector->>DDB1: メタデータ保存<br/>(disclosure_id, company_code, etc.)
+            
+            Collector->>CW: カスタムメトリクス送信<br/>(収集件数, 成功率)
+        end
+    end
+    
+    Collector->>DDB2: 実行レコード更新<br/>(status: completed)
+    Collector->>CW: ログ出力<br/>(収集完了)
+    
+    alt エラー発生時
+        Collector->>DDB2: 実行レコード更新<br/>(status: failed)
+        Collector->>CW: エラーログ出力
+        Collector->>DLQ: 失敗メッセージ送信
+        DLQ->>CW: アラーム発火
+    end
+```
+
+**フロー詳細:**
+1. **収集トリガー**: ユーザーまたはスケジューラーが `POST /collect` を呼び出し、APIキー認証を実施
+2. **データ収集**: Collector Lambda関数がTDnetから開示情報一覧を取得（レート制限: 1リクエスト/秒）
+3. **状態管理**: 実行状態を `tdnet_executions` テーブルで管理
+4. **エラーハンドリング**: 再試行可能なエラーは指数バックオフで再試行、再試行不可能なエラーはDLQに送信
+
+#### 2. APIクエリフロー
+
+```mermaid
+sequenceDiagram
+    participant User as ユーザー/アプリケーション
+    participant WAF as WAF
+    participant APIGW as API Gateway
+    participant Query as Lambda: Query
+    participant Secrets as Secrets Manager
+    participant DDB as DynamoDB: disclosures
+    participant S3 as S3: pdfs
+    participant CW as CloudWatch
+
+    User->>WAF: GET /disclosures?company_code=1234
+    WAF->>WAF: レート制限チェック<br/>(2000 req/5分)
+    WAF->>APIGW: リクエスト転送
+    
+    APIGW->>APIGW: APIキー検証
+    APIGW->>Query: リクエスト転送
+    
+    Query->>Secrets: APIキー取得
+    Secrets-->>Query: APIキー値
+    Query->>Query: APIキー検証
+    
+    Query->>DDB: クエリ実行<br/>(GSI: company_code + disclosed_at)
+    DDB-->>Query: 開示情報一覧
+    
+    loop 各開示情報
+        Query->>S3: 署名付きURL生成<br/>(有効期限: 1時間)
+        S3-->>Query: 署名付きURL
+    end
+    
+    Query->>CW: カスタムメトリクス送信<br/>(クエリレイテンシ)
+    Query->>CW: ログ出力
+    
+    Query->>APIGW: 200 OK<br/>{disclosures: [...]}
+    APIGW->>WAF: レスポンス転送
+    WAF->>User: レスポンス返却
+    
+    alt エラー発生時
+        Query->>CW: エラーログ出力
+        Query->>APIGW: 400/500 Error
+        APIGW->>User: エラーレスポンス
+    end
+```
+
+**フロー詳細:**
+1. **リクエスト受信**: WAFでレート制限チェック（2000リクエスト/5分）、API GatewayでAPIキー認証
+2. **クエリ処理**: DynamoDBのGSI（`company_code` + `disclosed_at`）でクエリ実行
+3. **レスポンス返却**: 開示情報一覧とPDF署名付きURLを返却
+
+#### 3. エクスポートフロー
+
+```mermaid
+sequenceDiagram
+    participant User as ユーザー/アプリケーション
+    participant APIGW as API Gateway
+    participant Export as Lambda: Export
+    participant ExportStatus as Lambda: Export Status
+    participant DDB1 as DynamoDB: disclosures
+    participant DDB2 as DynamoDB: export_status
+    participant S3 as S3: exports
+    participant CW as CloudWatch
+
+    User->>APIGW: POST /exports<br/>{format: "csv", filters: {...}}
+    APIGW->>APIGW: APIキー検証
+    APIGW->>Export: リクエスト転送
+    
+    Export->>DDB2: エクスポートレコード作成<br/>(status: pending)
+    Export->>APIGW: 202 Accepted<br/>{export_id}
+    APIGW->>User: レスポンス返却
+    
+    Note over Export: バックグラウンド処理開始
+    
+    Export->>DDB2: ステータス更新<br/>(status: processing)
+    
+    Export->>DDB1: クエリ実行<br/>(フィルター条件適用)
+    DDB1-->>Export: 開示情報一覧
+    
+    Export->>Export: CSV/JSON変換
+    
+    Export->>S3: ファイルアップロード<br/>(s3_key: exports/{export_id}.{format})
+    
+    Export->>S3: 署名付きURL生成<br/>(有効期限: 7日)
+    S3-->>Export: 署名付きURL
+    
+    Export->>DDB2: ステータス更新<br/>(status: completed, download_url)
+    Export->>CW: カスタムメトリクス送信<br/>(エクスポート成功率)
+    Export->>CW: ログ出力
+    
+    Note over User: エクスポート状態確認
+    
+    User->>APIGW: GET /exports/{export_id}
+    APIGW->>ExportStatus: リクエスト転送
+    
+    ExportStatus->>DDB2: ステータス取得
+    DDB2-->>ExportStatus: エクスポート情報
+    
+    ExportStatus->>APIGW: 200 OK<br/>{status, download_url}
+    APIGW->>User: レスポンス返却
+    
+    User->>S3: ファイルダウンロード<br/>(署名付きURL使用)
+    S3-->>User: CSV/JSONファイル
+    
+    alt エラー発生時
+        Export->>DDB2: ステータス更新<br/>(status: failed)
+        Export->>CW: エラーログ出力
+    end
+```
+
+**フロー詳細:**
+1. **エクスポートリクエスト**: ユーザーが `POST /exports` を呼び出し、即座に `export_id` を返却（202 Accepted）
+2. **エクスポート処理**: バックグラウンドでDynamoDBからデータを取得、CSV/JSON形式に変換、S3にアップロード
+3. **状態確認**: ユーザーが `GET /exports/{export_id}` で状態を確認
+4. **ファイルダウンロード**: ユーザーが署名付きURLでS3から直接ダウンロード（7日後に自動削除）
+
+### データフロー設計原則
+
+1. **非同期処理**: 長時間処理（データ収集、エクスポート）は非同期で実行
+2. **エラーハンドリング**: 再試行可能なエラーは指数バックオフで再試行、再試行不可能なエラーはDLQに送信
+3. **レート制限**: TDnet: 1リクエスト/秒、API Gateway: 100リクエスト/秒、WAF: 2000リクエスト/5分
+4. **データ整合性**: `disclosure_id`の一意性保証、`date_partition`はYYYY-MM形式（JST基準）
+5. **セキュリティ**: APIキー認証、HTTPS/TLS 1.2以上、S3/DynamoDB暗号化、署名付きURL（有効期限付き）
+6. **パフォーマンス**: DynamoDB GSI、S3署名付きURL（Lambda経由せず直接ダウンロード）、CloudFrontキャッシング
 
 ## Components
 

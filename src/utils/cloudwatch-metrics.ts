@@ -16,7 +16,7 @@ const cloudwatchClient = new CloudWatchClient({});
 /**
  * メトリクス名前空間
  */
-const NAMESPACE = 'TDnetDataCollector';
+const NAMESPACE = 'TDnet';
 
 /**
  * メトリクスディメンション
