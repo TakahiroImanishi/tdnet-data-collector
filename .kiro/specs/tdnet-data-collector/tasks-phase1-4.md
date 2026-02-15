@@ -3204,6 +3204,54 @@
   - _推定工数: 2-3時間_
   - _関連: TdnetApi-prod CloudFormationスタック_
 
+- [ ] 31.9 実行ステータス管理の改善
+  - **背景**: 2026-02-15の本番環境検証で、実行ステータス更新に以下の問題が発見されました：
+    1. `started_at`が毎回上書きされ、実行開始時刻が正しく記録されない
+    2. CloudWatchメトリクス名前空間の不一致により、メトリクス送信が失敗
+  - **修正内容**:
+    - `src/lambda/collector/update-execution-status.ts`: 既存レコードから`started_at`を取得して保持
+    - `src/utils/cloudwatch-metrics.ts`: 名前空間を`TDnet`に変更
+  - **修正コミット**: `292922e`
+  - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
+  - _優先度: 🟠 High_
+  - _推定工数: 6-8時間_
+  - _関連: work-log-20260215-085941-production-verification.md, task-31-improvement-01-20260215-092557.md_
+
+  - [ ] 31.9.1 実行ステータス更新処理のユニットテスト追加
+    - `updateExecutionStatus`の既存レコード取得ロジックをテスト
+    - `started_at`が初回作成時のみ設定され、更新時は保持されることを確認
+    - 複数回の更新で`started_at`が変わらないことを確認
+    - テストファイル: `src/lambda/collector/__tests__/update-execution-status.test.ts`
+    - _Requirements: 要件14.1（ユニットテスト）_
+    - _優先度: 🟠 High_
+    - _推定工数: 2-3時間_
+
+  - [ ] 31.9.2 CloudWatchメトリクス名前空間の統一性検証
+    - CDKのIAM Policy条件とメトリクス送信コードの名前空間が一致することを確認
+    - 統合テストで実際にメトリクスが送信されることを確認
+    - テストファイル: `src/utils/__tests__/cloudwatch-metrics.integration.test.ts`
+    - _Requirements: 要件7.1（監視）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+
+  - [ ] 31.9.3 実行ステータス管理のE2Eテスト追加
+    - 実行開始→進捗更新→完了の一連の流れをテスト
+    - DynamoDBに正しい値が保存されることを確認
+    - `started_at`, `updated_at`, `completed_at`のタイムスタンプが正しいことを確認
+    - テストファイル: `test/e2e/execution-status.e2e.test.ts`
+    - _Requirements: 要件14.3（E2Eテスト）_
+    - _優先度: 🟠 High_
+    - _推定工数: 2-3時間_
+
+  - [ ] 31.9.4 本番環境での修正の動作確認
+    - 修正版を本番環境にデプロイ
+    - 実際のデータ収集実行で実行ステータスが正しく更新されることを確認
+    - CloudWatchメトリクスが正常に送信されることを確認
+    - CloudWatchダッシュボードでメトリクスが表示されることを確認
+    - _Requirements: 要件12.1（監視）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1時間_
+
 
 ## Notes
 
