@@ -242,7 +242,35 @@ Write-Host "ダッシュボードURL: https://$distributionDomain"
 
 #### 9.1 リソース確認
 
+**4スタック構成の場合（推奨）**:
+
 ```powershell
+# 全スタックの状態確認
+$stacks = @("TdnetFoundation-prod", "TdnetCompute-prod", "TdnetApi-prod", "TdnetMonitoring-prod")
+foreach ($stack in $stacks) {
+    $status = aws cloudformation describe-stacks --stack-name $stack --query "Stacks[0].StackStatus" --output text
+    Write-Host "$stack : $status"
+}
+
+# Lambda関数確認
+aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'tdnet')].FunctionName"
+
+# DynamoDBテーブル確認
+aws dynamodb list-tables --query "TableNames[?starts_with(@, 'tdnet')]"
+
+# S3バケット確認
+aws s3 ls | Select-String "tdnet"
+
+# CloudFront Distribution確認
+aws cloudfront list-distributions --query "DistributionList.Items[?contains(Origins.Items[0].DomainName, 'tdnet-dashboard')].{Id:Id,DomainName:DomainName,Status:Status}"
+```
+
+**単一スタック構成の場合**:
+
+```powershell
+# スタックの状態確認
+aws cloudformation describe-stacks --stack-name TdnetDataCollectorStack-prod --query "Stacks[0].StackStatus"
+
 # Lambda関数確認
 aws lambda list-functions --query "Functions[?starts_with(FunctionName, 'tdnet')].FunctionName"
 
@@ -321,6 +349,21 @@ aws s3 ls s3://tdnet-data-collector-pdfs-prod-$accountId/ --recursive
 ```
 
 ### テスト4: API Gateway確認
+
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# API URL取得（TdnetApiスタックから）
+$apiUrl = aws cloudformation describe-stacks `
+    --stack-name TdnetApi-prod `
+    --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" `
+    --output text
+
+# ヘルスチェック
+curl -X GET "$apiUrl/health"
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # API URL取得
@@ -430,10 +473,9 @@ aws logs tail /aws/lambda/tdnet-collector-prod --follow
 
 ## 関連ドキュメント
 
-- [本番環境デプロイ手順書](./production-deployment-guide.md)
-- [スタック分割設計](./stack-split-design.md) - 推奨デプロイ方式
-- [運用マニュアル](./operations-manual.md)
-- [トラブルシューティングガイド](./troubleshooting-guide.md)
+- [デプロイガイド](./deployment-guide.md) - 本番環境デプロイ手順
+- [運用マニュアル](../05-operations/operations-manual.md)
+- [トラブルシューティングガイド](../05-operations/troubleshooting.md)
 - [ロールバック手順](./rollback-procedures.md)
 
 ---

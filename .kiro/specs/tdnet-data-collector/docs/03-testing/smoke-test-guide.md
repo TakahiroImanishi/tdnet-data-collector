@@ -19,6 +19,21 @@
 
 #### 1.1 CloudFormationスタック確認
 
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 全スタックの状態を確認
+$stacks = @("TdnetFoundation-dev", "TdnetCompute-dev", "TdnetApi-dev", "TdnetMonitoring-dev")
+foreach ($stack in $stacks) {
+    $status = aws cloudformation describe-stacks --stack-name $stack --profile dev --query "Stacks[0].StackStatus" --output text
+    Write-Host "$stack : $status"
+}
+
+# 期待結果: すべてのスタックが "CREATE_COMPLETE" または "UPDATE_COMPLETE"
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # スタックが正常にデプロイされていることを確認
 aws cloudformation describe-stacks --stack-name TdnetDataCollectorStack-dev --profile dev
@@ -71,12 +86,20 @@ aws s3 ls --profile dev | Select-String "tdnet"
 
 #### 2.1 APIエンドポイント取得
 
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# API Gateway URLを取得（TdnetApiスタックから）
+$API_URL = aws cloudformation describe-stacks --stack-name TdnetApi-dev --profile dev --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text
+Write-Host "API URL: $API_URL"
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # API Gateway URLを取得
-aws cloudformation describe-stacks --stack-name TdnetDataCollectorStack-dev --profile dev --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text
-
-# 結果を変数に保存
-$API_URL = "https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/prod"
+$API_URL = aws cloudformation describe-stacks --stack-name TdnetDataCollectorStack-dev --profile dev --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text
+Write-Host "API URL: $API_URL"
 ```
 
 #### 2.2 APIキー取得
@@ -305,12 +328,20 @@ aws cloudwatch describe-alarms --profile dev | Select-String "tdnet"
 
 #### 6.1 CloudFront URL取得
 
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# CloudFront Distribution URLを取得（TdnetFoundationスタックから）
+$DASHBOARD_URL = aws cloudformation describe-stacks --stack-name TdnetFoundation-dev --profile dev --query "Stacks[0].Outputs[?OutputKey=='DashboardUrl'].OutputValue" --output text
+Write-Host "Dashboard URL: $DASHBOARD_URL"
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # CloudFront Distribution URLを取得
-aws cloudformation describe-stacks --stack-name TdnetDataCollectorStack-dev --profile dev --query "Stacks[0].Outputs[?OutputKey=='DashboardUrl'].OutputValue" --output text
-
-# 結果を変数に保存
-$DASHBOARD_URL = "https://xxxxxxxxxx.cloudfront.net"
+$DASHBOARD_URL = aws cloudformation describe-stacks --stack-name TdnetDataCollectorStack-dev --profile dev --query "Stacks[0].Outputs[?OutputKey=='DashboardUrl'].OutputValue" --output text
+Write-Host "Dashboard URL: $DASHBOARD_URL"
 ```
 
 #### 6.2 ダッシュボードアクセス
@@ -383,7 +414,7 @@ aws secretsmanager create-secret --name /tdnet/api-key --secret-string "your-api
 
 ## 関連ドキュメント
 
-- [本番環境デプロイ手順書](./production-deployment-guide.md)
+- [本番環境デプロイチェックリスト](../04-deployment/production-deployment-checklist.md)
 - [負荷テストガイド](./load-testing-guide.md)
-- [トラブルシューティングガイド](./troubleshooting-guide.md)
+- [トラブルシューティングガイド](../05-operations/troubleshooting.md)
 

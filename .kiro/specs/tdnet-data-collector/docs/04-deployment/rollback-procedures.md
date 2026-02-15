@@ -45,17 +45,43 @@ CloudFormationは、デプロイ失敗時に自動的にロールバックしま
 
 #### 自動ロールバックの確認
 
+**4スタック構成の場合（推奨）**:
+
 ```powershell
-# スタックの状態を確認
-aws cloudformation describe-stacks `
-    --stack-name TdnetDataCollectorStack-prod `
-    --query "Stacks[0].StackStatus"
+# 全スタックの状態を確認
+$stacks = @("TdnetFoundation-prod", "TdnetCompute-prod", "TdnetApi-prod", "TdnetMonitoring-prod")
+foreach ($stack in $stacks) {
+    $status = aws cloudformation describe-stacks --stack-name $stack --query "Stacks[0].StackStatus" --output text
+    Write-Host "$stack : $status"
+}
 
 # ロールバック中の場合: UPDATE_ROLLBACK_IN_PROGRESS
 # ロールバック完了: ROLLBACK_COMPLETE または UPDATE_ROLLBACK_COMPLETE
 ```
 
+**単一スタック構成の場合**:
+
+```powershell
+# スタックの状態を確認
+aws cloudformation describe-stacks `
+    --stack-name TdnetDataCollectorStack-prod `
+    --query "Stacks[0].StackStatus"
+```
+
 #### 自動ロールバックの監視
+
+**4スタック構成の場合**:
+
+```powershell
+# 特定スタックのイベントをリアルタイムで監視
+aws cloudformation describe-stack-events `
+    --stack-name TdnetCompute-prod `
+    --max-items 20 `
+    --query "StackEvents[*].[Timestamp,ResourceStatus,ResourceType,LogicalResourceId,ResourceStatusReason]" `
+    --output table
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # スタックイベントをリアルタイムで監視
@@ -101,6 +127,18 @@ npm run build
 
 #### ステップ4: CDKデプロイ
 
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 全スタックを依存関係順にデプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack all
+
+# または、特定スタックのみデプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack compute
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # 開発環境
 cdk deploy --context environment=dev --require-approval never
@@ -110,6 +148,21 @@ cdk deploy --context environment=prod --require-approval always
 ```
 
 #### ステップ5: デプロイ完了を確認
+
+**4スタック構成の場合**:
+
+```powershell
+# 全スタックの状態を確認
+$stacks = @("TdnetFoundation-prod", "TdnetCompute-prod", "TdnetApi-prod", "TdnetMonitoring-prod")
+foreach ($stack in $stacks) {
+    $status = aws cloudformation describe-stacks --stack-name $stack --query "Stacks[0].StackStatus" --output text
+    Write-Host "$stack : $status"
+}
+
+# 期待される結果: すべてのスタックが UPDATE_COMPLETE
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # スタックの状態を確認
@@ -126,6 +179,17 @@ aws cloudformation describe-stacks `
 
 #### ステップ1: スタックの状態を確認
 
+**4スタック構成の場合**:
+
+```powershell
+# 問題のあるスタックの状態を確認
+aws cloudformation describe-stacks `
+    --stack-name TdnetCompute-prod `
+    --query "Stacks[0].StackStatus"
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 aws cloudformation describe-stacks `
     --stack-name TdnetDataCollectorStack-prod `
@@ -133,6 +197,21 @@ aws cloudformation describe-stacks `
 ```
 
 #### ステップ2: 続行ロールバック
+
+**4スタック構成の場合**:
+
+```powershell
+# 問題のあるスタックのロールバックを続行
+aws cloudformation continue-update-rollback `
+    --stack-name TdnetCompute-prod
+
+# 特定のリソースをスキップする場合
+aws cloudformation continue-update-rollback `
+    --stack-name TdnetCompute-prod `
+    --resources-to-skip <ResourceLogicalId>
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # ロールバックを続行
@@ -147,6 +226,16 @@ aws cloudformation continue-update-rollback `
 
 #### ステップ3: ロールバック完了を待機
 
+**4スタック構成の場合**:
+
+```powershell
+# ロールバック完了を待機
+aws cloudformation wait stack-update-rollback-complete `
+    --stack-name TdnetCompute-prod
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # ロールバック完了を待機
 aws cloudformation wait stack-update-rollback-complete `
@@ -156,6 +245,24 @@ aws cloudformation wait stack-update-rollback-complete `
 ### 環境別のロールバック手順
 
 #### 開発環境（dev）
+
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 1. 前のバージョンにチェックアウト
+git checkout v1.2.2
+
+# 2. 依存関係を再インストール
+npm ci && npm run build
+
+# 3. 全スタックをデプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack all
+
+# 4. スモークテスト実行
+.\scripts\smoke-test.ps1 -Environment dev
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # 1. 前のバージョンにチェックアウト
@@ -172,6 +279,30 @@ cdk deploy --context environment=dev --require-approval never
 ```
 
 #### 本番環境（prod）
+
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 1. 前のバージョンにチェックアウト
+git checkout v1.2.2
+
+# 2. 依存関係を再インストール
+npm ci && npm run build
+
+# 3. 差分を確認（必須）
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action diff
+
+# 4. 全スタックをデプロイ
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack all
+
+# 5. スモークテスト実行
+.\scripts\smoke-test.ps1 -Environment prod
+
+# 6. 監視ダッシュボードで確認
+# CloudWatch Dashboard: https://console.aws.amazon.com/cloudwatch/
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # 1. 前のバージョンにチェックアウト
@@ -412,6 +543,33 @@ foreach ($marker in $deleteMarkers) {
 
 #### 対応手順
 
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 1. 即座にアラームを確認
+aws cloudwatch describe-alarms `
+    --alarm-names "tdnet-collector-prod-errors" `
+    --query "MetricAlarms[*].[AlarmName,StateValue,StateReason]"
+
+# 2. Lambda関数のエラーログを確認
+aws logs tail /aws/lambda/tdnet-collector-prod --follow
+
+# 3. 前のバージョンにロールバック
+git checkout v1.2.2
+npm ci && npm run build
+
+# 4. 問題のあるスタック（通常はCompute）をロールバック
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack compute
+
+# 5. ロールバック完了を確認
+aws cloudformation wait stack-update-complete --stack-name TdnetCompute-prod
+
+# 6. スモークテスト実行
+.\scripts\smoke-test.ps1 -Environment prod
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # 1. 即座にアラームを確認
 aws cloudwatch describe-alarms `
@@ -441,6 +599,40 @@ aws cloudformation wait stack-update-complete `
 - データの欠損や重複が発生
 
 #### 対応手順
+
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 1. 問題の範囲を特定
+aws dynamodb scan `
+    --table-name tdnet_disclosures_prod `
+    --filter-expression "attribute_not_exists(disclosure_id)" `
+    --select COUNT
+
+# 2. 問題が発生した時刻を特定
+# CloudWatch Logsで最初のエラーログの時刻を確認
+
+# 3. その時刻の直前にDynamoDBを復元
+$restoreDateTime = "2024-02-14T11:55:00+00:00"  # エラー発生の5分前
+
+aws dynamodb restore-table-to-point-in-time `
+    --source-table-name tdnet_disclosures_prod `
+    --target-table-name tdnet_disclosures_prod_restored `
+    --restore-date-time $restoreDateTime
+
+# 4. 復元完了を待機
+aws dynamodb wait table-exists --table-name tdnet_disclosures_prod_restored
+
+# 5. データを検証
+aws dynamodb scan `
+    --table-name tdnet_disclosures_prod_restored `
+    --select COUNT
+
+# 6. 必要に応じてComputeスタックをロールバック
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack compute
+```
+
+**単一スタック構成の場合**:
 
 ```powershell
 # 1. 問題の範囲を特定
@@ -477,6 +669,30 @@ aws dynamodb scan `
 
 #### 対応手順
 
+**4スタック構成の場合（推奨）**:
+
+```powershell
+# 1. Lambda関数のメトリクスを確認
+aws cloudwatch get-metric-statistics `
+    --namespace AWS/Lambda `
+    --metric-name Duration `
+    --dimensions Name=FunctionName,Value=tdnet-collector-prod `
+    --start-time (Get-Date).AddHours(-2).ToString("yyyy-MM-ddTHH:mm:ss") `
+    --end-time (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss") `
+    --period 300 `
+    --statistics Average,Maximum
+
+# 2. 前のバージョンと比較
+# 前のバージョンのメトリクスを確認
+
+# 3. パフォーマンスが悪化している場合、Computeスタックをロールバック
+git checkout v1.2.2
+npm ci && npm run build
+.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack compute
+```
+
+**単一スタック構成の場合**:
+
 ```powershell
 # 1. Lambda関数のメトリクスを確認
 aws cloudwatch get-metric-statistics `
@@ -504,6 +720,20 @@ cdk deploy --context environment=prod --require-approval always
 ### チェックリスト
 
 #### CDKスタック
+
+**4スタック構成の場合**:
+
+- [ ] すべてのCloudFormationスタックの状態が `UPDATE_COMPLETE`
+  - TdnetFoundation-prod
+  - TdnetCompute-prod
+  - TdnetApi-prod
+  - TdnetMonitoring-prod
+- [ ] すべてのLambda関数が正常に動作
+- [ ] DynamoDBテーブルが正常にアクセス可能
+- [ ] S3バケットが正常にアクセス可能
+- [ ] API Gatewayエンドポイントが正常に応答
+
+**単一スタック構成の場合**:
 
 - [ ] CloudFormationスタックの状態が `UPDATE_COMPLETE`
 - [ ] すべてのLambda関数が正常に動作
@@ -538,23 +768,48 @@ cdk deploy --context environment=prod --require-approval always
 # ロールバック後の確認スクリプト
 function Test-RollbackSuccess {
     param(
-        [string]$Environment = "prod"
+        [string]$Environment = "prod",
+        [string]$StackType = "split"  # "split" または "single"
     )
     
     Write-Host "=== ロールバック後の確認 ===" -ForegroundColor Cyan
     
     # 1. CloudFormationスタックの状態
     Write-Host "`n1. CloudFormationスタックの状態を確認中..." -ForegroundColor Yellow
-    $stackStatus = aws cloudformation describe-stacks `
-        --stack-name "TdnetDataCollectorStack-$Environment" `
-        --query "Stacks[0].StackStatus" `
-        --output text
     
-    if ($stackStatus -eq "UPDATE_COMPLETE") {
-        Write-Host "✅ スタックの状態: $stackStatus" -ForegroundColor Green
+    if ($StackType -eq "split") {
+        $stacks = @("TdnetFoundation-$Environment", "TdnetCompute-$Environment", "TdnetApi-$Environment", "TdnetMonitoring-$Environment")
+        $allSuccess = $true
+        
+        foreach ($stack in $stacks) {
+            $stackStatus = aws cloudformation describe-stacks `
+                --stack-name $stack `
+                --query "Stacks[0].StackStatus" `
+                --output text
+            
+            if ($stackStatus -eq "UPDATE_COMPLETE" -or $stackStatus -eq "CREATE_COMPLETE") {
+                Write-Host "✅ $stack : $stackStatus" -ForegroundColor Green
+            } else {
+                Write-Host "❌ $stack : $stackStatus" -ForegroundColor Red
+                $allSuccess = $false
+            }
+        }
+        
+        if (-not $allSuccess) {
+            return $false
+        }
     } else {
-        Write-Host "❌ スタックの状態: $stackStatus" -ForegroundColor Red
-        return $false
+        $stackStatus = aws cloudformation describe-stacks `
+            --stack-name "TdnetDataCollectorStack-$Environment" `
+            --query "Stacks[0].StackStatus" `
+            --output text
+        
+        if ($stackStatus -eq "UPDATE_COMPLETE") {
+            Write-Host "✅ スタックの状態: $stackStatus" -ForegroundColor Green
+        } else {
+            Write-Host "❌ スタックの状態: $stackStatus" -ForegroundColor Red
+            return $false
+        }
     }
     
     # 2. Lambda関数の実行テスト
@@ -610,8 +865,12 @@ function Test-RollbackSuccess {
     return $true
 }
 
-# 実行
-Test-RollbackSuccess -Environment prod
+# 実行例
+# 4スタック構成の場合
+Test-RollbackSuccess -Environment prod -StackType split
+
+# 単一スタック構成の場合
+Test-RollbackSuccess -Environment prod -StackType single
 ```
 
 ---

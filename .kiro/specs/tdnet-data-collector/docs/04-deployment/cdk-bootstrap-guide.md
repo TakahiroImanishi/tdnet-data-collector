@@ -47,12 +47,21 @@ CDKアプリケーションのデプロイに必要なAWSリソースを初期�
 
 ### クイックスタート（すべて自動）
 
+**分割スタック方式（推奨）**:
+
+```powershell
+# すべてのステップを自動実行（4スタック構成）
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack all
+```
+
+**単一スタック方式**:
+
 ```powershell
 # すべてのステップを自動実行
 .\scripts\deploy.ps1 -Environment dev
 ```
 
-このコマンドは以下を自動実行します：
+これらのコマンドは以下を自動実行します：
 1. 前提条件チェック（Node.js, npm, AWS CLI, CDK）
 2. 依存関係のインストール
 3. テスト実行
@@ -245,6 +254,27 @@ S3_BUCKET_EXPORTS=tdnet-data-collector-exports-123456789012
 ```
 
 ### 2. CDKスタックのデプロイ準備
+
+**分割スタック方式（推奨）**:
+
+```powershell
+# CDKスタックの一覧を確認
+npx cdk list --app "npx ts-node cdk/bin/tdnet-data-collector-split.ts" -c environment=dev
+
+# 期待される出力:
+# TdnetFoundation-dev
+# TdnetCompute-dev
+# TdnetApi-dev
+# TdnetMonitoring-dev
+
+# CDKスタックの差分を確認
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action diff
+
+# CDKスタックをデプロイ（Phase 2で実施）
+.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack all
+```
+
+**単一スタック方式**:
 
 ```powershell
 cd cdk
