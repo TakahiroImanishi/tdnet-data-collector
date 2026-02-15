@@ -117,9 +117,11 @@ monitoringStack.addDependency(apiStack);
 | Health | 10秒 | 10秒 | 128MB | 128MB | DEBUG | DEBUG |
 | Stats | 30秒 | 30秒 | 256MB | 256MB | DEBUG | DEBUG |
 
+**注意**: prod環境のログレベルは現在DEBUGに設定されています（調査用）。本番運用時にはINFOレベルへの変更を推奨します。
+
 ### 環境変数の設定
 
-環境設定は `cdk/lib/config/environment-config.ts` で一元管理されています。
+環境設定は `cdk/lib/config/environment-config.ts` で一元管理されています。詳細な環境設定手順については、[環境構築ガイド](../04-deployment/environment-setup.md)を参照してください。
 
 ```typescript
 import { getEnvironmentConfig } from '../config/environment-config';
@@ -372,63 +374,18 @@ new NodejsFunction(this, 'CollectorFunction', {
 | Collector | 1週間 | 3ヶ月 |
 | その他 | 1週間 | 1ヶ月 |
 
-#### CloudWatch Alarms (7種類)
+#### CloudWatch監視
 
-1. **Lambda Error Rate** (Critical)
-   - 閾値: 10%
-   - 評価期間: 5分
-   - 対象: 全Lambda関数
+CloudWatch Alarms、Dashboard、CloudTrailの詳細な設定については、[監視ガイド](../05-operations/monitoring-guide.md)を参照してください。
 
-2. **Lambda Duration Warning**
-   - 閾値: 10分 (600秒)
-   - 評価期間: 5分×2回
-   - 対象: 全Lambda関数
-
-3. **Lambda Duration Critical**
-   - 閾値: 13分 (780秒)
-   - 評価期間: 5分×1回
-   - 対象: 全Lambda関数
-
-4. **Lambda Throttles** (Critical)
-   - 閾値: 1回以上
-   - 評価期間: 5分
-   - 対象: 全Lambda関数
-
-
-5. **Collection Success Rate** (Warning)
-   - 閾値: 95%未満
-   - 評価期間: 1時間
-   - メトリクス: `TDnet/Collector/CollectionSuccessRate`
-
-6. **No Data Collected** (Critical)
-   - 閾値: 1件未満
-   - 評価期間: 24時間
-   - メトリクス: `TDnet/Collector/DisclosuresCollected`
-
-7. **Collection Failures** (Warning)
-   - 閾値: 10件以上
-   - 評価期間: 24時間
-   - メトリクス: `TDnet/Collector/DisclosuresFailed`
-
-#### CloudWatch Dashboard
-
-- **ダッシュボード名**: `TdnetDataCollector-{env}`
-- **ウィジェット**:
-  - Lambda関数メトリクス (Invocations, Errors, Duration)
-  - DynamoDBメトリクス (Read/Write Capacity, Throttles)
-  - S3メトリクス (Bucket Size, Number of Objects)
-  - API Gatewayメトリクス (Count, Latency, 4xx/5xx Errors)
-  - カスタムメトリクス (Collection Success Rate, Disclosures Collected)
-
-#### CloudTrail
-
-- **証跡名**: `tdnet-audit-trail-{env}`
-- **ログ保存先**: `tdnet-cloudtrail-logs-{account-id}`
-- **監視対象**:
-  - DynamoDB: PutItem, UpdateItem, DeleteItem
-  - S3: PutObject, DeleteObject
-  - Lambda: Invoke
-  - Secrets Manager: GetSecretValue
+**主要な監視項目**:
+- Lambda Error Rate (Critical)
+- Lambda Duration Warning/Critical
+- Lambda Throttles (Critical)
+- Collection Success Rate (Warning)
+- No Data Collected (Critical)
+- Collection Failures (Warning)
+- DLQ Messages (Critical)
 
 **CloudFormation Outputs**:
 - CloudWatchAlarmsCount

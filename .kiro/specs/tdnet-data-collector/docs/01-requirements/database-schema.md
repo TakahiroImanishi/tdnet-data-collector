@@ -81,7 +81,11 @@ interface Disclosure {
 **使用例**: 特定月の開示情報を効率的に取得（月次レポート生成など）
 
 #### CDK実装
-**ファイル**: `cdk/lib/stacks/foundation-stack.ts`
+
+**スタック構成**: 4層スタック構成（Foundation, Compute, API, Monitoring）  
+**ファイル**: `cdk/lib/stacks/foundation-stack.ts` (Foundation Stack - 基盤層)
+
+DynamoDBテーブルはFoundation Stackで定義され、他のスタックから参照されます。
 
 ```typescript
 this.disclosuresTable = new dynamodb.Table(this, 'DisclosuresTable', {
@@ -171,7 +175,9 @@ interface ExecutionStatus {
 - **自動削除**: TTL属性のUnix timestampを過ぎたアイテムは自動削除
 
 #### CDK実装
-**ファイル**: `cdk/lib/stacks/foundation-stack.ts`
+
+**スタック構成**: 4層スタック構成（Foundation, Compute, API, Monitoring）  
+**ファイル**: `cdk/lib/stacks/foundation-stack.ts` (Foundation Stack - 基盤層)
 
 ```typescript
 this.executionsTable = new dynamodb.Table(this, 'ExecutionsTable', {
@@ -252,7 +258,9 @@ interface ExportStatus {
 - **自動削除**: TTL属性のUnix timestampを過ぎたアイテムは自動削除
 
 #### CDK実装
-**ファイル**: `cdk/lib/stacks/foundation-stack.ts`
+
+**スタック構成**: 4層スタック構成（Foundation, Compute, API, Monitoring）  
+**ファイル**: `cdk/lib/stacks/foundation-stack.ts` (Foundation Stack - 基盤層)
 
 ```typescript
 this.exportStatusTable = new dynamodb.Table(this, 'ExportStatusTable', {
