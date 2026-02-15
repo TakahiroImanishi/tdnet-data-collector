@@ -71,7 +71,7 @@ do {
     if ($lastEvaluatedKey) {
         $scanResult = aws dynamodb scan `
             --table-name $TableName `
-            --projection-expression "disclosure_id,pdf_s3_key" `
+            --projection-expression "disclosure_id,s3_key" `
             --exclusive-start-key $lastEvaluatedKey `
             --profile $Profile `
             --region $Region `
@@ -79,14 +79,14 @@ do {
     } else {
         $scanResult = aws dynamodb scan `
             --table-name $TableName `
-            --projection-expression "disclosure_id,pdf_s3_key" `
+            --projection-expression "disclosure_id,s3_key" `
             --profile $Profile `
             --region $Region `
             --output json | ConvertFrom-Json
     }
     
     foreach ($item in $scanResult.Items) {
-        if ($item.pdf_s3_key -and $item.pdf_s3_key.S) {
+        if ($item.s3_key -and $item.s3_key.S) {
             $dynamoWithS3KeyCount++
         } else {
             $dynamoWithoutS3KeyCount++
@@ -103,12 +103,12 @@ do {
 } while ($lastEvaluatedKey)
 
 Write-Host ""
-Write-Host "Records with pdf_s3_key: $dynamoWithS3KeyCount" -ForegroundColor Green
-Write-Host "Records without pdf_s3_key: $dynamoWithoutS3KeyCount" -ForegroundColor $(if ($dynamoWithoutS3KeyCount -gt 0) { "Red" } else { "Green" })
+Write-Host "Records with s3_key: $dynamoWithS3KeyCount" -ForegroundColor Green
+Write-Host "Records without s3_key: $dynamoWithoutS3KeyCount" -ForegroundColor $(if ($dynamoWithoutS3KeyCount -gt 0) { "Red" } else { "Green" })
 
 if ($missingS3Keys.Count -gt 0) {
     Write-Host ""
-    Write-Host "disclosure_id without pdf_s3_key (first 10):" -ForegroundColor Yellow
+    Write-Host "disclosure_id without s3_key (first 10):" -ForegroundColor Yellow
     $missingS3Keys | ForEach-Object {
         Write-Host "  - $_"
     }
@@ -155,25 +155,25 @@ Write-Host ""
 Write-Host "=== 4. Consistency check results ===" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "DynamoDB record count: $dynamoCount"
-Write-Host "Records with pdf_s3_key: $dynamoWithS3KeyCount"
-Write-Host "Records without pdf_s3_key: $dynamoWithoutS3KeyCount"
+Write-Host "Records with s3_key: $dynamoWithS3KeyCount"
+Write-Host "Records without s3_key: $dynamoWithoutS3KeyCount"
 Write-Host "S3 object count: $s3Count"
 Write-Host ""
 
 $discrepancy = $dynamoWithS3KeyCount - $s3Count
 
 if ($discrepancy -eq 0) {
-    Write-Host "OK: DynamoDB records with pdf_s3_key match S3 object count." -ForegroundColor Green
+    Write-Host "OK: DynamoDB records with s3_key match S3 object count." -ForegroundColor Green
 } elseif ($discrepancy -gt 0) {
-    Write-Host "INCONSISTENT: ${discrepancy} records have pdf_s3_key in DynamoDB but PDF file does not exist in S3." -ForegroundColor Red
+    Write-Host "INCONSISTENT: ${discrepancy} records have s3_key in DynamoDB but PDF file does not exist in S3." -ForegroundColor Red
 } else {
-    Write-Host "INCONSISTENT: $([Math]::Abs($discrepancy)) PDF files exist in S3 but pdf_s3_key is not set in DynamoDB." -ForegroundColor Red
+    Write-Host "INCONSISTENT: $([Math]::Abs($discrepancy)) PDF files exist in S3 but s3_key is not set in DynamoDB." -ForegroundColor Red
 }
 
 Write-Host ""
 
 if ($dynamoWithoutS3KeyCount -gt 0) {
-    Write-Host "WARNING: ${dynamoWithoutS3KeyCount} records in DynamoDB do not have pdf_s3_key set." -ForegroundColor Yellow
+    Write-Host "WARNING: ${dynamoWithoutS3KeyCount} records in DynamoDB do not have s3_key set." -ForegroundColor Yellow
     Write-Host "These records may have metadata only without PDF files." -ForegroundColor Yellow
 }
 
