@@ -3252,6 +3252,69 @@
     - _優先度: 🟠 High_
     - _推定工数: 1時間_
 
+- [ ] 31.10 PDFファイル保存不足の原因調査（Critical）
+  - **背景**: 2026-02-15の本番環境検証で、データ収集とS3保存に重大な不整合が発見されました：
+    - Lambda Collectorログ: 2,694件収集成功
+    - S3バケット: 998件のPDFファイルのみ保存
+    - 不足: 約1,696件（63%）のPDFファイルが保存されていない
+  - **調査項目**:
+    - CloudWatch Logsで詳細なエラーログを確認（PDF保存失敗のエラー）
+    - DynamoDB `tdnet_disclosures_prod`のレコード数を確認（2,694件 vs 998件）
+    - S3バケット `tdnet-pdfs-prod`のオブジェクト数を確認
+    - Lambda Collectorの処理フローを確認（PDF保存処理の実装）
+    - エラーハンドリングの確認（部分的失敗が正しく記録されているか）
+    - IAM権限の確認（S3 PutObject権限）
+    - タイムアウト設定の確認（Lambda実行時間）
+    - レート制限の確認（TDnet PDFダウンロード）
+  - **想定される原因**:
+    1. PDF保存処理でエラーが発生しているが、ログに記録されていない
+    2. 部分的失敗が正しく処理されていない（成功分のみカウント）
+    3. S3 PutObject権限が不足している
+    4. Lambda関数がタイムアウトしている
+    5. TDnetサイトからのPDFダウンロードが失敗している（404、403など）
+    6. レート制限により一部のPDFダウンロードがスキップされている
+  - _Requirements: 要件1.3, 1.4, 3.5（PDFダウンロード、メタデータ保存、ファイルストレージ）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 3-4時間_
+  - _関連: work-log-20260215-085941-production-verification.md_
+
+  - [ ] 31.10.1 CloudWatch Logsの詳細分析
+    - Lambda Collectorの全ログストリームを確認
+    - PDF保存失敗のエラーメッセージを検索
+    - エラーの種類と頻度を集計
+    - エラーが発生した開示情報のdisclosure_idをリストアップ
+    - _Requirements: 要件6.3（ロギング）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1時間_
+
+  - [ ] 31.10.2 DynamoDBとS3の整合性確認
+    - DynamoDB `tdnet_disclosures_prod`のレコード数をカウント
+    - S3バケット `tdnet-pdfs-prod`のオブジェクト数をカウント
+    - DynamoDBレコードで`pdf_s3_key`が設定されているレコード数をカウント
+    - `pdf_s3_key`が設定されていないレコードをリストアップ
+    - S3に存在しないPDFファイルのdisclosure_idをリストアップ
+    - _Requirements: 要件1.4, 3.5（メタデータ保存、ファイルストレージ）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1時間_
+
+  - [ ] 31.10.3 Lambda Collector処理フローの確認
+    - `src/lambda/collector/handler.ts`のPDF保存処理を確認
+    - エラーハンドリングが正しく実装されているか確認
+    - 部分的失敗が正しく記録されているか確認
+    - `collected_count`と`failed_count`のカウントロジックを確認
+    - _Requirements: 要件1.3, 6.1（PDFダウンロード、エラーハンドリング）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 1時間_
+
+  - [ ] 31.10.4 根本原因の特定と修正方針の決定
+    - 調査結果を統合して根本原因を特定
+    - 修正方針を決定（コード修正、設定変更、再実行など）
+    - 改善記録を作成（`task-31-improvement-02-[YYYYMMDD-HHMMSS].md`）
+    - 修正タスクを追加（必要に応じて31.10.5以降）
+    - _Requirements: 全要件_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 30分_
+
 
 ## Notes
 
