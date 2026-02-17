@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/handler.ts|**/lambda/**/index.ts'
+fileMatchPattern: '**/lambda/**/*.ts'
 ---
 
 # Lambda実装ガイド

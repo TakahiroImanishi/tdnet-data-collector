@@ -7,48 +7,16 @@ fileMatchPattern: '**/cdk/lib/constructs/*lambda*.ts|**/cdk/lib/constructs/*func
 
 エラーハンドリングの強制化方針。
 
-## 役割分担
-
-| ファイル | 役割 |
-|---------|------|
-| `core/error-handling-patterns.md` | エラー分類、再試行戦略 |
-| `error-handling-implementation.md` | 実装パターン、AWS SDK設定 |
-| このファイル | DLQ必須化、Alarms設定、テスト |
-
 ## Lambda DLQ必須化
-
-### 対象Lambda関数
 
 | トリガー | DLQ必須 |
 |---------|---------|
 | EventBridge/SQS/SNS/S3/DynamoDB Streams | ✅ 必須 |
 | API Gateway/Lambda直接呼び出し（同期） | ❌ 不要 |
 
-### DLQ標準仕様
-
 ```typescript
-const dlq = new sqs.Queue(this, 'CollectorDLQ', {
-    retentionPeriod: cdk.Duration.days(14),
-});
-
-const collectorFn = new lambda.Function(this, 'CollectorFunction', {
-    deadLetterQueue: dlq,
-    retryAttempts: 2,
-});
-```
-
-### DLQプロセッサー
-
-```typescript
-export const handler = async (event: SQSEvent) => {
-    for (const record of event.Records) {
-        await snsClient.send(new PublishCommand({
-            TopicArn: process.env.ALERT_TOPIC_ARN,
-            Subject: 'Lambda execution failed',
-            Message: JSON.stringify({ messageId: record.messageId, failedMessage: JSON.parse(record.body) }),
-        }));
-    }
-};
+const dlq = new sqs.Queue(this, 'CollectorDLQ', { retentionPeriod: cdk.Duration.days(14) });
+const collectorFn = new lambda.Function(this, 'CollectorFunction', { deadLetterQueue: dlq, retryAttempts: 2 });
 ```
 
 ## CloudWatch Alarms必須設定
@@ -62,16 +30,7 @@ export const handler = async (event: SQSEvent) => {
 
 ## MonitoredLambda Construct
 
-**ファイル:** `cdk/lib/constructs/monitored-lambda.ts`
-
-### 機能
-
-- DLQ自動設定
-- DLQプロセッサー自動作成
-- CloudWatch Alarms自動設定
-- X-Rayトレーシング有効化
-
-### 使用例
+`cdk/lib/constructs/monitored-lambda.ts` - DLQ、Alarms、X-Ray自動設定
 
 ```typescript
 const collectorLambda = new MonitoredLambda(this, 'Collector', {
@@ -85,31 +44,15 @@ const collectorLambda = new MonitoredLambda(this, 'Collector', {
 
 ## エラーハンドリングテスト
 
-### 必須テスト項目
-
-- [ ] 再試行テスト
-- [ ] 構造化ログテスト
-- [ ] 部分的失敗テスト
-- [ ] 非再試行エラーテスト
-- [ ] メトリクステスト
-
-### テスト実装例
+必須項目: 再試行、構造化ログ、部分的失敗、非再試行エラー、メトリクス
 
 ```typescript
-test('should handle network errors with retry', async () => {
+test('should retry on network errors', async () => {
     const mockFetch = jest.fn()
         .mockRejectedValueOnce(new Error('ECONNRESET'))
         .mockResolvedValueOnce({ data: 'success' });
-    
-    const result = await handler(mockEvent, mockContext);
+    await handler(mockEvent, mockContext);
     expect(mockFetch).toHaveBeenCalledTimes(2);
-});
-
-test('should log errors with structured format', async () => {
-    await expect(handler(invalidEvent, mockContext)).rejects.toThrow();
-    expect(mockLogger).toHaveBeenCalledWith(
-        expect.objectContaining({ error_type: expect.any(String) })
-    );
 });
 ```
 

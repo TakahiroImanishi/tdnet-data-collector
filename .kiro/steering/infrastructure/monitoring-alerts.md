@@ -44,79 +44,20 @@ fileMatchPattern: '**/monitoring/**/*|**/.github/workflows/**/*'
 ## カスタムメトリクス送信
 
 ```typescript
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
-
-const cloudwatch = new CloudWatchClient({ region: 'ap-northeast-1' });
-
-async function publishMetric(name: string, value: number, unit = 'Count'): Promise<void> {
+async function publishMetric(name: string, value: number): Promise<void> {
     await cloudwatch.send(new PutMetricDataCommand({
         Namespace: 'TDnet/Collector',
-        MetricData: [{
-            MetricName: name,
-            Value: value,
-            Unit: unit,
-            Timestamp: new Date(),
-            Dimensions: [{ Name: 'Environment', Value: process.env.ENVIRONMENT || 'dev' }],
-        }],
+        MetricData: [{ MetricName: name, Value: value, Timestamp: new Date() }],
     }));
 }
 ```
 
-## CDKアラーム設定
-
-```typescript
-import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
-import * as actions from 'aws-cdk-lib/aws-cloudwatch-actions';
-
-// エラー率アラーム
-new cloudwatch.Alarm(this, 'ErrorAlarm', {
-    metric: fn.metricErrors({ statistic: 'Sum', period: cdk.Duration.minutes(5) }),
-    threshold: 5,
-    evaluationPeriods: 1,
-    alarmDescription: 'Lambda errors > 5',
-}).addAlarmAction(new actions.SnsAction(alertTopic));
-
-// DLQアラーム
-new cloudwatch.Alarm(this, 'DLQAlarm', {
-    metric: dlq.metricApproximateNumberOfMessagesVisible(),
-    threshold: 1,
-    evaluationPeriods: 1,
-    alarmDescription: 'DLQ has messages',
-}).addAlarmAction(new actions.SnsAction(alertTopic));
-```
-
-## CloudWatch Logs Insights
-
-```
-# エラーログ検索
-fields @timestamp, @message
-| filter @message like /ERROR/
-| sort @timestamp desc
-| limit 100
-
-# 実行時間分析
-fields @timestamp, @duration
-| stats avg(@duration), max(@duration) by bin(5m)
-
-# エラー種別集計
-fields @timestamp, error_type
-| filter @message like /ERROR/
-| stats count() by error_type
-| sort count() desc
-```
-
 ## 運用手順
 
-### アラート対応
 1. SNS/Slackで通知受信
 2. CloudWatch Logsでエラー確認
 3. X-Rayトレースで実行フロー確認
 4. 対応実施（修正・デプロイ）
-5. インシデントレポート作成
-
-### 定期レビュー
-- **週次**: エラー率、パフォーマンス、コスト確認
-- **月次**: アラート発火状況、閾値見直し
 
 ## 関連ドキュメント
 

@@ -37,14 +37,14 @@ interface ErrorResponse {
 
 ```typescript
 class ValidationError extends Error {
-    constructor(message: string, public readonly field: string, public readonly value: any) {
+    constructor(message: string, public readonly field: string) {
         super(message);
         this.name = 'ValidationError';
     }
 }
 
 class NotFoundError extends Error {
-    constructor(message: string, public readonly resourceType: string, public readonly resourceId: string) {
+    constructor(message: string, public readonly resourceId: string) {
         super(message);
         this.name = 'NotFoundError';
     }
@@ -53,24 +53,12 @@ class NotFoundError extends Error {
 
 ## エラーコード変換
 
-| エラークラス名 | HTTPステータス | エラーコード |
-|--------------|---------------|-------------|
-| ValidationError | 400 | VALIDATION_ERROR |
-| UnauthorizedError | 401 | UNAUTHORIZED |
-| ForbiddenError | 403 | FORBIDDEN |
-| NotFoundError | 404 | NOT_FOUND |
-| ConflictError | 409 | CONFLICT |
-| RateLimitError | 429 | RATE_LIMIT_EXCEEDED |
-| InternalError | 500 | INTERNAL_ERROR |
-| ServiceUnavailableError | 503 | SERVICE_UNAVAILABLE |
-| GatewayTimeoutError | 504 | GATEWAY_TIMEOUT |
-
 ```typescript
 const ERROR_CODE_MAP: Record<string, { statusCode: number; code: string }> = {
     'ValidationError': { statusCode: 400, code: 'VALIDATION_ERROR' },
     'UnauthorizedError': { statusCode: 401, code: 'UNAUTHORIZED' },
     'NotFoundError': { statusCode: 404, code: 'NOT_FOUND' },
-    // ... 他のマッピング
+    'RateLimitError': { statusCode: 429, code: 'RATE_LIMIT_EXCEEDED' },
 };
 
 function toErrorResponse(error: Error, requestId: string): APIGatewayProxyResult {
@@ -79,7 +67,7 @@ function toErrorResponse(error: Error, requestId: string): APIGatewayProxyResult
         statusCode: mapping.statusCode,
         body: JSON.stringify({
             status: 'error',
-            error: { code: mapping.code, message: error.message, details: (error as any).details || {} },
+            error: { code: mapping.code, message: error.message },
             request_id: requestId,
         }),
     };

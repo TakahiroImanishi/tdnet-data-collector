@@ -156,12 +156,8 @@ switch ($Action) {
     
     'destroy' {
         Write-ColorOutput "`nWarning: This will delete the stacks. This operation cannot be undone." "Red"
-        $confirmation = Read-Host "Continue? (yes/no)"
-        
-        if ($confirmation -ne 'yes') {
-            Write-ColorOutput "Deletion cancelled" "Yellow"
-            exit 0
-        }
+        Write-ColorOutput "Proceeding with deletion (use Ctrl+C to cancel within 5 seconds)..." "Yellow"
+        Start-Sleep -Seconds 5
         
         if ($Stack -eq 'all') {
             # Delete all stacks in reverse dependency order

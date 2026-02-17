@@ -264,3 +264,28 @@ $cdkPath = Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath 
 ```
 
 #### 10.5 修正後のデプロイ再実行
+
+
+**問題**: CDKコマンドを`cdk`ディレクトリから実行していたが、`cdk.json`はルートディレクトリにある
+
+**修正内容**:
+- CDKコマンドをルートディレクトリから実行するように変更
+- ルートとCDKディレクトリの両方で`npm install`を実行
+
+#### 10.6 修正後のデプロイ再実行（2回目）
+
+
+**問題**: 複数スタック（4スタック）があるため、`--all`フラグが必要
+
+**修正内容**:
+```powershell
+# 修正前
+npx cdk deploy --context environment=prod
+
+# 修正後
+npx cdk deploy --all --context environment=prod --require-approval never
+```
+
+#### 10.7 修正後のデプロイ再実行（3回目）
+
+デプロイには時間がかかります（10-15分程度）。

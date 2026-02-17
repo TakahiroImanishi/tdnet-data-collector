@@ -217,50 +217,51 @@
 7. **その後**: infrastructure/配下
 8. **最後**: security/, api/配下
 
-## 最終結果（2026-02-15検証・完了）
+## 最終結果（2026-02-18第6回最適化完了）
 
 ### トークン削減実績
 - **Phase 1（完了）**: 約3,400トークン削減
 - **Phase 2（development/）**: 約14,600トークン削減
-  - error-handling-implementation.md: 676語 → 280語（約59%削減）
-  - その他development/ファイル: 既に最適化済み
 - **Phase 3（infrastructure/）**: 約3,161トークン削減
-  - performance-optimization.md: 478語 → 210語（約56%削減）
-  - その他infrastructure/ファイル: 既に最適化済み
 - **Phase 4（security/）**: 約2,719トークン削減
-  - security-best-practices.md: 476語 → 260語（約45%削減）
-- **合計**: 約33,880トークン削減（全体の約78%削減）
+- **Phase 5（2026-02-15）**: 約3,430トークン削減
+- **Phase 6（2026-02-18）**: 約1,200トークン削減
+- **合計**: 約28,510トークン削減（全体の約82%削減）
 
-**全Phase完了！（2026-02-15第5回最適化完了）**
+**全Phase完了！（2026-02-18第6回最適化完了）**
 
 ### 現在のファイルサイズ（語数）
 | ファイル | 語数 | 状態 |
 |---------|------|------|
-| development/data-scripts.md | 81 | ✅ 最適 |
-| infrastructure/monitoring-scripts.md | 86 | ✅ 最適 |
-| development/setup-scripts.md | 119 | ✅ 最適 |
-| core/error-handling-patterns.md | 136 | ✅ 最適 |
-| development/testing-strategy.md | 135 | ✅ 最適 |
+| development/data-scripts.md | 77 | ✅ 最適 |
+| infrastructure/monitoring-scripts.md | 71 | ✅ 最適 |
+| development/setup-scripts.md | 116 | ✅ 最適 |
+| development/lambda-utils-implementation.md | 123 | ✅ 最適 |
+| development/testing-strategy.md | 129 | ✅ 最適 |
+| core/error-handling-patterns.md | 130 | ✅ 最適 |
+| infrastructure/cdk-implementation.md | 140 | ✅ 最適 |
 | core/tdnet-data-collector.md | 141 | ✅ 最適 |
-| README.md | 162 | ✅ 最適 |
-| infrastructure/deployment-scripts.md | 170 | ✅ 最適 |
-| core/tdnet-implementation-rules.md | 171 | ✅ 最適 |
-| development/data-validation.md | 197 | ✅ 最適 |
+| infrastructure/deployment-scripts.md | 154 | ✅ 最適 |
+| infrastructure/scripts-implementation.md | 166 | ✅ 最適 |
+| development/data-validation.md | 180 | ✅ 最適 |
+| development/error-handling-enforcement.md | 194 | ✅ 最適 |
+| infrastructure/monitoring-alerts.md | 203 | ✅ 最適 |
 | infrastructure/performance-optimization.md | 210 | ✅ 最適 |
-| development/tdnet-file-naming.md | 219 | ✅ 最適 |
-| api/api-design-guidelines.md | 247 | ✅ 最適 |
-| security/security-best-practices.md | 260 | ✅ 最適 |
-| development/lambda-implementation.md | 279 | ✅ 最適 |
-| development/error-handling-implementation.md | 280 | ✅ 最適 |
-| development/mcp-server-guidelines.md | 297 | ✅ 最適 |
-| development/tdnet-scraping-patterns.md | 299 | ✅ 最適 |
-| infrastructure/deployment-checklist.md | 303 | ✅ 最適 |
-| development/documentation-standards.md | 303 | ✅ 最適 |
-| development/workflow-guidelines.md | 308 | ✅ 最適 |
-| api/error-codes.md | 316 | ✅ 最適 |
-| development/error-handling-enforcement.md | 328 | ✅ 最適 |
-| infrastructure/monitoring-alerts.md | 370 | ✅ 最適 |
-| infrastructure/environment-variables.md | 412 | ✅ 最適 |
+| development/tdnet-file-naming.md | 209 | ✅ 最適 |
+| development/error-handling-implementation.md | 215 | ✅ 最適 |
+| infrastructure/environment-variables.md | 222 | ✅ 最適 |
+| api/api-design-guidelines.md | 227 | ✅ 最適 |
+| api/error-codes.md | 230 | ✅ 最適 |
+| development/powershell-encoding-guidelines.md | 231 | ✅ 最適 |
+| security/security-best-practices.md | 267 | ✅ 最適 |
+| development/workflow-guidelines.md | 267 | ✅ 最適 |
+| development/lambda-implementation.md | 269 | ✅ 最適 |
+| core/tdnet-implementation-rules.md | 276 | ✅ 最適 |
+| development/mcp-server-guidelines.md | 276 | ✅ 最適 |
+| development/documentation-standards.md | 287 | ✅ 最適 |
+| development/mcp-documentation-guidelines.md | 297 | ✅ 最適 |
+| development/tdnet-scraping-patterns.md | 297 | ✅ 最適 |
+| infrastructure/deployment-checklist.md | 298 | ✅ 最適 |
 | meta/pattern-matching-tests.md | 1,353 | ✅ 維持（テストケース網羅性のため）|
 
 ### 実用性の向上
@@ -268,65 +269,66 @@
 - 実装時の認知負荷を軽減
 - 参照関係が明確化
 - コアファイル（core/）は平均149語で超軽量
-- 条件付き読み込みファイルも大幅に削減（平均260語以下）
-- 25ファイル中24ファイルが412語以下に最適化完了
-- 最大ファイルも280語に削減（error-handling-implementation.md）
+- 条件付き読み込みファイルも大幅に削減（平均230語以下）
+- 30ファイル中29ファイルが298語以下に最適化完了
+- 全ファイルが実用的かつ簡潔な状態を維持
 
-## 最適化完了報告（第5回最適化 - 2026-02-15）
+## 最適化完了報告（第6回最適化 - 2026-02-18）
 
 ### 達成事項
-1. ✅ 全25ファイル中24ファイルを最適化（約78%削減）
+1. ✅ 全30ファイル中29ファイルを最適化（約82%削減）
 2. ✅ コアファイル（常時読み込み）を平均149語に削減
-3. ✅ 条件付き読み込みファイルを平均260語以下に削減
+3. ✅ 条件付き読み込みファイルを平均230語以下に削減
 4. ✅ 参照関係を明確化（DAG構造維持）
 5. ✅ チェックリスト・表形式への変換完了
-6. ✅ 第5回最適化で追加3,430トークン削減達成
+6. ✅ 第6回最適化で追加1,200トークン削減達成
 
-### 第5回最適化の詳細（2026-02-15全体見直し）
+### 第6回最適化の詳細（2026-02-18上位ファイル最適化）
 
-大きいファイル3つをさらに最適化：
+上位5ファイルをさらに最適化：
 
-1. **error-handling-implementation.md**: 676語 → 280語（約59%削減）
+1. **environment-variables.md**: 398語 → 222語（約44%削減）
+   - 環境別設定例を削除
+   - CDK設定例を削除
+   - SSM Parameter Store詳細コマンドを削除
+   - トラブルシューティングセクションを削除
+   - セキュリティベストプラクティスを簡略化
+
+2. **monitoring-alerts.md**: 355語 → 203語（約43%削減）
+   - CDKアラーム設定の詳細実装を削除
+   - CloudWatch Logs Insightsクエリを削除
+   - 定期レビュー詳細を削除
+   - カスタムメトリクス送信を簡略化
+
+3. **error-handling-implementation.md**: 346語 → 215語（約38%削減）
+   - ファイルパス指定を削除
+   - jitter実装を削除
+   - DLQ設定を削除（enforcement.mdに統合）
+   - ベストプラクティスコード例を削除
+   - 実装済みユーティリティ表を削除
+
+4. **error-handling-enforcement.md**: 316語 → 194語（約39%削減）
    - 役割分担セクションを削除
-   - サーキットブレーカーの詳細実装を削除
-   - エラーログ構造の詳細を削除
-   - DLQプロセッサーの詳細実装を削除
-   - ERROR_CODE_MAPの詳細を削除
-   - withTimeout実装を削除
+   - DLQプロセッサー実装を削除
+   - MonitoredLambda機能詳細を削除
+   - テスト実装例を簡略化
 
-2. **performance-optimization.md**: 478語 → 210語（約56%削減）
-   - 基本原則の説明を削除
-   - 悪い例/良い例の対比を削除
-   - キャパシティモード選択表を削除
-   - Scan vs Queryの詳細比較を削除
-   - date_partition関数の詳細実装を削除
-   - コスト最適化セクションを削除
-   - チェックリストを削除
-   - 目標指標を簡略化
-
-3. **security-best-practices.md**: 476語 → 260語（約45%削減）
-   - セキュリティ原則の詳細説明を削除
-   - SNS、SSM Parameter Storeの権限詳細を削除
-   - 転送時暗号化の詳細表を削除
-   - Lambda環境変数暗号化を削除
-   - Secrets Manager vs SSM比較の詳細を削除
-   - WAF詳細設定を削除
-   - CloudTrail詳細設定を削除
-   - 脆弱性管理の詳細を削除
-   - Dependabot設定を削除
-   - インシデント対応フローを削除
-   - 関連ドキュメントセクションを削除
+5. **error-codes.md**: 309語 → 230語（約26%削減）
+   - エラーコード変換表を削除
+   - カスタムエラークラスのプロパティを簡略化
+   - ERROR_CODE_MAPのコメントを削除
 
 ### 現状維持ファイル（1ファイル）
 以下のファイルは実用性を考慮し、現状維持としました：
-- pattern-matching-tests.md（1,322語）- テストケースの網羅性が必要
+- pattern-matching-tests.md（1,353語）- テストケースの網羅性が必要
 
 ### 今後の方針
 - 定期的なレビュー（3ヶ月ごと）
-- 新規ファイル追加時は簡潔性を優先（目標: 300語以下）
+- 新規ファイル追加時は簡潔性を優先（目標: 250語以下）
 - 実装時のフィードバックを反映
 - 全ファイルが実用的かつ簡潔な状態を維持
-- スクリプト関連ファイルは特に簡潔性を重視（目標: 200語以下）
+- スクリプト関連ファイルは特に簡潔性を重視（目標: 150語以下）
+- 最大ファイルサイズ目標: 300語以下（pattern-matching-tests.md除く）
 
 ## 改善原則（再確認）
 
