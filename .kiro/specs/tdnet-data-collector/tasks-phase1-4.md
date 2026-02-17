@@ -3253,14 +3253,12 @@
   - _テスト結果: 38/38テスト成功（100%）_
   - _関連: タスク31.7.8（Jest設定修正）_
 
-- [ ] 31.8 TdnetApi-prod: WAF WebACLの重複エラー解消
+- [x] 31.8 TdnetApi-prod: WAF WebACLの重複エラー解消
   - CloudFormationスタックのドリフト検出を実行
   - WAF WebACLリソースの重複を確認
-  - 重複の原因を特定（手動作成 vs CDK作成）
-  - 解決方法の選択:
-    - オプションA: 手動作成されたWebACLを削除し、CDK管理に統一
-    - オプションB: CDK定義を修正して既存WebACLをインポート
-    - オプションC: CDK定義からWebACLを削除し、手動管理に統一
+  - 原因はwafを別のスタックに定義しなおしましたが、再デプロイしてないことです。
+  - コードを確認してからエラーを修正してください。
+  - 解決方法：現状のスタック構成に従うように再デプロイ
   - 選択した方法を実行してエラーを解消
   - CloudFormationスタックの状態を確認（UPDATE_COMPLETE）
   - WAF WebACLが正常に動作することを確認
@@ -3268,6 +3266,14 @@
   - _優先度: 🔴 Critical_
   - _推定工数: 2-3時間_
   - _関連: TdnetApi-prod CloudFormationスタック_
+  - _完了: 2026-02-18 08:29, WAF WebACL重複エラー完全解消_
+  - _作業記録: work-log-20260218-081116-waf-webacl-duplicate-fix.md_
+  - _実施内容:_
+    - 既存WAF WebACL（ID: 43b105da-fddd-4a97-909b-c233a36d6afa）を削除
+    - API Gatewayとの関連付けを解除
+    - CloudFormationスタックを再デプロイ（UPDATE_COMPLETE）
+    - 新WAF WebACL（ID: 1602dc0e-6bd2-4ba0-842e-2012c706448a）を作成
+    - API Gatewayとの関連付けを確認（正常動作）
 
 - [ ] 31.9 実行ステータス管理の改善
   - **背景**: 2026-02-15の本番環境検証で、実行ステータス更新に以下の問題が発見されました：
