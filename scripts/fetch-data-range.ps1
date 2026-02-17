@@ -81,7 +81,7 @@ try {
     Write-Host ""
     
     $outputFile = "data-$Date-offset$Offset-limit$Limit.json"
-    $response | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFile -Encoding UTF8
+    $response | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFile -Encoding UTF8NoBOM
     
     Write-Host "OK Saved to: $outputFile" -ForegroundColor Green
     Write-Host ""

@@ -305,7 +305,7 @@ $deploymentLog = @"
 "@
 
 $logFile = "deployment-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').md"
-$deploymentLog | Out-File -FilePath $logFile -Encoding utf8
+$deploymentLog | Out-File -FilePath $logFile -Encoding UTF8NoBOM
 
 Write-Host "Deployment log saved: $logFile" -ForegroundColor Gray
 Write-Host ""

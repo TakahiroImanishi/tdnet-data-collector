@@ -126,7 +126,7 @@ CIRCUIT_BREAKER_TIMEOUT=60000
 "@
 
 try {
-    $envContent | Out-File -FilePath $OutputFile -Encoding utf8
+    $envContent | Out-File -FilePath $OutputFile -Encoding UTF8NoBOM
     Write-Host "✅ Environment file generated successfully" -ForegroundColor Green
 } catch {
     Write-Host "❌ Failed to generate environment file" -ForegroundColor Red
