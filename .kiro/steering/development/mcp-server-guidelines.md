@@ -1,11 +1,11 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md'
+fileMatchPattern: '**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts'
 ---
 
-# MCP Server 活用ガイドライン
+# MCP Server 活用ガイドライン（AWS実装）
 
-MCPサーバーを活用して最新情報を取得し、実装を効率化する。
+MCPサーバーを活用してAWS実装を効率化する。
 
 ## 利用可能なMCPサーバー
 
@@ -15,7 +15,6 @@ MCPサーバーを活用して最新情報を取得し、実装を効率化す�
 | **AWS Labs CDK** | CDKGeneralGuidance, ExplainCDKNagRule, GetAwsSolutionsConstructPattern | CDK実装、CDK Nagエラー解決 |
 | **Brave Web Search** | brave_web_search, brave_news_search | エラー解決、最新情報、ベストプラクティス |
 | **Context7** | resolve_library_id, query_docs | ライブラリドキュメント、コード例 |
-| **Fetch** | fetch | 特定URLのコンテンツ取得 |
 
 ## 活用原則
 

@@ -98,31 +98,21 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```text
-**/utils/error*.ts|**/utils/retry*.ts|**/utils/logger*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/api/**/*.ts|**/lambda/**/*.ts|**/models/**/*.ts|**/types/**/*.ts
+**/utils/error*.ts|**/utils/retry*.ts|**/utils/logger*.ts|**/errors/**/*.ts
 ```
 
 ### マッチすべきファイル ✅
 - `src/utils/error-handler.ts`
 - `src/utils/retry.ts`
-- `src/utils/logger.ts` ← 追加
-- `src/models/disclosure.ts` ← 追加
-- `src/models/execution.ts` ← 追加
-- `src/types/index.ts` ← 追加
-- `src/scraper/tdnet-scraper.ts`
-- `src/collector/batch-processor.ts`
-- `src/api/disclosures.ts`
-- `lambda/collector/handler.ts`
-- `lambda/collector/index.ts`
-- `lambda/collector/utils.ts`
-- `lambda/query/handler.ts`
-- `src/lambda/export/handler.ts`
-- `src/lambda/collector/handler.ts` ← 追加
-- `src/lambda/collector/scrape-tdnet-list.ts` ← 追加
+- `src/utils/logger.ts`
+- `src/errors/index.ts`
+- `src/errors/custom-errors.ts`
 - `lambda/utils/error-handler/index.ts`
 
 ### マッチすべきでないファイル ❌
-- `src/validators/disclosure.ts` (対象フォルダ外)
-- `cdk/lib/lambda-stack.ts` (CDKファイル、Lambda関数コードではない)
+- `src/scraper/tdnet-scraper.ts` (対象フォルダ外)
+- `src/api/disclosures.ts` (対象フォルダ外)
+- `lambda/collector/handler.ts` (対象フォルダ外)
 - `README.md`
 - `package.json`
 
@@ -225,26 +215,25 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```text
-**/cdk/**/*.ts|**/lambda/**/*.ts|**/.env*
+**/.env*|**/config/**/*.ts|**/cdk/lib/config/**/*.ts
 ```
 
 ### マッチすべきファイル ✅
-- `cdk/lib/tdnet-stack.ts`
-- `cdk/lib/lambda-stack.ts`
-- `cdk/bin/app.ts`
-- `lambda/collector/handler.ts`
-- `lambda/collector/index.ts`
-- `lambda/collector/utils.ts`
-- `lambda/query/handler.ts`
-- `src/lambda/export/handler.ts`
 - `.env`
 - `.env.local`
 - `.env.production`
 - `config/.env.dev`
+- `config/.env.production`
+- `config/environment.ts`
+- `src/config/database.ts`
+- `cdk/lib/config/environment-config.ts`
+- `cdk/lib/config/stack-config.ts`
 
 ### マッチすべきでないファイル ❌
-- `src/api/disclosures.ts` (cdk/lambdaフォルダ外)
-- `src/utils/env-helper.ts` (cdk/lambdaフォルダ外)
+- `cdk/lib/tdnet-stack.ts` (configフォルダ外)
+- `lambda/collector/handler.ts` (configフォルダ外)
+- `src/api/disclosures.ts` (configフォルダ外)
+- `src/utils/env-helper.ts` (configフォルダ外)
 - `README.md`
 - `package.json`
 
@@ -303,7 +292,7 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ### fileMatchPattern
 ```text
-**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md
+**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts
 ```
 
 ### マッチすべきファイル ✅
@@ -319,17 +308,41 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 - `src/collector/batch-processor.ts`
 - `src/validators/disclosure.test.ts`
 - `tests/unit/validation.spec.ts`
-- `docs/architecture.md`
-- `docs/api-reference.md`
-- `.kiro/specs/tdnet-data-collector/spec.md`
-- `.kiro/specs/tdnet-data-collector/tasks.md`
 
 ### マッチすべきでないファイル ❌
 - `src/validators/disclosure.ts` (対象フォルダ外)
 - `src/utils/logger.ts` (対象フォルダ外)
-- `README.md` (docsフォルダ外、.kiro/specsフォルダ外)
+- `docs/architecture.md` (ドキュメントファイル)
+- `.kiro/specs/tdnet-data-collector/spec.md` (ドキュメントファイル)
+- `README.md`
 - `package.json`
 - `.gitignore`
+
+---
+
+## development/mcp-documentation-guidelines.md
+
+### fileMatchPattern
+```text
+**/docs/**/*.md|**/.kiro/specs/**/*.md
+```
+
+### マッチすべきファイル ✅
+- `docs/architecture.md`
+- `docs/api-reference.md`
+- `.kiro/specs/tdnet-data-collector/spec.md`
+- `.kiro/specs/tdnet-data-collector/tasks.md`
+- `.kiro/specs/tdnet-data-collector/improvements/task-1.1-improvement-1.md`
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260207.md`
+- `.kiro/specs/feature-x/spec.md`
+
+### マッチすべきでないファイル ❌
+- `lambda/collector/handler.ts` (AWS実装ファイル)
+- `cdk/lib/tdnet-stack.ts` (AWS実装ファイル)
+- `src/api/disclosures.ts` (AWS実装ファイル)
+- `.kiro/steering/README.md` (steeringフォルダ)
+- `README.md` (docsフォルダ外、.kiro/specsフォルダ外)
+- `package.json`
 
 ---
 

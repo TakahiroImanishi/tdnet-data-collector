@@ -89,8 +89,14 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
           }
         }
       } catch (error) {
-        // 404エラー（ページが存在しない）の場合は、これ以上ページがないと判断
+        // 404エラー（ページが存在しない）の場合
         if (error instanceof ValidationError && error.message.includes('not found')) {
+          // 最初のページで404エラーが発生した場合は、エラーをスロー
+          if (pageNumber === 1) {
+            throw error;
+          }
+          
+          // 2ページ目以降で404エラーが発生した場合は、これ以上ページがないと判断
           logger.info('TDnet page not found, stopping pagination', {
             date,
             page: pageNumber,

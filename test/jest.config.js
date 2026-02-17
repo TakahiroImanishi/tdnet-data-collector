@@ -1,7 +1,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src', '<rootDir>/cdk'],
+  roots: ['<rootDir>/../src', '<rootDir>/../cdk'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   
   // Exclude improved test examples from running
@@ -18,23 +18,24 @@ module.exports = {
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
       },
+      isolatedModules: true,
     }],
   },
   
   collectCoverageFrom: [
-    'src/**/*.ts',
-    'cdk/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/*.test.ts',
-    '!src/**/*.spec.ts',
-    '!src/**/*.improved.ts',
-    '!src/**/__tests__/test-helpers.ts',
-    '!cdk/**/*.test.ts',
-    '!cdk/**/*.spec.ts',
+    '../src/**/*.ts',
+    '../cdk/**/*.ts',
+    '!../src/**/*.d.ts',
+    '!../src/**/*.test.ts',
+    '!../src/**/*.spec.ts',
+    '!../src/**/*.improved.ts',
+    '!../src/**/__tests__/test-helpers.ts',
+    '!../cdk/**/*.test.ts',
+    '!../cdk/**/*.spec.ts',
     // Phase 3実装予定の未実装機能を除外（タスク19.9）
-    '!src/lambda/get-disclosure/**',
-    '!src/lambda/health/**',
-    '!src/lambda/stats/**',
+    '!../src/lambda/get-disclosure/**',
+    '!../src/lambda/health/**',
+    '!../src/lambda/stats/**',
   ],
   
   coverageDirectory: 'coverage',
@@ -59,20 +60,13 @@ module.exports = {
   
   // モジュール解決の最適化
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/../src/$1',
   },
   
   // セットアップファイル
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   
-  // グローバル設定
-  globals: {
-    'ts-jest': {
-      isolatedModules: true, // 型チェックをスキップして高速化
-    },
-  },
-  
   // キャッシュの有効化
   cache: true,
-  cacheDirectory: '<rootDir>/.jest-cache',
+  cacheDirectory: '<rootDir>/../.jest-cache',
 };

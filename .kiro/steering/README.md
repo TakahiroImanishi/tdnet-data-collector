@@ -18,14 +18,17 @@
 | パターン | トリガーされるsteering |
 |---------|---------------------|
 | `**/*.test.ts\|**/*.spec.ts` | testing-strategy, mcp-server-guidelines |
-| `**/lambda/**/*.ts` | lambda-implementation, error-handling-*, environment-variables, performance-optimization, mcp-server-guidelines |
-| `**/api/**/*.ts` | api-design-guidelines, error-codes, error-handling-implementation, mcp-server-guidelines |
-| `**/cdk/**/*.ts` | environment-variables, mcp-server-guidelines |
+| `**/lambda/**/*.ts` | lambda-implementation, mcp-server-guidelines |
+| `**/api/**/*.ts` | api-design-guidelines, error-codes, mcp-server-guidelines |
+| `**/cdk/**/*.ts` | mcp-server-guidelines |
 | `**/cdk/lib/**/*-stack.ts` | security-best-practices, deployment-checklist, mcp-server-guidelines |
-| `**/scraper/**/*.ts` | tdnet-scraping-patterns, error-handling-implementation, mcp-server-guidelines |
+| `**/scraper/**/*.ts` | tdnet-scraping-patterns, mcp-server-guidelines |
 | `**/validators/**/*.ts` | data-validation |
+| `**/utils/error*.ts` | error-handling-implementation |
 | `**/.env*` | environment-variables |
-| `**/docs/**/*.md` | documentation-standards, mcp-server-guidelines |
+| `**/config/**/*.ts` | environment-variables |
+| `**/docs/**/*.md` | documentation-standards, mcp-documentation-guidelines |
+| `**/.kiro/specs/**/*.md` | workflow-guidelines, mcp-documentation-guidelines |
 | `scripts/deploy*.ps1` | deployment-scripts |
 | `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1` | setup-scripts |
 | `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*` | data-scripts |
