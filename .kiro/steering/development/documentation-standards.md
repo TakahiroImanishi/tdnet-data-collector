@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/docs/**/*.md|**/README.md|**/.kiro/specs/**/*.md'
+fileMatchPattern: '**/docs/**/*.md|README.md|**/.kiro/specs/**/*.md'
 ---
 
 # ドキュメント標準

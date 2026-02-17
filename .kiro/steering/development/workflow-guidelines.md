@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/.kiro/specs/**/*.md|**/work-logs/**/*.md|**/improvements/**/*.md'
+fileMatchPattern: '**/.kiro/specs/**/tasks*.md|**/.kiro/specs/**/spec.md|**/.kiro/specs/**/work-logs/**/*.md|**/.kiro/specs/**/improvements/**/*.md'
 ---
 
 # ワークフローガイドライン
