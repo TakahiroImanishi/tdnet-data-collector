@@ -62,29 +62,44 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
       // レート制限を適用
       await rateLimiter.waitIfNeeded();
 
-      // TDnetからHTMLを取得（再試行あり）
-      const html = await fetchTdnetHtml(date, pageNumber);
+      try {
+        // TDnetからHTMLを取得（再試行あり）
+        const html = await fetchTdnetHtml(date, pageNumber);
 
-      // HTMLをパース（日付を渡す）
-      const disclosures = parseDisclosureList(html, date);
+        // HTMLをパース（日付を渡す）
+        const disclosures = parseDisclosureList(html, date);
 
-      if (disclosures.length === 0) {
-        // 開示情報がない場合は終了
-        hasMorePages = false;
-      } else {
-        allDisclosures.push(...disclosures);
-        logger.info('TDnet page scraped', {
-          date,
-          page: pageNumber,
-          count: disclosures.length,
-          total: allDisclosures.length,
-        });
-
-        // 100件未満の場合は最終ページ
-        if (disclosures.length < 100) {
+        if (disclosures.length === 0) {
+          // 開示情報がない場合は終了
           hasMorePages = false;
         } else {
-          pageNumber++;
+          allDisclosures.push(...disclosures);
+          logger.info('TDnet page scraped', {
+            date,
+            page: pageNumber,
+            count: disclosures.length,
+            total: allDisclosures.length,
+          });
+
+          // 100件未満の場合は最終ページ
+          if (disclosures.length < 100) {
+            hasMorePages = false;
+          } else {
+            pageNumber++;
+          }
+        }
+      } catch (error) {
+        // 404エラー（ページが存在しない）の場合は、これ以上ページがないと判断
+        if (error instanceof ValidationError && error.message.includes('not found')) {
+          logger.info('TDnet page not found, stopping pagination', {
+            date,
+            page: pageNumber,
+            total: allDisclosures.length,
+          });
+          hasMorePages = false;
+        } else {
+          // その他のエラーは再スロー
+          throw error;
         }
       }
     }

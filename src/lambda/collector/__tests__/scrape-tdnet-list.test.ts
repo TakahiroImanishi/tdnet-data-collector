@@ -40,7 +40,9 @@ jest.mock('../../../utils/rate-limiter', () => {
 import { scrapeTdnetList } from '../scrape-tdnet-list';
 
 const mockAxios = axios as jest.Mocked<typeof axios>;
-const mockParseDisclosureList = parseDisclosureList as jest.MockedFunction<typeof parseDisclosureList>;
+const mockParseDisclosureList = parseDisclosureList as jest.MockedFunction<
+  typeof parseDisclosureList
+>;
 
 describe('scrapeTdnetList', () => {
   beforeEach(() => {
@@ -507,4 +509,155 @@ describe('scrapeTdnetList', () => {
       );
     });
   });
+
+  describe('Pagination with 404 Error Handling', () => {
+    it('should stop pagination when 404 error occurs on page 10', async () => {
+      const mockHtml = '<html><body>Test HTML</body></html>';
+      const mockDisclosures = Array(100).fill({
+        company_code: '1234',
+        company_name: 'Test Company',
+        disclosure_type: '決算短信',
+        title: 'Test Disclosure',
+        disclosed_at: '2024-01-15T01:30:00Z',
+        pdf_url: 'https://example.com/test.pdf',
+      });
+
+      // ページ1-9: 各100件の開示情報を返す
+      mockAxios.get.mockImplementation((url: string) => {
+        if (url.includes('I_list_001_') || url.includes('I_list_002_') || 
+            url.includes('I_list_003_') || url.includes('I_list_004_') ||
+            url.includes('I_list_005_') || url.includes('I_list_006_') ||
+            url.includes('I_list_007_') || url.includes('I_list_008_') ||
+            url.includes('I_list_009_')) {
+          return Promise.resolve({
+            data: mockHtml,
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: {} as any,
+          });
+        }
+        // ページ10: 404エラー
+        if (url.includes('I_list_010_')) {
+          const error: any = new Error('Request failed with status code 404');
+          error.response = {
+            status: 404,
+            statusText: 'Not Found',
+            data: 'Not Found',
+            headers: {},
+            config: {} as any,
+          };
+          error.isAxiosError = true;
+          return Promise.reject(error);
+        }
+        return Promise.reject(new Error('Unexpected URL'));
+      });
+
+      mockParseDisclosureList.mockReturnValue(mockDisclosures);
+
+      const result = await scrapeTdnetList('2024-01-15');
+
+      // 9ページ分（900件）の開示情報が取得されることを確認
+      expect(result).toHaveLength(900);
+      // ページ1-10のリクエストが行われることを確認（10ページ目で404エラー）
+      expect(mockAxios.get).toHaveBeenCalledTimes(10);
+      // レート制限が10回適用されることを確認
+      expect(mockWaitIfNeeded).toHaveBeenCalledTimes(10);
+    });
+
+    it('should continue pagination if page 10 exists', async () => {
+      const mockHtml = '<html><body>Test HTML</body></html>';
+      const mockDisclosures100 = Array(100).fill({
+        company_code: '1234',
+        company_name: 'Test Company',
+        disclosure_type: '決算短信',
+        title: 'Test Disclosure',
+        disclosed_at: '2024-01-15T01:30:00Z',
+        pdf_url: 'https://example.com/test.pdf',
+      });
+      const mockDisclosures50 = Array(50).fill({
+        company_code: '1234',
+        company_name: 'Test Company',
+        disclosure_type: '決算短信',
+        title: 'Test Disclosure',
+        disclosed_at: '2024-01-15T01:30:00Z',
+        pdf_url: 'https://example.com/test.pdf',
+      });
+
+      // ページ1-10: 各100件の開示情報を返す
+      // ページ11: 50件の開示情報を返す（最終ページ）
+      mockAxios.get.mockImplementation((url: string) => {
+        if (url.includes('I_list_011_')) {
+          mockParseDisclosureList.mockReturnValueOnce(mockDisclosures50);
+        } else {
+          mockParseDisclosureList.mockReturnValueOnce(mockDisclosures100);
+        }
+        return Promise.resolve({
+          data: mockHtml,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as any,
+        });
+      });
+
+      const result = await scrapeTdnetList('2024-01-15');
+
+      // 11ページ分（1050件）の開示情報が取得されることを確認
+      expect(result).toHaveLength(1050);
+      // ページ1-11のリクエストが行われることを確認
+      expect(mockAxios.get).toHaveBeenCalledTimes(11);
+      // レート制限が11回適用されることを確認
+      expect(mockWaitIfNeeded).toHaveBeenCalledTimes(11);
+    });
+
+    it('should log 404 error and stop pagination gracefully', async () => {
+      const mockHtml = '<html><body>Test HTML</body></html>';
+      const mockDisclosures = Array(100).fill({
+        company_code: '1234',
+        company_name: 'Test Company',
+        disclosure_type: '決算短信',
+        title: 'Test Disclosure',
+        disclosed_at: '2024-01-15T01:30:00Z',
+        pdf_url: 'https://example.com/test.pdf',
+      });
+
+      // ページ1: 100件の開示情報を返す
+      // ページ2: 404エラー
+      mockAxios.get.mockImplementation((url: string) => {
+        if (url.includes('I_list_001_')) {
+          return Promise.resolve({
+            data: mockHtml,
+            status: 200,
+            statusText: 'OK',
+            headers: {},
+            config: {} as any,
+          });
+        }
+        if (url.includes('I_list_002_')) {
+          const error: any = new Error('Request failed with status code 404');
+          error.response = {
+            status: 404,
+            statusText: 'Not Found',
+            data: 'Not Found',
+            headers: {},
+            config: {} as any,
+          };
+          error.isAxiosError = true;
+          return Promise.reject(error);
+        }
+        return Promise.reject(new Error('Unexpected URL'));
+      });
+
+      mockParseDisclosureList.mockReturnValue(mockDisclosures);
+
+      const result = await scrapeTdnetList('2024-01-15');
+
+      // 1ページ分（100件）の開示情報が取得されることを確認
+      expect(result).toHaveLength(100);
+      // エラーがスローされないことを確認（正常終了）
+      expect(mockAxios.get).toHaveBeenCalledTimes(2);
+    });
+  });
 });
+
