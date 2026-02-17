@@ -250,3 +250,17 @@ npm run build
 #### 10.4 本番環境デプロイスクリプトの実行
 
 デプロイスクリプト `scripts/deploy-prod.ps1` を使用して本番環境にデプロイします。
+
+
+**エラー発生**: `Join-Path`の構文エラー
+
+**修正内容**:
+```powershell
+# 修正前
+$cdkPath = Join-Path $PSScriptRoot ".." "cdk"
+
+# 修正後
+$cdkPath = Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "cdk"
+```
+
+#### 10.5 修正後のデプロイ再実行

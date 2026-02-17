@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: '**/api/**/*.ts|**/routes/**/*.ts'
+fileMatchPattern: '**/api/**/errors/**/*.ts|**/api/**/error-codes.ts|**/errors/**/*.ts'
 ---
 
 # API Error Codes

@@ -45,7 +45,7 @@ Write-Host "🔧 Environment: Production" -ForegroundColor Cyan
 Write-Host ""
 
 # Navigate to CDK directory
-$cdkPath = Join-Path $PSScriptRoot ".." "cdk"
+$cdkPath = Join-Path -Path $PSScriptRoot -ChildPath ".." | Join-Path -ChildPath "cdk"
 if (-not (Test-Path $cdkPath)) {
     Write-Host "❌ Error: CDK directory not found at $cdkPath" -ForegroundColor Red
     exit 1
