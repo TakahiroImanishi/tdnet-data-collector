@@ -239,3 +239,14 @@ aws sts get-caller-identity
 - User: imanishi-awssso
 
 #### 10.3 TypeScriptビルドの実行
+
+
+```powershell
+npm run build
+```
+
+**結果**: TypeScriptビルド成功
+
+#### 10.4 本番環境デプロイスクリプトの実行
+
+デプロイスクリプト `scripts/deploy-prod.ps1` を使用して本番環境にデプロイします。
