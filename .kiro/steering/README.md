@@ -20,15 +20,18 @@
 | `**/*.test.ts\|**/*.spec.ts` | testing-strategy, mcp-server-guidelines |
 | `**/lambda/**/*.ts` | lambda-implementation, mcp-server-guidelines |
 | `**/api/**/*.ts` | api-design-guidelines, error-codes, mcp-server-guidelines |
-| `**/cdk/**/*.ts` | mcp-server-guidelines |
-| `**/cdk/lib/**/*-stack.ts` | security-best-practices, deployment-checklist, mcp-server-guidelines |
+| `**/cdk/lib/**/*.ts` | cdk-implementation, mcp-server-guidelines |
+| `**/cdk/lib/**/*-stack.ts` | security-best-practices, deployment-checklist, tdnet-file-naming |
+| `**/cdk/lib/constructs/*lambda*.ts` | error-handling-enforcement, performance-optimization |
 | `**/scraper/**/*.ts` | tdnet-scraping-patterns, mcp-server-guidelines |
 | `**/validators/**/*.ts` | data-validation |
 | `**/utils/error*.ts` | error-handling-implementation |
 | `**/.env*` | environment-variables |
 | `**/config/**/*.ts` | environment-variables |
 | `**/docs/**/*.md` | documentation-standards, mcp-documentation-guidelines |
-| `**/.kiro/specs/**/*.md` | workflow-guidelines, mcp-documentation-guidelines |
+| `README.md` | documentation-standards |
+| `**/.kiro/specs/**/tasks*.md` | workflow-guidelines |
+| `**/.kiro/specs/**/work-logs/**/*.md` | workflow-guidelines, mcp-documentation-guidelines |
 | `scripts/deploy*.ps1` | deployment-scripts |
 | `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1` | setup-scripts |
 | `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*` | data-scripts |
