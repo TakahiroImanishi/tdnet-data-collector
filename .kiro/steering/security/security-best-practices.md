@@ -20,14 +20,7 @@ fileMatchPattern: '**/cdk/lib/**/*-stack.ts|**/iam/**/*.ts|**/security/**/*.ts'
 | DynamoDB | dynamodb:PutItem, dynamodb:GetItem, dynamodb:Query, dynamodb:Scan | 特定テーブル・GSI |
 | Secrets Manager | secretsmanager:GetSecretValue | 特定シークレット |
 
-禁止:
-```typescript
-// ❌ ワイルドカード
-actions: ['s3:*'], resources: ['*']
-
-// ✅ 特定リソース
-actions: ['s3:PutObject', 's3:GetObject'], resources: [`${bucket.bucketArn}/*`]
-```
+禁止: ワイルドカード権限（`actions: ['s3:*'], resources: ['*']`）
 
 ## 暗号化
 
@@ -44,48 +37,18 @@ actions: ['s3:PutObject', 's3:GetObject'], resources: [`${bucket.bucketArn}/*`]
 | APIキー、パスワード | Secrets Manager |
 | 設定値 | SSM Parameter Store |
 
-環境変数:
-```typescript
-// ❌ 直接設定
-environment: { API_KEY: 'secret-key' }
-
-// ✅ ARNのみ
-environment: { API_KEY_SECRET_ARN: apiKeySecret.secretArn }
-```
+環境変数: ARNのみ設定（直接設定禁止）
 
 ## API Gateway
 
-WAF: レート制限（5分/2000リクエスト/IP）、AWS管理ルール
-
-APIキー:
-```typescript
-const apiKey = api.addApiKey('TdnetApiKey');
-const usagePlan = api.addUsagePlan('TdnetUsagePlan', {
-    throttle: { rateLimit: 100, burstLimit: 200 },
-    quota: { limit: 10000, period: apigateway.Period.MONTH },
-});
-```
-
-CORS:
-```typescript
-defaultCorsPreflightOptions: {
-    allowOrigins: ['https://dashboard.example.com'],
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-}
-```
+- WAF: レート制限（5分/2000リクエスト/IP）、AWS管理ルール
+- APIキー: レート制限（100/秒）、クォータ（10000/月）
+- CORS: 特定オリジンのみ許可
 
 ## 監査
 
-CloudTrail: `sendToCloudWatchLogs: true`
-
-ログマスク:
-```typescript
-function sanitizeForLog(data: any): any {
-    const sanitized = { ...data };
-    if (sanitized.api_key) sanitized.api_key = '***REDACTED***';
-    return sanitized;
-}
-```
+- CloudTrail: CloudWatch Logs送信有効化
+- ログマスク: 機密情報（APIキー等）をマスク
 
 ## チェックリスト
 

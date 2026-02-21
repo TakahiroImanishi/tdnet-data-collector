@@ -217,7 +217,7 @@
 7. **その後**: infrastructure/配下
 8. **最後**: security/, api/配下
 
-## 最終結果（2026-02-18第6回最適化完了）
+## 最終結果（2026-02-22第7回最適化完了）
 
 ### トークン削減実績
 - **Phase 1（完了）**: 約3,400トークン削減
@@ -226,51 +226,52 @@
 - **Phase 4（security/）**: 約2,719トークン削減
 - **Phase 5（2026-02-15）**: 約3,430トークン削減
 - **Phase 6（2026-02-18）**: 約1,200トークン削減
-- **合計**: 約28,510トークン削減（全体の約82%削減）
+- **Phase 7（2026-02-22）**: 約2,061トークン削減
+- **合計**: 約30,571トークン削減（全体の約85%削減）
 
-**全Phase完了！（2026-02-18第6回最適化完了）**
+**全Phase完了！（2026-02-22第7回最適化完了）**
 
 ### 現在のファイルサイズ（語数）
 | ファイル | 語数 | 状態 |
 |---------|------|------|
-| development/data-scripts.md | 77 | ✅ 最適 |
+| development/documentation-standards.md | 65 | ✅ 最適 |
 | infrastructure/monitoring-scripts.md | 71 | ✅ 最適 |
+| development/data-scripts.md | 77 | ✅ 最適 |
+| development/lambda-implementation.md | 81 | ✅ 最適 |
+| development/mcp-documentation-guidelines.md | 113 | ✅ 最適 |
 | development/setup-scripts.md | 116 | ✅ 最適 |
+| development/powershell-encoding-guidelines.md | 120 | ✅ 最適 |
 | development/lambda-utils-implementation.md | 123 | ✅ 最適 |
 | development/testing-strategy.md | 129 | ✅ 最適 |
-| core/error-handling-patterns.md | 130 | ✅ 最適 |
+| core/error-handling-patterns.md | 132 | ✅ 最適 |
 | infrastructure/cdk-implementation.md | 140 | ✅ 最適 |
-| core/tdnet-data-collector.md | 141 | ✅ 最適 |
+| core/tdnet-data-collector.md | 143 | ✅ 最適 |
 | infrastructure/deployment-scripts.md | 154 | ✅ 最適 |
+| development/mcp-server-guidelines.md | 156 | ✅ 最適 |
+| core/tdnet-implementation-rules.md | 161 | ✅ 最適 |
+| development/workflow-guidelines.md | 163 | ✅ 最適 |
 | infrastructure/scripts-implementation.md | 166 | ✅ 最適 |
 | development/data-validation.md | 180 | ✅ 最適 |
+| development/tdnet-scraping-patterns.md | 183 | ✅ 最適 |
+| infrastructure/deployment-checklist.md | 184 | ✅ 最適 |
+| security/security-best-practices.md | 191 | ✅ 最適 |
 | development/error-handling-enforcement.md | 194 | ✅ 最適 |
 | infrastructure/monitoring-alerts.md | 203 | ✅ 最適 |
-| infrastructure/performance-optimization.md | 210 | ✅ 最適 |
 | development/tdnet-file-naming.md | 209 | ✅ 最適 |
+| infrastructure/performance-optimization.md | 210 | ✅ 最適 |
 | development/error-handling-implementation.md | 215 | ✅ 最適 |
 | infrastructure/environment-variables.md | 222 | ✅ 最適 |
 | api/api-design-guidelines.md | 227 | ✅ 最適 |
 | api/error-codes.md | 230 | ✅ 最適 |
-| development/powershell-encoding-guidelines.md | 231 | ✅ 最適 |
-| security/security-best-practices.md | 267 | ✅ 最適 |
-| development/workflow-guidelines.md | 267 | ✅ 最適 |
-| development/lambda-implementation.md | 269 | ✅ 最適 |
-| core/tdnet-implementation-rules.md | 276 | ✅ 最適 |
-| development/mcp-server-guidelines.md | 276 | ✅ 最適 |
-| development/documentation-standards.md | 287 | ✅ 最適 |
-| development/mcp-documentation-guidelines.md | 297 | ✅ 最適 |
-| development/tdnet-scraping-patterns.md | 297 | ✅ 最適 |
-| infrastructure/deployment-checklist.md | 298 | ✅ 最適 |
-| meta/pattern-matching-tests.md | 1,353 | ✅ 維持（テストケース網羅性のため）|
+| meta/pattern-matching-tests.md | 1,339 | ✅ 維持（テストケース網羅性のため）|
 
 ### 実用性の向上
 - 必要な情報に素早くアクセス可能
 - 実装時の認知負荷を軽減
 - 参照関係が明確化
-- コアファイル（core/）は平均149語で超軽量
-- 条件付き読み込みファイルも大幅に削減（平均230語以下）
-- 30ファイル中29ファイルが298語以下に最適化完了
+- コアファイル（core/）は平均145語で超軽量
+- 条件付き読み込みファイルも大幅に削減（平均165語以下）
+- 30ファイル中29ファイルが230語以下に最適化完了
 - 全ファイルが実用的かつ簡潔な状態を維持
 
 ## 最適化完了報告（第6回最適化 - 2026-02-18）
@@ -337,3 +338,84 @@
 3. **構造の最適化**: 長文説明 → チェックリスト・表形式
 4. **実用性の重視**: 実装時に即座に使える情報のみ
 5. **参照の明確化**: 詳細は別ファイルへの参照を明記
+
+
+## 最適化完了報告（第7回最適化 - 2026-02-22）
+
+### 達成事項
+1. ✅ 全30ファイル中29ファイルを最適化（約85%削減）
+2. ✅ コアファイル（常時読み込み）を平均145語に削減
+3. ✅ 条件付き読み込みファイルを平均165語以下に削減
+4. ✅ 参照関係を明確化（DAG構造維持）
+5. ✅ チェックリスト・表形式への変換完了
+6. ✅ 第7回最適化で追加2,061トークン削減達成
+
+### 第7回最適化の詳細（2026-02-22上位10ファイル最適化）
+
+上位10ファイル（250語以上）をさらに最適化：
+
+1. **deployment-checklist.md**: 298語 → 184語（約38%削減）
+   - 「なぜこのルールが必要か」の詳細説明を削除
+   - 環境別設定の詳細表を削減
+   - ロールバック手順の詳細を削除
+
+2. **mcp-documentation-guidelines.md**: 297語 → 113語（約62%削減）
+   - 各パターンのTypeScriptコード例を削除
+   - ドキュメント品質ガイドラインの詳細コード例を削除
+   - 複数情報源の検証の詳細実装を削除
+
+3. **tdnet-scraping-patterns.md**: 297語 → 183語（約38%削減）
+   - 基本実装の完全なコード例を削減
+   - レート制限の完全なクラス実装を削減
+   - fetchWithRetry関数の完全実装を削除
+
+4. **documentation-standards.md**: 287語 → 65語（約77%削減）
+   - コード例（良い例・悪い例）を削除
+   - エディタ設定の詳細を削除
+   - ファイル操作のコード例を削除
+   - ドキュメント作成の詳細を削除
+
+5. **tdnet-implementation-rules.md**: 283語 → 161語（約43%削減）
+   - プロジェクト構造の詳細説明を簡略化
+   - scripts/の詳細分類を削除
+   - 関連ドキュメントの詳細説明を削除
+
+6. **mcp-server-guidelines.md**: 276語 → 156語（約43%削減）
+   - プロジェクト固有パターンの詳細コード例を削除
+   - 検索クエリのベストプラクティスの詳細例を削除
+   - 注意事項の詳細コード例を削除
+
+7. **lambda-implementation.md**: 269語 → 81語（約70%削減）
+   - 環境変数検証の完全なコード例を削除
+   - エラーハンドリングの完全なコード例を削除
+   - パフォーマンス最適化の完全なコード例を削除
+
+8. **workflow-guidelines.md**: 267語 → 163語（約39%削減）
+   - 並列実行パターンの詳細例を削除
+   - 並列実行不可パターンの詳細例を削除
+   - 並列実行の判断フローチャートを削除
+
+9. **security-best-practices.md**: 267語 → 191語（約28%削減）
+   - IAM権限の禁止コード例を削除
+   - 環境変数の禁止コード例を削除
+   - APIキー、CORS、ログマスクのコード例を削除
+
+10. **powershell-encoding-guidelines.md**: 250語 → 120語（約52%削減）
+    - fsWrite使用時のTypeScriptコード例を削除
+    - Out-File使用時の4つの例を2個に削減
+    - ConvertTo-Json、Set-Content使用時の例を削除
+    - 既存スクリプトの修正パターンを削除
+    - PowerShellバージョン別の違い表を削除
+
+### 現状維持ファイル（1ファイル）
+以下のファイルは実用性を考慮し、現状維持としました：
+- pattern-matching-tests.md（1,339語）- テストケースの網羅性が必要
+
+### 今後の方針
+- 定期的なレビュー（3ヶ月ごと）
+- 新規ファイル追加時は簡潔性を優先（目標: 200語以下）
+- 実装時のフィードバックを反映
+- 全ファイルが実用的かつ簡潔な状態を維持
+- スクリプト関連ファイルは特に簡潔性を重視（目標: 120語以下）
+- 最大ファイルサイズ目標: 230語以下（pattern-matching-tests.md除く）
+

@@ -27,85 +27,25 @@ MCPサーバーを活用してAWS実装を効率化する。
 | エラー解決 | Brave Web Search |
 | ライブラリAPI | Context7 |
 
-### 検索クエリのベストプラクティス
+## 検索クエリ
 
-```typescript
-// ✅ 具体的で明確
-"DynamoDB GSI query performance optimization"
-"Lambda Node.js 20 cold start reduction"
-"CDK Nag AwsSolutions-IAM4 remediation"
-
-// ❌ 曖昧で広すぎる
-"database", "lambda", "error"
-```
+具体的で明確なクエリを使用（例: "DynamoDB GSI query performance optimization"）
 
 ## プロジェクト固有パターン
 
-### TDnetスクレイピング実装
-
-```typescript
-// 1. HTTPクライアントのベストプラクティス
-brave_web_search({ query: "Node.js axios rate limiting retry best practices" })
-
-// 2. Lambdaスクレイピング
-search_documentation({ search_phrase: "Lambda web scraping best practices", topics: ["general"] })
-```
-
-### DynamoDB設計
-
-```typescript
-// 1. 設計ベストプラクティス
-search_documentation({ search_phrase: "DynamoDB design patterns GSI", topics: ["reference_documentation"] })
-
-// 2. CDK実装
-GetAwsSolutionsConstructPattern({ services: ["dynamodb"] })
-```
-
-### CDK Nagエラー解決
-
-```typescript
-// 1. ルール解説
-ExplainCDKNagRule({ rule_id: "AwsSolutions-IAM4" })
-
-// 2. 修正方法
-brave_web_search({ query: "CDK Nag AwsSolutions-IAM4 remediation example" })
-```
-
-### エラー解決
-
-```typescript
-// 1. エラーメッセージ検索
-brave_web_search({ query: "TypeScript error TS2345 Argument of type..." })
-
-// 2. AWS SDKエラー
-search_documentation({ search_phrase: "DynamoDB ConditionalCheckFailedException", topics: ["troubleshooting"] })
-```
+| パターン | 使用MCPサーバー |
+|---------|---------------|
+| TDnetスクレイピング | Brave Web Search |
+| DynamoDB設計 | AWS Knowledge, AWS Labs CDK |
+| CDK Nagエラー解決 | AWS Labs CDK, Brave Web Search |
+| エラー解決 | Brave Web Search, AWS Knowledge |
 
 ## 注意事項
 
-### 情報の信頼性
+- AWS公式ドキュメント優先、複数情報源で検証
+- センシティブ情報除外（APIキー、PII、機密情報）
+- トークン消費最適化（適切な件数設定）
 
-- ✅ AWS公式ドキュメント優先
-- ✅ 複数の情報源で検証
-- ⚠️ Web検索結果は公開日確認
+## 関連
 
-### センシティブ情報の除外
-
-- ❌ APIキー、パスワード、認証情報
-- ❌ 個人情報（PII）
-- ❌ 企業の機密情報
-
-### トークン消費の最適化
-
-```typescript
-// ✅ 適切な件数設定
-brave_web_search({ query: "Lambda best practices", count: 5 })
-
-// ❌ 過剰な件数設定
-brave_web_search({ query: "Lambda best practices", count: 50 })
-```
-
-## 関連ドキュメント
-
-- `workflow-guidelines.md` - サブエージェント活用
-- `error-handling-implementation.md` - エラー解決パターン
+`workflow-guidelines.md`, `error-handling-implementation.md`
