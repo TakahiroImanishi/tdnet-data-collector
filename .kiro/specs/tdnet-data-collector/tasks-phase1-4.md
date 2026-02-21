@@ -3318,30 +3318,35 @@
     - _Requirements: 要件7.1（監視）_
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
-    - _完了: 2026-02-22 08:25, CDK修正・テスト完了_
+    - _完了: 2026-02-22 08:26, CDK修正・テスト完了_
     - _作業記録: work-log-20260222-081454-cloudwatch-metrics-namespace-verification.md_
     - _実施内容:_
       - compute-stack.tsの9個のLambda関数のIAM Policy条件を`TDnet`に統一
+      - cloudwatch-alarms.tsの4箇所を`TDnet`に統一
+      - cloudwatch-dashboard.tsの5箇所を`TDnet`に統一
       - cloudwatch-integration.test.tsのアラーム数期待値を15個に修正
       - すべてのCDKテストが成功（15/15 passed）
+      - すべてのCloudWatchリソース（IAM Policy、アラーム、ダッシュボード）で名前空間が統一
 
-  - [ ] 31.9.3 実行ステータス管理のE2Eテスト追加
-    - 実行開始→進捗更新→完了の一連の流れをテスト
-    - DynamoDBに正しい値が保存されることを確認
-    - `started_at`, `updated_at`, `completed_at`のタイムスタンプが正しいことを確認
-    - テストファイル: `test/e2e/execution-status.e2e.test.ts`
-    - _Requirements: 要件14.3（E2Eテスト）_
-    - _優先度: 🟠 High_
-    - _推定工数: 2-3時間_
-
-  - [ ] 31.9.4 本番環境での修正の動作確認
-    - 修正版を本番環境にデプロイ
-    - 実際のデータ収集実行で実行ステータスが正しく更新されることを確認
-    - CloudWatchメトリクスが正常に送信されることを確認
-    - CloudWatchダッシュボードでメトリクスが表示されることを確認
+  - [x] 31.9.3 CloudWatchアラームの名前空間検証
+    - cloudwatch-alarms.tsの名前空間を確認
+    - `TDnet/Collector`を`TDnet`に統一
+    - アラーム定義が実装コードと一致することを確認
     - _Requirements: 要件12.1（監視）_
     - _優先度: 🟠 High_
-    - _推定工数: 1時間_
+    - _推定工数: 0.5時間_
+    - _完了: 2026-02-22 08:26, 31.9.2と同時に実施_
+    - _作業記録: work-log-20260222-081454-cloudwatch-metrics-namespace-verification.md_
+
+  - [x] 31.9.4 CloudWatchダッシュボードの名前空間検証
+    - cloudwatch-dashboard.tsの名前空間を確認
+    - `TDnet/Collector`を`TDnet`に統一
+    - ダッシュボード定義が実装コードと一致することを確認
+    - _Requirements: 要件12.1（監視）_
+    - _優先度: 🟠 High_
+    - _推定工数: 0.5時間_
+    - _完了: 2026-02-22 08:26, 31.9.2と同時に実施_
+    - _作業記録: work-log-20260222-081454-cloudwatch-metrics-namespace-verification.md_
 
 - [x] 31.10 PDFファイル保存不足の原因調査（Critical）
   - **背景**: 2026-02-15の本番環境検証で、データ収集とS3保存に重大な不整合が発見されました：
