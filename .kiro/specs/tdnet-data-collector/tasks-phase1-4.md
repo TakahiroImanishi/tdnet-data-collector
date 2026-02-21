@@ -1725,57 +1725,7 @@
     - エッジケースのテスト追加
     - カバレッジ再測定と目標達成確認
 
-### 3.11 本番環境運用改善（タスク31.6で発見された問題）
 
-- [ ] 3.11.1 実行状態更新の修正（Critical）
-  - Lambda Collectorの`updateExecutionStatus`関数の動作確認
-  - DynamoDBへの書き込みが正常に行われているか確認
-  - 進捗率（progress）、収集件数（collected_count）、失敗件数（failed_count）が正しく更新されることを確認
-  - ユニットテスト追加
-  - _Requirements: 要件5.4（進捗フィードバック）_
-  - _優先度: 🔴 Critical_
-  - _推定工数: 3-4時間_
-  - _発見: タスク31.6実行時、実行状態が0%のまま更新されない問題を確認_
-  - _影響: ユーザーが進捗を確認できない_
-  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
-
-- [ ] 3.11.2 CloudWatchメトリクス送信権限の追加（High）
-  - IAMロールに`cloudwatch:PutMetricData`権限を追加
-  - `cdk/lib/stacks/compute-stack.ts`のCollector Lambda IAMロール修正
-  - CDKスタックを再デプロイ
-  - メトリクス送信が正常に動作することを確認
-  - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
-  - _優先度: 🟠 High_
-  - _推定工数: 1-2時間_
-  - _発見: タスク31.6実行時、CloudWatchメトリクス送信権限エラーを確認_
-  - _エラー: `User is not authorized to perform: cloudwatch:PutMetricData`_
-  - _影響: メトリクスが送信されず、監視ができない_
-  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
-
-- [ ] 3.11.3 文字エンコーディングエラーの修正（Medium）
-  - ログ出力時のエンコーディング処理を確認
-  - `'cp932' codec can't encode character '\ufffd'`エラーの原因を特定
-  - 日本語文字の適切な処理を実装
-  - ユニットテスト追加
-  - _Requirements: 要件6.3（ロギング）_
-  - _優先度: 🟡 Medium_
-  - _推定工数: 2-3時間_
-  - _発見: タスク31.6実行時、文字エンコーディングエラーを確認_
-  - _エラー: `'cp932' codec can't encode character '\ufffd'`_
-  - _影響: ログ出力時にエラーが発生（機能には影響なし）_
-  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
-
-- [ ] 3.11.4 データ削除スクリプトの作成（Low）
-  - DynamoDBとS3のデータを完全に削除するスクリプトを作成
-  - `scripts/delete-all-data.ps1`を作成
-  - 確認プロンプトを追加（誤削除防止）
-  - 削除対象: DynamoDBテーブル（tdnet_disclosures_prod、tdnet_executions_prod）、S3バケット（pdfs、exports）
-  - _Requirements: 要件8.1（運用スクリプト）_
-  - _優先度: 🟢 Low_
-  - _推定工数: 1-2時間_
-  - _発見: タスク31.6実行時、データ削除が不完全だった問題を確認_
-  - _影響: すべてのデータが重複として扱われ、新規収集されない_
-  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
 
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
 
@@ -3350,7 +3300,7 @@
     - すべてのテストが成功することを確認
   - _関連: work-log-20260215-085941-production-verification.md, task-31-improvement-01-20260215-092557.md_
 
-  - [ ] 31.9.1 実行ステータス更新処理のユニットテスト追加
+  - [x] 31.9.1 実行ステータス更新処理のユニットテスト追加
     - `updateExecutionStatus`の既存レコード取得ロジックをテスト
     - `started_at`が初回作成時のみ設定され、更新時は保持されることを確認
     - 複数回の更新で`started_at`が変わらないことを確認
@@ -3358,14 +3308,22 @@
     - _Requirements: 要件14.1（ユニットテスト）_
     - _優先度: 🟠 High_
     - _推定工数: 2-3時間_
+    - _完了: 2026-02-22 08:11, 31.9と同時に実施_
+    - _テスト結果: 20/20 passed（started_at保持テスト2件追加）_
 
-  - [ ] 31.9.2 CloudWatchメトリクス名前空間の統一性検証
+  - [x] 31.9.2 CloudWatchメトリクス名前空間の統一性検証
     - CDKのIAM Policy条件とメトリクス送信コードの名前空間が一致することを確認
     - 統合テストで実際にメトリクスが送信されることを確認
     - テストファイル: `src/utils/__tests__/cloudwatch-metrics.integration.test.ts`
     - _Requirements: 要件7.1（監視）_
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
+    - _完了: 2026-02-22 08:25, CDK修正・テスト完了_
+    - _作業記録: work-log-20260222-081454-cloudwatch-metrics-namespace-verification.md_
+    - _実施内容:_
+      - compute-stack.tsの9個のLambda関数のIAM Policy条件を`TDnet`に統一
+      - cloudwatch-integration.test.tsのアラーム数期待値を15個に修正
+      - すべてのCDKテストが成功（15/15 passed）
 
   - [ ] 31.9.3 実行ステータス管理のE2Eテスト追加
     - 実行開始→進捗更新→完了の一連の流れをテスト
@@ -3450,6 +3408,59 @@
     - _完了: 2026-02-15, 問題は存在しないことを確認（調査スクリプトの誤り）_
     - _作業記録: work-log-20260215-093248-pdf-save-investigation.md_
     - _改善記録: task-31-improvement-02-20260215-093730.md_
+
+- [ ] 31.11 本番環境運用改善（タスク31.6で発見された問題）
+  - タスク31.6実行時に発見された本番環境の問題を修正
+  - _Requirements: 要件5.4, 6.3, 6.4, 8.1, 12.1_
+  - _優先度: 🔴 Critical（一部）、🟠 High（一部）_
+  - _推定工数: 7-11時間_
+  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
+
+  - [ ] 31.11.1 実行状態更新の修正（Critical）
+    - Lambda Collectorの`updateExecutionStatus`関数の動作確認
+    - DynamoDBへの書き込みが正常に行われているか確認
+    - 進捗率（progress）、収集件数（collected_count）、失敗件数（failed_count）が正しく更新されることを確認
+    - ユニットテスト追加
+    - _Requirements: 要件5.4（進捗フィードバック）_
+    - _優先度: 🔴 Critical_
+    - _推定工数: 3-4時間_
+    - _発見: タスク31.6実行時、実行状態が0%のまま更新されない問題を確認_
+    - _影響: ユーザーが進捗を確認できない_
+
+  - [ ] 31.11.2 CloudWatchメトリクス送信権限の追加（High）
+    - IAMロールに`cloudwatch:PutMetricData`権限を追加
+    - `cdk/lib/stacks/compute-stack.ts`のCollector Lambda IAMロール修正
+    - CDKスタックを再デプロイ
+    - メトリクス送信が正常に動作することを確認
+    - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
+    - _優先度: 🟠 High_
+    - _推定工数: 1-2時間_
+    - _発見: タスク31.6実行時、CloudWatchメトリクス送信権限エラーを確認_
+    - _エラー: `User is not authorized to perform: cloudwatch:PutMetricData`_
+    - _影響: メトリクスが送信されず、監視ができない_
+
+  - [ ] 31.11.3 文字エンコーディングエラーの修正（Medium）
+    - ログ出力時のエンコーディング処理を確認
+    - `'cp932' codec can't encode character '\ufffd'`エラーの原因を特定
+    - 日本語文字の適切な処理を実装
+    - ユニットテスト追加
+    - _Requirements: 要件6.3（ロギング）_
+    - _優先度: 🟡 Medium_
+    - _推定工数: 2-3時間_
+    - _発見: タスク31.6実行時、文字エンコーディングエラーを確認_
+    - _エラー: `'cp932' codec can't encode character '\ufffd'`_
+    - _影響: ログ出力時にエラーが発生（機能には影響なし）_
+
+  - [ ] 31.11.4 データ削除スクリプトの作成（Low）
+    - DynamoDBとS3のデータを完全に削除するスクリプトを作成
+    - `scripts/delete-all-data.ps1`を作成
+    - 確認プロンプトを追加（誤削除防止）
+    - 削除対象: DynamoDBテーブル（tdnet_disclosures_prod、tdnet_executions_prod）、S3バケット（pdfs、exports）
+    - _Requirements: 要件8.1（運用スクリプト）_
+    - _優先度: 🟢 Low_
+    - _推定工数: 1-2時間_
+    - _発見: タスク31.6実行時、データ削除が不完全だった問題を確認_
+    - _影響: すべてのデータが重複として扱われ、新規収集されない_
 
 - [ ] 31.12 ドキュメントと実装の整合性修正（Critical/High）
   - ドキュメントと実装の整合性チェックで発見された35件の不整合を修正

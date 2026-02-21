@@ -98,7 +98,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/Collector',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -137,7 +137,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/Query',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -179,7 +179,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/Export',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -216,7 +216,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/Collect',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -253,7 +253,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/CollectStatus',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -290,7 +290,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/ExportStatus',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -329,7 +329,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/PdfDownload',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -383,7 +383,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/Health',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
@@ -420,7 +420,7 @@ export class TdnetComputeStack extends cdk.Stack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'cloudwatch:namespace': 'TDnet/Stats',
+            'cloudwatch:namespace': 'TDnet',
           },
         },
       })
