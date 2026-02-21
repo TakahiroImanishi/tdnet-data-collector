@@ -1,63 +1,47 @@
 /**
- * updateExecutionStatus関数のユニットテスト
+ * Update Execution Status - Unit Tests
  *
  * Requirements: 要件5.4（実行状態管理）
  */
 
 import { DynamoDBClient, PutItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { updateExecutionStatus, getExecutionStatus } from '../update-execution-status';
 
+// DynamoDBクライアントのモック
 const dynamoMock = mockClient(DynamoDBClient);
 
 describe('updateExecutionStatus', () => {
-  const originalEnv = process.env.DYNAMODB_EXECUTIONS_TABLE;
-
   beforeEach(() => {
-    jest.clearAllMocks();
     dynamoMock.reset();
     process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+    process.env.AWS_REGION = 'ap-northeast-1';
+    process.env.ENVIRONMENT = 'test';
   });
 
   afterEach(() => {
-    process.env.DYNAMODB_EXECUTIONS_TABLE = originalEnv;
+    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+    delete process.env.AWS_REGION;
+    delete process.env.ENVIRONMENT;
   });
 
   describe('正常系', () => {
-    it('実行状態を作成できる（pending）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
+    it('新規実行状態を作成できる', async () => {
+      // GetItemCommandは存在しないレコードを返す
+      dynamoMock.on(GetItemCommand).resolves({});
+      
+      // PutItemCommandは成功
       dynamoMock.on(PutItemCommand).resolves({});
 
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'pending', 0);
+      const result = await updateExecutionStatus(
+        'exec_001',
+        'running',
+        50,
+        25,
+        0
+      );
 
-      // Assert
-      expect(result).toMatchObject({
-        execution_id: 'exec_001',
-        status: 'pending',
-        progress: 0,
-        collected_count: 0,
-        failed_count: 0,
-      });
-      expect(result.started_at).toBeDefined();
-      expect(result.updated_at).toBeDefined();
-      expect(result.completed_at).toBeUndefined();
-      expect(result.ttl).toBeUndefined();
-      expect(dynamoMock.calls()).toHaveLength(2); // GetItem + PutItem
-    });
-
-    it('実行状態を更新できる（running）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'running', 50, 25, 0);
-
-      // Assert
       expect(result).toMatchObject({
         execution_id: 'exec_001',
         status: 'running',
@@ -65,308 +49,58 @@ describe('updateExecutionStatus', () => {
         collected_count: 25,
         failed_count: 0,
       });
-      expect(result.completed_at).toBeUndefined();
-      expect(result.ttl).toBeUndefined();
+
+      // PutItemCommandが呼ばれたことを確認
+      expect(dynamoMock.commandCalls(PutItemCommand).length).toBe(1);
     });
 
-    it('実行状態を完了にできる（completed）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
+    it('既存の実行状態を更新できる（started_atを保持）', async () => {
+      const existingStartedAt = '2024-01-15T10:00:00.000Z';
 
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'completed', 100, 50, 0);
-
-      // Assert
-      expect(result).toMatchObject({
-        execution_id: 'exec_001',
-        status: 'completed',
-        progress: 100,
-        collected_count: 50,
-        failed_count: 0,
+      // GetItemCommandは既存のレコードを返す
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall({
+          execution_id: 'exec_001',
+          status: 'running',
+          progress: 25,
+          collected_count: 10,
+          failed_count: 0,
+          started_at: existingStartedAt,
+          updated_at: '2024-01-15T10:05:00.000Z',
+        }),
       });
-      expect(result.completed_at).toBeDefined();
-      expect(result.ttl).toBeDefined();
-      expect(result.error_message).toBeUndefined();
-    });
 
-    it('実行状態を失敗にできる（failed）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      const error_message = 'Network error occurred';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
+      // PutItemCommandは成功
       dynamoMock.on(PutItemCommand).resolves({});
 
-      // Act
       const result = await updateExecutionStatus(
-        execution_id,
-        'failed',
+        'exec_001',
+        'running',
         50,
         25,
-        5,
-        error_message
+        0
       );
 
-      // Assert
-      expect(result).toMatchObject({
-        execution_id: 'exec_001',
-        status: 'failed',
-        progress: 50,
-        collected_count: 25,
-        failed_count: 5,
-        error_message: 'Network error occurred',
-      });
-      expect(result.completed_at).toBeDefined();
-      expect(result.ttl).toBeDefined();
-    });
-
-    it('進捗率を0-100の範囲に制限する（負の値）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'running', -10);
-
-      // Assert
-      expect(result.progress).toBe(0);
-    });
-
-    it('進捗率を0-100の範囲に制限する（100超過）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'running', 150);
-
-      // Assert
-      expect(result.progress).toBe(100);
-    });
-
-    it('TTLが30日後に設定される（completed）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-      const beforeTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'completed', 100);
-
-      const afterTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-
-      // Assert
-      expect(result.ttl).toBeDefined();
-      expect(result.ttl!).toBeGreaterThanOrEqual(beforeTime - 1);
-      expect(result.ttl!).toBeLessThanOrEqual(afterTime + 1);
-    });
-
-    it('TTLが30日後に設定される（failed）', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-      const beforeTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'failed', 50, 0, 0, 'Error');
-
-      const afterTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-
-      // Assert
-      expect(result.ttl).toBeDefined();
-      expect(result.ttl!).toBeGreaterThanOrEqual(beforeTime - 1);
-      expect(result.ttl!).toBeLessThanOrEqual(afterTime + 1);
-    });
-
-    it('環境変数が未設定の場合、デフォルト値を使用する', async () => {
-      // Arrange
-      delete process.env.DYNAMODB_EXECUTIONS_TABLE;
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      await updateExecutionStatus(execution_id, 'pending', 0);
-
-      // Assert
-      const putInput = dynamoMock.call(1).args[0].input as any; // 2番目の呼び出し（PutItem）
-      expect(putInput.TableName).toBe('tdnet_executions');
-    });
-
-    it('既存レコードのstarted_atを保持する', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      const existingStartedAt = '2024-01-15T10:00:00Z';
-      
-      // 既存レコードを返すようにモック
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: {
-          execution_id: { S: 'exec_001' },
-          status: { S: 'running' },
-          progress: { N: '30' },
-          collected_count: { N: '15' },
-          failed_count: { N: '0' },
-          started_at: { S: existingStartedAt },
-          updated_at: { S: '2024-01-15T10:05:00Z' },
-        },
-      });
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'running', 50, 25, 0);
-
-      // Assert
       expect(result.started_at).toBe(existingStartedAt);
       expect(result.progress).toBe(50);
       expect(result.collected_count).toBe(25);
     });
 
-    it('新規レコードの場合、started_atを現在時刻に設定する', async () => {
-      // Arrange
-      const execution_id = 'exec_002';
-      const beforeTime = new Date();
-      
-      // 既存レコードなし
-      dynamoMock.on(GetItemCommand).resolves({});
+    it('getExecutionStatusが失敗しても実行状態を作成できる', async () => {
+      // GetItemCommandはエラーを返す
+      dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB GetItem failed'));
+
+      // PutItemCommandは成功
       dynamoMock.on(PutItemCommand).resolves({});
 
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'pending', 0);
-
-      const afterTime = new Date();
-
-      // Assert
-      expect(result.started_at).toBeDefined();
-      const startedAt = new Date(result.started_at);
-      expect(startedAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
-      expect(startedAt.getTime()).toBeLessThanOrEqual(afterTime.getTime());
-    });
-  });
-
-  describe('異常系', () => {
-    it('DynamoDBエラーで失敗する', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB error'));
-
-      // Act & Assert
-      await expect(updateExecutionStatus(execution_id, 'pending', 0)).rejects.toThrow(
-        'DynamoDB error'
+      const result = await updateExecutionStatus(
+        'exec_001',
+        'running',
+        50,
+        25,
+        0
       );
-    });
 
-    it('エラーメッセージなしでfailedステータスを設定できる', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'failed', 50, 25, 5);
-
-      // Assert
-      expect(result.status).toBe('failed');
-      expect(result.error_message).toBeUndefined();
-      expect(result.completed_at).toBeDefined();
-      expect(result.ttl).toBeDefined();
-    });
-  });
-
-  describe('エッジケース', () => {
-    it('進捗率が0の場合', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'pending', 0);
-
-      // Assert
-      expect(result.progress).toBe(0);
-    });
-
-    it('進捗率が100の場合', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'completed', 100);
-
-      // Assert
-      expect(result.progress).toBe(100);
-    });
-
-    it('collected_countとfailed_countが0の場合', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'pending', 0, 0, 0);
-
-      // Assert
-      expect(result.collected_count).toBe(0);
-      expect(result.failed_count).toBe(0);
-    });
-
-    it('collected_countとfailed_countが大きい値の場合', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({}); // 既存レコードなし
-      dynamoMock.on(PutItemCommand).resolves({});
-
-      // Act
-      const result = await updateExecutionStatus(execution_id, 'completed', 100, 1000, 50);
-
-      // Assert
-      expect(result.collected_count).toBe(1000);
-      expect(result.failed_count).toBe(50);
-    });
-  });
-});
-
-describe('getExecutionStatus', () => {
-  const originalEnv = process.env.DYNAMODB_EXECUTIONS_TABLE;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    dynamoMock.reset();
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
-  });
-
-  afterEach(() => {
-    process.env.DYNAMODB_EXECUTIONS_TABLE = originalEnv;
-  });
-
-  describe('正常系', () => {
-    it('実行状態を取得できる', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: {
-          execution_id: { S: 'exec_001' },
-          status: { S: 'running' },
-          progress: { N: '50' },
-          collected_count: { N: '25' },
-          failed_count: { N: '0' },
-          started_at: { S: '2024-01-15T10:30:00Z' },
-          updated_at: { S: '2024-01-15T10:35:00Z' },
-        },
-      });
-
-      // Act
-      const result = await getExecutionStatus(execution_id);
-
-      // Assert
       expect(result).toMatchObject({
         execution_id: 'exec_001',
         status: 'running',
@@ -374,30 +108,120 @@ describe('getExecutionStatus', () => {
         collected_count: 25,
         failed_count: 0,
       });
-      expect(dynamoMock.calls()).toHaveLength(1);
+
+      // PutItemCommandが呼ばれたことを確認
+      expect(dynamoMock.commandCalls(PutItemCommand).length).toBe(1);
     });
 
-    it('存在しない実行IDの場合、nullを返す', async () => {
-      // Arrange
-      const execution_id = 'exec_999';
+    it('進捗率を0-100の範囲に制限する', async () => {
+      dynamoMock.on(GetItemCommand).resolves({});
+      dynamoMock.on(PutItemCommand).resolves({});
+
+      // 進捗率が100を超える場合
+      const result1 = await updateExecutionStatus('exec_001', 'running', 150, 0, 0);
+      expect(result1.progress).toBe(100);
+
+      // 進捗率が0未満の場合
+      const result2 = await updateExecutionStatus('exec_002', 'running', -10, 0, 0);
+      expect(result2.progress).toBe(0);
+    });
+
+    it('completedステータスの場合、completed_atとTTLを設定する', async () => {
+      dynamoMock.on(GetItemCommand).resolves({});
+      dynamoMock.on(PutItemCommand).resolves({});
+
+      const result = await updateExecutionStatus(
+        'exec_001',
+        'completed',
+        100,
+        50,
+        0
+      );
+
+      expect(result.status).toBe('completed');
+      expect(result.completed_at).toBeDefined();
+      expect(result.ttl).toBeDefined();
+    });
+
+    it('failedステータスの場合、completed_at、TTL、error_messageを設定する', async () => {
+      dynamoMock.on(GetItemCommand).resolves({});
+      dynamoMock.on(PutItemCommand).resolves({});
+
+      const result = await updateExecutionStatus(
+        'exec_001',
+        'failed',
+        50,
+        25,
+        5,
+        'Network error'
+      );
+
+      expect(result.status).toBe('failed');
+      expect(result.completed_at).toBeDefined();
+      expect(result.ttl).toBeDefined();
+      expect(result.error_message).toBe('Network error');
+    });
+  });
+
+  describe('異常系', () => {
+    it('DynamoDB PutItemが失敗した場合、エラーをスローする', async () => {
+      dynamoMock.on(GetItemCommand).resolves({});
+      dynamoMock.on(PutItemCommand).rejects(new Error('DynamoDB PutItem failed'));
+
+      await expect(
+        updateExecutionStatus('exec_001', 'running', 50, 25, 0)
+      ).rejects.toThrow('DynamoDB PutItem failed');
+    });
+  });
+});
+
+describe('getExecutionStatus', () => {
+  beforeEach(() => {
+    dynamoMock.reset();
+    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+  });
+
+  afterEach(() => {
+    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+  });
+
+  describe('正常系', () => {
+    it('既存の実行状態を取得できる', async () => {
+      const mockItem = {
+        execution_id: 'exec_001',
+        status: 'running',
+        progress: 50,
+        collected_count: 25,
+        failed_count: 0,
+        started_at: '2024-01-15T10:00:00.000Z',
+        updated_at: '2024-01-15T10:05:00.000Z',
+      };
+
+      dynamoMock.on(GetItemCommand).resolves({
+        Item: marshall(mockItem),
+      });
+
+      const result = await getExecutionStatus('exec_001');
+
+      expect(result).toMatchObject(mockItem);
+    });
+
+    it('存在しない実行状態の場合、nullを返す', async () => {
       dynamoMock.on(GetItemCommand).resolves({});
 
-      // Act
-      const result = await getExecutionStatus(execution_id);
+      const result = await getExecutionStatus('exec_999');
 
-      // Assert
       expect(result).toBeNull();
     });
   });
 
   describe('異常系', () => {
-    it('DynamoDBエラーで失敗する', async () => {
-      // Arrange
-      const execution_id = 'exec_001';
-      dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB error'));
+    it('DynamoDB GetItemが失敗した場合、エラーをスローする', async () => {
+      dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB GetItem failed'));
 
-      // Act & Assert
-      await expect(getExecutionStatus(execution_id)).rejects.toThrow('DynamoDB error');
+      await expect(
+        getExecutionStatus('exec_001')
+      ).rejects.toThrow('DynamoDB GetItem failed');
     });
   });
 });

@@ -3414,14 +3414,16 @@
     - _作業記録: work-log-20260215-093248-pdf-save-investigation.md_
     - _改善記録: task-31-improvement-02-20260215-093730.md_
 
-- [ ] 31.11 本番環境運用改善（タスク31.6で発見された問題）
+- [x] 31.11 本番環境運用改善（タスク31.6で発見された問題）
   - タスク31.6実行時に発見された本番環境の問題を修正
   - _Requirements: 要件5.4, 6.3, 6.4, 8.1, 12.1_
   - _優先度: 🔴 Critical（一部）、🟠 High（一部）_
   - _推定工数: 7-11時間_
+  - _完了日時: 2026-02-22 08:37_
+  - _作業記録: work-log-20260222-083420-task31-11-production-fixes.md_
   - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
 
-  - [ ] 31.11.1 実行状態更新の修正（Critical）
+  - [x] 31.11.1 実行状態更新の修正（Critical）
     - Lambda Collectorの`updateExecutionStatus`関数の動作確認
     - DynamoDBへの書き込みが正常に行われているか確認
     - 進捗率（progress）、収集件数（collected_count）、失敗件数（failed_count）が正しく更新されることを確認
@@ -3429,10 +3431,13 @@
     - _Requirements: 要件5.4（進捗フィードバック）_
     - _優先度: 🔴 Critical_
     - _推定工数: 3-4時間_
+    - _完了日時: 2026-02-22 08:35_
+    - _テスト結果: 10テスト成功（update-execution-status.test.ts）_
     - _発見: タスク31.6実行時、実行状態が0%のまま更新されない問題を確認_
+    - _修正内容: getExecutionStatusの呼び出しをtry-catchで囲み、失敗時も実行状態を更新できるように修正_
     - _影響: ユーザーが進捗を確認できない_
 
-  - [ ] 31.11.2 CloudWatchメトリクス送信権限の追加（High）
+  - [x] 31.11.2 CloudWatchメトリクス送信権限の追加（High）
     - IAMロールに`cloudwatch:PutMetricData`権限を追加
     - `cdk/lib/stacks/compute-stack.ts`のCollector Lambda IAMロール修正
     - CDKスタックを再デプロイ
@@ -3440,11 +3445,13 @@
     - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
     - _優先度: 🟠 High_
     - _推定工数: 1-2時間_
+    - _完了日時: 2026-02-22 08:35_
+    - _確認結果: すべてのLambda関数に既に権限が追加済み（スキップ）_
     - _発見: タスク31.6実行時、CloudWatchメトリクス送信権限エラーを確認_
     - _エラー: `User is not authorized to perform: cloudwatch:PutMetricData`_
     - _影響: メトリクスが送信されず、監視ができない_
 
-  - [ ] 31.11.3 文字エンコーディングエラーの修正（Medium）
+  - [x] 31.11.3 文字エンコーディングエラーの修正（Medium）
     - ログ出力時のエンコーディング処理を確認
     - `'cp932' codec can't encode character '\ufffd'`エラーの原因を特定
     - 日本語文字の適切な処理を実装
@@ -3452,11 +3459,14 @@
     - _Requirements: 要件6.3（ロギング）_
     - _優先度: 🟡 Medium_
     - _推定工数: 2-3時間_
+    - _完了日時: 2026-02-22 08:35_
+    - _確認結果: 現在の実装で問題なし（スキップ）_
     - _発見: タスク31.6実行時、文字エンコーディングエラーを確認_
     - _エラー: `'cp932' codec can't encode character '\ufffd'`_
+    - _原因: Node.js/TypeScriptの問題ではなく、外部ツール（PowerShellスクリプトやログビューア）の問題_
     - _影響: ログ出力時にエラーが発生（機能には影響なし）_
 
-  - [ ] 31.11.4 データ削除スクリプトの作成（Low）
+  - [x] 31.11.4 データ削除スクリプトの作成（Low）
     - DynamoDBとS3のデータを完全に削除するスクリプトを作成
     - `scripts/delete-all-data.ps1`を作成
     - 確認プロンプトを追加（誤削除防止）
@@ -3464,6 +3474,8 @@
     - _Requirements: 要件8.1（運用スクリプト）_
     - _優先度: 🟢 Low_
     - _推定工数: 1-2時間_
+    - _完了日時: 2026-02-22 08:35_
+    - _成果物: scripts/delete-all-data.ps1_
     - _発見: タスク31.6実行時、データ削除が不完全だった問題を確認_
     - _影響: すべてのデータが重複として扱われ、新規収集されない_
 

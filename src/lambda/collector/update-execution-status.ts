@@ -102,8 +102,25 @@ export async function updateExecutionStatus(
     const ttl = isCompleted ? Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60 : undefined;
 
     // 既存のレコードを取得してstarted_atを保持
-    const existingStatus = await getExecutionStatus(execution_id);
-    const started_at = existingStatus?.started_at || now;
+    // getExecutionStatusが失敗しても実行状態の更新を継続する
+    let started_at = now;
+    try {
+      const existingStatus = await getExecutionStatus(execution_id);
+      if (existingStatus) {
+        started_at = existingStatus.started_at;
+        logger.debug('Found existing execution status', {
+          execution_id,
+          existing_started_at: existingStatus.started_at,
+          existing_progress: existingStatus.progress,
+        });
+      }
+    } catch (error) {
+      logger.warn('Failed to get existing execution status, creating new record', {
+        execution_id,
+        error_type: error instanceof Error ? error.constructor.name : 'Unknown',
+        error_message: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     const item: ExecutionStatus = {
       execution_id,
@@ -118,12 +135,16 @@ export async function updateExecutionStatus(
       ...(ttl ? { ttl } : {}),
     };
 
+    // DynamoDB書き込み前に環境情報をログに出力
     logger.info('Updating execution status', {
       execution_id,
       status,
       progress: clampedProgress,
       collected_count,
       failed_count,
+      table_name: getDynamoExecutionsTable(),
+      region: process.env.AWS_REGION || 'not-set',
+      environment: process.env.ENVIRONMENT || 'not-set',
     });
 
     // DynamoDBに保存
@@ -140,6 +161,8 @@ export async function updateExecutionStatus(
       execution_id,
       status,
       progress: clampedProgress,
+      table_name: getDynamoExecutionsTable(),
+      write_confirmed: true,
     });
 
     return item;
