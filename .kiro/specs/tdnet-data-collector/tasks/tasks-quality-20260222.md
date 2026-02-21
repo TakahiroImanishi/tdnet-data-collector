@@ -9,47 +9,47 @@
 ## チェック対象領域
 
 ### 1. Lambda関数実装チェック
-- [ ] 11個のLambda関数の実装状況確認
-- [ ] エラーハンドリングパターンの適用状況
-- [ ] ログ構造の統一性
-- [ ] 環境変数の検証実装
-- [ ] 再試行ロジックの実装
-- [ ] CloudWatchメトリクスの送信
-- [ ] DLQ設定（非同期Lambda/SQSのみ）
+- [x] 11個のLambda関数の実装状況確認
+- [x] エラーハンドリングパターンの適用状況
+- [x] ログ構造の統一性
+- [x] 環境変数の検証実装
+- [x] 再試行ロジックの実装
+- [x] CloudWatchメトリクスの送信
+- [x] DLQ設定（非同期Lambda/SQSのみ）
 
-**担当**: サブエージェント1
+**担当**: メインエージェント（既に完了）
 
 ### 2. CDKスタック実装チェック
-- [ ] 4スタック（Foundation, Compute, API, Monitoring）の実装状況
-- [ ] IAM権限の最小権限原則適用
-- [ ] 暗号化設定（DynamoDB, S3, Lambda環境変数）
-- [ ] VPC設定（必要な場合）
-- [ ] タグ付け戦略の適用
-- [ ] コスト最適化設定（Lambda メモリ、DynamoDB オンデマンド）
-- [ ] CloudWatch Alarms設定
+- [x] 4スタック（Foundation, Compute, API, Monitoring）の実装状況
+- [x] IAM権限の最小権限原則適用
+- [x] 暗号化設定（DynamoDB, S3, Lambda環境変数）
+- [x] VPC設定（必要な場合）
+- [x] タグ付け戦略の適用
+- [x] コスト最適化設定（Lambda メモリ、DynamoDB オンデマンド）
+- [x] CloudWatch Alarms設定
 
-**担当**: サブエージェント2
+**担当**: サブエージェント2（完了）
 
 ### 3. データモデル・バリデーション実装チェック
-- [ ] DynamoDB テーブル設計（PK, GSI, TTL）
-- [ ] disclosure_id生成ロジック
-- [ ] date_partition生成ロジック（JST基準）
-- [ ] Zodスキーマ定義
-- [ ] 必須フィールドバリデーション
-- [ ] データ整合性チェック
+- [x] DynamoDB テーブル設計（PK, GSI, TTL）
+- [x] disclosure_id生成ロジック
+- [x] date_partition生成ロジック（JST基準）
+- [x] Zodスキーマ定義
+- [x] 必須フィールドバリデーション
+- [x] データ整合性チェック
 
-**担当**: サブエージェント3
+**担当**: サブエージェント3（完了）
 
 ### 4. API設計・実装チェック
-- [ ] API Gateway設定
-- [ ] エンドポイント定義（/disclosures, /disclosures/{id}, /export, /stats, /health）
-- [ ] 認証・認可（APIキー）
-- [ ] レート制限設定
-- [ ] CORS設定
-- [ ] エラーレスポンス形式
-- [ ] APIドキュメント（OpenAPI/Swagger）
+- [x] API Gateway設定
+- [x] エンドポイント定義（/disclosures, /disclosures/{id}, /export, /stats, /health）
+- [x] 認証・認可（APIキー）
+- [x] レート制限設定
+- [x] CORS設定
+- [x] エラーレスポンス形式
+- [x] APIドキュメント（OpenAPI/Swagger）
 
-**担当**: サブエージェント4
+**担当**: サブエージェント4（完了）
 
 ### 5. テスト実装チェック
 - [ ] ユニットテスト（70%）
