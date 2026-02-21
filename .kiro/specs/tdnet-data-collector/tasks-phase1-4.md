@@ -1725,6 +1725,58 @@
     - エッジケースのテスト追加
     - カバレッジ再測定と目標達成確認
 
+### 3.11 本番環境運用改善（タスク31.6で発見された問題）
+
+- [ ] 3.11.1 実行状態更新の修正（Critical）
+  - Lambda Collectorの`updateExecutionStatus`関数の動作確認
+  - DynamoDBへの書き込みが正常に行われているか確認
+  - 進捗率（progress）、収集件数（collected_count）、失敗件数（failed_count）が正しく更新されることを確認
+  - ユニットテスト追加
+  - _Requirements: 要件5.4（進捗フィードバック）_
+  - _優先度: 🔴 Critical_
+  - _推定工数: 3-4時間_
+  - _発見: タスク31.6実行時、実行状態が0%のまま更新されない問題を確認_
+  - _影響: ユーザーが進捗を確認できない_
+  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
+
+- [ ] 3.11.2 CloudWatchメトリクス送信権限の追加（High）
+  - IAMロールに`cloudwatch:PutMetricData`権限を追加
+  - `cdk/lib/stacks/compute-stack.ts`のCollector Lambda IAMロール修正
+  - CDKスタックを再デプロイ
+  - メトリクス送信が正常に動作することを確認
+  - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
+  - _優先度: 🟠 High_
+  - _推定工数: 1-2時間_
+  - _発見: タスク31.6実行時、CloudWatchメトリクス送信権限エラーを確認_
+  - _エラー: `User is not authorized to perform: cloudwatch:PutMetricData`_
+  - _影響: メトリクスが送信されず、監視ができない_
+  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
+
+- [ ] 3.11.3 文字エンコーディングエラーの修正（Medium）
+  - ログ出力時のエンコーディング処理を確認
+  - `'cp932' codec can't encode character '\ufffd'`エラーの原因を特定
+  - 日本語文字の適切な処理を実装
+  - ユニットテスト追加
+  - _Requirements: 要件6.3（ロギング）_
+  - _優先度: 🟡 Medium_
+  - _推定工数: 2-3時間_
+  - _発見: タスク31.6実行時、文字エンコーディングエラーを確認_
+  - _エラー: `'cp932' codec can't encode character '\ufffd'`_
+  - _影響: ログ出力時にエラーが発生（機能には影響なし）_
+  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
+
+- [ ] 3.11.4 データ削除スクリプトの作成（Low）
+  - DynamoDBとS3のデータを完全に削除するスクリプトを作成
+  - `scripts/delete-all-data.ps1`を作成
+  - 確認プロンプトを追加（誤削除防止）
+  - 削除対象: DynamoDBテーブル（tdnet_disclosures_prod、tdnet_executions_prod）、S3バケット（pdfs、exports）
+  - _Requirements: 要件8.1（運用スクリプト）_
+  - _優先度: 🟢 Low_
+  - _推定工数: 1-2時間_
+  - _発見: タスク31.6実行時、データ削除が不完全だった問題を確認_
+  - _影響: すべてのデータが重複として扱われ、新規収集されない_
+  - _関連: work-log-20260222-074800-task31-6-data-collection-retry.md_
+
 ## Phase 4: 運用改善（セキュリティ、監視、CI/CD、最適化）
 
 ### 20. CloudTrail設定
@@ -3175,7 +3227,7 @@
   - _完了: 2026-02-15, ビルド成功_
   - _作業記録: work-log-20260215-080816-typescript-build-errors-fix.md_
 
-- [ ] 31.6 初回データ収集の実行
+- [x] 31.6 初回データ収集の実行
   - 手動でデータ収集を実行
   - 収集結果の確認
   - エラーがないことを確認
@@ -3275,7 +3327,7 @@
     - 新WAF WebACL（ID: 1602dc0e-6bd2-4ba0-842e-2012c706448a）を作成
     - API Gatewayとの関連付けを確認（正常動作）
 
-- [ ] 31.9 実行ステータス管理の改善
+- [x] 31.9 実行ステータス管理の改善
   - **背景**: 2026-02-15の本番環境検証で、実行ステータス更新に以下の問題が発見されました：
     1. `started_at`が毎回上書きされ、実行開始時刻が正しく記録されない
     2. CloudWatchメトリクス名前空間の不一致により、メトリクス送信が失敗
@@ -3286,6 +3338,16 @@
   - _Requirements: 要件6.4, 12.1（エラーメトリクス、監視）_
   - _優先度: 🟠 High_
   - _推定工数: 6-8時間_
+  - _完了: 2026-02-22 08:11, テスト追加・検証完了_
+  - _作業記録: work-log-20260222-080826-execution-status-verification.md_
+  - _テスト結果:_
+    - update-execution-status.test.ts: 20/20 passed
+    - cloudwatch-metrics.test.ts: 7/7 passed
+  - _実施内容:_
+    - 修正コミット`292922e`の実装内容を確認
+    - `started_at`保持ロジックのテストケースを追加
+    - CloudWatchメトリクス名前空間のテストを修正
+    - すべてのテストが成功することを確認
   - _関連: work-log-20260215-085941-production-verification.md, task-31-improvement-01-20260215-092557.md_
 
   - [ ] 31.9.1 実行ステータス更新処理のユニットテスト追加

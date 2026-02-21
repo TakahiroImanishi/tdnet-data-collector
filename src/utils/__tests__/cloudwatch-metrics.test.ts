@@ -29,7 +29,7 @@ describe('CloudWatch Metrics', () => {
       expect(cloudwatchMock.calls()).toHaveLength(1);
       const call = cloudwatchMock.call(0);
       expect(call.args[0].input).toMatchObject({
-        Namespace: 'TDnetDataCollector',
+        Namespace: 'TDnet',
         MetricData: [
           {
             MetricName: 'TestMetric',
@@ -54,7 +54,7 @@ describe('CloudWatch Metrics', () => {
       expect(cloudwatchMock.calls()).toHaveLength(1);
       const call = cloudwatchMock.call(0);
       expect(call.args[0].input).toMatchObject({
-        Namespace: 'TDnetDataCollector',
+        Namespace: 'TDnet',
         MetricData: [
           {
             MetricName: 'TestMetric',
@@ -146,7 +146,7 @@ describe('CloudWatch Metrics', () => {
       expect(cloudwatchMock.calls()).toHaveLength(1);
       const call = cloudwatchMock.call(0);
       expect(call.args[0].input).toMatchObject({
-        Namespace: 'TDnetDataCollector',
+        Namespace: 'TDnet',
         MetricData: [
           {
             MetricName: 'LambdaError',
@@ -174,7 +174,7 @@ describe('CloudWatch Metrics', () => {
       expect(cloudwatchMock.calls()).toHaveLength(1);
       const call = cloudwatchMock.call(0);
       expect(call.args[0].input).toMatchObject({
-        Namespace: 'TDnetDataCollector',
+        Namespace: 'TDnet',
         MetricData: [
           {
             MetricName: 'OperationSuccess',
