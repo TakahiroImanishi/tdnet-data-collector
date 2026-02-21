@@ -57,131 +57,98 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "DynamoDBテーブルのデータ削除" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-# 1. tdnet_disclosures テーブル
-Write-Host ""
-Write-Host "テーブル: $disclosuresTable" -ForegroundColor Yellow
-Write-Host "データをスキャン中..." -ForegroundColor Cyan
-
-$items = aws dynamodb scan `
-    --table-name $disclosuresTable `
-    --projection-expression "disclosure_id" `
-    --output json | ConvertFrom-Json
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "エラー: テーブル $disclosuresTable のスキャンに失敗しました。" -ForegroundColor Red
-    exit 1
-}
-
-$itemCount = $items.Items.Count
-Write-Host "削除対象: $itemCount 件" -ForegroundColor Yellow
-
-if ($itemCount -gt 0) {
+# DynamoDB削除関数（バッチ処理対応）
+function Remove-DynamoDBItems {
+    param(
+        [string]$TableName,
+        [string]$KeyName
+    )
+    
+    Write-Host ""
+    Write-Host "テーブル: $TableName" -ForegroundColor Yellow
+    Write-Host "データをスキャン中..." -ForegroundColor Cyan
+    
+    # テーブル存在確認
+    $tableExists = aws dynamodb describe-table --table-name $TableName 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "警告: テーブル $TableName が見つかりません。スキップします。" -ForegroundColor Yellow
+        return
+    }
+    
+    # スキャン実行
+    $scanResult = aws dynamodb scan `
+        --table-name $TableName `
+        --projection-expression $KeyName `
+        --output json 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "エラー: テーブル $TableName のスキャンに失敗しました。" -ForegroundColor Red
+        Write-Host $scanResult -ForegroundColor Red
+        return
+    }
+    
+    $items = ($scanResult | ConvertFrom-Json).Items
+    
+    if (-not $items -or $items.Count -eq 0) {
+        Write-Host "削除対象のデータはありません。" -ForegroundColor Green
+        return
+    }
+    
+    $itemCount = $items.Count
+    Write-Host "削除対象: $itemCount 件" -ForegroundColor Yellow
     Write-Host "データを削除中..." -ForegroundColor Cyan
+    
     $deletedCount = 0
-    foreach ($item in $items.Items) {
-        $disclosureId = $item.disclosure_id.S
-        aws dynamodb delete-item `
-            --table-name $disclosuresTable `
-            --key "{`"disclosure_id`": {`"S`": `"$disclosureId`"}}" `
-            --output json | Out-Null
+    $failedCount = 0
+    
+    # バッチ削除（25件ずつ）
+    for ($i = 0; $i -lt $items.Count; $i += 25) {
+        $batchSize = [Math]::Min(25, $items.Count - $i)
+        $batch = $items[$i..($i + $batchSize - 1)]
+        
+        # BatchWriteItem用のリクエスト構築
+        $deleteRequests = @()
+        foreach ($item in $batch) {
+            $keyValue = $item.$KeyName.S
+            $deleteRequests += @{
+                DeleteRequest = @{
+                    Key = @{
+                        $KeyName = @{ S = $keyValue }
+                    }
+                }
+            }
+        }
+        
+        $requestItems = @{
+            $TableName = $deleteRequests
+        } | ConvertTo-Json -Depth 10 -Compress
+        
+        # バッチ削除実行
+        $result = aws dynamodb batch-write-item --request-items $requestItems 2>&1
         
         if ($LASTEXITCODE -eq 0) {
-            $deletedCount++
-            if ($deletedCount % 100 -eq 0) {
-                Write-Host "  削除済み: $deletedCount / $itemCount 件" -ForegroundColor Gray
-            }
+            $deletedCount += $batchSize
+            Write-Host "  削除済み: $deletedCount / $itemCount 件" -ForegroundColor Gray
         } else {
-            Write-Host "警告: disclosure_id=$disclosureId の削除に失敗しました。" -ForegroundColor Yellow
+            $failedCount += $batchSize
+            Write-Host "  警告: バッチ削除に失敗しました（$batchSize 件）" -ForegroundColor Yellow
         }
+        
+        # レート制限対策
+        Start-Sleep -Milliseconds 100
     }
-    Write-Host "削除完了: $deletedCount / $itemCount 件" -ForegroundColor Green
-} else {
-    Write-Host "削除対象のデータはありません。" -ForegroundColor Green
+    
+    Write-Host "削除完了: $deletedCount 件成功, $failedCount 件失敗" -ForegroundColor Green
 }
+
+# 1. tdnet_disclosures テーブル
+Remove-DynamoDBItems -TableName $disclosuresTable -KeyName "disclosure_id"
 
 # 2. tdnet_executions テーブル
-Write-Host ""
-Write-Host "テーブル: $executionsTable" -ForegroundColor Yellow
-Write-Host "データをスキャン中..." -ForegroundColor Cyan
-
-$items = aws dynamodb scan `
-    --table-name $executionsTable `
-    --projection-expression "execution_id" `
-    --output json | ConvertFrom-Json
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "エラー: テーブル $executionsTable のスキャンに失敗しました。" -ForegroundColor Red
-    exit 1
-}
-
-$itemCount = $items.Items.Count
-Write-Host "削除対象: $itemCount 件" -ForegroundColor Yellow
-
-if ($itemCount -gt 0) {
-    Write-Host "データを削除中..." -ForegroundColor Cyan
-    $deletedCount = 0
-    foreach ($item in $items.Items) {
-        $executionId = $item.execution_id.S
-        aws dynamodb delete-item `
-            --table-name $executionsTable `
-            --key "{`"execution_id`": {`"S`": `"$executionId`"}}" `
-            --output json | Out-Null
-        
-        if ($LASTEXITCODE -eq 0) {
-            $deletedCount++
-            if ($deletedCount % 100 -eq 0) {
-                Write-Host "  削除済み: $deletedCount / $itemCount 件" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "警告: execution_id=$executionId の削除に失敗しました。" -ForegroundColor Yellow
-        }
-    }
-    Write-Host "削除完了: $deletedCount / $itemCount 件" -ForegroundColor Green
-} else {
-    Write-Host "削除対象のデータはありません。" -ForegroundColor Green
-}
+Remove-DynamoDBItems -TableName $executionsTable -KeyName "execution_id"
 
 # 3. tdnet_export_status テーブル
-Write-Host ""
-Write-Host "テーブル: $exportStatusTable" -ForegroundColor Yellow
-Write-Host "データをスキャン中..." -ForegroundColor Cyan
-
-$items = aws dynamodb scan `
-    --table-name $exportStatusTable `
-    --projection-expression "export_id" `
-    --output json | ConvertFrom-Json
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "エラー: テーブル $exportStatusTable のスキャンに失敗しました。" -ForegroundColor Red
-    exit 1
-}
-
-$itemCount = $items.Items.Count
-Write-Host "削除対象: $itemCount 件" -ForegroundColor Yellow
-
-if ($itemCount -gt 0) {
-    Write-Host "データを削除中..." -ForegroundColor Cyan
-    $deletedCount = 0
-    foreach ($item in $items.Items) {
-        $exportId = $item.export_id.S
-        aws dynamodb delete-item `
-            --table-name $exportStatusTable `
-            --key "{`"export_id`": {`"S`": `"$exportId`"}}" `
-            --output json | Out-Null
-        
-        if ($LASTEXITCODE -eq 0) {
-            $deletedCount++
-            if ($deletedCount % 100 -eq 0) {
-                Write-Host "  削除済み: $deletedCount / $itemCount 件" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "警告: export_id=$exportId の削除に失敗しました。" -ForegroundColor Yellow
-        }
-    }
-    Write-Host "削除完了: $deletedCount / $itemCount 件" -ForegroundColor Green
-} else {
-    Write-Host "削除対象のデータはありません。" -ForegroundColor Green
-}
+Remove-DynamoDBItems -TableName $exportStatusTable -KeyName "export_id"
 
 # ========================================
 # S3バケットのデータ削除
@@ -192,67 +159,62 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "S3バケットのデータ削除" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-# 1. PDFバケット
-Write-Host ""
-Write-Host "バケット: $pdfsBucket" -ForegroundColor Yellow
-Write-Host "オブジェクトをリスト中..." -ForegroundColor Cyan
-
-$objects = aws s3api list-objects-v2 `
-    --bucket $pdfsBucket `
-    --query "Contents[].Key" `
-    --output json | ConvertFrom-Json
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "エラー: バケット $pdfsBucket のリストに失敗しました。" -ForegroundColor Red
-    exit 1
-}
-
-if ($objects) {
+# S3削除関数
+function Remove-S3Objects {
+    param(
+        [string]$BucketName
+    )
+    
+    Write-Host ""
+    Write-Host "バケット: $BucketName" -ForegroundColor Yellow
+    
+    # バケット存在確認
+    $bucketExists = aws s3api head-bucket --bucket $BucketName 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "警告: バケット $BucketName が見つかりません。スキップします。" -ForegroundColor Yellow
+        return
+    }
+    
+    Write-Host "オブジェクトをリスト中..." -ForegroundColor Cyan
+    
+    $listResult = aws s3api list-objects-v2 `
+        --bucket $BucketName `
+        --query "Contents[].Key" `
+        --output json 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "エラー: バケット $BucketName のリストに失敗しました。" -ForegroundColor Red
+        Write-Host $listResult -ForegroundColor Red
+        return
+    }
+    
+    $objects = $listResult | ConvertFrom-Json
+    
+    if (-not $objects -or $objects.Count -eq 0) {
+        Write-Host "削除対象のオブジェクトはありません。" -ForegroundColor Green
+        return
+    }
+    
     $objectCount = $objects.Count
     Write-Host "削除対象: $objectCount 件" -ForegroundColor Yellow
     Write-Host "オブジェクトを削除中..." -ForegroundColor Cyan
     
-    aws s3 rm "s3://$pdfsBucket" --recursive --output text
+    # 再帰的削除実行
+    $deleteResult = aws s3 rm "s3://$BucketName" --recursive 2>&1
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "削除完了: $objectCount 件" -ForegroundColor Green
     } else {
         Write-Host "警告: 一部のオブジェクトの削除に失敗しました。" -ForegroundColor Yellow
+        Write-Host $deleteResult -ForegroundColor Yellow
     }
-} else {
-    Write-Host "削除対象のオブジェクトはありません。" -ForegroundColor Green
 }
+
+# 1. PDFバケット
+Remove-S3Objects -BucketName $pdfsBucket
 
 # 2. Exportバケット
-Write-Host ""
-Write-Host "バケット: $exportsBucket" -ForegroundColor Yellow
-Write-Host "オブジェクトをリスト中..." -ForegroundColor Cyan
-
-$objects = aws s3api list-objects-v2 `
-    --bucket $exportsBucket `
-    --query "Contents[].Key" `
-    --output json | ConvertFrom-Json
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "エラー: バケット $exportsBucket のリストに失敗しました。" -ForegroundColor Red
-    exit 1
-}
-
-if ($objects) {
-    $objectCount = $objects.Count
-    Write-Host "削除対象: $objectCount 件" -ForegroundColor Yellow
-    Write-Host "オブジェクトを削除中..." -ForegroundColor Cyan
-    
-    aws s3 rm "s3://$exportsBucket" --recursive --output text
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "削除完了: $objectCount 件" -ForegroundColor Green
-    } else {
-        Write-Host "警告: 一部のオブジェクトの削除に失敗しました。" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "削除対象のオブジェクトはありません。" -ForegroundColor Green
-}
+Remove-S3Objects -BucketName $exportsBucket
 
 # ========================================
 # 完了
