@@ -46,23 +46,19 @@
 
 - UTF-8 BOMなしで保存（PowerShellガイドライン準拠）
 
+### 4. 問題発生
+
+- fsWriteツールで作成したファイルが実行時に文字化け
+- PowerShell 5.1のエンコーディング問題
+- PowerShell 7がインストールされていない環境
+
 ## 成果物
 
-- `scripts/delete-all-data.ps1`: 修正版スクリプト
-
-## テスト
-
-実行コマンド:
-```powershell
-# ドライラン（確認のみ）
-.\scripts\delete-all-data.ps1 -Environment prod
-
-# 強制実行
-.\scripts\delete-all-data.ps1 -Environment prod -Force
-```
+- `scripts/delete-all-data.ps1`: 修正版スクリプト（文字化け問題あり）
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-084844-fix-delete-script.md`: 作業記録
 
 ## 申し送り
 
-- 本番環境での実行前に必ずバックアップを取得すること
-- 大量データ（1000件以上）の場合は時間がかかる可能性あり
-- DynamoDB BatchWriteItemは最大25件/バッチの制限あり
+- PowerShell 7のインストールを推奨（UTF-8 BOMなしのネイティブサポート）
+- または、既存の動作しているスクリプト（localstack-setup.ps1）と同じ方法でエンコーディング処理を実装
+- 現状のスクリプトは文字化けのため動作しない

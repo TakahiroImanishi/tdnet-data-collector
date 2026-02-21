@@ -27,7 +27,7 @@
 - [ ] 作業記録に成果物・申し送り記入
 - [ ] Git commit & push（形式: `[feat/fix/docs/refactor/test/chore/improve] 変更内容`）
 - [ ] 問題発生時: 改善記録作成（`.kiro/specs/tdnet-data-collector/improvements/task-[番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md`）
-- [ ] ファイルエンコーディング確認: すべてのファイルがUTF-8 BOMなしであることを確認
+- [ ] ファイルエンコーディング確認: すべてのファイルがUTF-8 BOMなしであることを確認（`file-encoding-rules.md`参照）
 
 ## サブエージェント活用（Autopilotのみ）
 
