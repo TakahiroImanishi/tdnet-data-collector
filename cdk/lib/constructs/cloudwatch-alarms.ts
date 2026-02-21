@@ -208,7 +208,7 @@ export class CloudWatchAlarms extends Construct {
       alarmName: `tdnet-no-data-collected-${props.environment}`,
       alarmDescription: '24時間データ収集がありません',
       metric: new cloudwatch.Metric({
-        namespace: 'TDnet/Collector',
+        namespace: 'TDnet',
         metricName: 'DisclosuresCollected',
         statistic: 'Sum',
         period: cdk.Duration.hours(24),
@@ -230,7 +230,7 @@ export class CloudWatchAlarms extends Construct {
       alarmName: `tdnet-collection-failures-${props.environment}`,
       alarmDescription: '24時間で10件以上の収集失敗が発生しました',
       metric: new cloudwatch.Metric({
-        namespace: 'TDnet/Collector',
+        namespace: 'TDnet',
         metricName: 'DisclosuresFailed',
         statistic: 'Sum',
         period: cdk.Duration.hours(24),
@@ -322,7 +322,7 @@ export class CloudWatchAlarms extends Construct {
    */
   private createCollectionSuccessRateMetric(environment: string): cloudwatch.IMetric {
     const collected = new cloudwatch.Metric({
-      namespace: 'TDnet/Collector',
+      namespace: 'TDnet',
       metricName: 'DisclosuresCollected',
       statistic: 'Sum',
       period: cdk.Duration.hours(1),
@@ -332,7 +332,7 @@ export class CloudWatchAlarms extends Construct {
     });
 
     const failed = new cloudwatch.Metric({
-      namespace: 'TDnet/Collector',
+      namespace: 'TDnet',
       metricName: 'DisclosuresFailed',
       statistic: 'Sum',
       period: cdk.Duration.hours(1),

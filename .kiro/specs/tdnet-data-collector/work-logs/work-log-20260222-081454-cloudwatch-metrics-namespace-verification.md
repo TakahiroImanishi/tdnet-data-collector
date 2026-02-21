@@ -123,3 +123,57 @@ CDKのIAM Policy条件とメトリクス送信コードの名前空間が一致�
 - 各Lambda関数は`TDnet`名前空間にのみメトリクスを送信可能
 - CloudWatchダッシュボードでメトリクスを統一的に表示できる
 - アラーム数は15個（Lambda関数ごとに4個 + カスタムメトリクス3個）
+
+
+## 追加修正（2026-02-22 08:26:00）
+
+### 6. CloudWatchアラームとダッシュボードの名前空間修正
+
+#### 6.1 問題点
+- `cdk/lib/constructs/cloudwatch-alarms.ts`と`cloudwatch-dashboard.ts`で`TDnet/Collector`名前空間を使用
+- 実装コードは`TDnet`を使用しているため、不一致が発生
+
+#### 6.2 修正箇所
+
+**cloudwatch-alarms.ts**:
+- `NoDataCollectedAlarm`: `TDnet/Collector` → `TDnet`
+- `CollectionFailureAlarm`: `TDnet/Collector` → `TDnet`
+- `createCollectionSuccessRateMetric`: `TDnet/Collector` → `TDnet`（2箇所）
+
+**cloudwatch-dashboard.ts**:
+- `addBusinessMetricsWidgets`メソッド内の3つのウィジェット:
+  - Disclosures Collected (Daily): `TDnet/Collector` → `TDnet`
+  - Disclosures Failed: `TDnet/Collector` → `TDnet`
+  - Collection Success Rate: `TDnet/Collector` → `TDnet`（2箇所）
+
+**cloudwatch-integration.test.ts**:
+- カスタムメトリクスアラームのテスト: `TDnet/Collector` → `TDnet`（3箇所）
+
+#### 6.3 テスト結果
+```
+✓ すべてのCloudWatch統合テストが成功（15/15 passed）
+```
+
+### 7. 最終成果物
+
+#### 修正ファイル（追加）
+3. `cdk/lib/constructs/cloudwatch-alarms.ts`: 名前空間を`TDnet`に統一（4箇所修正）
+4. `cdk/lib/constructs/cloudwatch-dashboard.ts`: 名前空間を`TDnet`に統一（5箇所修正）
+5. `cdk/__tests__/cloudwatch-integration.test.ts`: テスト期待値を`TDnet`に修正（追加3箇所）
+
+#### 検証結果（最終）
+- ✅ すべてのCloudWatchリソース（IAM Policy、アラーム、ダッシュボード）で名前空間が`TDnet`に統一
+- ✅ 実装コード（cloudwatch-metrics.ts）との完全な一致を確認
+- ✅ すべてのCDKテストが成功（15/15 passed）
+
+### 8. 最終申し送り事項
+
+#### 完了事項
+- タスク31.9.2「CloudWatchメトリクス名前空間の統一性検証」完了
+- タスク31.9.3「CloudWatchアラームの名前空間検証」完了
+- タスク31.9.4「CloudWatchダッシュボードの名前空間検証」完了
+- すべてのCloudWatchリソースで名前空間が`TDnet`に統一されました
+
+#### 次のステップ
+- Git commit & push
+- tasks-phase1-4.mdのタスク31.9.2, 31.9.3, 31.9.4を完了としてマーク

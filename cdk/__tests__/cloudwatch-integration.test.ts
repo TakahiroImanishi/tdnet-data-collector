@@ -202,14 +202,14 @@ describe('CloudWatch Integration Tests', () => {
       template.hasResourceProperties('AWS::CloudWatch::Alarm', {
         AlarmName: 'tdnet-no-data-collected-test',
         MetricName: 'DisclosuresCollected',
-        Namespace: 'TDnet/Collector',
+        Namespace: 'TDnet',
       });
 
       // CollectionFailureアラーム
       template.hasResourceProperties('AWS::CloudWatch::Alarm', {
         AlarmName: 'tdnet-collection-failures-test',
         MetricName: 'DisclosuresFailed',
-        Namespace: 'TDnet/Collector',
+        Namespace: 'TDnet',
       });
     });
 
@@ -441,15 +441,15 @@ describe('CloudWatch Integration Tests', () => {
 
       const template = Template.fromStack(stack);
 
-      // カスタムメトリクスアラームがTDnet/Collector名前空間を使用していることを確認
+      // カスタムメトリクスアラームがTDnet名前空間を使用していることを確認
       template.hasResourceProperties('AWS::CloudWatch::Alarm', {
         MetricName: 'DisclosuresCollected',
-        Namespace: 'TDnet/Collector',
+        Namespace: 'TDnet',
       });
 
       template.hasResourceProperties('AWS::CloudWatch::Alarm', {
         MetricName: 'DisclosuresFailed',
-        Namespace: 'TDnet/Collector',
+        Namespace: 'TDnet',
       });
 
       // Lambda関数のメトリクスはAWS/Lambda名前空間を使用

@@ -317,7 +317,7 @@ export class CloudWatchDashboard extends Construct {
         title: 'Disclosures Collected (Daily)',
         left: [
           new cloudwatch.Metric({
-            namespace: 'TDnet/Collector',
+            namespace: 'TDnet',
             metricName: 'DisclosuresCollected',
             dimensionsMap: { Environment: environment },
             statistic: 'Sum',
@@ -334,7 +334,7 @@ export class CloudWatchDashboard extends Construct {
         title: 'Disclosures Failed',
         left: [
           new cloudwatch.Metric({
-            namespace: 'TDnet/Collector',
+            namespace: 'TDnet',
             metricName: 'DisclosuresFailed',
             dimensionsMap: { Environment: environment },
             statistic: 'Sum',
@@ -354,13 +354,13 @@ export class CloudWatchDashboard extends Construct {
             expression: '(collected / (collected + failed)) * 100',
             usingMetrics: {
               collected: new cloudwatch.Metric({
-                namespace: 'TDnet/Collector',
+                namespace: 'TDnet',
                 metricName: 'DisclosuresCollected',
                 dimensionsMap: { Environment: environment },
                 statistic: 'Sum',
               }),
               failed: new cloudwatch.Metric({
-                namespace: 'TDnet/Collector',
+                namespace: 'TDnet',
                 metricName: 'DisclosuresFailed',
                 dimensionsMap: { Environment: environment },
                 statistic: 'Sum',
