@@ -38,7 +38,7 @@ function Show-TestSkipped {
 
 # Test 1: Script file exists
 Write-Host "[Test 1] Script file existence check" -ForegroundColor Cyan
-$scriptPath = Join-Path $PSScriptRoot ".." "Get-TdnetApiKey.ps1"
+$scriptPath = Join-Path (Join-Path $PSScriptRoot "..") "Get-TdnetApiKey.ps1"
 if (Test-Path $scriptPath) {
     Show-TestResult -TestName "Script file exists" -Passed $true
 } else {

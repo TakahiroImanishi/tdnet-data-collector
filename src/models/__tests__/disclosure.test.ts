@@ -110,17 +110,17 @@ describe('validateDisclosure', () => {
       expect(() => validateDisclosure(invalid3)).toThrow(ValidationError);
     });
 
-    it('file_sizeが10MBを超える場合はValidationErrorをスロー', () => {
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    it('file_sizeが100MBを超える場合はValidationErrorをスロー', () => {
+      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
       const invalid = { ...validDisclosure, file_size: MAX_FILE_SIZE + 1 };
       expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
-      expect(() => validateDisclosure(invalid)).toThrow(/File size exceeds maximum allowed size/);
+      expect(() => validateDisclosure(invalid)).toThrow(/Invalid file_size range/);
     });
 
     it('file_sizeが負の値の場合はValidationErrorをスロー', () => {
       const invalid = { ...validDisclosure, file_size: -1 };
       expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
-      expect(() => validateDisclosure(invalid)).toThrow(/File size must be non-negative/);
+      expect(() => validateDisclosure(invalid)).toThrow(/Invalid file_size range/);
     });
 
     it('file_sizeが10MB以下の場合は成功', () => {

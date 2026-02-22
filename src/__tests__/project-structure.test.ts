@@ -49,9 +49,12 @@ describe('プロジェクト構造の検証', () => {
       'cdk.json',
       'README.md',
       'LICENSE',
-      'cdk/bin/tdnet-data-collector.ts',
-      'cdk/lib/tdnet-data-collector-stack.ts',
-      '.kiro/specs/tdnet-data-collector/tasks.md',
+      'cdk/bin/tdnet-data-collector-split.ts',
+      'cdk/lib/stacks/foundation-stack.ts',
+      'cdk/lib/stacks/compute-stack.ts',
+      'cdk/lib/stacks/api-stack.ts',
+      'cdk/lib/stacks/monitoring-stack.ts',
+      '.kiro/specs/tdnet-data-collector/tasks/tasks-phase1-4.md',
     ];
 
     test.each(requiredFiles)('ファイル "%s" が存在すること', (file) => {
@@ -200,8 +203,8 @@ describe('プロジェクト構造の検証', () => {
     });
 
     test('rootsにsrcとcdkが含まれていること', () => {
-      expect(jestConfig.roots).toContain('<rootDir>/src');
-      expect(jestConfig.roots).toContain('<rootDir>/cdk');
+      expect(jestConfig.roots).toContain('<rootDir>/../src');
+      expect(jestConfig.roots).toContain('<rootDir>/../cdk');
     });
 
     test('coverageThresholdが適切に設定されていること', () => {
@@ -270,7 +273,7 @@ describe('プロジェクト構造の検証', () => {
     test('appエントリーポイントが設定されていること', () => {
       expect(cdkConfig.app).toBeDefined();
       expect(cdkConfig.app).toContain('ts-node');
-      expect(cdkConfig.app).toContain('cdk/bin/tdnet-data-collector.ts');
+      expect(cdkConfig.app).toContain('cdk/bin/tdnet-data-collector');
     });
 
     test('contextが設定されていること', () => {
@@ -304,7 +307,7 @@ describe('プロジェクト構造の検証', () => {
 
   describe('CDKファイルの検証', () => {
     test('CDK binファイルが有効なTypeScriptファイルであること', () => {
-      const binFilePath = path.join(rootDir, 'cdk/bin/tdnet-data-collector.ts');
+      const binFilePath = path.join(rootDir, 'cdk/bin/tdnet-data-collector-split.ts');
       const content = fs.readFileSync(binFilePath, 'utf-8');
 
       // 基本的な構文チェック
@@ -314,7 +317,7 @@ describe('プロジェクト構造の検証', () => {
     });
 
     test('CDK stackファイルが有効なTypeScriptファイルであること', () => {
-      const stackFilePath = path.join(rootDir, 'cdk/lib/tdnet-data-collector-stack.ts');
+      const stackFilePath = path.join(rootDir, 'cdk/lib/stacks/foundation-stack.ts');
       const content = fs.readFileSync(stackFilePath, 'utf-8');
 
       // 基本的な構文チェック

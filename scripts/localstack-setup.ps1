@@ -108,6 +108,37 @@ try {
 # Table 2: tdnet_executions
 Write-Info "Creating table: tdnet_executions"
 try {
+    # Delete existing table if it exists
+    Write-Info "Checking if table 'tdnet_executions' exists..."
+    $tableExists = $false
+    try {
+        aws --endpoint-url=$ENDPOINT `
+            --region=$REGION `
+            dynamodb describe-table `
+            --table-name tdnet_executions `
+            --no-cli-pager `
+            2>&1 | Out-Null
+        
+        if ($LASTEXITCODE -eq 0) {
+            $tableExists = $true
+            Write-Warning-Custom "Table 'tdnet_executions' already exists. Deleting..."
+            aws --endpoint-url=$ENDPOINT `
+                --region=$REGION `
+                dynamodb delete-table `
+                --table-name tdnet_executions `
+                --no-cli-pager `
+                2>&1 | Out-Null
+            
+            Write-Info "Waiting for table deletion..."
+            Start-Sleep -Seconds 3
+            Write-Success "Table 'tdnet_executions' deleted"
+        }
+    } catch {
+        # Table doesn't exist, continue
+    }
+    
+    # Create table
+    Write-Info "Creating table 'tdnet_executions' with GSI..."
     aws --endpoint-url=$ENDPOINT `
         --region=$REGION `
         dynamodb create-table `
@@ -125,17 +156,48 @@ try {
         2>&1 | Out-Null
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Success "Table 'tdnet_executions' created successfully"
+        Write-Success "Table 'tdnet_executions' created successfully with StartedAtIndex GSI"
     } else {
-        Write-Warning-Custom "Table 'tdnet_executions' may already exist or creation failed"
+        Write-Error-Custom "Failed to create table 'tdnet_executions'"
     }
 } catch {
-    Write-Warning-Custom "Failed to create table 'tdnet_executions': $_"
+    Write-Error-Custom "Failed to create table 'tdnet_executions': $_"
 }
 
 # Table 3: tdnet-export-status
 Write-Info "Creating table: tdnet-export-status"
 try {
+    # Delete existing table if it exists
+    Write-Info "Checking if table 'tdnet-export-status' exists..."
+    $tableExists = $false
+    try {
+        aws --endpoint-url=$ENDPOINT `
+            --region=$REGION `
+            dynamodb describe-table `
+            --table-name tdnet-export-status `
+            --no-cli-pager `
+            2>&1 | Out-Null
+        
+        if ($LASTEXITCODE -eq 0) {
+            $tableExists = $true
+            Write-Warning-Custom "Table 'tdnet-export-status' already exists. Deleting..."
+            aws --endpoint-url=$ENDPOINT `
+                --region=$REGION `
+                dynamodb delete-table `
+                --table-name tdnet-export-status `
+                --no-cli-pager `
+                2>&1 | Out-Null
+            
+            Write-Info "Waiting for table deletion..."
+            Start-Sleep -Seconds 3
+            Write-Success "Table 'tdnet-export-status' deleted"
+        }
+    } catch {
+        # Table doesn't exist, continue
+    }
+    
+    # Create table
+    Write-Info "Creating table 'tdnet-export-status'..."
     aws --endpoint-url=$ENDPOINT `
         --region=$REGION `
         dynamodb create-table `
@@ -152,10 +214,10 @@ try {
     if ($LASTEXITCODE -eq 0) {
         Write-Success "Table 'tdnet-export-status' created successfully"
     } else {
-        Write-Warning-Custom "Table 'tdnet-export-status' may already exist or creation failed"
+        Write-Error-Custom "Failed to create table 'tdnet-export-status'"
     }
 } catch {
-    Write-Warning-Custom "Failed to create table 'tdnet-export-status': $_"
+    Write-Error-Custom "Failed to create table 'tdnet-export-status': $_"
 }
 Write-Info "Waiting for tables to be active..."
 Start-Sleep -Seconds 2

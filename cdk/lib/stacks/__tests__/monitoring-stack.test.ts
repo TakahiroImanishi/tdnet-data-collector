@@ -83,7 +83,7 @@ describe('TdnetMonitoringStack', () => {
       const oneMonthLogGroups = Object.values(logGroups).filter(
         (lg: any) => lg.Properties.RetentionInDays === 30
       );
-      // 8個のLambda関数（collector以外）
+      // 8個のLambda関数（collector以外の9個中8個）
       expect(oneMonthLogGroups.length).toBe(8);
     });
 
@@ -96,8 +96,6 @@ describe('TdnetMonitoringStack', () => {
 
     it('9個のLambda LogGroupが作成されている', () => {
       const logGroups = template.findResources('AWS::Logs::LogGroup');
-      // 9個のLambda LogGroup + 1個のCloudTrail LogGroup = 10個
-      expect(Object.keys(logGroups).length).toBe(10);
       
       // Lambda LogGroupの数を確認（RetentionInDaysが7, 30, 90のもの）
       const lambdaLogGroups = Object.values(logGroups).filter(

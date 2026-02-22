@@ -88,7 +88,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -133,7 +133,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -286,6 +286,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       // Act
@@ -309,6 +320,17 @@ describe('Lambda PDF Download Handler', () => {
         },
         headers: {
           'x-api-key': 'test-api-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 
@@ -334,6 +356,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       // Act
@@ -356,6 +389,17 @@ describe('Lambda PDF Download Handler', () => {
         },
         headers: {
           'x-api-key': 'test-api-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 
@@ -381,6 +425,17 @@ describe('Lambda PDF Download Handler', () => {
         },
         headers: {
           'x-api-key': 'test-api-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 
@@ -412,6 +467,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -419,7 +485,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -449,6 +515,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -456,7 +533,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -487,6 +564,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       // Act
@@ -513,6 +601,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       const throughputError: any = new Error('ProvisionedThroughputExceededException');
@@ -528,7 +627,7 @@ describe('Lambda PDF Download Handler', () => {
             disclosure_id: { S: '20240115_7203_001' },
             company_code: { S: '7203' },
             company_name: { S: 'トヨタ自動車株式会社' },
-            pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+            pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
           },
         });
 
@@ -550,6 +649,17 @@ describe('Lambda PDF Download Handler', () => {
         },
         headers: {
           'x-api-key': 'test-api-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 
@@ -575,6 +685,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -582,7 +703,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -609,6 +730,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -616,7 +748,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -644,6 +776,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'X-Api-Key': 'test-api-key', // 大文字
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -651,7 +794,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -674,6 +817,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -681,7 +835,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -703,6 +857,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -710,7 +875,7 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
+          pdf_s3_key: { S: 'pdfs/2024/01/20240115_7203_001.pdf' },
         },
       });
 
@@ -732,6 +897,17 @@ describe('Lambda PDF Download Handler', () => {
         pathParameters: null, // null
         headers: {
           'x-api-key': 'test-api-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 

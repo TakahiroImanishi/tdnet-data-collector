@@ -127,3 +127,26 @@ Failed: 2
 3. **次のタスク:**
    - タスク2.5: 本番環境でのAPIキー登録とテスト
    - タスク2.6: ドキュメント更新
+
+
+## Git Commit
+
+```
+[test] APIキースクリプトの統合テスト実装
+
+- scripts/__tests__/api-key-integration.test.ps1を作成
+- 8つのテストケース（構文チェック、エンコーディング、API設定）
+- manual-data-collection.ps1とfetch-data-range.ps1の検証
+- Secrets Manager統合コードの確認
+- 6/8テスト成功（AWS接続依存テストは手動実行）
+- タスク2.4完了
+```
+
+Commit: 9975c18
+Push: 成功
+
+## タスク完了
+
+タスク2.4「修正スクリプトのテスト」を完了しました。
+
+**完了日時**: 2026-02-22 10:20:41

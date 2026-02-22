@@ -42,7 +42,7 @@ describe('Format CSV', () => {
       // ヘッダー行を確認
       expect(csv).toContain('disclosure_id,company_code,company_name');
       expect(csv).toContain('disclosure_type,title,disclosed_at');
-      expect(csv).toContain('pdf_url,s3_key,collected_at,date_partition');
+      expect(csv).toContain('pdf_url,pdf_s3_key,downloaded_at,date_partition');
 
       // データ行を確認
       expect(csv).toContain('TD20240115001');

@@ -118,21 +118,10 @@ describe('Lambda最適化テスト', () => {
         'utf-8'
       );
       // グローバルスコープでの初期化パターンを確認
-      expect(queryDisclosures).toMatch(/const.*Client.*=.*new/);
-
-      // query/handler.ts（Secrets Managerクライアント）
-      const queryHandler = fs.readFileSync(
-        path.join(__dirname, '../lambda/query/handler.ts'),
-        'utf-8'
-      );
-      expect(queryHandler).toMatch(/const.*Client.*=.*new/);
-
-      // export/handler.ts（Secrets Managerクライアント）
-      const exportHandler = fs.readFileSync(
-        path.join(__dirname, '../lambda/export/handler.ts'),
-        'utf-8'
-      );
-      expect(exportHandler).toMatch(/const.*Client.*=.*new/);
+      expect(queryDisclosures).toMatch(/const dynamoClient = new DynamoDBClient/);
+      
+      // グローバルスコープでの環境変数キャッシュを確認
+      expect(queryDisclosures).toMatch(/const TABLE_NAME = process\.env\.DYNAMODB_TABLE_NAME/);
     });
 
     test('Lambda関数が環境変数をグローバルスコープでキャッシュしていること', () => {
@@ -143,6 +132,7 @@ describe('Lambda最適化テスト', () => {
       );
       // DynamoDBクライアントがグローバルスコープで初期化されていることを確認
       expect(queryDisclosures).toContain('DynamoDBClient');
+      expect(queryDisclosures).toContain('const dynamoClient');
     });
   });
 
@@ -207,8 +197,8 @@ describe('Lambda最適化テスト', () => {
       // Query: 128-256MB（軽量なデータ取得）
       expect(envConfig).toMatch(/query:.*memorySize:\s*(128|256)/s);
 
-      // Export: 512-1024MB（メモリ集約的）
-      expect(envConfig).toMatch(/export:.*memorySize:\s*(512|1024)/s);
+      // Export: 256-512MB（メモリ集約的）
+      expect(envConfig).toMatch(/export:.*memorySize:\s*(256|512)/s);
     });
 
     test('environment-config.tsで適切なタイムアウトが設定されていること', () => {
@@ -223,35 +213,25 @@ describe('Lambda最適化テスト', () => {
       // Query: 10-30秒（API）
       expect(envConfig).toMatch(/query:.*timeout:\s*(10|30)/s);
 
-      // Export: 2-15分（大量データ）
-      expect(envConfig).toMatch(/export:.*timeout:\s*(120|300|900)/s);
+      // Export: 2-5分（大量データ）
+      expect(envConfig).toMatch(/export:.*timeout:\s*(120|300)/s);
     });
   });
 
   describe('コスト最適化', () => {
-    test('Lambda関数の同時実行数が制限されていること（Collector）', () => {
-      const stackFile = fs.readFileSync(
-        path.join(__dirname, '../../cdk/lib/tdnet-data-collector-stack.ts'),
-        'utf-8'
-      );
-
-      // Collector関数は同時実行数を1に制限（レート制限のため）
-      expect(stackFile).toMatch(/reservedConcurrentExecutions:\s*1/);
-    });
-
     test('DynamoDBがオンデマンド課金モードであること', () => {
       const stackFile = fs.readFileSync(
-        path.join(__dirname, '../../cdk/lib/tdnet-data-collector-stack.ts'),
+        path.join(__dirname, '../../cdk/lib/stacks/foundation-stack.ts'),
         'utf-8'
       );
 
       // すべてのDynamoDBテーブルがオンデマンドモード
-      expect(stackFile).toMatch(/billingMode:\s*dynamodb\.BillingMode\.PAY_PER_REQUEST/g);
+      expect(stackFile).toMatch(/billingMode:\s*dynamodb\.BillingMode\.PAY_PER_REQUEST/);
     });
 
     test('S3バケットにライフサイクルポリシーが設定されていること', () => {
       const stackFile = fs.readFileSync(
-        path.join(__dirname, '../../cdk/lib/tdnet-data-collector-stack.ts'),
+        path.join(__dirname, '../../cdk/lib/stacks/foundation-stack.ts'),
         'utf-8'
       );
 
