@@ -1243,7 +1243,7 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
 
 ---
 
-### 37. CDK Nag統合（高優先度）
+### 37. CDK Nag統合（高優先度）✅
 
 **問題**: CDK Nagがインストール済みだが、アプリケーションレベルで適用されていない
 
@@ -1252,22 +1252,27 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
 **影響**: デプロイ前のセキュリティ検証が自動化されていない
 
 **対応内容**:
-- [ ] `cdk/bin/tdnet-data-collector-split.ts`に`AwsSolutionsChecks.check(app)`を追加
-- [ ] デプロイ前にセキュリティチェックを自動化
+- [x] `cdk/bin/tdnet-data-collector-split.ts`に`Aspects.of(app).add(new AwsSolutionsChecks())`を追加
+- [x] デプロイ前にセキュリティチェックを自動化
+- [x] 未使用変数エラー修正（cloudwatch-alarms.ts）
 
-**実装例**:
+**実装内容**:
 ```typescript
+import { Aspects } from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 
 const app = new cdk.App();
 // ... スタック作成 ...
-AwsSolutionsChecks.check(app);
+Aspects.of(app).add(new AwsSolutionsChecks());
 app.synth();
 ```
 
-**担当**: 未定
+**担当**: Kiro AI Assistant
 
-**期限**: 1週間以内
+**完了日時**: 2026-02-22 12:30
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122736-task37-cdk-nag.md`
+
 
 **優先度**: 🔴 高
 
