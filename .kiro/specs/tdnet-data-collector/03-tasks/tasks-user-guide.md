@@ -31,18 +31,23 @@ TDnet Data Collectorの機能と使い方を説明するシンプルなマニュ
 - `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194849-user-manual-structure.md`
 
 ### タスク2: ユーザマニュアル作成
-- [ ] システム概要と機能説明
-- [ ] Webダッシュボードの使い方
-- [ ] API利用方法（エンドポイント、認証、リクエスト例）
-- [ ] よくあるエラーと対処法
+- [x] システム概要と機能説明
+- [x] Webダッシュボードの使い方
+- [x] API利用方法（エンドポイント、認証、リクエスト例）
+- [x] よくあるエラーと対処法
+
+**完了日時**: 2026-02-22 20:29:19
 
 **成果物**:
 - `docs/USER_MANUAL.md`
 
+**作業記録**:
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-202919-user-manual-creation.md`
+
 ## 完了条件
 
-- [ ] マニュアルが作成され、機能と使い方が説明されている
-- [ ] README.mdにマニュアルへのリンクが追加
+- [x] マニュアルが作成され、機能と使い方が説明されている
+- [x] README.mdにマニュアルへのリンクが追加
 
 ## 関連ドキュメント
 

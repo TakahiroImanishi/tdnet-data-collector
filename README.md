@@ -1136,6 +1136,10 @@ aws logs filter-log-events \
 
 ## ドキュメント
 
+### ユーザ向けドキュメント
+
+- [ユーザマニュアル](docs/USER_MANUAL.md) - システムの使い方、API利用方法、トラブルシューティング
+
 ### 仕様書
 
 - [要件定義書](.kiro/specs/tdnet-data-collector/docs/01-requirements/requirements.md) - システム要件と機能仕様
