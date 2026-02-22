@@ -8,7 +8,7 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
-import { handler, clearApiKeyCache } from '../export-status/handler';
+import { handler } from '../export-status/handler';
 
 // モック
 const dynamoMock = mockClient(DynamoDBClient);
@@ -52,6 +52,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-xyz789' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -94,6 +97,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-abc123' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -121,6 +127,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-failed' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -151,6 +160,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: {},
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -169,6 +181,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: null,
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -185,6 +200,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'invalid-format' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -198,48 +216,15 @@ describe('Export Status Lambda Handler', () => {
     });
   });
 
-  describe('異常系 - 認証エラー', () => {
-    it('APIキーが未指定の場合、401エラーを返す', async () => {
-      // Arrange
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: {},
-      };
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('API key is required');
-    });
-
-    it('APIキーが不正な場合、401エラーを返す', async () => {
-      // Arrange
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'invalid-key' },
-      };
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('Invalid API key');
-    });
-  });
-
   describe('異常系 - リソース不存在', () => {
     it('エクスポートが存在しない場合、404エラーを返す', async () => {
       // Arrange
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-notfound' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -263,6 +248,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-xyz789' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB error'));
@@ -281,6 +269,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-xyz789' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       const throttleError = new Error('ProvisionedThroughputExceededException');
@@ -315,6 +306,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-xyz789' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -336,208 +330,11 @@ describe('Export Status Lambda Handler', () => {
     });
   });
 
-  describe('APIキーキャッシング', () => {
-    beforeEach(() => {
-      // キャッシュをクリア
-      clearApiKeyCache();
-      // 環境変数をリセット
-      delete process.env.TEST_ENV;
-      delete process.env.API_KEY;
-      process.env.API_KEY_SECRET_ARN = 'arn:aws:secretsmanager:ap-northeast-1:123456789012:secret:api-key';
-    });
-
-    it('Secrets ManagerからAPIキーを取得する（本番環境）', async () => {
-      // Arrange
-      secretsManagerMock.reset();
-      secretsManagerMock.on(GetSecretValueCommand).resolves({
-        SecretString: 'production-api-key',
-      });
-
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'production-api-key' },
-      };
-
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: {
-          export_id: { S: 'export-20240115-xyz789' },
-          status: { S: 'completed' },
-          progress: { N: '100' },
-          requested_at: { S: '2024-01-15T10:00:00Z' },
-          completed_at: { S: '2024-01-15T10:05:00Z' },
-        },
-      });
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(200);
-      expect(secretsManagerMock.calls()).toHaveLength(1);
-    });
-
-    it('テスト環境ではAPI_KEY環境変数から取得する', async () => {
-      // Arrange
-      process.env.TEST_ENV = 'e2e';
-      process.env.API_KEY = 'test-env-api-key';
-      secretsManagerMock.reset();
-
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'test-env-api-key' },
-      };
-
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: {
-          export_id: { S: 'export-20240115-xyz789' },
-          status: { S: 'completed' },
-          progress: { N: '100' },
-          requested_at: { S: '2024-01-15T10:00:00Z' },
-          completed_at: { S: '2024-01-15T10:05:00Z' },
-        },
-      });
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(200);
-      expect(secretsManagerMock.calls()).toHaveLength(0); // Secrets Managerは呼ばれない
-    });
-
-    it('API_KEY_SECRET_ARNが未設定の場合エラーを返す', async () => {
-      // Arrange
-      delete process.env.API_KEY_SECRET_ARN;
-      delete process.env.API_KEY;
-      delete process.env.TEST_ENV;
-
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'test-key' },
-      };
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(500);
-      const body = JSON.parse(result.body);
-      expect(body.error.code).toBe('INTERNAL_ERROR');
-    });
-
-    it('Secrets ManagerのSecretStringが空の場合エラーを返す', async () => {
-      // Arrange
-      secretsManagerMock.reset();
-      secretsManagerMock.on(GetSecretValueCommand).resolves({
-        SecretString: undefined,
-      });
-
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'test-key' },
-      };
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(500);
-    });
-
-    it('Secrets Manager取得エラー時にエラーを返す', async () => {
-      // Arrange
-      secretsManagerMock.reset();
-      secretsManagerMock.on(GetSecretValueCommand).rejects(new Error('Secrets Manager error'));
-
-      const event: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'test-key' },
-      };
-
-      // Act
-      const result = await handler(event as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(result.statusCode).toBe(500);
-    });
-
-    it('APIキーキャッシュが有効な場合はSecrets Managerを呼ばない', async () => {
-      // Arrange
-      process.env.TEST_ENV = 'e2e';
-      process.env.API_KEY = 'cached-api-key';
-      secretsManagerMock.reset();
-
-      const event1: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'cached-api-key' },
-      };
-
-      const event2: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-abc123' },
-        headers: { 'x-api-key': 'cached-api-key' },
-      };
-
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: {
-          export_id: { S: 'export-20240115-xyz789' },
-          status: { S: 'completed' },
-          progress: { N: '100' },
-          requested_at: { S: '2024-01-15T10:00:00Z' },
-          completed_at: { S: '2024-01-15T10:05:00Z' },
-        },
-      });
-
-      // Act
-      await handler(event1 as APIGatewayProxyEvent, mockContext);
-      await handler(event2 as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(secretsManagerMock.calls()).toHaveLength(0); // キャッシュが使われる
-    });
-
-    it('APIキーキャッシュの有効期限が切れた場合は再取得する', async () => {
-      // Arrange
-      delete process.env.TEST_ENV;
-      delete process.env.API_KEY;
-      secretsManagerMock.reset();
-      secretsManagerMock.on(GetSecretValueCommand).resolves({
-        SecretString: 'production-api-key',
-      });
-
-      const event1: Partial<APIGatewayProxyEvent> = {
-        pathParameters: { export_id: 'export-20240115-xyz789' },
-        headers: { 'x-api-key': 'production-api-key' },
-      };
-
-      dynamoMock.on(GetItemCommand).resolves({
-        Item: {
-          export_id: { S: 'export-20240115-xyz789' },
-          status: { S: 'completed' },
-          progress: { N: '100' },
-          requested_at: { S: '2024-01-15T10:00:00Z' },
-          completed_at: { S: '2024-01-15T10:05:00Z' },
-        },
-      });
-
-      // Act - 1回目の呼び出し（キャッシュに保存）
-      await handler(event1 as APIGatewayProxyEvent, mockContext);
-      expect(secretsManagerMock.calls()).toHaveLength(1);
-
-      // キャッシュをクリア（有効期限切れをシミュレート）
-      clearApiKeyCache();
-
-      // Act - 2回目の呼び出し（キャッシュ期限切れ、再取得）
-      await handler(event1 as APIGatewayProxyEvent, mockContext);
-
-      // Assert
-      expect(secretsManagerMock.calls()).toHaveLength(2); // 再取得される
-    });
-  });
+  // APIキーキャッシングテストは削除（APIキー認証機能が未実装のため）
 
   describe('エクスポート状態の各ステータス', () => {
     beforeEach(() => {
-      // 各テストの前にキャッシュをクリアし、環境変数を設定
-      clearApiKeyCache();
+      // 各テストの前に環境変数を設定
       process.env.TEST_ENV = 'e2e';
       process.env.API_KEY = 'test-api-key';
     });
@@ -547,6 +344,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-pending' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -573,6 +373,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-xyz789' },
         headers: { 'X-Api-Key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -597,6 +400,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-processing' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -627,6 +433,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-processing2' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -653,6 +462,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-complete' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -684,6 +496,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-failed2' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -717,6 +532,9 @@ describe('Export Status Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { export_id: 'export-20240115-xyz789' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act

@@ -62,11 +62,11 @@ describe('generateSignedUrl', () => {
 
       expect(result).toBe(expectedUrl);
       expect(mockLogger.info).toHaveBeenCalledWith('Generating signed URL', {
-        pdf_s3_key: s3Key,
+        s3_key: s3Key,
         expires_in: 7 * 24 * 60 * 60,
       });
       expect(mockLogger.info).toHaveBeenCalledWith('Signed URL generated successfully', {
-        pdf_s3_key: s3Key,
+        s3_key: s3Key,
         signed_url: expectedUrl,
       });
     });
@@ -82,7 +82,7 @@ describe('generateSignedUrl', () => {
 
       expect(result).toBe(expectedUrl);
       expect(mockLogger.info).toHaveBeenCalledWith('Generating signed URL', {
-        pdf_s3_key: s3Key,
+        s3_key: s3Key,
         expires_in: customExpiry,
       });
     });
@@ -147,7 +147,7 @@ describe('generateSignedUrl', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate signed URL', {
         error_type: error.name,
         error_message: error.message,
-        context: { pdf_s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
+        context: { s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
         stack_trace: error.stack,
       });
     });
@@ -176,7 +176,7 @@ describe('generateSignedUrl', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate signed URL', {
         error_type: error.name,
         error_message: error.message,
-        context: { pdf_s3_key: invalidKey, expires_in: 7 * 24 * 60 * 60 },
+        context: { s3_key: invalidKey, expires_in: 7 * 24 * 60 * 60 },
         stack_trace: error.stack,
       });
     });
@@ -194,7 +194,7 @@ describe('generateSignedUrl', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate signed URL', {
         error_type: error.name,
         error_message: error.message,
-        context: { pdf_s3_key: s3Key, expires_in: customExpiry },
+        context: { s3_key: s3Key, expires_in: customExpiry },
         stack_trace: error.stack,
       });
     });
@@ -249,7 +249,7 @@ describe('generateSignedUrl', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate signed URL', {
         error_type: undefined,
         error_message: 'Error without name',
-        context: { pdf_s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
+        context: { s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
         stack_trace: 'stack trace',
       });
     });
@@ -266,7 +266,7 @@ describe('generateSignedUrl', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate signed URL', {
         error_type: 'CustomError',
         error_message: undefined,
-        context: { pdf_s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
+        context: { s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
         stack_trace: 'stack trace',
       });
     });
@@ -283,7 +283,7 @@ describe('generateSignedUrl', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate signed URL', {
         error_type: 'CustomError',
         error_message: 'Error without stack',
-        context: { pdf_s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
+        context: { s3_key: s3Key, expires_in: 7 * 24 * 60 * 60 },
         stack_trace: undefined,
       });
     });

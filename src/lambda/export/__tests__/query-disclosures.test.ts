@@ -63,8 +63,8 @@ function toDynamoDBItem(disclosure: Disclosure): Record<string, any> {
     title: { S: disclosure.title },
     disclosed_at: { S: disclosure.disclosed_at },
     pdf_url: { S: disclosure.pdf_url },
-    pdf_s3_key: { S: disclosure.s3_key },
-    downloaded_at: { S: disclosure.collected_at },
+    pdf_s3_key: { S: disclosure.pdf_s3_key },
+    downloaded_at: { S: disclosure.downloaded_at },
     date_partition: { S: disclosure.date_partition },
   };
 }
@@ -850,8 +850,8 @@ describe('Export Lambda query-disclosures', () => {
       expect(result[0].title).toBe('');
       expect(result[0].disclosed_at).toBe('2024-01-15T10:00:00Z');
       expect(result[0].pdf_url).toBe('');
-      expect(result[0].s3_key).toBe('');
-      expect(result[0].collected_at).toBe('');
+      expect(result[0].pdf_s3_key).toBe('');
+      expect(result[0].downloaded_at).toBe('');
       expect(result[0].date_partition).toBe('');
     });
 

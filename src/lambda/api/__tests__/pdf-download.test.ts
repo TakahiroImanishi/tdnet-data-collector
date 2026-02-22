@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PDF Download Lambda Function Tests
  *
  * GET /disclosures/{disclosure_id}/pdf エンドポイントのテスト
@@ -56,6 +56,9 @@ describe('PDF Download Lambda Handler', () => {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         queryStringParameters: {},
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -63,7 +66,7 @@ describe('PDF Download Lambda Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
+          pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
         },
       });
 
@@ -87,6 +90,9 @@ describe('PDF Download Lambda Handler', () => {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         queryStringParameters: { expiration: '7200' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -94,7 +100,7 @@ describe('PDF Download Lambda Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
+          pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
         },
       });
 
@@ -116,6 +122,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: {},
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -133,6 +142,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: 'invalid-format' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -151,6 +163,9 @@ describe('PDF Download Lambda Handler', () => {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         queryStringParameters: { expiration: '30' }, // 60秒未満
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -169,6 +184,9 @@ describe('PDF Download Lambda Handler', () => {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         queryStringParameters: { expiration: '90000' }, // 86400秒超過
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -187,6 +205,9 @@ describe('PDF Download Lambda Handler', () => {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         queryStringParameters: { expiration: 'invalid' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -206,6 +227,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: {},
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -223,6 +247,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: { 'x-api-key': 'invalid-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       // Act
@@ -242,6 +269,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_9999_001' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -263,6 +293,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -289,6 +322,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -296,7 +332,7 @@ describe('PDF Download Lambda Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
+          pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
         },
       });
 
@@ -312,7 +348,7 @@ describe('PDF Download Lambda Handler', () => {
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('NOT_FOUND');
-      expect(body.error.message).toContain('PDF file not found in S3');
+      expect(body.error.message).toContain('PDF file not found');
     });
   });
 
@@ -322,6 +358,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB error'));
@@ -340,6 +379,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       const throttleError = new Error('ProvisionedThroughputExceededException');
@@ -353,7 +395,7 @@ describe('PDF Download Lambda Handler', () => {
             disclosure_id: { S: '20240115_7203_001' },
             company_code: { S: '7203' },
             company_name: { S: 'トヨタ自動車株式会社' },
-            pdf_pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
+            pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
           },
         });
 
@@ -374,6 +416,9 @@ describe('PDF Download Lambda Handler', () => {
       const event: Partial<APIGatewayProxyEvent> = {
         pathParameters: { disclosure_id: '20240115_7203_001' },
         headers: { 'x-api-key': 'test-api-key' },
+        requestContext: {
+          requestId: 'test-request-id',
+        } as any,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -381,7 +426,7 @@ describe('PDF Download Lambda Handler', () => {
           disclosure_id: { S: '20240115_7203_001' },
           company_code: { S: '7203' },
           company_name: { S: 'トヨタ自動車株式会社' },
-          pdf_pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
+          pdf_s3_key: { S: '2024/01/15/TD20240115001_7203.pdf' },
         },
       });
 
