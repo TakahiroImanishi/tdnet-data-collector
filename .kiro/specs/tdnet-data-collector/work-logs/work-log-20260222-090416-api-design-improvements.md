@@ -199,3 +199,76 @@ API設計書とOpenAPI仕様を実装に合わせて統一しました。エン�
 
 ### 次のステップ
 
+
+タスク20（Stats Lambdaのパフォーマンス改善）は、現状分析とドキュメント化を完了しました。実装は将来的にデータ量が増加した際に対応する方針です。
+
+タスク21（Health Lambdaのステータスコード修正）は、実装が既に正しかったため、ドキュメントのみ修正しました。
+
+### 6. タスクファイルの更新
+
+`tasks-improvements-20260222.md`を更新:
+- タスク2: ✅ 完了（2026-02-22）
+- タスク16: ✅ 完了（2026-02-22）
+- タスク20: 🔄 分析完了（実装は将来対応）
+- タスク21: ✅ 完了（2026-02-22）
+
+## 申し送り事項
+
+### 完了したタスク
+
+1. **タスク2: API設計ドキュメントとOpenAPI仕様の更新**
+   - API設計書とOpenAPI仕様を実装に合わせて完全に更新
+   - limitパラメータ、monthパラメータ、レスポンス形式、レート制限設定を修正
+
+2. **タスク16: API仕様の統一**
+   - API設計書とOpenAPI仕様の整合性を確保
+   - エンドポイント一覧は既に完全だった
+
+3. **タスク21: Health Lambdaのステータスコード修正**
+   - 実装は既に正しかった（healthy: 200、unhealthy: 503）
+   - ドキュメントを実装に合わせて更新
+
+### 部分完了したタスク
+
+4. **タスク20: Stats Lambdaのパフォーマンス改善**
+   - 現状分析完了: Scanを使用、大量データ時にパフォーマンス影響あり
+   - 改善案検討: 集計テーブル、CloudWatch Metrics、キャッシュ
+   - API設計書に注意事項を記載
+   - **実装は将来対応**: データ量が増加した際に集計テーブルを導入
+
+### 今後の対応が必要な項目
+
+1. **Stats Lambdaのパフォーマンス改善実装**:
+   - データ量が数万件を超えた場合、集計テーブルの導入を検討
+   - 日次バッチで統計情報を集計し、Stats Lambdaは集計テーブルからQueryで取得
+
+2. **テスト実行**:
+   - 今回はドキュメント更新のみのため、テスト実行は不要
+   - 将来的にStats Lambdaを改善する際は、パフォーマンステストを実施
+
+### Git Commit
+
+次のステップとして、以下のコミットを実行してください:
+
+```bash
+git add .kiro/specs/tdnet-data-collector/docs/01-requirements/api-design.md
+git add .kiro/specs/tdnet-data-collector/docs/01-requirements/openapi.yaml
+git add .kiro/specs/tdnet-data-collector/tasks/tasks-improvements-20260222.md
+git add .kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-090416-api-design-improvements.md
+git commit -m "[improve] API設計改善: ドキュメント更新、パフォーマンス改善分析"
+```
+
+## まとめ
+
+API設計関連の4つのタスクを実行し、3つを完了、1つを部分完了しました。
+
+**完了タスク**:
+- タスク2: API設計ドキュメントとOpenAPI仕様の更新
+- タスク16: API仕様の統一
+- タスク21: Health Lambdaのステータスコード修正（ドキュメントのみ）
+
+**部分完了タスク**:
+- タスク20: Stats Lambdaのパフォーマンス改善（分析・ドキュメント化完了、実装は将来対応）
+
+すべてのドキュメントが実装と整合性が取れた状態になりました。
+
