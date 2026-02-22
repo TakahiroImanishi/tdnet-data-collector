@@ -1278,7 +1278,7 @@ app.synth();
 
 ---
 
-### 38. OpenAPI仕様書の整合性確認（高優先度）
+### 38. OpenAPI仕様書の整合性確認（高優先度） ✅
 
 **問題**: OpenAPI仕様書の内容を確認していないため、実装との整合性が不明
 
@@ -1287,20 +1287,28 @@ app.synth();
 **影響**: API仕様書が古い場合、開発者が誤った仕様で実装する可能性がある
 
 **対応内容**:
-- [ ] OpenAPI仕様書の内容を確認
-- [ ] 実装との整合性を検証
-- [ ] 不一致がある場合は更新
+- [x] OpenAPI仕様書の内容を確認
+- [x] 実装との整合性を検証
+- [x] 不一致がある場合は更新
 
-**担当**: 未定
+**担当**: AI Assistant
 
 **期限**: 1週間以内
 
+**完了日時**: 2026-02-22 12:30
+
 **優先度**: 🔴 高
+
+**実施した修正**:
+- レスポンスフィールド名の統一（`pdf_url` → `download_url`）
+- ステータスコードの修正（POST /exportsで200 → 202）
+- 追加パラメータの記載（`format`, `skipped_count`, `message`, `progress`）
+- 400エラーの追加（GET /disclosures/{id}/pdf）
 
 **関連ファイル**:
 - `.kiro/specs/tdnet-data-collector/docs/01-requirements/openapi.yaml`
 
-**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121334-quality-check-documentation.md`
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122742-task38-openapi-check.md`
 
 ---
 
@@ -1611,7 +1619,7 @@ app.synth();
 | 35 | E2Eテストの追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
 | 36 | 16スクリプトにUTF-8エンコーディング設定追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
 | 37 | CDK Nag統合 | 🔴 高 | ⏳ 未着手 | - | - | - |
-| 38 | OpenAPI仕様書の整合性確認 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 38 | OpenAPI仕様書の整合性確認 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 12:30 | [work-log-20260222-122742-task38-openapi-check.md](../work-logs/work-log-20260222-122742-task38-openapi-check.md) |
 | 39 | トラブルシューティングガイドの拡充 | 🔴 高 | ⏳ 未着手 | - | - | - |
 | 40 | 統合テストの拡充 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
 | 41 | PowerShellテストの追加 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
