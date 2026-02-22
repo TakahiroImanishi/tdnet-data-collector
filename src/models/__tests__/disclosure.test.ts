@@ -123,14 +123,14 @@ describe('validateDisclosure', () => {
       expect(() => validateDisclosure(invalid)).toThrow(/Invalid file_size range/);
     });
 
-    it('file_sizeが10MB以下の場合は成功', () => {
+    it('file_sizeが100MB以下の場合は成功', () => {
       const valid1 = { ...validDisclosure, file_size: 0 };
       expect(() => validateDisclosure(valid1)).not.toThrow();
 
       const valid2 = { ...validDisclosure, file_size: 5 * 1024 * 1024 }; // 5MB
       expect(() => validateDisclosure(valid2)).not.toThrow();
 
-      const valid3 = { ...validDisclosure, file_size: 10 * 1024 * 1024 }; // 10MB（境界値）
+      const valid3 = { ...validDisclosure, file_size: 100 * 1024 * 1024 }; // 100MB（境界値）
       expect(() => validateDisclosure(valid3)).not.toThrow();
     });
 

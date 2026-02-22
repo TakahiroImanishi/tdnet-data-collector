@@ -983,11 +983,11 @@ const event = {
 - `cdk/lib/stacks/` 配下に分割されたスタック
 
 **対応内容**:
-- [ ] プロジェクト構造テストを新しいCDK構造に合わせて更新（7テスト）
-- [ ] Lambda最適化テストを新しいスタックファイルパスに更新（3テスト）
-- [ ] Jest Config テストのパス設定を更新（2テスト）
+- [x] プロジェクト構造テストを新しいCDK構造に合わせて更新（7テスト）
+- [x] Lambda最適化テストを新しいスタックファイルパスに更新（3テスト）
+- [x] Jest Config テストのパス設定を更新（2テスト）
 
-**担当**: 未定
+**担当**: Kiro AI Assistant
 
 **期限**: 1週間以内
 
@@ -997,9 +997,13 @@ const event = {
 - `src/__tests__/project-structure.test.ts`
 - `src/__tests__/lambda-optimization.test.ts`
 
-**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-102602-test-failure-analysis.md`
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-111235-task31-project-structure-fix.md`
 
 **期待される効果**: 10テスト修正
+
+**完了日時**: 2026-02-22 11:30
+
+**テスト結果**: 95/95テスト成功（100%）
 
 ---
 

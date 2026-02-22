@@ -83,8 +83,8 @@ describe('TdnetMonitoringStack', () => {
       const oneMonthLogGroups = Object.values(logGroups).filter(
         (lg: any) => lg.Properties.RetentionInDays === 30
       );
-      // 8個のLambda関数（collector以外の9個中8個）
-      expect(oneMonthLogGroups.length).toBe(8);
+      // 6個のLambda関数（collector以外の7個中6個、health/statsは除外）
+      expect(oneMonthLogGroups.length).toBe(6);
     });
 
     it('本番環境のLogGroupにRETAINポリシーが設定されている', () => {
@@ -94,14 +94,15 @@ describe('TdnetMonitoringStack', () => {
       });
     });
 
-    it('9個のLambda LogGroupが作成されている', () => {
+    it('7個のLambda LogGroupが作成されている', () => {
       const logGroups = template.findResources('AWS::Logs::LogGroup');
       
       // Lambda LogGroupの数を確認（RetentionInDaysが7, 30, 90のもの）
+      // health/statsは既存のLogGroupを使用するため除外
       const lambdaLogGroups = Object.values(logGroups).filter(
         (lg: any) => [7, 30, 90].includes(lg.Properties.RetentionInDays)
       );
-      expect(lambdaLogGroups.length).toBe(9);
+      expect(lambdaLogGroups.length).toBe(7);
     });
   });
 
@@ -119,8 +120,8 @@ describe('TdnetMonitoringStack', () => {
       const oneWeekLogGroups = Object.values(logGroups).filter(
         (lg: any) => lg.Properties.RetentionInDays === 7
       );
-      // 9個のLambda関数すべて
-      expect(oneWeekLogGroups.length).toBe(9);
+      // 7個のLambda関数（health/statsは既存のLogGroupを使用するため除外）
+      expect(oneWeekLogGroups.length).toBe(7);
     });
 
     it('開発環境のLambda LogGroupにDESTROYポリシーが設定されている', () => {
