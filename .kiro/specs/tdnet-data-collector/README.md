@@ -7,12 +7,12 @@
 ```
 .kiro/specs/tdnet-data-collector/
 ├── README.md                    # このファイル
-├── completed-phases/            # 完了Phaseレポート
-│   ├── README.md                # Phase完了レポート一覧
-│   ├── PHASE2-COMPLETION-SUMMARY.md
-│   ├── PHASE3-COMPLETION-SUMMARY.md
-│   └── PHASE4-COMPLETION-REPORT.md
-├── designs/                     # 設計・実装ドキュメント
+├── 01-requirements/             # 要件定義
+│   ├── functional-requirements.md      # 機能要件（要件1-19）
+│   ├── non-functional-requirements.md  # 非機能要件（要件12-20）
+│   ├── overview.md              # 要件概要
+│   └── requirements-mapping.md  # 要件マッピング
+├── 02-designs/                  # 設計・実装ドキュメント
 │   ├── 01-requirements/         # 要件・設計（8ファイル）
 │   ├── 02-implementation/       # 実装ガイド（2ファイル）
 │   ├── 03-testing/              # テスト（2ファイル）
@@ -21,24 +21,26 @@
 │   ├── 06-scripts/              # スクリプト（4ファイル）
 │   ├── step-functions-*.md      # Step Functions設計ドキュメント
 │   └── README.md                # ドキュメント体系の説明
-├── tasks/                       # タスク一覧
+├── 03-tasks/                    # タスク一覧
 │   ├── tasks-phase1-4.md        # Phase1-4タスク一覧（完了）
 │   ├── tasks-phase5.md          # Phase5タスク一覧（進行中）
-│   └── tasks-quality-20260222.md # 品質改善タスク（進行中）
-├── work-logs/                   # 作業記録（Phase5進行中）
+│   ├── tasks-step-functions-migration.md  # Step Functions移行タスク
+│   ├── tasks-requirements-update.md       # 要件更新タスク
+│   └── archive/                 # 完了タスクアーカイブ
+├── 04-work-logs/                # 作業記録（Phase5進行中）
 │   ├── README.md                # 作業記録の記録方法
 │   ├── create-work-log.ps1      # 作業記録ファイル作成スクリプト
 │   ├── archive/                 # 完了Phase作業記録
 │   │   ├── README.md            # アーカイブ説明
 │   │   └── phase1-4/            # Phase1-4完了分（267ファイル）
 │   └── work-log-[YYYYMMDD-HHMMSS]-[作業概要].md  # 各作業記録
-├── improvements/                # 改善履歴（Phase5進行中）
+├── 05-improvements/             # 改善履歴（Phase5進行中）
 │   ├── README.md                # 改善履歴の記録方法
 │   ├── create-improvement.ps1   # 改善履歴ファイル作成スクリプト
 │   ├── archive/                 # 完了Phase改善記録
 │   │   └── phase1/              # Phase1完了分（22ファイル）
 │   └── task-*-improvement-*.md  # 各改善記録
-├── templates/                   # テンプレートファイル
+├── 06-templates/                # テンプレートファイル
 │   ├── package.json.example     # package.jsonのテンプレート
 │   ├── .env.example             # 環境変数テンプレート
 │   ├── cdk.context.json.example # CDK Context設定テンプレート
@@ -47,6 +49,11 @@
 │       ├── test.yml             # テストワークフロー
 │       ├── deploy.yml           # デプロイワークフロー
 │       └── dependency-update.yml # 依存関係更新ワークフロー
+├── 07-completed-phases/         # 完了Phaseレポート
+│   ├── README.md                # Phase完了レポート一覧
+│   ├── PHASE2-COMPLETION-SUMMARY.md
+│   ├── PHASE3-COMPLETION-SUMMARY.md
+│   └── PHASE4-COMPLETION-REPORT.md
 ├── .config.kiro                 # Kiro設定
 └── CHANGELOG.md                 # 変更履歴
 ```
@@ -59,10 +66,13 @@
 TDnet Data Collector Project
 │
 ├── .kiro/specs/tdnet-data-collector/  ← このフォルダ（仕様書・設計）
-│   ├── designs/                       # 設計・実装ドキュメント
-│   ├── work-logs/                     # 作業記録
-│   ├── improvements/                  # 改善履歴
-│   └── templates/                     # テンプレート
+│   ├── 01-requirements/               # 要件定義
+│   ├── 02-designs/                    # 設計・実装ドキュメント
+│   ├── 03-tasks/                      # タスク一覧
+│   ├── 04-work-logs/                  # 作業記録
+│   ├── 05-improvements/               # 改善履歴
+│   ├── 06-templates/                  # テンプレート
+│   └── 07-completed-phases/           # 完了Phaseレポート
 │
 ├── .kiro/steering/                    # 実装ガイドライン
 │   ├── core/                          # 基本ルール（常時読み込み）
@@ -76,9 +86,9 @@ TDnet Data Collector Project
     └── openapi.yaml                   # OpenAPI 3.0仕様
 ```
 
-## 📖 設計ドキュメント (designs/)
+## 📖 設計ドキュメント (02-designs/)
 
-ドキュメントは以下のカテゴリに整理されています。詳細は `designs/README.md` を参照してください。
+ドキュメントは以下のカテゴリに整理されています。詳細は `02-designs/README.md` を参照してください。
 
 ### 01-requirements/ - 要件・設計（8ファイル）
 - `requirements.md` - 要件定義書（要件1-15）
@@ -209,7 +219,7 @@ TDnet Data Collector Project
 - CloudWatchメトリクス対応表
 - フェーズ別目標値（Phase 1-3）
 
-## 📝 作業記録 (work-logs/)
+## 📝 作業記録 (04-work-logs/)
 
 ### 目的
 各タスク実行時の作業履歴を記録し、実施内容、問題点、成果物を追跡可能にします。
@@ -244,8 +254,8 @@ Get-Date -Format "yyyyMMdd-HHmmss"
 
 **スクリプトを使用（推奨）:**
 ```powershell
-# work-logs/create-work-log.ps1 を実行
-cd .kiro/specs/tdnet-data-collector/work-logs
+# 04-work-logs/create-work-log.ps1 を実行
+cd .kiro/specs/tdnet-data-collector/04-work-logs
 .\create-work-log.ps1
 # プロンプトに従って作業概要を入力（ケバブケース）
 ```
@@ -267,9 +277,9 @@ New-Item "work-log-$timestamp-your-task-description.md"
 | **成果物** | 作成・変更したファイル |
 | **次回への申し送り** | 未完了の作業、注意点 |
 
-詳細は `work-logs/README.md` を参照してください。
+詳細は `04-work-logs/README.md` を参照してください。
 
-## 🔄 改善履歴 (improvements/)
+## 🔄 改善履歴 (05-improvements/)
 
 ### 目的
 タスク実行後のフィードバックループで発見された問題と実施した改善を記録します。
@@ -289,8 +299,8 @@ task-[タスク番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md
 
 **スクリプトを使用（推奨）:**
 ```powershell
-# improvements/create-improvement.ps1 を実行
-cd .kiro/specs/tdnet-data-collector/improvements
+# 05-improvements/create-improvement.ps1 を実行
+cd .kiro/specs/tdnet-data-collector/05-improvements
 .\create-improvement.ps1
 # プロンプトに従ってタスク番号と改善概要を入力
 ```
@@ -314,11 +324,11 @@ cd .kiro/specs/tdnet-data-collector/improvements
 | 🟡 **Medium** | コード品質、保守性、テストカバレッジ |
 | 🟢 **Low** | ドキュメント、コメント、スタイル |
 
-詳細は `improvements/README.md` を参照してください。
+詳細は `05-improvements/README.md` を参照してください。
 
-## 📦 テンプレートファイル (templates/)
+## 📦 テンプレートファイル (06-templates/)
 
-### templates/package.json.example
+### 06-templates/package.json.example
 プロジェクトのpackage.jsonテンプレート。
 
 **含まれる内容:**
@@ -326,7 +336,7 @@ cd .kiro/specs/tdnet-data-collector/improvements
 - npm scriptsの定義（build, test, lint, deploy）
 - テスト設定（Jest, fast-check）
 
-### templates/.env.example
+### 06-templates/.env.example
 環境変数テンプレート。
 
 **環境別設定:**
@@ -341,16 +351,16 @@ cd .kiro/specs/tdnet-data-collector/improvements
 **使用方法:**
 ```powershell
 # 開発環境用
-cp templates/.env.example .env.development
+cp 06-templates/.env.example .env.development
 
 # 本番環境用
-cp templates/.env.example .env.production
+cp 06-templates/.env.example .env.production
 
 # 環境変数を編集
 # 注意: .env.* ファイルは .gitignore に追加してください
 ```
 
-### templates/cdk.context.json.example
+### 06-templates/cdk.context.json.example
 CDK Context設定テンプレート。
 
 **環境別設定（development, staging, production）:**
@@ -365,13 +375,13 @@ CDK Context設定テンプレート。
 **使用方法:**
 ```powershell
 # プロジェクトルートにコピー
-cp templates/cdk.context.json.example cdk.context.json
+cp 06-templates/cdk.context.json.example cdk.context.json
 
 # 環境を指定してデプロイ
 cdk deploy --context environment=development
 ```
 
-### templates/test-fixtures/
+### 06-templates/test-fixtures/
 テスト用のサンプルデータとフィクスチャ。
 
 **含まれる内容:**
@@ -380,7 +390,7 @@ cdk deploy --context environment=development
 - プロパティテスト用Arbitrary定義
 - エッジケーステストデータ
 
-### templates/github-workflows/
+### 06-templates/github-workflows/
 GitHub Actionsワークフローのテンプレート。
 
 **ワークフロー:**
@@ -392,9 +402,9 @@ GitHub Actionsワークフローのテンプレート。
 ```powershell
 # .github/workflows/ ディレクトリにコピー
 mkdir -p .github/workflows
-cp templates/github-workflows/test.yml .github/workflows/test.yml
-cp templates/github-workflows/deploy.yml .github/workflows/deploy.yml
-cp templates/github-workflows/dependency-update.yml .github/workflows/dependency-update.yml
+cp 06-templates/github-workflows/test.yml .github/workflows/test.yml
+cp 06-templates/github-workflows/deploy.yml .github/workflows/deploy.yml
+cp 06-templates/github-workflows/dependency-update.yml .github/workflows/dependency-update.yml
 ```
 
 ## 🚀 実装開始手順
@@ -411,7 +421,7 @@ git init
 git remote add origin <your-repo-url>
 
 # package.jsonの作成
-cp templates/package.json.example package.json
+cp 06-templates/package.json.example package.json
 
 # 依存関係のインストール
 npm install
@@ -420,11 +430,11 @@ npm install
 ### 3. 環境変数とCDK設定
 ```powershell
 # 環境変数ファイルの作成
-cp templates/.env.example .env.development
-cp templates/.env.example .env.production
+cp 06-templates/.env.example .env.development
+cp 06-templates/.env.example .env.production
 
 # CDK Context設定の作成
-cp templates/cdk.context.json.example cdk.context.json
+cp 06-templates/cdk.context.json.example cdk.context.json
 
 # 環境変数を編集（AWS認証情報、リージョンなど）
 ```
@@ -433,9 +443,9 @@ cp templates/cdk.context.json.example cdk.context.json
 ```powershell
 # GitHub Actionsワークフローの配置
 mkdir -p .github/workflows
-cp templates/github-workflows/test.yml .github/workflows/test.yml
-cp templates/github-workflows/deploy.yml .github/workflows/deploy.yml
-cp templates/github-workflows/dependency-update.yml .github/workflows/dependency-update.yml
+cp 06-templates/github-workflows/test.yml .github/workflows/test.yml
+cp 06-templates/github-workflows/deploy.yml .github/workflows/deploy.yml
+cp 06-templates/github-workflows/dependency-update.yml .github/workflows/dependency-update.yml
 
 # GitHub Secretsの設定（GitHub UIで実施）
 # - AWS_ROLE_ARN
@@ -614,4 +624,4 @@ MIT License
 
 ---
 
-**最終更新**: 2026年2月7日
+**最終更新**: 2026年2月22日
