@@ -1,0 +1,169 @@
+{
+  "Comment": "TDnet Data Collector - Step Functions State Machine (LocalStack用簡易版)",
+  "StartAt": "CollectorInit",
+  "States": {
+    "CollectorInit": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "tdnet-collector-init",
+        "Payload": {
+          "start_date.$": "$.start_date",
+          "end_date.$": "$.end_date",
+          "max_items.$": "$.max_items"
+        }
+      },
+      "ResultPath": "$.initResult",
+      "Next": "CheckTotalCount",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "CollectionFailed"
+        }
+      ],
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ]
+    },
+    "CheckTotalCount": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.initResult.Payload.total_count",
+          "NumericEquals": 0,
+          "Next": "NoDataToCollect"
+        }
+      ],
+      "Default": "ProcessPages"
+    },
+    "NoDataToCollect": {
+      "Type": "Succeed",
+      "Comment": "取得対象データが0件のため正常終了"
+    },
+    "ProcessPages": {
+      "Type": "Map",
+      "ItemsPath": "$.initResult.Payload.pages",
+      "MaxConcurrency": 5,
+      "ResultPath": "$.mapResult",
+      "Iterator": {
+        "StartAt": "FetchPageData",
+        "States": {
+          "FetchPageData": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "tdnet-collector-fetch",
+              "Payload": {
+                "page_number.$": "$.page_number",
+                "start_date.$": "$.start_date",
+                "end_date.$": "$.end_date",
+                "max_items.$": "$.max_items",
+                "execution_id.$": "$.execution_id"
+              }
+            },
+            "ResultPath": "$.fetchResult",
+            "Next": "SavePageData",
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "ResultPath": "$.error",
+                "Next": "PageFailed"
+              }
+            ],
+            "Retry": [
+              {
+                "ErrorEquals": ["RateLimitError"],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 1.0
+              },
+              {
+                "ErrorEquals": ["States.TaskFailed"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0
+              }
+            ]
+          },
+          "SavePageData": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "tdnet-collector-save",
+              "Payload": {
+                "items.$": "$.fetchResult.Payload.items",
+                "page_number.$": "$.fetchResult.Payload.page_number",
+                "execution_id.$": "$.execution_id"
+              }
+            },
+            "ResultPath": "$.saveResult",
+            "End": true,
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "ResultPath": "$.error",
+                "Next": "PageFailed"
+              }
+            ],
+            "Retry": [
+              {
+                "ErrorEquals": ["States.TaskFailed"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0
+              }
+            ]
+          },
+          "PageFailed": {
+            "Type": "Succeed",
+            "Comment": "ページ処理失敗（Map全体は継続）"
+          }
+        }
+      },
+      "Next": "AggregateResults"
+    },
+    "AggregateResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "tdnet-collector-aggregate",
+        "Payload": {
+          "execution_id.$": "$.initResult.Payload.execution_id",
+          "map_results.$": "$.mapResult"
+        }
+      },
+      "ResultPath": "$.aggregateResult",
+      "Next": "CollectionSucceeded",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "CollectionFailed"
+        }
+      ],
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ]
+    },
+    "CollectionSucceeded": {
+      "Type": "Succeed",
+      "Comment": "データ収集処理が正常に完了しました"
+    },
+    "CollectionFailed": {
+      "Type": "Fail",
+      "Error": "CollectionFailed",
+      "Cause": "データ収集処理が失敗しました。詳細はCloudWatch Logsを確認してください。"
+    }
+  }
+}

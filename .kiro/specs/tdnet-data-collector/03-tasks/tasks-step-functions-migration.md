@@ -191,15 +191,21 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `cdk/lib/constructs/__tests__/step-functions-collector.test.ts`
 
 #### タスク3.2: Compute Stack更新
-- [ ] Step Functions Constructの統合
-- [ ] 既存collector Lambda関数の段階的廃止計画
-- [ ] API Gateway統合の更新（/collect エンドポイント）
-- [ ] 環境変数の設定
-- [ ] ユニットテスト更新
+- [x] Step Functions Constructの統合
+- [x] 既存collector Lambda関数の段階的廃止計画
+- [x] API Gateway統合の更新（/collect エンドポイント）
+- [x] 環境変数の設定
+- [x] ユニットテスト更新
+
+**完了日時**: 2026-02-22 19:41:04
+**テスト結果**: Compute Stack 34件、Collect Function 18件、全て成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194104-compute-stack-update.md`
 
 **成果物**:
-- `cdk/lib/stacks/compute-stack.ts`（更新）
-- `cdk/lib/stacks/__tests__/compute-stack.test.ts`（更新）
+- `cdk/lib/stacks/compute-stack.ts`（更新）✓
+- `cdk/lib/stacks/__tests__/compute-stack.test.ts`（更新）✓
+- `src/lambda/collect/handler.ts`（Step Functions対応追加）✓
+- `src/lambda/collect/__tests__/handler.test.ts`（更新）✓
 
 #### タスク3.3: 実行状態管理テーブル作成
 - [x] DynamoDBテーブル定義
@@ -220,69 +226,99 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 ### フェーズ4: API統合（優先度: 中）
 
 #### タスク4.1: /collect エンドポイント更新
-- [ ] Step Functions実行開始処理
-- [ ] execution_idの生成と返却
-- [ ] エラーハンドリング
-- [ ] ユニットテスト更新
+- [x] Step Functions実行開始処理
+- [x] execution_idの生成と返却
+- [x] エラーハンドリング
+- [x] ユニットテスト更新
+
+**完了日時**: 2026-02-22 19:41:11
+**テスト結果**: 18件全て成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194111-api-integration.md`
 
 **成果物**:
-- `src/lambda/api/handlers/collect.ts`（更新）
-- `src/lambda/api/__tests__/handlers/collect.test.ts`（更新）
+- `src/lambda/collect/handler.ts`（更新）✓
+- `src/lambda/collect/__tests__/handler.test.ts`（更新）✓
 
 #### タスク4.2: /collect/{executionId} エンドポイント更新
-- [ ] Step Functions実行状態の取得
-- [ ] DynamoDB実行状態テーブルからの詳細情報取得
-- [ ] レスポンス形式の統一
-- [ ] ユニットテスト更新
+- [x] Step Functions実行状態の取得
+- [x] DynamoDB実行状態テーブルからの詳細情報取得
+- [x] レスポンス形式の統一
+- [x] ユニットテスト更新
+
+**完了日時**: 2026-02-22 19:41:11
+**テスト結果**: 既存テスト維持、Step Functions統合テスト追加
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194111-api-integration.md`
 
 **成果物**:
-- `src/lambda/collect-status/handler.ts`（更新）
-- `src/lambda/collect-status/__tests__/handler.test.ts`（更新）
+- `src/lambda/collect-status/handler.ts`（更新）✓
+- `src/lambda/collect-status/__tests__/handler-step-functions.test.ts`（新規）✓
 
 ### フェーズ5: 監視・運用（優先度: 中）
 
 #### タスク5.1: CloudWatch Alarms設定
-- [ ] Step Functions実行失敗アラーム
-- [ ] 実行時間超過アラーム
-- [ ] スロットリングアラーム
-- [ ] CDK実装
+- [x] Step Functions実行失敗アラーム
+- [x] 実行時間超過アラーム
+- [x] スロットリングアラーム
+- [x] CDK実装
+
+**完了日時**: 2026-02-22 19:41:19
+**テスト結果**: 8件全て成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194119-monitoring-setup.md`
 
 **成果物**:
-- `cdk/lib/stacks/monitoring-stack.ts`（更新）
+- `cdk/lib/stacks/monitoring-stack.ts`（更新）✓
+- `cdk/lib/constructs/cloudwatch-alarms.ts`（更新）✓
 
 #### タスク5.2: CloudWatch Dashboard更新
-- [ ] Step Functions実行状況ウィジェット
-- [ ] 各Lambda関数のメトリクス
-- [ ] エラー率グラフ
-- [ ] CDK実装
+- [x] Step Functions実行状況ウィジェット
+- [x] 各Lambda関数のメトリクス
+- [x] エラー率グラフ
+- [x] CDK実装
+
+**完了日時**: 2026-02-22 19:41:19
+**テスト結果**: 8件全て成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194119-monitoring-setup.md`
 
 **成果物**:
-- `cdk/lib/constructs/cloudwatch-dashboard.ts`（更新）
+- `cdk/lib/constructs/cloudwatch-dashboard.ts`（更新）✓
+- `cdk/lib/constructs/__tests__/cloudwatch-dashboard.test.ts`（新規）✓
 
 #### タスク5.3: 運用スクリプト更新
-- [ ] `manual-data-collection.ps1`更新
+- [x] `manual-data-collection.ps1`更新
   - Step Functions実行ARNの使用
-  - ポーリングタイムアウトの延長（または削除）
-  - 進捗表示の改善
-- [ ] 新規スクリプト作成
+  - ポーリングタイムアウトの延長（5分→30分）
+  - 進捗表示の改善（経過時間追加）
+- [x] 新規スクリプト作成
   - `scripts/check-step-functions-execution.ps1`（実行状態確認）
   - `scripts/cancel-step-functions-execution.ps1`（実行キャンセル）
 
+**完了日時**: 2026-02-22 19:41:27
+**テスト結果**: ヘルプメッセージ、パラメータ検証確認済み
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-194127-operation-scripts.md`
+
 **成果物**:
-- `scripts/manual-data-collection.ps1`（更新）
-- `scripts/check-step-functions-execution.ps1`
-- `scripts/cancel-step-functions-execution.ps1`
+- `scripts/manual-data-collection.ps1`（更新）✓
+- `scripts/check-step-functions-execution.ps1`（新規）✓
+- `scripts/cancel-step-functions-execution.ps1`（新規）✓
 
 ### フェーズ6: テスト・検証（優先度: 高）
 
 #### タスク6.1: E2Eテスト作成
-- [ ] LocalStackでのStep Functions実行テスト
-- [ ] 正常系テスト（小規模データ）
-- [ ] 異常系テスト（エラー、タイムアウト）
-- [ ] 大規模データテスト（モック）
+- [x] LocalStackでのStep Functions実行テスト
+- [x] 正常系テスト（小規模データ）
+- [x] 異常系テスト（エラー、タイムアウト）
+- [x] 大規模データテスト（モック）
+
+**完了日時**: 2026-02-22 22:56:00
+**テスト結果**: E2Eテスト実装完了、LocalStack環境構築完了
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-205601-e2e-test-step-functions.md`
 
 **成果物**:
-- `src/__tests__/e2e/step-functions-collector.test.ts`
+- `src/__tests__/e2e/step-functions-collector.e2e.test.ts`
+- `scripts/step-functions/state-machine-definition.json`
+- `scripts/localstack-setup.ps1`（Step Functions作成処理追加）
+- `docker-compose.yml`（Step FunctionsとIAMサービス追加）
+- `jest.setup.e2e.js`（STATE_MACHINE_ARN環境変数追加）
 
 #### タスク6.2: 本番環境検証
 - [ ] 小規模データでの検証（1日分、100件以下）

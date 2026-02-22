@@ -336,6 +336,93 @@ try {
 }
 
 # ==========================================
+# Create Step Functions State Machine
+# ==========================================
+Write-Info "Creating Step Functions State Machine..."
+
+# IAMロール作成（LocalStack用）
+Write-Info "Creating IAM role for Step Functions..."
+try {
+    $rolePolicy = @'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "states.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+'@
+    
+    # PowerShell 5.1互換のUTF-8 BOMなし書き込み
+    [System.IO.File]::WriteAllText("$PWD/temp_role_policy.json", $rolePolicy, (New-Object System.Text.UTF8Encoding $false))
+    
+    aws --endpoint-url=$ENDPOINT `
+        --region=$REGION `
+        iam create-role `
+        --role-name StepFunctionsExecutionRole `
+        --assume-role-policy-document file://temp_role_policy.json `
+        --no-cli-pager `
+        2>&1 | Out-Null
+    
+    Remove-Item -Path "temp_role_policy.json" -ErrorAction SilentlyContinue
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "IAM role 'StepFunctionsExecutionRole' created successfully"
+    } else {
+        Write-Warning-Custom "IAM role may already exist or creation failed"
+    }
+} catch {
+    Write-Warning-Custom "Failed to create IAM role: $_"
+}
+
+# ステートマシン作成
+Write-Info "Creating State Machine: TDnetCollectorStateMachine"
+try {
+    $stateMachineDefinition = Get-Content -Path "scripts/step-functions/state-machine-definition.json" -Raw
+    
+    $roleArn = "arn:aws:iam::000000000000:role/StepFunctionsExecutionRole"
+    
+    aws --endpoint-url=$ENDPOINT `
+        --region=$REGION `
+        stepfunctions create-state-machine `
+        --name TDnetCollectorStateMachine `
+        --definition $stateMachineDefinition `
+        --role-arn $roleArn `
+        --no-cli-pager `
+        2>&1 | Out-Null
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "State Machine 'TDnetCollectorStateMachine' created successfully"
+    } else {
+        Write-Warning-Custom "State Machine may already exist or creation failed"
+    }
+} catch {
+    Write-Warning-Custom "Failed to create State Machine: $_"
+}
+
+# Verify State Machine
+Write-Info "Verifying State Machine..."
+try {
+    $stateMachines = aws --endpoint-url=$ENDPOINT --region=$REGION stepfunctions list-state-machines --output json --no-cli-pager | ConvertFrom-Json
+    
+    $tdnetStateMachine = $stateMachines.stateMachines | Where-Object { $_.name -eq "TDnetCollectorStateMachine" }
+    
+    if ($tdnetStateMachine) {
+        Write-Success "State Machine 'TDnetCollectorStateMachine' verified"
+        Write-Info "  ARN: $($tdnetStateMachine.stateMachineArn)"
+    } else {
+        Write-Error-Custom "State Machine 'TDnetCollectorStateMachine' not found"
+    }
+} catch {
+    Write-Error-Custom "Failed to verify State Machine: $_"
+}
+
+# ==========================================
 # Summary
 # ==========================================
 Write-Host ""
@@ -351,6 +438,9 @@ Write-Host ""
 Write-Info "S3 Buckets:"
 Write-Host "  - tdnet-data-collector-pdfs-local"
 Write-Host "  - tdnet-data-collector-exports-local"
+Write-Host ""
+Write-Info "Step Functions:"
+Write-Host "  - TDnetCollectorStateMachine"
 Write-Host ""
 Write-Info "Next Steps:"
 Write-Host "  1. Copy config/.env.local.example to config/.env.local"
