@@ -440,7 +440,7 @@ describe('Structured Logging Format', () => {
     }
   });
 
-  it('should default to development when NODE_ENV is not set', () => {
+  it('should default to production when NODE_ENV is not set', () => {
     const originalNodeEnv = process.env.NODE_ENV;
     delete process.env.NODE_ENV;
 
@@ -452,7 +452,7 @@ describe('Structured Logging Format', () => {
     const lastCall = calls[calls.length - 1];
     
     if (lastCall && lastCall[0]) {
-      expect(lastCall[0].defaultMeta.environment).toBe('development');
+      expect(lastCall[0].defaultMeta.environment).toBe('production');
     }
 
     // 環境変数を元に戻す

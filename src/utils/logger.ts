@@ -56,7 +56,7 @@ const winstonLogger = isLambdaEnvironment
       ),
       defaultMeta: {
         service: 'tdnet-data-collector',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV || 'production',
       },
       transports: [
         new winston.transports.Console({
