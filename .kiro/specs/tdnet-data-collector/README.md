@@ -12,13 +12,14 @@
 │   ├── PHASE2-COMPLETION-SUMMARY.md
 │   ├── PHASE3-COMPLETION-SUMMARY.md
 │   └── PHASE4-COMPLETION-REPORT.md
-├── docs/                        # 設計・実装ドキュメント
+├── designs/                     # 設計・実装ドキュメント
 │   ├── 01-requirements/         # 要件・設計（8ファイル）
 │   ├── 02-implementation/       # 実装ガイド（2ファイル）
 │   ├── 03-testing/              # テスト（2ファイル）
 │   ├── 04-deployment/           # デプロイ（5ファイル）
 │   ├── 05-operations/           # 運用（5ファイル）
 │   ├── 06-scripts/              # スクリプト（4ファイル）
+│   ├── step-functions-*.md      # Step Functions設計ドキュメント
 │   └── README.md                # ドキュメント体系の説明
 ├── tasks/                       # タスク一覧
 │   ├── tasks-phase1-4.md        # Phase1-4タスク一覧（完了）
@@ -58,7 +59,7 @@
 TDnet Data Collector Project
 │
 ├── .kiro/specs/tdnet-data-collector/  ← このフォルダ（仕様書・設計）
-│   ├── docs/                          # 設計・実装ドキュメント
+│   ├── designs/                       # 設計・実装ドキュメント
 │   ├── work-logs/                     # 作業記録
 │   ├── improvements/                  # 改善履歴
 │   └── templates/                     # テンプレート
@@ -75,9 +76,9 @@ TDnet Data Collector Project
     └── openapi.yaml                   # OpenAPI 3.0仕様
 ```
 
-## 📖 設計ドキュメント (docs/)
+## 📖 設計ドキュメント (designs/)
 
-ドキュメントは以下のカテゴリに整理されています。詳細は `docs/README.md` を参照してください。
+ドキュメントは以下のカテゴリに整理されています。詳細は `designs/README.md` を参照してください。
 
 ### 01-requirements/ - 要件・設計（8ファイル）
 - `requirements.md` - 要件定義書（要件1-15）
@@ -108,7 +109,7 @@ TDnet Data Collector Project
 - `metrics-and-kpi.md` - メトリクスとKPI定義
 - `troubleshooting.md` - トラブルシューティングガイド
 
-### docs/architecture.md
+### designs/architecture.md
 システムアーキテクチャの概要設計。
 
 **主要内容:**
@@ -117,7 +118,7 @@ TDnet Data Collector Project
 - データフロー
 - AWS サービス構成
 
-### docs/requirements.md
+### designs/requirements.md
 プロジェクトの要件定義書（要件1-15）。すべての機能要件と非機能要件が記載されています。
 
 **主要な要件:**
@@ -125,7 +126,7 @@ TDnet Data Collector Project
 - 要件6-10: API機能（検索、取得、ヘルスチェック）
 - 要件11-15: 非機能要件（パフォーマンス、セキュリティ、監視、コスト最適化）
 
-### docs/design.md
+### designs/design.md
 システムの詳細設計書。以下の内容を含みます：
 - **アーキテクチャ**: サーバーレスアーキテクチャ（Lambda, DynamoDB, S3, API Gateway）
 - **コンポーネント設計**: 各Lambda関数の責務と実装詳細
@@ -137,7 +138,7 @@ TDnet Data Collector Project
 - **パフォーマンスベンチマーク**: 目標値と測定方法
 - **データ保持ポリシー**: データライフサイクル管理
 
-### docs/implementation-checklist.md
+### designs/implementation-checklist.md
 実装開始前に確認すべき16カテゴリ、100項目以上のチェックリスト。
 
 **主要カテゴリ:**
@@ -154,7 +155,7 @@ TDnet Data Collector Project
 - ドキュメント（README, API仕様、運用手順）
 - コスト最適化（無料枠活用、リソース最適化）
 
-### docs/correctness-properties-checklist.md
+### designs/correctness-properties-checklist.md
 設計検証のための15個のCorrectness Properties。
 
 **検証項目:**
@@ -165,7 +166,7 @@ TDnet Data Collector Project
 - 可用性（冗長性、障害復旧）
 - コスト効率（無料枠活用、リソース最適化）
 
-### docs/environment-setup.md
+### designs/environment-setup.md
 開発環境のセットアップ手順（local/dev/prod環境）。
 
 **セットアップ内容:**
@@ -176,7 +177,7 @@ TDnet Data Collector Project
 - 依存関係のインストール
 - ローカルテスト環境の構築
 
-### docs/troubleshooting.md
+### designs/troubleshooting.md
 よくある問題と解決策をまとめたトラブルシューティングガイド。
 
 **カテゴリ:**
@@ -189,7 +190,7 @@ TDnet Data Collector Project
 - 監視・ログ関連（ログ出力、メトリクス、アラート）
 - ネットワーク関連（タイムアウト、DNS解決）
 
-### docs/metrics-and-kpi.md
+### designs/metrics-and-kpi.md
 プロジェクトの成功指標、パフォーマンスメトリクス、KPI定義。
 
 **主要KPI:**

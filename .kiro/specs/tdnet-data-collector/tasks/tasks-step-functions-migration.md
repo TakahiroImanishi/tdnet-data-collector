@@ -126,13 +126,28 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 **成果物**:
 - `src/lambda/collector-save/handler.ts`
 - `src/lambda/collector-save/__tests__/handler.test.ts`
+- `src/lambda/collector-save/__tests__/integration.test.ts`
 
 #### タスク2.4: 集約Lambda作成
-- [ ] `src/lambda/collector-aggregate/handler.ts`作成
+- [x] `src/lambda/collector-aggregate/handler.ts`作成
   - 実行結果の集約
   - 統計情報の計算
   - 実行状態の更新（completed/failed）
-- [ ] ユニットテスト作成
+  - CloudWatchメトリクスの送信
+  - 既存collector関数から以下を再利用:
+    - `updateExecutionStatus`: 実行状態更新
+- [x] ユニットテスト作成
+- [x] 統合テスト作成
+
+**完了日時**: 2026-02-22 18:25:00
+**テスト結果**: 8テスト全て成功
+
+**成果物**:
+- `src/lambda/collector-aggregate/handler.ts`
+- `src/lambda/collector-aggregate/__tests__/handler.test.ts`
+- `src/lambda/collector-aggregate/__tests__/integration.test.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-182149-subagent4-collector-aggregate.md`
 - [ ] 統合テスト作成
 
 **成果物**:
