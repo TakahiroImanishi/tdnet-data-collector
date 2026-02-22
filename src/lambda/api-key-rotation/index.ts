@@ -9,6 +9,11 @@
  * 2. setSecret: 新しいシークレット値を設定
  * 3. testSecret: 新しいシークレット値をテスト
  * 4. finishSecret: ローテーションを完了
+ * 
+ * 関連ドキュメント:
+ * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
+ * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
+ * - .kiro/steering/core/error-handling-patterns.md - エラーハンドリング
  */
 
 import {

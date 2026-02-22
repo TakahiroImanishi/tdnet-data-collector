@@ -5,6 +5,12 @@
  * Lambda Collectorを非同期で呼び出し、実行IDを返却します。
  *
  * Requirements: タスク13.1, タスク31.2.6.9
+ * 
+ * 関連ドキュメント:
+ * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
+ * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
+ * - .kiro/steering/core/error-handling-patterns.md - エラーハンドリング
+ * - .kiro/steering/api/api-design-guidelines.md - API設計
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';

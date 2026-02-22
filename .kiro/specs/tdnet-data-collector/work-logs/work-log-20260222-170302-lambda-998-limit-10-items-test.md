@@ -93,13 +93,72 @@ aws configure
 
 ## 次のステップ
 
-1. ユーザーにAWS認証情報の更新を依頼
-2. 認証情報更新後、10件テストを再実行
-3. CloudWatch Logsでログ出力を確認
+1. ✅ AWS SSO再認証完了（`aws sso login --profile imanishi-awssso`）
+2. ✅ 10件テスト実行開始
+3. ❌ MaxItems機能が動作していない（285件以上収集中）
+
+## 問題発見: MaxItems機能が動作していない
+
+**現象**:
+```
+進捗: 22% | 収集: 285 件 | 失敗: 0 件 | 状態: running
+```
+
+**原因**:
+- `manual-data-collection.ps1`は`max_items`パラメータをAPI（`/collect`）に送信している
+- しかし、Lambda Collector関数（`src/lambda/collector/handler.ts`）が`max_items`パラメータを処理していない
+- `CollectorEvent`インターフェースに`max_items`フィールドが存在しない
+- `scrapeTdnetList`関数に`max_items`パラメータが渡されていない
+
+**修正方針**:
+1. `CollectorEvent`インターフェースに`max_items?: number`を追加
+2. `scrapeTdnetList`関数に`maxItems`パラメータを追加
+3. `collectDisclosuresForDateRange`関数で`max_items`を処理
+4. スクレイピング結果を`max_items`で制限
 
 ## 申し送り事項
 
-- AWS認証トークンの有効期限が切れている可能性
-- 本番環境へのアクセスには有効な認証情報が必要
-- テスト実行前に`aws sts get-caller-identity`で認証状態を確認することを推奨
+- MaxItems機能の実装が必要
+- 実装後、ユニットテストを更新して再実行
+- 実装後、10件テストを再実行してCloudWatch Logsを確認
+
+
+
+## MaxItems機能の実装完了
+
+**実装日時**: 2026-02-22 17:12:00
+
+### 実装内容
+
+1. **CollectorEventインターフェースの修正**
+   - `max_items?: number`フィールドを追加
+
+2. **handleOnDemandMode関数の修正**
+   - `max_items`パラメータを追加
+   - `collectDisclosuresForDateRange`に渡す
+
+3. **collectDisclosuresForDateRange関数の修正**
+   - `max_items`パラメータを追加
+   - スクレイピング結果を`max_items`で制限
+   - 残り件数を計算して、制限に達したらループを終了
+   - ログに`max_items`情報を追加
+
+4. **カウント累積ロジックの修正**
+   - `collected_count`と`failed_count`を累積するように修正
+   - コールバックでは更新せず、`results`から累積
+
+### テスト結果
+
+```
+Test Suites: 1 passed, 1 total
+Tests:       14 passed, 14 total
+```
+
+すべてのユニットテストが成功しました。
+
+### 次のステップ
+
+1. CDKデプロイ（本番環境）
+2. 10件テストの再実行
+3. CloudWatch Logsでログ出力を確認
 

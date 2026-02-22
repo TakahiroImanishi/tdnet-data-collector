@@ -1,7 +1,11 @@
 # トラブルシューティングガイド
 
 **バージョン:** 1.0.0  
-**最終更新:** 2026-02-15
+**最終更新:** 2026-02-22
+
+**役割**: このドキュメントは、TDnet Data Collectorの包括的なトラブルシューティングガイドです。Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視などの問題を網羅しています。
+
+**APIキー関連エラー**: Secrets Manager、環境変数、ネットワークに関連するAPIキーエラーについては、[03-operations/troubleshooting.md](../03-operations/troubleshooting.md) を参照してください。
 
 TDnet Data Collectorの開発・運用中に発生する可能性のある問題と解決策をまとめたものです。
 

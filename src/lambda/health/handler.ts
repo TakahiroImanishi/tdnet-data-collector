@@ -5,6 +5,12 @@
  * DynamoDBとS3の接続確認を行い、システムの健全性を返却します。
  *
  * Requirements: 要件4.1（検索API）
+ * 
+ * 関連ドキュメント:
+ * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
+ * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
+ * - .kiro/steering/core/error-handling-patterns.md - エラーハンドリング
+ * - .kiro/steering/api/api-design-guidelines.md - API設計
  */
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';

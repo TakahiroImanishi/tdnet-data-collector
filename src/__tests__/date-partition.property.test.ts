@@ -3,6 +3,8 @@
  * 
  * Tests the correctness of generateDatePartition function using fast-check
  * to verify behavior across a wide range of inputs.
+ * 
+ * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
 import * as fc from 'fast-check';

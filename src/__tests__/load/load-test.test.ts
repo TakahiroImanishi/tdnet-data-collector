@@ -6,6 +6,8 @@
  * 【重要】このテストは実際のAWS環境（Lambda + API Gateway + DynamoDB）が必要です
  * LocalStack環境では実行できません
  * 
+ * テスト戦略: .kiro/steering/development/testing-strategy.md
+ * 
  * 実行方法:
  * 1. AWS環境にデプロイ
  * 2. 環境変数を設定:

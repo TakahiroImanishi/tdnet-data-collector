@@ -13,6 +13,11 @@ import { LambdaDLQ } from '../constructs/lambda-dlq';
  * Compute Stack - Lambda関数とDLQ
  * 変更頻度: 高（週数回）
  * 依存: Foundation Stack
+ * 
+ * 関連ドキュメント:
+ * - .kiro/steering/infrastructure/cdk-implementation.md - CDK実装ガイド
+ * - .kiro/steering/security/security-best-practices.md - セキュリティベストプラクティス
+ * - .kiro/steering/infrastructure/deployment-checklist.md - デプロイチェックリスト
  */
 export interface TdnetComputeStackProps extends cdk.StackProps {
   environment: Environment;

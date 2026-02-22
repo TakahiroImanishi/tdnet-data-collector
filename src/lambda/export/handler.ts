@@ -5,6 +5,12 @@
  * APIキー認証を実装し、非同期でエクスポート処理を実行します。
  *
  * Requirements: 要件5.1, 5.2, 5.4, 11.1（エクスポート、認証）
+ * 
+ * 関連ドキュメント:
+ * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
+ * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
+ * - .kiro/steering/core/error-handling-patterns.md - エラーハンドリング
+ * - .kiro/steering/api/api-design-guidelines.md - API設計
  */
 
 import { APIGatewayProxyResult, Context } from 'aws-lambda';

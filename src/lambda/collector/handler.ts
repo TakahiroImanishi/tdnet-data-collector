@@ -5,6 +5,11 @@
  * バッチモード（日次自動実行）とオンデマンドモード（手動実行）をサポート。
  *
  * Requirements: 要件1.1, 1.2, 5.1, 5.2
+ * 
+ * 関連ドキュメント:
+ * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
+ * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
+ * - .kiro/steering/core/error-handling-patterns.md - エラーハンドリング
  */
 
 import { Context } from 'aws-lambda';
@@ -39,6 +44,9 @@ export interface CollectorEvent {
 
   /** 終了日（ISO 8601形式、YYYY-MM-DD）- on-demandモードで必須 */
   end_date?: string;
+
+  /** 最大収集件数（オプション、デフォルト: 制限なし） */
+  max_items?: number;
 }
 
 /**
@@ -108,7 +116,8 @@ export async function handler(
       response = await handleOnDemandMode(
         execution_id,
         event.start_date!,
-        event.end_date!
+        event.end_date!,
+        event.max_items
       );
     }
 
@@ -289,23 +298,27 @@ async function handleBatchMode(
  * @param execution_id 実行ID
  * @param start_date 開始日（YYYY-MM-DD）
  * @param end_date 終了日（YYYY-MM-DD）
+ * @param max_items 最大収集件数（オプション）
  * @returns CollectorResponse
  */
 async function handleOnDemandMode(
   execution_id: string,
   start_date: string,
-  end_date: string
+  end_date: string,
+  max_items?: number
 ): Promise<CollectorResponse> {
   logger.info('On-demand mode: collecting data for specified range', {
     execution_id,
     start_date,
     end_date,
+    max_items,
   });
 
   return await collectDisclosuresForDateRange(
     execution_id,
     start_date,
-    end_date
+    end_date,
+    max_items
   );
 }
 
@@ -315,12 +328,14 @@ async function handleOnDemandMode(
  * @param execution_id 実行ID
  * @param start_date 開始日（YYYY-MM-DD）
  * @param end_date 終了日（YYYY-MM-DD）
+ * @param max_items 最大収集件数（オプション）
  * @returns CollectorResponse
  */
 async function collectDisclosuresForDateRange(
   execution_id: string,
   start_date: string,
-  end_date: string
+  end_date: string,
+  max_items?: number
 ): Promise<CollectorResponse> {
   const dates = generateDateRange(start_date, end_date);
   let collected_count = 0;
@@ -332,6 +347,7 @@ async function collectDisclosuresForDateRange(
     start_date,
     end_date,
     total_days: dates.length,
+    max_items,
   });
 
   // 実行状態を初期化（pending）
@@ -358,21 +374,51 @@ async function collectDisclosuresForDateRange(
         count: disclosureMetadata.length,
       });
 
+      // max_itemsが指定されている場合、制限を適用
+      let metadataToProcess = disclosureMetadata;
+      if (max_items !== undefined && max_items > 0) {
+        const remaining = max_items - (collected_count + failed_count);
+        if (remaining <= 0) {
+          logger.info('Max items limit reached, stopping collection', {
+            execution_id,
+            max_items,
+            collected_count,
+            failed_count,
+          });
+          break;
+        }
+        if (disclosureMetadata.length > remaining) {
+          metadataToProcess = disclosureMetadata.slice(0, remaining);
+          logger.info('Limiting disclosures to max_items', {
+            execution_id,
+            original_count: disclosureMetadata.length,
+            limited_count: metadataToProcess.length,
+            remaining,
+          });
+        }
+      }
+
       // 総件数を更新
-      total_count += disclosureMetadata.length;
+      total_count += metadataToProcess.length;
+
+      logger.info('Total disclosures to process', {
+        execution_id,
+        total_count,
+        max_items,
+      });
 
       // 並列処理（並列度5）
       // 進捗更新コールバックを渡す
       const results = await processDisclosuresInParallel(
-        disclosureMetadata,
+        metadataToProcess,
         execution_id,
         5,
         async (batchSuccess: number, batchFailed: number) => {
           // バッチ完了時に進捗を更新
-          collected_count += batchSuccess;
-          failed_count += batchFailed;
+          const currentCollected = collected_count + batchSuccess;
+          const currentFailed = failed_count + batchFailed;
           
-          const processed = collected_count + failed_count;
+          const processed = currentCollected + currentFailed;
           const progress = total_count > 0 
             ? Math.floor((processed / total_count) * 100) 
             : 0;
@@ -381,15 +427,15 @@ async function collectDisclosuresForDateRange(
             execution_id,
             'running',
             progress,
-            collected_count,
-            failed_count
+            currentCollected,
+            currentFailed
           );
         }
       );
 
-      // 最終カウントを更新（コールバックで既に更新済みだが念のため）
-      collected_count = results.success;
-      failed_count = results.failed;
+      // カウントを累積（コールバックでは更新していないため、ここで累積）
+      collected_count += results.success;
+      failed_count += results.failed;
     } catch (error) {
       logger.error(
         'Failed to collect disclosures for date',

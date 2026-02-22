@@ -5,6 +5,8 @@
  * - 不要な依存関係の削除確認
  * - コールドスタート時間の短縮確認
  * - バンドルサイズの最適化確認
+ * 
+ * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
 import * as fs from 'fs';

@@ -4,6 +4,8 @@
  * DynamoDB、S3、CloudWatchとの統合を検証します。
  *
  * Requirements: テスト改善（タスク24）
+ * 
+ * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';

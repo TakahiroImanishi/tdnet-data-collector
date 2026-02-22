@@ -529,10 +529,10 @@ export async function downloadPdf(
 - Lambda関数のメトリクスを確認（メモリ使用量、実行時間）
 
 **成果物**:
-- [ ] 小規模テスト（10件）の実行結果 → ❌ AWS認証エラーで実行不可
+- [ ] 小規模テスト（10件）の実行結果
 - [ ] CloudWatch Logsの確認結果
 - [ ] 998件で停止する具体的な原因の特定
-- [x] 作業記録: `work-log-20260222-170302-lambda-998-limit-10-items-test.md`
+- [ ] 作業記録: `work-log-20260222-170302-lambda-998-limit-10-items-test.md`
 
 **実行状況**:
 - **実行日時**: 2026-02-22 17:03:30

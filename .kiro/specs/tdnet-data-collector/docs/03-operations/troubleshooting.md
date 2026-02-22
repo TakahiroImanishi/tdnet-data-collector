@@ -1,6 +1,10 @@
-# トラブルシューティング
+# トラブルシューティング - APIキー関連エラー
 
-このドキュメントでは、TDnet Data Collectorの運用中に発生する可能性のある問題と、その解決方法を説明します。
+**役割**: このドキュメントは、APIキー取得に関連するエラー（Secrets Manager、環境変数、ネットワーク）のトラブルシューティングに特化しています。
+
+**包括的なトラブルシューティング**: Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視などの問題については、[05-operations/troubleshooting.md](../05-operations/troubleshooting.md) を参照してください。
+
+このドキュメントでは、TDnet Data Collectorの運用中に発生する可能性のあるAPIキー関連の問題と、その解決方法を説明します。
 
 ## 目次
 

@@ -10,7 +10,7 @@ docs/
 ├── 02-implementation/    # 実装ガイド（3ファイル）
 ├── 03-testing/           # テスト（4ファイル）
 ├── 04-deployment/        # デプロイ（6ファイル）
-├── 05-operations/        # 運用（6ファイル）
+├── 05-operations/        # 運用（7ファイル）
 ├── 06-scripts/           # スクリプト（3ファイル）
 ├── milestones.md         # マイルストーン達成状況
 └── README.md             # このファイル
@@ -73,10 +73,11 @@ docs/
 |---------|------|
 | monitoring-guide.md | 監視ガイド（CloudWatch、Alarms、Dashboard） |
 | cost-monitoring.md | コスト監視ガイド |
-| troubleshooting.md | トラブルシューティングガイド |
+| troubleshooting.md | 包括的なトラブルシューティングガイド（Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視） |
 | backup-strategy.md | バックアップ戦略 |
 | lambda-power-tuning.md | Lambda Power Tuningガイド（Phase 5実施予定） |
 | operations-manual.md | 運用マニュアル |
+| ../03-operations/troubleshooting.md | APIキー関連エラーのトラブルシューティング（Secrets Manager、環境変数、ネットワーク） |
 
 ## 06-scripts/ - スクリプト
 
@@ -148,6 +149,13 @@ Phase 1-4の達成状況とPhase 5の計画。
 4. 運用手順変更時は `05-operations/` 配下を更新
 5. 更新後は作業記録に記載
 
+## 📚 ドキュメント作成ガイドライン
+
+新規ドキュメント作成時は、以下のガイドラインに従ってください：
+
+- [ドキュメント作成ガイドライン](../../steering/development/mcp-documentation-guidelines.md) - MCP活用とドキュメント標準
+- [ドキュメント標準](../../steering/development/documentation-standards.md) - 一般的なドキュメント標準
+
 ---
 
-**最終更新**: 2026年2月15日
+**最終更新**: 2026年2月22日

@@ -7,6 +7,8 @@
  * - 1件あたりの収集時間: 5秒以内
  * - 50件の収集: 5分以内
  * - クエリ応答時間: 500ms以内
+ * 
+ * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';

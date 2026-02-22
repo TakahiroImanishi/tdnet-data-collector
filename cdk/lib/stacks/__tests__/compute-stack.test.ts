@@ -2,6 +2,8 @@
  * Compute Stack テスト
  *
  * Lambda関数、DLQ、IAM権限の設定を検証します。
+ * 
+ * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
 import * as cdk from 'aws-cdk-lib';
