@@ -7,12 +7,11 @@
 ```
 02-designs/
 ├── 01-design/            # 設計ドキュメント（8ファイル）
-├── 02-implementation/    # 実装ガイド（4ファイル）
+├── 02-implementation/    # 実装ガイド（4ファイル + step-functionsフォルダ）
 ├── 03-testing/           # テスト（4ファイル）
 ├── 04-deployment/        # デプロイ（6ファイル）
 ├── 05-operations/        # 運用（8ファイル）
 ├── 06-scripts/           # スクリプト（3ファイル）
-├── 07-step-functions/    # Step Functions設計（6ファイル）
 ├── milestones.md         # マイルストーン達成状況
 └── README.md             # このファイル
 ```
@@ -34,7 +33,7 @@
 
 ## 02-implementation/ - 実装ガイド
 
-実装開始前のチェックリストと検証項目、CDKインフラストラクチャドキュメント。
+実装開始前のチェックリストと検証項目、CDKインフラストラクチャドキュメント、Step Functions設計。
 
 | ファイル | 内容 |
 |---------|------|
@@ -42,6 +41,7 @@
 | correctness-properties-checklist.md | 設計検証項目（15項目） |
 | cdk-infrastructure.md | CDKインフラストラクチャ完全ガイド |
 | README.md | フォルダ概要 |
+| step-functions/ | Step Functions設計ドキュメント（6ファイル） |
 
 ## 03-testing/ - テスト
 
@@ -94,19 +94,6 @@
 | setup-scripts.md | セットアップスクリプト |
 | README.md | フォルダ概要 |
 
-## 07-step-functions/ - Step Functions設計
-
-AWS Step Functionsを使用したデータ収集ワークフローの設計ドキュメント。
-
-| ファイル | 内容 |
-|---------|------|
-| step-functions-architecture.md | Step Functionsアーキテクチャ設計 |
-| step-functions-workflow-diagram.md | ワークフロー図と状態遷移 |
-| step-functions-state-machine.json | ステートマシン定義（JSON） |
-| step-functions-error-handling.md | エラーハンドリング戦略 |
-| step-functions-cost-analysis.md | コスト分析と最適化 |
-| README.md | フォルダ概要 |
-
 ## milestones.md - マイルストーン
 
 Phase 1-4の達成状況とPhase 5の計画。
@@ -121,10 +108,10 @@ Phase 1-4の達成状況とPhase 5の計画。
 ### 実装者
 1. `02-implementation/implementation-checklist.md` - 実装前チェック
 2. `02-implementation/cdk-infrastructure.md` - CDKインフラ構成理解
-3. `01-design/api-design.md` - API設計確認
-4. `01-design/openapi.yaml` - API仕様確認
-5. `04-deployment/environment-setup.md` - 環境構築
-6. `07-step-functions/step-functions-architecture.md` - Step Functions設計確認
+3. `02-implementation/step-functions/step-functions-architecture.md` - Step Functions設計確認
+4. `01-design/api-design.md` - API設計確認
+5. `01-design/openapi.yaml` - API仕様確認
+6. `04-deployment/environment-setup.md` - 環境構築
 
 ### テスター
 1. `03-testing/localstack-setup.md` - テスト環境構築
@@ -164,8 +151,8 @@ Phase 1-4の達成状況とPhase 5の計画。
 1. ドキュメント更新時は関連するsteeringファイルも確認
 2. 設計変更時は `01-design/` 配下を更新
 3. 実装手順変更時は `02-implementation/` 配下を更新
-4. 運用手順変更時は `05-operations/` 配下を更新
-5. Step Functions設計変更時は `07-step-functions/` 配下を更新
+4. Step Functions設計変更時は `02-implementation/step-functions/` 配下を更新
+5. 運用手順変更時は `05-operations/` 配下を更新
 6. 更新後は作業記録に記載
 
 ## 📚 ドキュメント作成ガイドライン

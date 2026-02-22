@@ -15,6 +15,7 @@
 | `implementation-checklist.md` | 実装開始前チェックリスト（要件確認、環境準備、開発フロー） |
 | `cdk-infrastructure.md` | CDKインフラストラクチャ完全ガイド（4層スタック構成、Constructs、デプロイフロー） |
 | `correctness-properties-checklist.md` | 設計検証チェックリスト（要件との対応、正確性プロパティ） |
+| `step-functions/` | Step Functions設計ドキュメント（アーキテクチャ、ワークフロー、エラーハンドリング、コスト分析） |
 
 ## 推奨される読み順
 
@@ -25,7 +26,8 @@
 
 ### CDK実装時
 1. `cdk-infrastructure.md` - スタック構成とConstructsを参照
-2. `implementation-checklist.md` - 実装進捗を確認
+2. `step-functions/step-functions-architecture.md` - Step Functions設計を確認
+3. `implementation-checklist.md` - 実装進捗を確認
 
 ## 関連ドキュメント
 
