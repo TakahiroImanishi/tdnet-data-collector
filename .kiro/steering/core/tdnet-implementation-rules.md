@@ -15,6 +15,11 @@ TDnetから上場企業の開示情報を自動収集するAWSサーバーレス
 
 Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWatch | WAF
 
+## AWS認証
+
+- **AWS SSO**: プロファイル`tdnet-prod`を使用（`~/.aws/config`に設定済み）
+- **使用方法**: `aws sso login --profile tdnet-prod` でログイン後、CDKデプロイやスクリプト実行時に`--profile tdnet-prod`を指定
+
 ## プロジェクト構造
 
 - **src/lambda/**: 11個のLambda関数（collector, query, export, api, get-disclosure, collect-status, stats, health, dlq-processor, api-key-rotation）

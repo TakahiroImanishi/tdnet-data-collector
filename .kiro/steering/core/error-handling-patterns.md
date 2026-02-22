@@ -43,3 +43,7 @@ logger.error('Operation failed', {
 - [ ] 部分的失敗処理（バッチ）
 - [ ] DLQ設定（非同期Lambda/SQSのみ。API Gateway統合Lambdaは不要）
 - [ ] CloudWatch Alarms（エラー率、DLQメッセージ数）
+
+## 関連
+
+`tdnet-implementation-rules.md`, `../development/error-handling-implementation.md`, `../development/error-handling-enforcement.md`

@@ -72,3 +72,7 @@ await Promise.allSettled(disclosures.map(d => limit(() => processDisclosure(d)))
 | Lambda実行時間（Query） | < 1秒 |
 | DynamoDBクエリレイテンシ | < 100ms |
 | API レスポンスタイム | < 500ms |
+
+## 関連
+
+`../development/lambda-implementation.md`, `cdk-implementation.md`, `monitoring-alerts.md`

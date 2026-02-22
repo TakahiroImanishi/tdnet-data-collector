@@ -49,3 +49,7 @@
 - メイン記録にリンク追加
 - Git commit
 - tasks.md更新確認
+
+## 関連
+
+`tdnet-implementation-rules.md`, `file-encoding-rules.md`, `../development/workflow-guidelines.md`

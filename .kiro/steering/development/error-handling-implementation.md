@@ -57,3 +57,7 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context) => 
 | `CircuitBreaker` | `src/utils/circuit-breaker.ts` |
 | `withTimeout` | `src/utils/timeout.ts` |
 | `toErrorResponse` | `src/utils/error-response.ts` |
+
+## 関連ドキュメント
+
+`../core/error-handling-patterns.md`, `lambda-implementation.md`, `testing-strategy.md`

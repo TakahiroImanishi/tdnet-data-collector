@@ -155,3 +155,11 @@ docker-compose up -d
 
 - [LocalStack公式ドキュメント](https://docs.localstack.cloud/)
 - [Docker Compose公式ドキュメント](https://docs.docker.com/compose/)
+
+---
+
+## 関連ドキュメント
+
+- [E2Eテスト実行ガイド](./e2e-test-guide.md) - LocalStack環境でのE2Eテスト実行方法
+- [テスト戦略](../../../steering/development/testing-strategy.md) - プロジェクト全体のテスト戦略
+- [セットアップスクリプト](../06-scripts/setup-scripts.md) - LocalStackセットアップスクリプトの詳細

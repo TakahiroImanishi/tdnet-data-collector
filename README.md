@@ -1109,6 +1109,31 @@ aws logs filter-log-events \
 
 ---
 
+## 実装ガイドライン
+
+プロジェクトの実装時は、以下のSteeringファイルを参照してください。これらのガイドラインは、コード品質、セキュリティ、パフォーマンスを保証するための重要な原則を定義しています。
+
+### 基本ルール（必読）
+
+- [実装ルール](.kiro/steering/core/tdnet-implementation-rules.md) - プロジェクト全体の実装原則、技術スタック、AWS認証
+- [エラーハンドリングパターン](.kiro/steering/core/error-handling-patterns.md) - エラー分類、再試行戦略、ログ構造
+- [タスク実行ルール](.kiro/steering/core/tdnet-data-collector.md) - タスク実行チェックリスト、作業記録の作成方法
+
+### テスト
+
+- [テスト戦略](.kiro/steering/development/testing-strategy.md) - ユニットテスト、統合テスト、プロパティベーステスト
+
+### インフラストラクチャ
+
+- [CDK実装ガイド](.kiro/steering/infrastructure/cdk-implementation.md) - CDKスタック設計、Construct実装
+- [デプロイチェックリスト](.kiro/steering/infrastructure/deployment-checklist.md) - デプロイ前後の確認事項
+
+### セキュリティ
+
+- [セキュリティベストプラクティス](.kiro/steering/security/security-best-practices.md) - IAM権限、暗号化、監査ログ
+
+---
+
 ## ドキュメント
 
 ### 仕様書

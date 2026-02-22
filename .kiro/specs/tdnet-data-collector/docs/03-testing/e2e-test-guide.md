@@ -96,3 +96,12 @@ E2Eテストは、APIキー認証の動作を包括的に検証するための�
 - 開発中: 機能追加・変更時に随時実行
 - CI/CD: プルリクエスト時に自動実行
 - リリース前: 必ず実行して動作確認
+
+---
+
+## 関連ドキュメント
+
+- [LocalStack環境構築ガイド](./localstack-setup.md) - LocalStack環境のセットアップ手順
+- [テスト戦略](../../../steering/development/testing-strategy.md) - プロジェクト全体のテスト戦略
+- [スモークテストガイド](./smoke-test-guide.md) - デプロイ後の動作確認手順
+- [負荷テストガイド](./load-testing-guide.md) - パフォーマンステストの実施方法

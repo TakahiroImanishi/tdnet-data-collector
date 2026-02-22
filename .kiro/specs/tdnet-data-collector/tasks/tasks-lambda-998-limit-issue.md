@@ -480,8 +480,135 @@ export async function downloadPdf(
 | タスク1: 根本原因の特定 | 🔴 Critical | 即座 | ✅ 完了（部分的） |
 | タスク2: ログ出力の強化 | 🔴 Critical | 即座 | ✅ 完了 |
 
+---
+
+### タスク3: ログ出力の検証とデバッグ（緊急）
+
+**優先度**: 🔴 Critical  
+**期限**: 即座  
+**担当**: AI Assistant
+
+**背景**:
+2026年2月22日の調査で、以下の事実が判明しました：
+- TDnetから2,694件のデータ取得成功 ✅
+- DynamoDB/S3には998件しか保存されていない ❌
+- タスク2で追加したログ（`Processing batch`, `Batch completed`等）が出力されていない ❌
+
+**実施内容**:
+
+#### 3.1 ログ出力の検証
+
+**目的**: タスク2で追加したログが本番環境で正しく出力されるか確認
+
+**手順**:
+1. 本番環境で小規模テスト（10件）を実行
+   ```powershell
+   .\scripts\manual-data-collection.ps1 -StartDate "2026-02-12" -EndDate "2026-02-12" -MaxItems 10
+   ```
+
+2. CloudWatch Logsで以下のログを確認
+   - `Total disclosures to process: 10`
+   - `Processing batch 1/2`
+   - `Batch completed`
+   - `All batches completed`
+
+3. ログが出力されない場合の対処
+   - Lambda関数を再デプロイ
+   - または、Lambda関数のキャッシュをクリア
+
+#### 3.2 998件で停止する原因の特定
+
+**ログが正しく出力される場合**:
+- 998件目と999件目の処理ログを比較
+- 重複検出ログの件数を確認
+- エラーログの有無を確認
+
+**ログが出力されない場合**:
+- Lambda関数が998件で異常終了している可能性
+- メモリ不足またはタイムアウトの可能性
+- Lambda関数のメトリクスを確認（メモリ使用量、実行時間）
+
+**成果物**:
+- [ ] 小規模テスト（10件）の実行結果 → ❌ AWS認証エラーで実行不可
+- [ ] CloudWatch Logsの確認結果
+- [ ] 998件で停止する具体的な原因の特定
+- [x] 作業記録: `work-log-20260222-170302-lambda-998-limit-10-items-test.md`
+
+**実行状況**:
+- **実行日時**: 2026-02-22 17:03:30
+- **結果**: ❌ 失敗（AWS認証エラー）
+- **エラー**: `UnrecognizedClientException: The security token included in the request is invalid`
+- **原因**: AWS認証トークンの有効期限切れ
+
+**対処方法**:
+1. AWS SSOで再認証: `aws sso login --profile [your-profile]`
+2. または、環境変数で直接APIキーを設定: `$env:TDNET_API_KEY = 'your-api-key'`
+3. または、AWS認証情報を更新: `aws configure`
+
+**完了条件**:
+- ログが正しく出力されることを確認
+- 998件で停止する具体的な原因を特定
+
+**ブロッカー**: AWS認証情報の更新が必要
+
+---
+
+### タスク4: 998件制限問題の修正実装（緊急）
+
+**優先度**: 🔴 Critical  
+**期限**: タスク3完了後、即座  
+**担当**: AI Assistant
+
+**前提条件**: タスク3で根本原因が特定されていること
+
+**実施内容**:
+
+タスク3の結果に基づいて、以下のいずれかの修正を実施します。
+
+#### パターンA: 重複データが原因の場合
+
+**修正内容**:
+- `generateDisclosureId`のロジックを見直し
+- 重複チェックの条件を確認
+- 必要に応じて、disclosure_idの生成方法を変更
+
+#### パターンB: S3 PutObjectエラーが原因の場合
+
+**修正内容**:
+- `download-pdf.ts`に再試行ロジックを追加
+- S3アップロードのエラーハンドリングを強化
+- エラー時のログ出力を追加
+
+#### パターンC: メモリ不足が原因の場合
+
+**修正内容**:
+- Lambda関数のメモリを512MB→1024MBに増加
+- バッチサイズを5→3に削減
+- 処理済みデータのメモリ解放を追加
+
+#### パターンD: タイムアウトが原因の場合
+
+**修正内容**:
+- Lambda関数のタイムアウトを15分→30分に増加
+- または、Step Functionsへの移行を検討（tasks-step-functions-migration.md参照）
+
+**成果物**:
+- [ ] 修正されたLambda関数コード
+- [ ] ユニットテストの更新と実行（全て成功）
+- [ ] 本番環境へのデプロイ
+- [ ] 修正後の動作確認（2,694件すべて保存されることを確認）
+- [ ] 作業記録: `work-log-20260222-HHMMSS-998-limit-fix.md`
+
+**完了条件**:
+- 2,694件すべてのデータがDynamoDB/S3に保存される
+- ユニットテストがすべて成功
+- 本番環境で動作確認完了
+
+---
+
 ## 関連ドキュメント
 
+- 調査記録: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-164736-investigate-998-limit-20260213.md`
 - 作業記録: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-152446-lambda-998-limit-root-cause.md`
 - Lambda関数: `src/lambda/collector/handler.ts`
 - CDKスタック: `cdk/lib/stacks/compute-stack.ts`

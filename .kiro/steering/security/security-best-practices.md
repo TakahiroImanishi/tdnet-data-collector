@@ -144,3 +144,7 @@ fileMatchPattern: '**/cdk/lib/**/*-stack.ts|**/iam/**/*.ts|**/security/**/*.ts'
 - [ ] CloudTrailログ確認
 - [ ] 依存関係更新
 - [ ] APIキーローテーション（90日経過時）
+
+## 関連
+
+`../infrastructure/cdk-implementation.md`, `../infrastructure/deployment-checklist.md`, `../infrastructure/environment-variables.md`

@@ -90,3 +90,7 @@ npm run startup
 | ビルドファイル不足 | `npm run build` |
 | Bootstrap未実行 | `-SkipBootstrap`を外す |
 | Secret作成失敗 | `-SkipSecretCreation`使用 |
+
+## 関連
+
+`deployment-checklist.md`, `../development/powershell-encoding-guidelines.md`, `../security/security-best-practices.md`
