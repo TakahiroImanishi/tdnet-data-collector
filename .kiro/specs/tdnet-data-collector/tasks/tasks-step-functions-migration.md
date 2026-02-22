@@ -198,16 +198,20 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `cdk/lib/stacks/__tests__/compute-stack.test.ts`（更新）
 
 #### タスク3.3: 実行状態管理テーブル作成
-- [ ] DynamoDBテーブル定義
+- [x] DynamoDBテーブル定義
   - PK: `execution_id`
   - 属性: status, start_time, end_time, progress, collected_count, failed_count, error_message
   - TTL設定（30日後削除）
-- [ ] GSI設計（必要に応じて）
-- [ ] CDK実装
+- [x] GSI設計（必要に応じて）
+- [x] CDK実装
+
+**完了日時**: 2026-02-22 18:55:00
+**テスト結果**: ユニットテスト15件全て成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-185100-execution-state-table.md`
 
 **成果物**:
-- `cdk/lib/constructs/execution-state-table.ts`
-- `cdk/lib/constructs/__tests__/execution-state-table.test.ts`
+- `cdk/lib/constructs/execution-state-table.ts` ✓
+- `cdk/lib/constructs/__tests__/execution-state-table.test.ts` ✓
 
 ### フェーズ4: API統合（優先度: 中）
 
