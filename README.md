@@ -600,6 +600,279 @@ Too many requests
 - レート制限設定を確認（デフォルト: 1リクエスト/秒）
 - 必要に応じて `src/utils/rate-limiter.ts` の設定を調整
 
+### API Gatewayエラー
+
+#### 1. CORSエラー
+
+**エラーメッセージ:**
+```
+Access to fetch at 'https://api.example.com/disclosures' from origin 'https://dashboard.example.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+**原因:**
+- API GatewayのCORS設定が不足している
+- Lambda関数のレスポンスヘッダーにCORSヘッダーが含まれていない
+
+**解決方法:**
+1. API GatewayのCORS設定を確認:
+   ```bash
+   aws apigateway get-resource \
+     --rest-api-id YOUR_API_ID \
+     --resource-id YOUR_RESOURCE_ID
+   ```
+2. Lambda関数のレスポンスにCORSヘッダーを追加:
+   ```typescript
+   return {
+     statusCode: 200,
+     headers: {
+       'Access-Control-Allow-Origin': '*',
+       'Access-Control-Allow-Headers': 'Content-Type,X-Api-Key',
+       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+     },
+     body: JSON.stringify(data)
+   };
+   ```
+
+#### 2. 認証エラー
+
+**エラーメッセージ:**
+```
+{"message":"Forbidden"}
+```
+
+**原因:**
+- APIキーが不正または期限切れ
+- APIキーヘッダーが欠落している
+- Secrets Managerからのキー取得に失敗
+
+**解決方法:**
+1. APIキーの確認:
+   ```bash
+   aws apigateway get-api-keys --include-values
+   ```
+2. APIキーの再生成:
+   ```bash
+   .\scripts\register-api-key.ps1 -Environment prod -Action rotate
+   ```
+3. リクエストヘッダーにAPIキーを含める:
+   ```bash
+   curl -H "x-api-key: YOUR_API_KEY" https://api.example.com/disclosures
+   ```
+
+#### 3. レート制限エラー
+
+**エラーメッセージ:**
+```
+{"message":"Too Many Requests"}
+```
+
+**原因:**
+- API Gatewayのスロットリング制限を超過（デフォルト: 10,000リクエスト/秒、5,000バースト）
+- 使用量プランの制限を超過
+
+**解決方法:**
+1. スロットリング設定を確認:
+   ```bash
+   aws apigateway get-stage \
+     --rest-api-id YOUR_API_ID \
+     --stage-name prod
+   ```
+2. 使用量プランの制限を確認:
+   ```bash
+   aws apigateway get-usage-plan --usage-plan-id YOUR_PLAN_ID
+   ```
+3. リクエスト頻度を調整（クライアント側で再試行ロジックを実装）
+
+#### 4. タイムアウトエラー
+
+**エラーメッセージ:**
+```
+{"message":"Endpoint request timed out"}
+```
+
+**原因:**
+- Lambda関数の実行時間がAPI Gatewayのタイムアウト（29秒）を超過
+- Lambda関数内での外部API呼び出しが遅延
+
+**解決方法:**
+1. Lambda関数のタイムアウトを確認:
+   ```bash
+   aws lambda get-function-configuration --function-name YOUR_FUNCTION_NAME
+   ```
+2. Lambda関数の処理を最適化（非同期処理、キャッシュ活用）
+3. API Gatewayの統合タイムアウトを確認（最大29秒）
+
+### CloudFrontエラー
+
+#### 1. キャッシュ問題
+
+**エラーメッセージ:**
+```
+古いコンテンツが表示される（更新が反映されない）
+```
+
+**原因:**
+- CloudFrontのキャッシュTTLが長すぎる
+- キャッシュ無効化（Invalidation）が実行されていない
+
+**解決方法:**
+1. キャッシュを手動で無効化:
+   ```bash
+   aws cloudfront create-invalidation \
+     --distribution-id YOUR_DISTRIBUTION_ID \
+     --paths "/*"
+   ```
+2. キャッシュ無効化の状態を確認:
+   ```bash
+   aws cloudfront get-invalidation \
+     --distribution-id YOUR_DISTRIBUTION_ID \
+     --id YOUR_INVALIDATION_ID
+   ```
+3. キャッシュポリシーを調整（TTLを短縮、またはCache-Controlヘッダーを使用）
+
+#### 2. SSL証明書エラー
+
+**エラーメッセージ:**
+```
+NET::ERR_CERT_DATE_INVALID
+Your connection is not private
+```
+
+**原因:**
+- SSL証明書の期限切れ
+- 証明書とドメイン名の不一致
+- 証明書がus-east-1リージョンに存在しない（CloudFrontの要件）
+
+**解決方法:**
+1. 証明書の状態を確認:
+   ```bash
+   aws acm list-certificates --region us-east-1
+   aws acm describe-certificate \
+     --certificate-arn YOUR_CERT_ARN \
+     --region us-east-1
+   ```
+2. 証明書を更新または再発行（ACMの自動更新を有効化）
+3. CloudFrontディストリビューションの証明書設定を確認:
+   ```bash
+   aws cloudfront get-distribution-config --id YOUR_DISTRIBUTION_ID
+   ```
+
+#### 3. オリジンエラー
+
+**エラーメッセージ:**
+```
+502 Bad Gateway
+503 Service Unavailable
+```
+
+**原因:**
+- オリジン（S3バケットまたはAPI Gateway）が応答していない
+- オリジンのアクセス権限が不足している
+- オリジンのタイムアウト設定が短すぎる
+
+**解決方法:**
+1. オリジンの状態を確認:
+   ```bash
+   # S3バケットの場合
+   aws s3 ls s3://YOUR_BUCKET_NAME/
+   
+   # API Gatewayの場合
+   curl -I https://YOUR_API_ENDPOINT/
+   ```
+2. CloudFrontのオリジン設定を確認:
+   ```bash
+   aws cloudfront get-distribution-config --id YOUR_DISTRIBUTION_ID
+   ```
+3. オリジンアクセスアイデンティティ（OAI）の権限を確認（S3の場合）
+4. CloudWatch Logsでオリジンのエラーログを確認
+
+### Secrets Managerエラー
+
+#### 1. アクセス拒否
+
+**エラーメッセージ:**
+```
+AccessDeniedException: User is not authorized to perform: secretsmanager:GetSecretValue
+```
+
+**原因:**
+- Lambda実行ロールにSecrets Managerの権限が不足している
+- シークレットのリソースポリシーでアクセスが拒否されている
+
+**解決方法:**
+1. Lambda実行ロールに権限を追加:
+   ```json
+   {
+     "Effect": "Allow",
+     "Action": [
+       "secretsmanager:GetSecretValue",
+       "secretsmanager:DescribeSecret"
+     ],
+     "Resource": "arn:aws:secretsmanager:REGION:ACCOUNT-ID:secret:tdnet-api-key-*"
+   }
+   ```
+2. IAMロールの権限を確認:
+   ```bash
+   aws iam get-role-policy \
+     --role-name YOUR_LAMBDA_ROLE \
+     --policy-name YOUR_POLICY_NAME
+   ```
+
+#### 2. シークレット未作成
+
+**エラーメッセージ:**
+```
+ResourceNotFoundException: Secrets Manager can't find the specified secret.
+```
+
+**原因:**
+- シークレットが作成されていない
+- シークレット名が間違っている
+- リージョンが間違っている
+
+**解決方法:**
+1. シークレットの存在を確認:
+   ```bash
+   aws secretsmanager list-secrets
+   ```
+2. シークレットを作成:
+   ```bash
+   .\scripts\register-api-key.ps1 -Environment prod -Action create
+   ```
+3. シークレット名を確認（環境変数 `API_KEY_SECRET_NAME` と一致しているか）
+
+#### 3. シークレット値の取得失敗
+
+**エラーメッセージ:**
+```
+DecryptionFailure: Secrets Manager can't decrypt the protected secret text using the provided KMS key.
+```
+
+**原因:**
+- KMSキーへのアクセス権限が不足している
+- KMSキーが無効化または削除されている
+
+**解決方法:**
+1. KMSキーの状態を確認:
+   ```bash
+   aws kms describe-key --key-id YOUR_KEY_ID
+   ```
+2. Lambda実行ロールにKMS権限を追加:
+   ```json
+   {
+     "Effect": "Allow",
+     "Action": [
+       "kms:Decrypt",
+       "kms:DescribeKey"
+     ],
+     "Resource": "arn:aws:kms:REGION:ACCOUNT-ID:key/YOUR_KEY_ID"
+   }
+   ```
+3. シークレットの暗号化設定を確認:
+   ```bash
+   aws secretsmanager describe-secret --secret-id tdnet-api-key
+   ```
+
 ### ログの確認方法
 
 ```bash

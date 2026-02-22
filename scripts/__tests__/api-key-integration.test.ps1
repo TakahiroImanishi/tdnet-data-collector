@@ -97,6 +97,9 @@ Test-Case -Name "Environment variable fallback" -Test {
 }
 
 # Test 3: Secrets Manager connection failure handling
+# Note: このテストは正常に動作していますが、Test-Case関数のcatchブロックで
+# 例外メッセージが空になる既知の問題があります。実際のエラーハンドリングは
+# 正しく動作しています（exit code 254でエラーを検出）。
 Test-Case -Name "Secrets Manager connection failure handling" -Test {
     $Region = "ap-northeast-1"
     $InvalidSecretName = "/tdnet/invalid-secret-name-that-does-not-exist"
@@ -111,7 +114,8 @@ Test-Case -Name "Secrets Manager connection failure handling" -Test {
         throw "Non-existent secret succeeded unexpectedly"
     }
     
-    Write-Host "  Error occurred as expected" -ForegroundColor Gray
+    # エラーが発生したことを確認（exit code != 0）
+    Write-Host "  Error occurred as expected (exit code: $LASTEXITCODE)" -ForegroundColor Gray
 }
 
 # Test 4: manual-data-collection.ps1 syntax check

@@ -2,6 +2,14 @@
 # Development Environment Deployment Script
 # This script deploys the TDnet Data Collector to the development environment
 
+# UTF-8エンコーディング設定（包括的）
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+if ($PSVersionTable.PSVersion.Major -le 5) {
+    $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+}
+
 # Set error action preference
 $ErrorActionPreference = "Stop"
 

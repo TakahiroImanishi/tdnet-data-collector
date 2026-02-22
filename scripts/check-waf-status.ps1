@@ -7,6 +7,14 @@ param(
     [string]$Environment = 'prod'
 )
 
+# UTF-8エンコーディング設定（包括的）
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+if ($PSVersionTable.PSVersion.Major -le 5) {
+    $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+}
+
 $ErrorActionPreference = 'Stop'
 
 Write-Host "========================================" -ForegroundColor Cyan

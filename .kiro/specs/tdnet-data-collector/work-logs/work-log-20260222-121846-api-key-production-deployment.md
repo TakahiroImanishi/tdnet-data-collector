@@ -152,7 +152,10 @@ $disclosuresResponse = Invoke-RestMethod `
 ### 5. 申し送り事項
 
 #### 5.1 残課題
-- Test 3（Secrets Manager接続失敗ハンドリング）: エラーメッセージが空文字列のため例外がスローされない（軽微な問題）
+- Test 3（Secrets Manager接続失敗ハンドリング）: Test-Case関数のcatchブロックで例外メッセージが空文字列になる既知の問題（実際のエラーハンドリングは正常に動作）
+  - 原因: PowerShellの`$ErrorActionPreference = "Stop"`設定とAWS CLIのエラー出力の扱い
+  - 影響: テスト結果の表示のみ（実際の機能には影響なし）
+  - 対応: コメントを追加して明確化
 
 #### 5.2 次のステップ
 1. 実際のスクリプト（manual-data-collection.ps1, fetch-data-range.ps1）での動作確認

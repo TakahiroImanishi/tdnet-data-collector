@@ -15,6 +15,14 @@ param(
     [string]$Region = "ap-northeast-1"
 )
 
+# UTF-8エンコーディング設定（包括的）
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+if ($PSVersionTable.PSVersion.Major -le 5) {
+    $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+}
+
 Write-Host "=== DynamoDB and S3 Consistency Check ===" -ForegroundColor Cyan
 Write-Host "DynamoDB Table: $TableName"
 Write-Host "S3 Bucket: $BucketName"
