@@ -1654,14 +1654,117 @@ app.synth();
 
 ---
 
-## 進捗管理（最終更新: 2026-02-22 13:00）
+---
+
+### 50. タスク34残課題: Lambda Handlerテストの修正（高優先度）
+
+**問題**: タスク34のサブタスク実行後、Lambda Handlerテストに失敗が残っている
+
+**影響範囲**: Lambda Handlerテスト
+
+**対応内容**:
+- [ ] Lambda Query Handlerテストの3つの失敗を修正
+  - ファイル: `src/lambda/query/__tests__/handler.test.ts`
+  - 失敗数: 3テスト（成功: 23テスト）
+- [ ] Lambda Export to S3テストの1つの失敗を修正
+  - ファイル: `src/lambda/export/__tests__/export-to-s3.test.ts`
+  - 失敗数: 1テスト（成功: 9テスト）
+
+**修正方針**:
+1. 各テストファイルの失敗原因を特定（モック設定、実装との不整合等）
+2. テストを実装に合わせて修正
+3. テスト実行で全テストパスを確認
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: � 高
+
+**関連ファイル**:
+- `src/lambda/query/__tests__/handler.test.ts`
+- `src/lambda/export/__tests__/export-to-s3.test.ts`
+
+**作業記録**: 
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-142337-task34-subtask1-property-lambda-tests.md`
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-142338-task34-subtask2-cdk-handler-load-tests.md`
+
+**備考**: タスク34のサブタスク1と2で、プロパティベーステスト（31テスト）とCDKテスト（59テスト）は全て成功。残りはLambda Handlerテスト4件のみ。
+
+---
+
+### 51. タスク34残課題: 統合テストの設計見直し（中優先度）
+
+**問題**: Lambda統合テストとAPI Gateway統合テストがメモリ不足エラーで実行不可
+
+**影響範囲**: 統合テスト
+
+**エラー内容**: JavaScript heap out of memory
+
+**原因**: 実際のLambda handlerをインポートすることで、全ての依存関係が読み込まれ、メモリ使用量が4GB以上必要
+
+**対応内容**:
+- [ ] 統合テストの扱いを決定
+  - オプション1（推奨）: E2Eテストに統合（LocalStack環境で実環境に近いテスト）
+  - オプション2: Lambda handlerをモック化して軽量化
+  - オプション3: 暫定的にスキップ（プロパティベーステストで主要ロジックはカバー済み）
+- [ ] 選択したオプションを実装
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `src/__tests__/integration/lambda-integration.test.ts`
+- `src/__tests__/integration/api-gateway-integration.test.ts`
+- `src/__tests__/test-helpers.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-142337-task34-subtask1-property-lambda-tests.md`
+
+**備考**: プロパティベーステストで主要なロジックは既にカバーされているため、緊急性は低い。
+
+---
+
+### 52. タスク34残課題: 負荷テストの実行（低優先度）
+
+**問題**: 負荷テストが環境依存のため未実行
+
+**影響範囲**: 負荷テスト
+
+**対応内容**:
+- [ ] Docker Desktop起動確認: `docker ps`
+- [ ] LocalStack環境起動: `docker compose up -d`
+- [ ] LocalStack環境セットアップ: `scripts/localstack-setup.ps1`
+- [ ] 負荷テスト実行: `npm test -- src/__tests__/load/load-test.test.ts`
+- [ ] 実行結果を作業記録に記載
+
+**担当**: 未定
+
+**期限**: 1ヶ月以内
+
+**優先度**: 🟢 低
+
+**関連ファイル**:
+- `src/__tests__/load/load-test.test.ts`
+- `docker-compose.yml`
+- `scripts/localstack-setup.ps1`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-142338-task34-subtask2-cdk-handler-load-tests.md`
+
+**備考**: LocalStack環境が必要。実行時間が長いため、別途実行を推奨。
+
+---
+
+## 進捗管理（最終更新: 2026-02-22 14:36）
 
 | タスク番号 | タスク名 | 優先度 | 状態 | 担当 | 開始日 | 完了日 |
 |-----------|---------|--------|------|------|--------|--------|
 | 1-32 | 既存タスク | - | 🔄 進行中 | - | - | - |
 | 33 | カスタムメトリクスNamespace統一 | 🔴 最高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 34 | カバレッジ測定の修正 | 🔴 高 | 🔄 部分完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
-| 35 | E2Eテストの追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 35 | E2Eテストの追加 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 36 | 16スクリプトにUTF-8エンコーディング設定追加 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 37 | CDK Nag統合 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 38 | OpenAPI仕様書の整合性確認 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
@@ -1676,6 +1779,9 @@ app.synth();
 | 47 | デプロイガイドの更新 | ⚠️ 中 | ⚠️ スキップ | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 48 | LogGroup管理の統一 | 🟢 低 | ⏳ 未着手 | - | - | - |
 | 49 | 作業記録のインデックス作成 | 🟢 低 | ⏳ 未着手 | - | - | - |
+| 50 | タスク34残課題: Lambda Handlerテスト修正 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 51 | タスク34残課題: 統合テスト設計見直し | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 52 | タスク34残課題: 負荷テスト実行 | 🟢 低 | ⏳ 未着手 | - | - | - |
 
 ## タスク実行の推奨順序
 

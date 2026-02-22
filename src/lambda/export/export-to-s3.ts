@@ -116,8 +116,8 @@ function toJSON(disclosures: Disclosure[]): string {
  * @returns CSV文字列
  */
 function toCSV(disclosures: Disclosure[]): string {
-  // CSVヘッダー
-  const headers = [
+  // CSVヘッダー（表示用）
+  const displayHeaders = [
     'disclosure_id',
     'company_code',
     'company_name',
@@ -130,14 +130,28 @@ function toCSV(disclosures: Disclosure[]): string {
     'date_partition',
   ];
 
+  // Disclosure型の実際のフィールド名
+  const fieldNames: (keyof Disclosure)[] = [
+    'disclosure_id',
+    'company_code',
+    'company_name',
+    'disclosure_type',
+    'title',
+    'disclosed_at',
+    'pdf_url',
+    'pdf_s3_key',
+    'downloaded_at',
+    'date_partition',
+  ];
+
   // CSVヘッダー行
-  const headerRow = headers.join(',');
+  const headerRow = displayHeaders.join(',');
 
   // CSVデータ行
   const dataRows = disclosures.map((disclosure) => {
-    return headers
-      .map((header) => {
-        const value = disclosure[header as keyof Disclosure];
+    return fieldNames
+      .map((fieldName) => {
+        const value = disclosure[fieldName];
         // カンマやダブルクォートを含む場合はエスケープ
         return escapeCSVValue(String(value));
       })

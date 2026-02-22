@@ -69,7 +69,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.collectorFunction = new NodejsFunction(this, 'CollectorFunction', {
       functionName: `tdnet-collector-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/collector/handler.ts',
+      entry: '../src/lambda/collector/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collector.timeout),
       memorySize: envConfig.collector.memorySize,
@@ -117,7 +117,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.queryFunction = new NodejsFunction(this, 'QueryFunction', {
       functionName: `tdnet-query-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/query/handler.ts',
+      entry: '../src/lambda/query/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.query.timeout),
       memorySize: envConfig.query.memorySize,
@@ -158,7 +158,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.exportFunction = new NodejsFunction(this, 'ExportFunction', {
       functionName: `tdnet-export-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/export/handler.ts',
+      entry: '../src/lambda/export/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.export.timeout),
       memorySize: envConfig.export.memorySize,
@@ -202,7 +202,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.collectFunction = new NodejsFunction(this, 'CollectFunction', {
       functionName: `tdnet-collect-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/collect/handler.ts',
+      entry: '../src/lambda/collect/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collect.timeout),
       memorySize: envConfig.collect.memorySize,
@@ -241,7 +241,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.collectStatusFunction = new NodejsFunction(this, 'CollectStatusFunction', {
       functionName: `tdnet-collect-status-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/collect-status/handler.ts',
+      entry: '../src/lambda/collect-status/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collectStatus.timeout),
       memorySize: envConfig.collectStatus.memorySize,
@@ -280,7 +280,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.exportStatusFunction = new NodejsFunction(this, 'ExportStatusFunction', {
       functionName: `tdnet-export-status-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/api/export-status/handler.ts',
+      entry: '../src/lambda/api/export-status/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.exportStatus.timeout),
       memorySize: envConfig.exportStatus.memorySize,
@@ -319,7 +319,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.pdfDownloadFunction = new NodejsFunction(this, 'PdfDownloadFunction', {
       functionName: `tdnet-pdf-download-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/api/pdf-download/handler.ts',
+      entry: '../src/lambda/api/pdf-download/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.pdfDownload.timeout),
       memorySize: envConfig.pdfDownload.memorySize,
@@ -360,7 +360,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.healthFunction = new NodejsFunction(this, 'HealthFunction', {
       functionName: `tdnet-health-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/health/handler.ts',
+      entry: '../src/lambda/health/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.health.timeout),
       memorySize: envConfig.health.memorySize,
@@ -416,7 +416,7 @@ export class TdnetComputeStack extends cdk.Stack {
     this.statsFunction = new NodejsFunction(this, 'StatsFunction', {
       functionName: `tdnet-stats-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: 'src/lambda/stats/handler.ts',
+      entry: '../src/lambda/stats/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.stats.timeout),
       memorySize: envConfig.stats.memorySize,
