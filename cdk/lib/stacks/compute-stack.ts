@@ -667,6 +667,22 @@ export class TdnetComputeStack extends cdk.Stack {
       // Collect FunctionにStep Functions実行権限を付与
       stepFunctionsCollectorConstruct.stateMachine.grantStartExecution(this.collectFunction);
 
+      // Collect Status Functionの環境変数を更新（Step Functions統合）
+      this.collectStatusFunction.addEnvironment(
+        'STATE_MACHINE_ARN',
+        stepFunctionsCollectorConstruct.stateMachine.stateMachineArn
+      );
+      this.collectStatusFunction.addEnvironment(
+        'EXECUTION_STATE_TABLE',
+        this.executionStateTable.tableName
+      );
+
+      // Collect Status FunctionにStep Functions DescribeExecution権限を付与
+      stepFunctionsCollectorConstruct.stateMachine.grantRead(this.collectStatusFunction);
+
+      // Collect Status FunctionにExecutionStateテーブルの読み取り権限を付与
+      this.executionStateTable.grantReadData(this.collectStatusFunction);
+
       // CloudFormation Outputs（Step Functions関連）
       new cdk.CfnOutput(this, 'CollectorInitFunctionArn', {
         value: this.collectorInitFunction.functionArn,

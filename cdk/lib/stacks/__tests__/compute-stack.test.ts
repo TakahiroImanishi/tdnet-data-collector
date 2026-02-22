@@ -398,6 +398,18 @@ describe('TdnetComputeStack', () => {
       });
     });
 
+    it('Collect Status FunctionにSTATE_MACHINE_ARN環境変数が設定される', () => {
+      stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-collect-status-prod',
+        Environment: {
+          Variables: Match.objectLike({
+            STATE_MACHINE_ARN: Match.anyValue(),
+            EXECUTION_STATE_TABLE: Match.anyValue(),
+          }),
+        },
+      });
+    });
+
     it('Step Functions関連のCloudFormation Outputsが出力される', () => {
       stepFunctionsStack.template.hasOutput('CollectorInitFunctionArn', {
         Export: { Name: 'TdnetCollectorInitFunctionArn-prod' },

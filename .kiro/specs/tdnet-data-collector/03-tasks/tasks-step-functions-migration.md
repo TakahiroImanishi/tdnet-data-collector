@@ -728,3 +728,94 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - ✅ チェックリストが作成され、チームに共有
 - ✅ コードレビューで運用性が確認される（チェックリストを指針として使用）
 
+#### タスク8.1.5: Secrets Manager統合の改善（優先度: 高）
+
+**目的**: 運用スクリプトでのAPIキー取得を安定化し、エラーハンドリングを改善する
+
+**背景**: 
+- マニュアルデータ収集スクリプトでAPIキー取得時にネットワークエラーが発生
+- AWS CLI実行時のタイムアウトやリトライ設定が不十分
+- エラーメッセージが不明瞭で原因特定が困難
+
+**実装内容**:
+1. `scripts/lib/get-stack-outputs.ps1`の改善:
+   - Secrets Manager APIキー取得関数の追加
+   - タイムアウト設定の追加（デフォルト: 30秒）
+   - リトライロジックの改善（指数バックオフ）
+   - エラーメッセージの改善（原因と対処法を明示）
+
+2. 各運用スクリプトの修正:
+   - `manual-data-collection.ps1`
+   - `fetch-data-range.ps1`
+   
+   APIキー取得処理を共通関数に統一し、エラーハンドリングを改善
+
+3. エラーハンドリングの強化:
+   - ネットワークエラー: リトライ後に詳細なエラーメッセージ
+   - 認証エラー: AWS SSOログインの案内
+   - 権限エラー: IAMポリシーの確認案内
+   - タイムアウト: タイムアウト値の調整案内
+
+**完了日時**: 2026-02-23 08:30:02
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-083002-operation-scripts-secrets-manager-improvement.md`
+
+**成果物**:
+- `scripts/lib/get-stack-outputs.ps1`（更新）✓
+- `scripts/manual-data-collection.ps1`（更新）✓
+- `scripts/fetch-data-range.ps1`（更新）✓
+
+**完了条件**:
+- ✅ APIキー取得が安定化（ネットワークエラー時のリトライ）
+- ✅ エラーメッセージが明確（原因と対処法を表示）
+- ✅ タイムアウト設定が適切（30秒）
+- ✅ すべての運用スクリプトで共通関数を使用
+
+#### タスク8.1.6: collect-status API 500エラーの調査と修正（優先度: 高）
+
+**目的**: Step Functions実行状態確認時の500エラーを解決し、運用スクリプトを安定化する
+
+**背景**:
+- マニュアルデータ収集スクリプトでStep Functions実行テストを実施
+- APIキー取得は成功（タスク8.1.5の改善が効果あり）
+- データ収集リクエストは成功（execution_idを取得）
+- 実行状態の確認（`GET /collect/{executionId}`）で500エラーが発生
+
+**問題の詳細**:
+```
+実行状態を確認中...
+❌ 実行状態の確認に失敗しました
+ステータスコード: 500
+エラー: {"message":"Internal server error"}
+```
+
+**根本原因**:
+`collect-status` Lambda関数が`STATE_MACHINE_ARN`環境変数が設定されていないため、Step Functions統合ではなくレガシーのDynamoDBテーブル（`tdnet_executions_prod`）から実行状態を取得しようとしていました。しかし、Step Functionsで開始された実行はこのテーブルに記録されないため、「Execution not found」エラーが発生していました。
+
+**実装内容**:
+1. CDK修正（`cdk/lib/stacks/compute-stack.ts`）
+   - `collectStatusFunction`に`STATE_MACHINE_ARN`環境変数を追加
+   - `collectStatusFunction`に`EXECUTION_STATE_TABLE`環境変数を追加
+   - `collectStatusFunction`にStep Functions `DescribeExecution`権限を付与
+   - `collectStatusFunction`にExecutionStateテーブルの読み取り権限を付与
+
+2. ユニットテスト更新（`cdk/lib/stacks/__tests__/compute-stack.test.ts`）
+   - Step Functions統合テストに新しいテストケースを追加
+
+**完了日時**: 2026-02-23 09:00:00
+**テスト結果**: 34/35テスト成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-083922-collect-status-500-error-investigation.md`
+
+**成果物**:
+- `cdk/lib/stacks/compute-stack.ts` (更新) ✓
+- `cdk/lib/stacks/__tests__/compute-stack.test.ts` (更新) ✓
+- `.kiro/specs/tdnet-data-collector/improvements/collect-status-500-error-investigation.md` (改善記録) ✓
+
+**完了条件**:
+- [x] CloudWatch Logsで根本原因を特定
+- [x] 必要な修正を実施（環境変数、IAM権限）
+- [x] ユニットテストが成功
+- [ ] 本番環境へのCDKデプロイ
+- [ ] 本番環境で実行状態確認が成功
+
+**次のステップ**: CDKデプロイ後、マニュアルデータ収集スクリプトで動作確認
+

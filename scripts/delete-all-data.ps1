@@ -6,6 +6,9 @@ param(
     [string]$Environment = "prod",
     
     [Parameter(Mandatory=$false)]
+    [string]$Profile = "imanishi-awssso",
+    
+    [Parameter(Mandatory=$false)]
     [switch]$Force
 )
 
@@ -57,9 +60,10 @@ if (-not $Force) {
 Write-Info "Starting data deletion..."
 
 Write-Info "Getting AWS account ID..."
-$accountId = aws sts get-caller-identity --query Account --output text
+$accountId = aws sts get-caller-identity --profile $Profile --query Account --output text
 if ($LASTEXITCODE -ne 0) {
     Write-Error-Custom "Error: Failed to get AWS account ID."
+    Write-Error-Custom "Please run: aws sso login --profile $Profile"
     exit 1
 }
 Write-Success "AWS Account ID: $accountId"
@@ -78,7 +82,8 @@ Write-Info "========================================"
 function Remove-DynamoDBItems {
     param(
         [string]$TableName,
-        [string]$KeyName
+        [string]$KeyName,
+        [string]$Profile
     )
     
     Write-Host ""
@@ -86,7 +91,7 @@ function Remove-DynamoDBItems {
     Write-Info "Scanning data..."
     
     $ErrorActionPreference = "SilentlyContinue"
-    $tableCheck = aws dynamodb describe-table --table-name $TableName 2>&1 | Out-Null
+    $tableCheck = aws dynamodb describe-table --table-name $TableName --profile $Profile 2>&1 | Out-Null
     $ErrorActionPreference = "Stop"
     
     if ($LASTEXITCODE -ne 0) {
@@ -94,7 +99,7 @@ function Remove-DynamoDBItems {
         return
     }
     
-    $scanOutput = aws dynamodb scan --table-name $TableName --projection-expression $KeyName --output json 2>&1
+    $scanOutput = aws dynamodb scan --table-name $TableName --projection-expression $KeyName --profile $Profile --output json 2>&1
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error-Custom "Error: Failed to scan table $TableName."
@@ -142,7 +147,7 @@ function Remove-DynamoDBItems {
         $requestJson = $requestItems | ConvertTo-Json -Depth 10 -Compress
         [System.IO.File]::WriteAllText($tempFile, $requestJson, (New-Object System.Text.UTF8Encoding $false))
         
-        $batchResult = aws dynamodb batch-write-item --request-items file://$tempFile 2>&1
+        $batchResult = aws dynamodb batch-write-item --request-items file://$tempFile --profile $Profile 2>&1
         Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
         
         if ($LASTEXITCODE -eq 0) {
@@ -159,9 +164,9 @@ function Remove-DynamoDBItems {
     Write-Success "Deletion complete: $deletedCount succeeded, $failedCount failed"
 }
 
-Remove-DynamoDBItems -TableName $disclosuresTable -KeyName "disclosure_id"
-Remove-DynamoDBItems -TableName $executionsTable -KeyName "execution_id"
-Remove-DynamoDBItems -TableName $exportStatusTable -KeyName "export_id"
+Remove-DynamoDBItems -TableName $disclosuresTable -KeyName "disclosure_id" -Profile $Profile
+Remove-DynamoDBItems -TableName $executionsTable -KeyName "execution_id" -Profile $Profile
+Remove-DynamoDBItems -TableName $exportStatusTable -KeyName "export_id" -Profile $Profile
 
 Write-Host ""
 Write-Info "========================================"
@@ -170,14 +175,15 @@ Write-Info "========================================"
 
 function Remove-S3Objects {
     param(
-        [string]$BucketName
+        [string]$BucketName,
+        [string]$Profile
     )
     
     Write-Host ""
     Write-Info "Bucket: $BucketName"
     
     $ErrorActionPreference = "SilentlyContinue"
-    $bucketCheck = aws s3api head-bucket --bucket $BucketName 2>&1 | Out-Null
+    $bucketCheck = aws s3api head-bucket --bucket $BucketName --profile $Profile 2>&1 | Out-Null
     $ErrorActionPreference = "Stop"
     
     if ($LASTEXITCODE -ne 0) {
@@ -187,7 +193,7 @@ function Remove-S3Objects {
     
     Write-Info "Listing objects..."
     
-    $listOutput = aws s3api list-objects-v2 --bucket $BucketName --query "Contents[].Key" --output json 2>&1
+    $listOutput = aws s3api list-objects-v2 --bucket $BucketName --query "Contents[].Key" --profile $Profile --output json 2>&1
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error-Custom "Error: Failed to list bucket $BucketName."
@@ -205,7 +211,7 @@ function Remove-S3Objects {
     Write-Info "Objects to delete: $objectCount"
     Write-Info "Deleting objects..."
     
-    aws s3 rm "s3://$BucketName" --recursive 2>&1 | Out-Null
+    aws s3 rm "s3://$BucketName" --recursive --profile $Profile 2>&1 | Out-Null
     
     if ($LASTEXITCODE -eq 0) {
         Write-Success "Deletion complete: $objectCount objects"
@@ -214,8 +220,8 @@ function Remove-S3Objects {
     }
 }
 
-Remove-S3Objects -BucketName $pdfsBucket
-Remove-S3Objects -BucketName $exportsBucket
+Remove-S3Objects -BucketName $pdfsBucket -Profile $Profile
+Remove-S3Objects -BucketName $exportsBucket -Profile $Profile
 
 Write-Host ""
 Write-Info "========================================"
