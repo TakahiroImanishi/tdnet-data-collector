@@ -25,14 +25,48 @@ Step Functions移行に伴うコスト影響を詳細に分析し、現在のア
 
 ## 問題と解決策
 
-（作業中に記録）
+### 問題1: Web検索APIが利用不可
+- **問題**: Brave Search APIのサブスクリプショントークンが無効
+- **解決**: AWS Knowledge MCP Serverを使用してAWS公式ドキュメントから料金情報を取得
+
+### 問題2: 現在のアーキテクチャドキュメントが不在
+- **問題**: 既存の設計ドキュメントが見つからない
+- **解決**: CDKコード（compute-stack.ts、environment-config.ts）から直接設定を確認
 
 ## 成果物
 
-- [ ] コスト分析ドキュメント作成
+- [x] コスト分析ドキュメント作成
+  - `.kiro/specs/tdnet-data-collector/designs/step-functions-cost-analysis.md`
+  - 詳細な料金計算、比較分析、最適化推奨事項を含む
 - [ ] tasks-step-functions-migration.md更新
 - [ ] Git commit
 
+## 分析結果サマリー
+
+### コスト比較
+- **現在**: $1.71/月（S3のみ課金）
+- **移行後**: $1.75/月（+$0.04、+2.3%）
+- **最適化後**: $1.71/月（fetchとsave統合により±$0.00）
+
+### 主要な発見
+1. **Lambda実行時間**: 89.9%削減（31,500 → 3,175 GB秒）
+2. **処理時間**: 約95%短縮（並列実行により）
+3. **Step Functions料金**: $0.041/月（無料枠4,000状態遷移の一部超過）
+4. **無料枠の余裕**: Lambda、DynamoDBは十分な余裕あり（使用率1%未満）
+
+### 推奨事項
+1. **即座に実施**: Step Functions移行（わずかなコスト増で大幅な性能向上）
+2. **移行後に実施**: fetchとsaveの統合（Step Functions料金を$0.00に削減）
+3. **将来的に検討**: Express Workflowsへの移行（処理時間が5分以内に収まることを確認後）
+
 ## 申し送り事項
 
-（完了時に記録）
+### 次のステップ
+1. tasks-step-functions-migration.mdのタスク1.1「コスト試算」チェックボックスを更新
+2. Git commitを実行
+3. アーキテクチャ設計ドキュメント（step-functions-architecture.md）の作成に進む
+
+### 注意事項
+- S3が唯一の課金対象（ストレージ55.5GB、月間$1.71）
+- 収集回数が増加してもLambda、DynamoDBは無料枠内で運用可能
+- Step Functions無料枠（4,000状態遷移/月）を超過しているが、fetchとsave統合で無料枠内に収まる

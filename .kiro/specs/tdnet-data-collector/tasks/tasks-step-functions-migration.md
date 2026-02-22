@@ -48,12 +48,14 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
   - **完了日時**: 2026-02-22 18:13:01
   - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
 - [x] コスト試算
-  - Step Functions料金（Standard: $25/100万状態遷移、Express: $1/100万リクエスト）
-  - Lambda実行時間の変化
-  - 無料枠内での運用可能性確認
-  - **完了日時**: 2026-02-22 18:13:01
-  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
-  - **作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-181251-subagent1-architecture-design.md`
+  - Step Functions料金: $0.041/月（無料枠一部超過）
+  - Lambda実行時間: 89.9%削減（31,500 → 3,175 GB秒）
+  - 総コスト: $1.75/月（現在$1.71/月から+$0.04）
+  - 最適化後: $1.71/月（fetchとsave統合により±$0.00）
+  - 結論: わずかなコスト増で大幅な性能向上を実現、移行を強く推奨
+  - **完了日時**: 2026-02-22 18:13:01（初版）、2026-02-22 18:13:05（詳細版）
+  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`、`.kiro/specs/tdnet-data-collector/designs/step-functions-cost-analysis.md`（詳細版）
+  - **作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-181251-subagent1-architecture-design.md`、`.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-181305-subagent4-cost-analysis.md`（詳細版）
 
 **成果物**:
 - `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
