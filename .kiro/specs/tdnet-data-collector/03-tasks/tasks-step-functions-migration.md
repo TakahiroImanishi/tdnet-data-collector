@@ -606,13 +606,16 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
    - よくある問題と解決方法
    - エラーメッセージの解説
 
+**完了日時**: 2026-02-23 07:35:14
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-073514-operation-documentation.md`
+
 **成果物**:
-- `.kiro/specs/tdnet-data-collector/docs/03-operations/operation-guide.md`（新規）
-- `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md`（新規）
+- `.kiro/specs/tdnet-data-collector/docs/03-operations/operation-guide.md`（新規）✓
+- `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md`（新規）✓
 
 **完了条件**:
-- 運用手順が明確に記載
-- トラブルシューティングガイドが充実
+- ✅ 運用手順が明確に記載
+- ✅ トラブルシューティングガイドが充実
 
 #### タスク8.1.4: 開発プロセスの改善（優先度: 低）
 
