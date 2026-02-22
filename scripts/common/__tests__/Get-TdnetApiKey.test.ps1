@@ -90,7 +90,7 @@ Write-Host ""
 Write-Host "[Test 4] Verbose option" -ForegroundColor Cyan
 $env:TDNET_API_KEY = "test-verbose"
 try {
-    $output = & $scriptPath -Verbose 2>&1 | Out-String
+    $output = & $scriptPath -VerboseLog 2>&1 | Out-String
     if ($output -match "\[VERBOSE\]") {
         Show-TestResult -TestName "Verbose option works" -Passed $true
     } else {

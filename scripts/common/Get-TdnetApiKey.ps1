@@ -10,7 +10,7 @@ param(
     [switch]$NoCache,
     
     [Parameter(Mandatory=$false)]
-    [switch]$Verbose
+    [switch]$VerboseLog
 )
 
 # UTF-8エンコーディング設定（包括的）
@@ -28,7 +28,7 @@ if (-not $script:ApiKeyCache) {
 
 function Write-VerboseLog {
     param([string]$Message)
-    if ($Verbose) {
+    if ($VerboseLog) {
         Write-Host "[VERBOSE] $Message" -ForegroundColor Gray
     }
 }
