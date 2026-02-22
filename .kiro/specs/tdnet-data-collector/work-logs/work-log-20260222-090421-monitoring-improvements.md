@@ -241,3 +241,40 @@ apiGateway?: apigateway.IRestApi;
 - 開始: 2026-02-22 09:04:21
 - 終了: 2026-02-22 09:15:00（推定）
 - 所要時間: 約11分
+
+
+## Git Commit
+
+```
+[improve] 監視改善: X-Ray有効化、アラーム閾値見直し、API Gatewayウィジェット修正、DynamoDB/API Gatewayアラーム追加
+
+Commit ID: e56274c
+変更ファイル数: 41
+追加行数: 3939
+削除行数: 179
+```
+
+## 完了確認
+
+- [x] タスク6: X-Rayトレーシング有効化（優先度: 高）
+- [x] タスク12: CloudWatch Alarms閾値の見直し（優先度: 中）
+- [x] タスク13: API Gatewayウィジェット修正（優先度: 中）
+- [x] タスク23: DynamoDB/API Gatewayアラーム追加（優先度: 低）
+- [x] 作業記録作成
+- [x] tasks-improvements-20260222.md更新
+- [x] Git commit & push
+- [x] UTF-8 BOMなし確認（すべてのファイル）
+
+## まとめ
+
+監視関連の4つのタスクを完了しました:
+
+1. **X-Rayトレーシング有効化**: すべてのLambda関数（13個）でX-Rayトレーシングを有効化し、リクエストのトレースとパフォーマンス分析が可能になりました。
+
+2. **CloudWatch Alarms閾値見直し**: Lambda Errors/Throttlesアラームを2段階（Warning/Critical）に分割し、段階的なアラート通知により問題の早期検知と重大度の判断が容易になりました。
+
+3. **API Gatewayウィジェット修正**: CloudWatch DashboardのAPI Gatewayウィジェットの型エラーを修正し、リクエスト数、エラー率、レイテンシの監視が可能になりました。
+
+4. **DynamoDB/API Gatewayアラーム追加**: DynamoDB（UserErrors、SystemErrors、ThrottledRequests）とAPI Gateway（4XXError、5XXError、Latency）のアラームを追加し、設計ドキュメントに記載されていたアラームを実装しました。
+
+これらの改善により、システムの可観測性が大幅に向上し、問題の早期検知と迅速な対応が可能になります。

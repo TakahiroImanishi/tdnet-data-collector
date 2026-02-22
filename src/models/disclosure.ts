@@ -47,12 +47,21 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
   // downloaded_atのフォーマット検証
   validateDisclosedAt(disclosure.downloaded_at!);
 
-  // company_codeのフォーマット検証（4桁の数字）
+  // company_codeのフォーマット検証（4桁の数字、1000-9999の範囲）
   const companyCodeRegex = /^\d{4}$/;
   if (!companyCodeRegex.test(disclosure.company_code!)) {
     throw new ValidationError(
       `Invalid company_code format: ${disclosure.company_code}. Expected 4-digit number.`,
       { company_code: disclosure.company_code }
+    );
+  }
+
+  // company_codeの範囲検証（1000-9999）
+  const companyCodeNum = parseInt(disclosure.company_code!, 10);
+  if (companyCodeNum < 1000 || companyCodeNum > 9999) {
+    throw new ValidationError(
+      `Invalid company_code range: ${disclosure.company_code}. Expected 1000-9999.`,
+      { company_code: disclosure.company_code, value: companyCodeNum }
     );
   }
 
@@ -63,6 +72,26 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
       `Invalid date_partition format: ${disclosure.date_partition}. Expected YYYY-MM format.`,
       { date_partition: disclosure.date_partition }
     );
+  }
+
+  // file_sizeのバリデーション（オプショナル）
+  if (disclosure.file_size !== undefined) {
+    // 整数チェック
+    if (!Number.isInteger(disclosure.file_size)) {
+      throw new ValidationError(
+        `Invalid file_size: ${disclosure.file_size}. Expected integer.`,
+        { file_size: disclosure.file_size }
+      );
+    }
+
+    // 範囲チェック（0以上、100MB以下）
+    const maxFileSize = 100 * 1024 * 1024; // 100MB
+    if (disclosure.file_size < 0 || disclosure.file_size > maxFileSize) {
+      throw new ValidationError(
+        `Invalid file_size range: ${disclosure.file_size}. Expected 0 to ${maxFileSize} bytes (100MB).`,
+        { file_size: disclosure.file_size, max_file_size: maxFileSize }
+      );
+    }
   }
 }
 
@@ -98,6 +127,9 @@ export function toDynamoDBItem(disclosure: Disclosure): DynamoDBItem {
   }
   if (disclosure.pdf_s3_key) {
     item.pdf_s3_key = { S: disclosure.pdf_s3_key };
+  }
+  if (disclosure.file_size !== undefined) {
+    item.file_size = { N: disclosure.file_size.toString() };
   }
 
   return item;
@@ -150,6 +182,9 @@ export function fromDynamoDBItem(item: DynamoDBItem): Disclosure {
   }
   if (item.pdf_s3_key?.S) {
     disclosure.pdf_s3_key = item.pdf_s3_key.S;
+  }
+  if (item.file_size?.N) {
+    disclosure.file_size = parseInt(item.file_size.N, 10);
   }
 
   // バリデーション

@@ -36,6 +36,9 @@ export interface Disclosure {
   /** S3キー（PDFファイルの保存先、オプショナル） */
   pdf_s3_key?: string;
 
+  /** ファイルサイズ（バイト、オプショナル） */
+  file_size?: number;
+
   /** ダウンロード日時（ISO 8601形式、UTC）: "2024-01-15T10:35:00Z" */
   downloaded_at: string;
 
