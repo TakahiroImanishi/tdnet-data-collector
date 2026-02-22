@@ -174,13 +174,17 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 ### フェーズ3: CDK実装（優先度: 高）
 
 #### タスク3.1: Step Functions Construct作成
-- [ ] `cdk/lib/constructs/step-functions-collector.ts`作成
+- [x] `cdk/lib/constructs/step-functions-collector.ts`作成
   - ステートマシン定義
   - Lambda関数の統合
   - IAMロール設定
   - CloudWatch Logs統合
   - X-Ray有効化
-- [ ] ユニットテスト作成
+- [x] ユニットテスト作成
+
+**完了日時**: 2026-02-22 18:55:28
+**テスト結果**: 19/19テスト成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-185049-step-functions-construct.md`
 
 **成果物**:
 - `cdk/lib/constructs/step-functions-collector.ts`
