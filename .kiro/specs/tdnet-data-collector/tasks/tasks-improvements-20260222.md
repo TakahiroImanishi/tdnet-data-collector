@@ -916,3 +916,189 @@
 | 27 | Dashboard ビルド最適化の検証 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 28 | Dashboard Viteへの移行検討 | 低 | 🔄 ガイド作成完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 29 | テスト失敗の修正（循環依存） | 中 | 🔄 部分完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+
+
+---
+
+### 30. テスト修正: PDF Download Handler（高優先度）
+
+**問題**: PDF Download Handlerのテストで`requestContext`未定義エラーが発生（20テスト失敗）
+
+**影響範囲**: PDF Download API全体
+
+**エラー内容**:
+```
+TypeError: Cannot read properties of undefined (reading 'requestId')
+```
+
+**原因**: テストイベントに`requestContext`プロパティが含まれていない
+
+**対応内容**:
+- [ ] テストイベントに`requestContext`を追加
+- [ ] 必要なプロパティ（requestId等）を設定
+- [ ] 20個のテストケースを修正
+
+**修正例**:
+```typescript
+const event = {
+  ...baseEvent,
+  requestContext: {
+    requestId: 'test-request-id',
+    accountId: 'test-account',
+    apiId: 'test-api-id',
+    // その他必要なプロパティ
+  }
+};
+```
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: 高（API機能全体に影響）
+
+**関連ファイル**:
+- `src/lambda/api/pdf-download/__tests__/handler.test.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-102602-test-failure-analysis.md`
+
+**期待される効果**: 20テスト修正 → 約170テスト失敗削減
+
+---
+
+### 31. テスト修正: プロジェクト構造とLambda最適化（高優先度）
+
+**問題**: CDKスタック分割によるファイルパスエラー（10テスト失敗）
+
+**影響範囲**: CI/CD、構造検証、コスト最適化検証
+
+**エラー内容**:
+- プロジェクト構造テスト（7件）: `cdk/bin/tdnet-data-collector.ts`、`cdk/lib/tdnet-data-collector-stack.ts`が存在しない
+- Lambda最適化テスト（3件）: `ENOENT: no such file or directory, open 'cdk/lib/tdnet-data-collector-stack.ts'`
+
+**原因**: プロジェクト構造が変更され、CDKファイルが分割された
+
+**実際のファイル**:
+- `cdk/bin/tdnet-data-collector-split.ts`
+- `cdk/lib/stacks/` 配下に分割されたスタック
+
+**対応内容**:
+- [ ] プロジェクト構造テストを新しいCDK構造に合わせて更新（7テスト）
+- [ ] Lambda最適化テストを新しいスタックファイルパスに更新（3テスト）
+- [ ] Jest Config テストのパス設定を更新（2テスト）
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: 高（CI/CD検証に影響）
+
+**関連ファイル**:
+- `src/__tests__/project-structure.test.ts`
+- `src/__tests__/lambda-optimization.test.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-102602-test-failure-analysis.md`
+
+**期待される効果**: 10テスト修正
+
+---
+
+### 32. テスト修正: その他の失敗テスト（中優先度）
+
+**問題**: セキュリティ、監視、データモデル等のテスト失敗（16テスト失敗）
+
+**影響範囲**: セキュリティ検証、監視設定、データモデル
+
+**対応内容**:
+
+#### セキュリティ強化テスト（3件）
+- [ ] 新しいスタック構造でのテンプレート取得方法を修正
+- [ ] CloudWatch名前空間の条件チェックを更新
+
+#### Monitoring Stack テスト（3件）
+- [ ] Lambda関数数の期待値を更新（8個 → 6個、10個 → 8個、9個 → 7個）
+
+#### Environment Config テスト（2件）
+- [ ] 本番環境のlogLevelを`INFO`に変更（現在`DEBUG`）
+
+#### Format CSV テスト（1件）
+- [ ] フィールド名を`s3_key` → `pdf_s3_key`に更新
+
+#### Type Definitions テスト（1件）
+- [ ] バリデーションロジックに合わせてテストを更新
+
+#### Disclosure Model テスト（3件）
+- [ ] file_size制限を10MB → 100MBに更新
+- [ ] エラーメッセージの期待値を更新
+
+#### CI/CD Verification テスト（1件）
+- [ ] `npm audit fix`を実行して脆弱性を修正
+
+#### Jest Config テスト（2件）
+- [ ] パス設定の期待値を現在の設定に合わせて更新
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: 中
+
+**関連ファイル**:
+- `cdk/__tests__/security-hardening.test.ts`
+- `cdk/lib/stacks/__tests__/monitoring-stack.test.ts`
+- `cdk/lib/config/__tests__/environment-config.test.ts`
+- `src/lambda/query/__tests__/format-csv.test.ts`
+- `src/__tests__/type-definitions.test.ts`
+- `src/models/__tests__/disclosure.test.ts`
+- `src/__tests__/ci-cd-verification.test.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-102602-test-failure-analysis.md`
+
+**期待される効果**: 16テスト修正
+
+---
+
+## 進捗管理（更新）
+
+| タスク番号 | タスク名 | 優先度 | 状態 | 担当 | 開始日 | 完了日 |
+|-----------|---------|--------|------|------|--------|--------|
+| 1 | 本番APIキーのハードコード削除 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 2 | API設計ドキュメント更新 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 3 | PdfDownloadコンポーネント統合 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 4 | ユニットテスト修正 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 5 | npm audit実行追加 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 6 | X-Rayトレーシング有効化 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 7 | カバレッジ測定と最適化 | 中 | 🔄 進行中 | AI Assistant | 2026-02-22 | - |
+| 8 | E2Eテスト実行確認 | 中 | ⏸️ 保留 | AI Assistant | 2026-02-22 | - |
+| 9 | Zodスキーマ導入 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 10 | タグ付け戦略実装 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 11 | API Gateway TLS 1.2設定 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 12 | CloudWatch Alarms閾値見直し | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 13 | API Gatewayウィジェット修正 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 14 | CI/CDパイプライン実装 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 15 | Lambda関数一覧更新 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 16 | API仕様統一 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 17 | Dependabot設定 | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 18 | company_codeバリデーション統一 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 19 | file_sizeバリデーション整理 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 20 | Stats Lambdaパフォーマンス改善 | 低 | 🔄 分析完了 | AI Assistant | 2026-02-22 | - |
+| 21 | Health Lambdaステータスコード修正 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 22 | CloudWatch Logs権限の限定 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 23 | DynamoDB/API Gatewayアラーム追加 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 24 | 統合テストの追加 | 低 | 🔄 部分完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 25 | テストデータファクトリーの作成 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 26 | Dashboard E2Eテストの拡充 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 27 | Dashboard ビルド最適化の検証 | 低 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 28 | Dashboard Viteへの移行検討 | 低 | 🔄 ガイド作成完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 29 | テスト失敗の修正（循環依存） | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 30 | テスト修正: PDF Download Handler | 高 | ⏳ 未着手 | - | - | - |
+| 31 | テスト修正: プロジェクト構造とLambda最適化 | 高 | ⏳ 未着手 | - | - | - |
+| 32 | テスト修正: その他の失敗テスト | 中 | ⏳ 未着手 | - | - | - |
+
+## タスク実行の推奨順序
+
+1. **タスク30（高優先度）**: PDF Download Handler修正 → 20テスト修正、約170テスト失敗削減
+2. **タスク31（高優先度）**: プロジェクト構造とLambda最適化 → 10テスト修正
+3. **タスク32（中優先度）**: その他の失敗テスト → 16テスト修正
+
+**合計**: 46テスト修正により、200個のテスト失敗を解消
