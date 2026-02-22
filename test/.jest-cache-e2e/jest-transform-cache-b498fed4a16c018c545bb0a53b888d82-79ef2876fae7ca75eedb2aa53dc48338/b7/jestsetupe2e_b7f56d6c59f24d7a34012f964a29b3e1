@@ -1,0 +1,25 @@
+e801a7d31501b12e54fe72c3444abc6a
+/**
+ * Jest E2E Test Setup
+ *
+ * E2Eテスト実行前の環境設定を行います。
+ * LocalStack環境を使用することを前提としています。
+ */
+
+// LocalStack用の環境変数設定
+process.env.AWS_REGION = 'ap-northeast-1';
+process.env.AWS_ENDPOINT = 'http://localhost:4566';
+process.env.DYNAMODB_TABLE_NAME = 'tdnet_disclosures';
+process.env.DYNAMODB_EXECUTIONS_TABLE = 'tdnet_executions';
+process.env.S3_BUCKET_NAME = 'tdnet-data-collector-pdfs-local';
+process.env.S3_EXPORTS_BUCKET_NAME = 'tdnet-data-collector-exports-local';
+
+// テスト環境フラグ
+process.env.TEST_ENV = 'e2e';
+
+// タイムアウト設定（E2Eテストは時間がかかる）
+jest.setTimeout(60000);
+
+console.log('E2E Test Environment initialized');
+console.log('AWS_ENDPOINT:', process.env.AWS_ENDPOINT);
+console.log('AWS_REGION:', process.env.AWS_REGION);
