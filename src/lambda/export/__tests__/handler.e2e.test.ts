@@ -62,19 +62,71 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
     process.env.S3_BUCKET_NAME = 'tdnet-pdfs-local';
   });
 
+  /**
+   * テスト用のExportEventを作成するヘルパー関数
+   */
+  function createMockExportEvent(headers: Record<string, string>, body: string): ExportEvent {
+    return {
+      headers,
+      body,
+      httpMethod: 'POST',
+      isBase64Encoded: false,
+      path: '/export',
+      pathParameters: null,
+      queryStringParameters: null,
+      multiValueHeaders: {},
+      multiValueQueryStringParameters: null,
+      stageVariables: null,
+      requestContext: {
+        accountId: '123456789012',
+        apiId: 'test-api-id-e2e',
+        protocol: 'HTTP/1.1',
+        httpMethod: 'POST',
+        path: '/export',
+        stage: 'test',
+        requestId: mockContext.awsRequestId,
+        requestTime: '15/Jan/2024:10:30:00 +0000',
+        requestTimeEpoch: 1705315800000,
+        identity: {
+          accessKey: null,
+          accountId: null,
+          apiKey: null,
+          apiKeyId: null,
+          caller: null,
+          clientCert: null,
+          cognitoAuthenticationProvider: null,
+          cognitoAuthenticationType: null,
+          cognitoIdentityId: null,
+          cognitoIdentityPoolId: null,
+          principalOrgId: null,
+          sourceIp: '192.168.1.1',
+          user: null,
+          userAgent: 'Mozilla/5.0',
+          userArn: null,
+        },
+        authorizer: null,
+        domainName: 'api.example.com',
+        domainPrefix: 'api',
+        resourceId: 'test-resource-id',
+        resourcePath: '/export',
+      },
+      resource: '/export',
+    } as ExportEvent;
+  }
+
   describe('Property 9.1: 無効なAPIキーで401 Unauthorizedが返される', () => {
     it('APIキーが未指定の場合は401エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {},
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        {},
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -94,18 +146,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('APIキーが不正な場合は401エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'invalid-api-key',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'invalid-api-key' },
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -124,18 +174,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('大文字小文字が異なるヘッダー名でも認証が機能する', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'X-Api-Key': 'invalid-api-key', // 大文字
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'X-Api-Key': 'invalid-api-key' }, // 大文字
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -149,18 +197,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('空文字列のAPIキーは401エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': '', // 空文字列
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': '' }, // 空文字列
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -175,18 +221,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
   describe('Property 9.2: 有効なAPIキーで正常にレスポンスが返される', () => {
     it('JSON形式のエクスポートリクエストが受け付けられる', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -225,19 +269,17 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('CSV形式のエクスポートリクエストが受け付けられる', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'csv',
           filter: {
             company_code: '1234',
             start_date: '2024-01-01',
             end_date: '2024-01-31',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -264,31 +306,27 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーで複数のエクスポートリクエストが処理できる', async () => {
       // Arrange
-      const event1 = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event1 = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
-      const event2 = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event2 = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'csv',
           filter: {
             start_date: '2024-01-01',
             end_date: '2024-01-31',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result1 = await handler(event1, mockContext);
@@ -309,18 +347,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
   describe('Property 9.3: APIキー認証とバリデーションの組み合わせ', () => {
     it('有効なAPIキーでも不正なフォーマットは400エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'xml', // 不正なフォーマット
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -334,18 +370,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーでも不正な日付フォーマットは400エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024/01/15', // 不正なフォーマット
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -359,18 +393,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーでも開始日が終了日より後の場合は400エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-20',
             end_date: '2024-01-15', // 開始日より前
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -386,19 +418,17 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーでも不正な企業コードは400エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        JSON.stringify({
           format: 'json',
           filter: {
             company_code: '12345', // 5桁（不正）
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -412,12 +442,10 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーでもリクエストボディが空の場合は400エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: '',
-      } as unknown as ExportEvent;
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        ''
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -430,12 +458,10 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーでも不正なJSON形式は400エラーを返す', async () => {
       // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'test-api-key-e2e-export',
-        },
-        body: 'invalid json',
-      } as unknown as ExportEvent;
+      const event = createMockExportEvent(
+        { 'x-api-key': 'test-api-key-e2e-export' },
+        'invalid json'
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -450,16 +476,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
   describe('Property 9.4: エラーレスポンスの一貫性', () => {
     it('すべてのエラーレスポンスにCORSヘッダーが含まれる', async () => {
       // Arrange: APIキーなし
-      const event = {
-        headers: {},
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        {},
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -473,18 +499,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('すべてのエラーレスポンスにrequest_idが含まれる', async () => {
       // Arrange: 無効なAPIキー
-      const event = {
-        headers: {
-          'x-api-key': 'invalid-api-key',
-        },
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        { 'x-api-key': 'invalid-api-key' },
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);
@@ -497,16 +521,16 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('エラーレスポンスの構造が一貫している', async () => {
       // Arrange: APIキーなし
-      const event = {
-        headers: {},
-        body: JSON.stringify({
+      const event = createMockExportEvent(
+        {},
+        JSON.stringify({
           format: 'json',
           filter: {
             start_date: '2024-01-15',
             end_date: '2024-01-20',
           },
-        }),
-      } as unknown as ExportEvent;
+        })
+      );
 
       // Act
       const result = await handler(event, mockContext);

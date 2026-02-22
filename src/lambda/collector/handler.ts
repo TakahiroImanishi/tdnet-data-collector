@@ -325,6 +325,7 @@ async function collectDisclosuresForDateRange(
   const dates = generateDateRange(start_date, end_date);
   let collected_count = 0;
   let failed_count = 0;
+  let total_count = 0;
 
   logger.info('Collecting disclosures for date range', {
     execution_id,
@@ -357,25 +358,38 @@ async function collectDisclosuresForDateRange(
         count: disclosureMetadata.length,
       });
 
+      // 総件数を更新
+      total_count += disclosureMetadata.length;
+
       // 並列処理（並列度5）
+      // 進捗更新コールバックを渡す
       const results = await processDisclosuresInParallel(
         disclosureMetadata,
         execution_id,
-        5
+        5,
+        async (batchSuccess: number, batchFailed: number) => {
+          // バッチ完了時に進捗を更新
+          collected_count += batchSuccess;
+          failed_count += batchFailed;
+          
+          const processed = collected_count + failed_count;
+          const progress = total_count > 0 
+            ? Math.floor((processed / total_count) * 100) 
+            : 0;
+          
+          await updateExecutionStatus(
+            execution_id,
+            'running',
+            progress,
+            collected_count,
+            failed_count
+          );
+        }
       );
 
-      collected_count += results.success;
-      failed_count += results.failed;
-
-      // 進捗率を更新（日付単位）
-      const progress = Math.floor(((i + 1) / dates.length) * 100);
-      await updateExecutionStatus(
-        execution_id,
-        'running',
-        progress,
-        collected_count,
-        failed_count
-      );
+      // 最終カウントを更新（コールバックで既に更新済みだが念のため）
+      collected_count = results.success;
+      failed_count = results.failed;
     } catch (error) {
       logger.error(
         'Failed to collect disclosures for date',
@@ -507,12 +521,14 @@ function generateDateRange(start_date: string, end_date: string): string[] {
  * @param disclosureMetadata 開示情報メタデータリスト
  * @param execution_id 実行ID
  * @param concurrency 並列度（デフォルト: 5）
+ * @param onBatchComplete バッチ完了時のコールバック（進捗更新用）
  * @returns 処理結果（成功件数、失敗件数）
  */
 async function processDisclosuresInParallel(
   disclosureMetadata: DisclosureMetadata[],
   execution_id: string,
-  concurrency: number = 5
+  concurrency: number = 5,
+  onBatchComplete?: (batchSuccess: number, batchFailed: number) => Promise<void>
 ): Promise<{ success: number; failed: number }> {
   const results = { success: 0, failed: 0 };
   const totalCount = disclosureMetadata.length;
@@ -540,6 +556,9 @@ async function processDisclosuresInParallel(
 
     const settled = await Promise.allSettled(promises);
 
+    const batchSuccess = settled.filter(r => r.status === 'fulfilled').length;
+    const batchFailed = settled.filter(r => r.status === 'rejected').length;
+
     for (const result of settled) {
       if (result.status === 'fulfilled') {
         results.success++;
@@ -556,12 +575,17 @@ async function processDisclosuresInParallel(
     logger.info('Batch completed', {
       execution_id,
       batch_number: batchNumber,
-      batch_success: settled.filter(r => r.status === 'fulfilled').length,
-      batch_failed: settled.filter(r => r.status === 'rejected').length,
+      batch_success: batchSuccess,
+      batch_failed: batchFailed,
       total_success: results.success,
       total_failed: results.failed,
       progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
     });
+
+    // 進捗更新コールバックを呼び出し
+    if (onBatchComplete) {
+      await onBatchComplete(batchSuccess, batchFailed);
+    }
   }
 
   // 最終結果ログ

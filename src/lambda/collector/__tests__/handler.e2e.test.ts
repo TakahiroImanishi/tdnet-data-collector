@@ -8,7 +8,7 @@
  */
 
 import { Context } from 'aws-lambda';
-import { handler, CollectorEvent, CollectorResponse } from '../handler';
+import { handler, CollectorEvent } from '../handler';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';

@@ -240,35 +240,105 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.data.completed_at).toBe('2024-01-15T10:10:00Z');
     });
 
-    it('failed状態の実行状態を取得できる'
-      path: `/collect/${execution_id}`,
-      stage: 'prod',
-      requestId: 'test-request-id',
-      requestTime: '15/Jan/2024:10:30:00 +0000',
-      requestTimeEpoch: 1705315800000,
-      identity: {
-        accessKey: null,
-        accountId: null,
-        apiKey: null,
-        apiKeyId: null,
-        caller: null,
-        clientCert: null,
-        cognitoAuthenticationProvider: null,
-        cognitoAuthenticationType: null,
-        cognitoIdentityId: null,
-        cognitoIdentityPoolId: null,
-        principalOrgId: null,
-        sourceIp: '192.168.1.1',
-        user: null,
-        userAgent: 'Mozilla/5.0',
-        userArn: null,
-      },
-      authorizer: null,
-      domainName: 'api.example.com',
-      domainPrefix: 'api',
-      resourceId: 'test-resource-id',
-      resourcePath: '/collect/{execution_id}',
-    },
-    resource: '/collect/{execution_id}',
-  };
-}
+    it('failed状態の実行状態を取得できる', async () => {
+      // Arrange
+      mockEvent.pathParameters = {
+        execution_id: 'exec_test_failed_12345678',
+      };
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('success');
+      expect(body.data.execution_id).toBe('exec_test_failed_12345678');
+      expect(body.data.status).toBe('failed');
+      expect(body.data.progress).toBe(30);
+      expect(body.data.collected_count).toBe(10);
+      expect(body.data.failed_count).toBe(20);
+      expect(body.data).toHaveProperty('completed_at');
+      expect(body.data).toHaveProperty('error_message');
+      expect(body.data.error_message).toBe('Network error occurred');
+    });
+  });
+
+  describe('エラーハンドリング', () => {
+    it('存在しないexecution_idの場合は404を返す', async () => {
+      // Arrange
+      mockEvent.pathParameters = {
+        execution_id: 'exec_nonexistent_12345678',
+      };
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(404);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error).toHaveProperty('code');
+      expect(body.error).toHaveProperty('message');
+    });
+
+    it('pathParametersが未定義の場合は400を返す', async () => {
+      // Arrange
+      mockEvent.pathParameters = null;
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+    });
+
+    it('execution_idが空の場合は400を返す', async () => {
+      // Arrange
+      mockEvent.pathParameters = {
+        execution_id: '',
+      };
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.statusCode).toBe(400);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+    });
+  });
+
+  describe('レスポンス形式', () => {
+    it('正しいCORSヘッダーを返す', async () => {
+      // Arrange
+      mockEvent.pathParameters = {
+        execution_id: 'exec_test_completed_12345678',
+      };
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.headers).toHaveProperty('Access-Control-Allow-Origin');
+      expect(result.headers).toHaveProperty('Access-Control-Allow-Methods');
+      expect(result.headers).toHaveProperty('Access-Control-Allow-Headers');
+      expect(result.headers?.['Access-Control-Allow-Origin']).toBe('*');
+    });
+
+    it('Content-Typeヘッダーがapplication/jsonである', async () => {
+      // Arrange
+      mockEvent.pathParameters = {
+        execution_id: 'exec_test_completed_12345678',
+      };
+
+      // Act
+      const result = await handler(mockEvent, mockContext);
+
+      // Assert
+      expect(result.headers?.['Content-Type']).toBe('application/json');
+    });
+  });
+});

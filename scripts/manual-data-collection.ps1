@@ -13,11 +13,10 @@ param(
 )
 
 # UTF-8エンコーディング設定（包括的）
-# PowerShell 5.1では明示的にUTF8エンコーディングオブジェクトを使用
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[Console]::OutputEncoding = $utf8NoBom
-$OutputEncoding = $utf8NoBom
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+# PowerShell 5.1互換性のため
 if ($PSVersionTable.PSVersion.Major -le 5) {
     $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 }
@@ -27,36 +26,124 @@ $ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod
 $Region = "ap-northeast-1"
 $SecretName = "/tdnet/api-key-prod"
 
+# APIキー取得関数（リトライ機能付き）
+function Get-ApiKeyWithRetry {
+    param(
+        [string]$SecretName,
+        [string]$Region,
+        [int]$MaxRetries = 3
+    )
+    
+    $retryCount = 0
+    $delay = 2
+    
+    while ($retryCount -lt $MaxRetries) {
+        try {
+            $secretJson = aws secretsmanager get-secret-value `
+                --secret-id $SecretName `
+                --region $Region `
+                --query SecretString `
+                --output text 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+                $secret = $secretJson | ConvertFrom-Json
+                return $secret.api_key
+            }
+            
+            # エラー分類
+            if ($secretJson -match "ResourceNotFoundException") {
+                throw [System.Exception]::new("SECRET_NOT_FOUND")
+            } elseif ($secretJson -match "AccessDeniedException") {
+                throw [System.Exception]::new("ACCESS_DENIED")
+            } else {
+                throw [System.Exception]::new("NETWORK_ERROR")
+            }
+            
+        } catch {
+            $errorType = $_.Exception.Message
+            
+            if ($errorType -eq "NETWORK_ERROR" -and $retryCount -lt ($MaxRetries - 1)) {
+                $retryCount++
+                Write-Host "⚠️ ネットワークエラー。$delay 秒後にリトライします... ($retryCount/$MaxRetries)" -ForegroundColor Yellow
+                Start-Sleep -Seconds $delay
+                $delay *= 2
+                continue
+            }
+            
+            # リトライ不可能なエラー、または最大リトライ回数到達
+            throw $_
+        }
+    }
+}
+
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "TDnet Data Collector - 手動データ収集" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Secrets ManagerからAPIキーを取得
+# Secrets ManagerからAPIキーを取得（環境変数フォールバック付き）
 Write-Host "[0/4] APIキーを取得中..." -ForegroundColor Green
-try {
-    $secretJson = aws secretsmanager get-secret-value `
-        --secret-id $SecretName `
-        --region $Region `
-        --query SecretString `
-        --output text 2>&1
-    
-    if ($LASTEXITCODE -ne 0) {
-        throw "Secrets Manager接続失敗: $secretJson"
-    }
-    
-    $secret = $secretJson | ConvertFrom-Json
-    $ApiKey = $secret.api_key
+
+# 環境変数からAPIキーを取得
+$envApiKey = $env:TDNET_API_KEY
+
+if ($envApiKey) {
+    Write-Host "ℹ️ 環境変数からAPIキーを使用します" -ForegroundColor Cyan
+    $ApiKey = $envApiKey
     Write-Host "✅ APIキーを取得しました" -ForegroundColor Green
-} catch {
-    Write-Host "❌ APIキー取得失敗: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "" -ForegroundColor Yellow
-    Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. Secrets Managerに $SecretName が登録されているか確認" -ForegroundColor White
-    Write-Host "2. 登録されていない場合は、以下のコマンドで登録:" -ForegroundColor White
-    Write-Host "   .\scripts\register-api-key.ps1 -Environment prod" -ForegroundColor Cyan
-    Write-Host "" -ForegroundColor Yellow
-    exit 1
+} else {
+    # Secrets Managerから取得
+    try {
+        $ApiKey = Get-ApiKeyWithRetry -SecretName $SecretName -Region $Region
+        Write-Host "✅ Secrets ManagerからAPIキーを取得しました" -ForegroundColor Green
+    } catch {
+        $errorType = $_.Exception.Message
+        
+        Write-Host "❌ APIキーの取得に失敗しました" -ForegroundColor Red
+        Write-Host ""
+        
+        switch ($errorType) {
+            "SECRET_NOT_FOUND" {
+                Write-Host "原因: Secrets Managerにシークレットが登録されていません" -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "解決方法:" -ForegroundColor Cyan
+                Write-Host "1. 以下のコマンドでシークレットを登録してください:" -ForegroundColor White
+                Write-Host "   .\scripts\create-api-key-secret.ps1" -ForegroundColor Gray
+                Write-Host ""
+                Write-Host "2. または、環境変数を設定してください:" -ForegroundColor White
+                Write-Host "   `$env:TDNET_API_KEY = 'your-api-key'" -ForegroundColor Gray
+            }
+            "ACCESS_DENIED" {
+                Write-Host "原因: Secrets Managerへのアクセス権限がありません" -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "解決方法:" -ForegroundColor Cyan
+                Write-Host "1. IAMポリシーを確認してください:" -ForegroundColor White
+                Write-Host "   - secretsmanager:GetSecretValue" -ForegroundColor Gray
+                Write-Host ""
+                Write-Host "2. または、環境変数を設定してください:" -ForegroundColor White
+                Write-Host "   `$env:TDNET_API_KEY = 'your-api-key'" -ForegroundColor Gray
+            }
+            "NETWORK_ERROR" {
+                Write-Host "原因: ネットワークエラー（最大リトライ回数に到達）" -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "解決方法:" -ForegroundColor Cyan
+                Write-Host "1. ネットワーク接続を確認してください" -ForegroundColor White
+                Write-Host "2. AWS CLIの設定を確認してください:" -ForegroundColor White
+                Write-Host "   aws configure list" -ForegroundColor Gray
+                Write-Host ""
+                Write-Host "3. または、環境変数を設定してください:" -ForegroundColor White
+                Write-Host "   `$env:TDNET_API_KEY = 'your-api-key'" -ForegroundColor Gray
+            }
+            default {
+                Write-Host "原因: 不明なエラー" -ForegroundColor Yellow
+                Write-Host "エラー詳細: $errorType" -ForegroundColor Gray
+            }
+        }
+        
+        Write-Host ""
+        Write-Host "詳細: .kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md" -ForegroundColor Gray
+        exit 1
+    }
 }
 Write-Host ""
 

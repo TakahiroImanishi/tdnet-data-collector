@@ -83,10 +83,8 @@ export async function handler(
       function_name: context.functionName,
     });
 
-    // APIキー認証（テスト環境以外）
-    if (process.env.TEST_ENV !== 'e2e') {
-      validateApiKey(event);
-    }
+    // APIキー認証
+    validateApiKey(event);
 
     // クエリパラメータのパース
     const params = parseQueryParameters(event);

@@ -1,7 +1,8 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/../src', '<rootDir>/../cdk'],
+  rootDir: '..',
+  roots: ['<rootDir>/src', '<rootDir>/cdk'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   
   // Exclude improved test examples from running
@@ -25,22 +26,23 @@ module.exports = {
   },
   
   collectCoverageFrom: [
-    '../src/**/*.ts',
-    '../cdk/**/*.ts',
-    '!../src/**/*.d.ts',
-    '!../src/**/*.test.ts',
-    '!../src/**/*.spec.ts',
-    '!../src/**/*.improved.ts',
-    '!../src/**/__tests__/test-helpers.ts',
-    '!../cdk/**/*.test.ts',
-    '!../cdk/**/*.spec.ts',
+    'src/**/*.ts',
+    'cdk/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.improved.ts',
+    '!src/**/__tests__/**',
+    '!cdk/**/*.test.ts',
+    '!cdk/**/*.spec.ts',
+    '!cdk/**/__tests__/**',
     // Phase 3実装予定の未実装機能を除外（タスク19.9）
-    '!../src/lambda/get-disclosure/**',
-    '!../src/lambda/health/**',
-    '!../src/lambda/stats/**',
+    '!src/lambda/get-disclosure/**',
+    '!src/lambda/health/**',
+    '!src/lambda/stats/**',
   ],
   
-  coverageDirectory: 'coverage',
+  coverageDirectory: 'test/coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
@@ -62,13 +64,13 @@ module.exports = {
   
   // モジュール解決の最適化
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/../src/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   
   // セットアップファイル
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.js'],
   
   // キャッシュの有効化
   cache: true,
-  cacheDirectory: '<rootDir>/../.jest-cache',
+  cacheDirectory: '<rootDir>/.jest-cache',
 };

@@ -7,7 +7,7 @@
  * Requirements: タスク35
  */
 
-import { SQSEvent, SQSRecord } from 'aws-lambda';
+import { SQSEvent } from 'aws-lambda';
 import { SNSClient, CreateTopicCommand, ListTopicsCommand } from '@aws-sdk/client-sns';
 import { handler, resetSNSClient } from '../index';
 
