@@ -60,7 +60,7 @@ module.exports = {
   testTimeout: 30000,
   
   // テスト実行の最適化
-  maxWorkers: '50%', // CPU使用率を50%に制限,
+  maxWorkers: '75%', // CPU使用率を75%に引き上げ（テスト実行時間短縮）,
   
   // モジュール解決の最適化
   moduleNameMapper: {

@@ -205,8 +205,8 @@ describe('プロジェクト構造の検証', () => {
     });
 
     test('rootsにsrcとcdkが含まれていること', () => {
-      expect(jestConfig.roots).toContain('<rootDir>/../src');
-      expect(jestConfig.roots).toContain('<rootDir>/../cdk');
+      expect(jestConfig.roots).toContain('<rootDir>/src');
+      expect(jestConfig.roots).toContain('<rootDir>/cdk');
     });
 
     test('coverageThresholdが適切に設定されていること', () => {

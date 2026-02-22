@@ -143,7 +143,7 @@ describe('Lambda Export Handler', () => {
   });
 
   describe('異常系: APIキー認証', () => {
-    it('APIキーが未指定の場合でもリクエストを受け付ける（認証未実装）', async () => {
+    it('APIキーが未指定の場合は401を返す', async () => {
       // Arrange
       const event = {
         headers: {},
@@ -159,28 +159,15 @@ describe('Lambda Export Handler', () => {
         },
       } as unknown as ExportEvent;
 
-      const mockExportJob = {
-        export_id: 'export_test',
-        status: 'pending' as const,
-        requested_at: '2024-01-15T10:00:00Z',
-        progress: 0,
-        ttl: 1707897600,
-        format: 'json' as const,
-        filter: JSON.stringify({ start_date: '2024-01-15', end_date: '2024-01-20' }),
-      };
-
-      jest.spyOn(createExportJob, 'createExportJob').mockResolvedValue(mockExportJob);
-      jest.spyOn(processExport, 'processExport').mockResolvedValue(undefined);
-
       // Act
       const result = await handler(event, mockContext);
 
       // Assert
-      // Note: APIキー認証は現在未実装のため、202を返す
-      expect(result.statusCode).toBe(202);
+      // Note: APIキー認証が実装されたため、401を返す
+      expect(result.statusCode).toBe(401);
     });
 
-    it('APIキーが不正な場合でもリクエストを受け付ける（認証未実装）', async () => {
+    it('APIキーが不正な場合は401を返す', async () => {
       // Arrange
       const event = {
         headers: {
@@ -198,25 +185,12 @@ describe('Lambda Export Handler', () => {
         },
       } as unknown as ExportEvent;
 
-      const mockExportJob = {
-        export_id: 'export_test',
-        status: 'pending' as const,
-        requested_at: '2024-01-15T10:00:00Z',
-        progress: 0,
-        ttl: 1707897600,
-        format: 'json' as const,
-        filter: JSON.stringify({ start_date: '2024-01-15', end_date: '2024-01-20' }),
-      };
-
-      jest.spyOn(createExportJob, 'createExportJob').mockResolvedValue(mockExportJob);
-      jest.spyOn(processExport, 'processExport').mockResolvedValue(undefined);
-
       // Act
       const result = await handler(event, mockContext);
 
       // Assert
-      // Note: APIキー認証は現在未実装のため、202を返す
-      expect(result.statusCode).toBe(202);
+      // Note: APIキー認証が実装されたため、401を返す
+      expect(result.statusCode).toBe(401);
     });
   });
 

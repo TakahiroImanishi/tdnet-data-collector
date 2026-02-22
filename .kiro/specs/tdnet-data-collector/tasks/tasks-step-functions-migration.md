@@ -29,10 +29,12 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 ### フェーズ1: 設計（優先度: 高）
 
 #### タスク1.1: アーキテクチャ設計
-- [ ] Step Functionsワークフロー設計
+- [x] Step Functionsワークフロー設計
   - Standard vs Express Workflowsの選択
   - 状態遷移図の作成
   - エラーハンドリング戦略
+  - **完了日時**: 2026-02-22 18:13:01
+  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-workflow-diagram.md`
 - [ ] Lambda関数の分割設計
   - 既存collector関数の分解
   - 各ステップの責務定義

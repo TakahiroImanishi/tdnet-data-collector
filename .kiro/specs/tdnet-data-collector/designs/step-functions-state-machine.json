@@ -1,0 +1,395 @@
+{
+  "Comment": "TDnet データ収集ワークフロー - 大量データ収集時の長時間実行に対応",
+  "StartAt": "Initialize",
+  "TimeoutSeconds": 3600,
+  "States": {
+    "Initialize": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Comment": "収集処理の初期化 - パラメータ検証、実行状態初期化、TDnet APIメタデータ取得",
+      "Parameters": {
+        "FunctionName": "${CollectorInitLambdaArn}",
+        "Payload": {
+          "start_date.$": "$.start_date",
+          "end_date.$": "$.end_date",
+          "max_items.$": "$.max_items"
+        }
+      },
+      "ResultPath": "$.initResult",
+      "ResultSelector": {
+        "execution_id.$": "$.Payload.execution_id",
+        "total_count.$": "$.Payload.total_count",
+        "pages.$": "$.Payload.pages",
+        "parameters.$": "$.Payload.parameters"
+      },
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0,
+          "Comment": "Lambda サービスエラーの指数バックオフ再試行"
+        },
+        {
+          "ErrorEquals": [
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0,
+          "Comment": "ネットワークエラー等の一時的エラーの再試行"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "ValidationError",
+            "AuthenticationError"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleInitializationError",
+          "Comment": "バリデーションエラーや認証エラーは即座に失敗"
+        },
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleInitializationError",
+          "Comment": "その他すべてのエラーをキャッチ"
+        }
+      ],
+      "Next": "CheckTotalCount"
+    },
+    "CheckTotalCount": {
+      "Type": "Choice",
+      "Comment": "取得件数が0件の場合は処理をスキップ",
+      "Choices": [
+        {
+          "Variable": "$.initResult.total_count",
+          "NumericGreaterThan": 0,
+          "Next": "ProcessPages"
+        }
+      ],
+      "Default": "NoDataToCollect"
+    },
+    "ProcessPages": {
+      "Type": "Map",
+      "Comment": "ページごとのデータ取得・保存を並列実行（最大5並列）",
+      "ItemsPath": "$.initResult.pages",
+      "MaxConcurrency": 5,
+      "ResultPath": "$.processResults",
+      "Parameters": {
+        "page_number.$": "$$.Map.Item.Value",
+        "execution_id.$": "$.initResult.execution_id",
+        "start_date.$": "$.start_date",
+        "end_date.$": "$.end_date",
+        "max_items.$": "$.max_items"
+      },
+      "Iterator": {
+        "StartAt": "FetchPageData",
+        "States": {
+          "FetchPageData": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Comment": "TDnet APIから1ページ分のデータ取得（レート制限: 1req/sec）",
+            "Parameters": {
+              "FunctionName": "${CollectorFetchLambdaArn}",
+              "Payload": {
+                "page_number.$": "$.page_number",
+                "start_date.$": "$.start_date",
+                "end_date.$": "$.end_date",
+                "max_items.$": "$.max_items",
+                "execution_id.$": "$.execution_id"
+              }
+            },
+            "ResultPath": "$.fetchResult",
+            "ResultSelector": {
+              "page_number.$": "$.Payload.page_number",
+              "items.$": "$.Payload.items",
+              "count.$": "$.Payload.count"
+            },
+            "TimeoutSeconds": 60,
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "RateLimitError"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 1.0,
+                "Comment": "レート制限エラーは1秒待機後リトライ"
+              },
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0,
+                "Comment": "Lambda サービスエラーの指数バックオフ再試行"
+              },
+              {
+                "ErrorEquals": [
+                  "States.TaskFailed"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0,
+                "Comment": "ネットワークエラー等の一時的エラーの再試行"
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "AuthenticationError"
+                ],
+                "ResultPath": "$.error",
+                "Next": "FetchFailed",
+                "Comment": "認証エラーは即座に失敗"
+              },
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "ResultPath": "$.error",
+                "Next": "FetchFailed",
+                "Comment": "その他すべてのエラーをキャッチ"
+              }
+            ],
+            "Next": "SavePageData"
+          },
+          "SavePageData": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Comment": "DynamoDB保存、S3 PDFアップロード、バリデーション",
+            "Parameters": {
+              "FunctionName": "${CollectorSaveLambdaArn}",
+              "Payload": {
+                "items.$": "$.fetchResult.items",
+                "page_number.$": "$.fetchResult.page_number",
+                "execution_id.$": "$.execution_id"
+              }
+            },
+            "ResultPath": "$.saveResult",
+            "ResultSelector": {
+              "page_number.$": "$.Payload.page_number",
+              "saved_count.$": "$.Payload.saved_count",
+              "failed_count.$": "$.Payload.failed_count",
+              "failed_items.$": "$.Payload.failed_items"
+            },
+            "TimeoutSeconds": 120,
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "DynamoDB.ProvisionedThroughputExceededException",
+                  "DynamoDB.ThrottlingException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0,
+                "Comment": "DynamoDB スロットリングの指数バックオフ再試行"
+              },
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.AWSLambdaException",
+                  "Lambda.SdkClientException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0,
+                "Comment": "Lambda サービスエラーの指数バックオフ再試行"
+              },
+              {
+                "ErrorEquals": [
+                  "States.TaskFailed"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2.0,
+                "Comment": "ネットワークエラー等の一時的エラーの再試行"
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "ResultPath": "$.error",
+                "Next": "SaveFailed",
+                "Comment": "すべてのエラーをキャッチして部分的失敗を記録"
+              }
+            ],
+            "Next": "PageSuccess"
+          },
+          "PageSuccess": {
+            "Type": "Succeed",
+            "Comment": "ページ処理成功"
+          },
+          "FetchFailed": {
+            "Type": "Pass",
+            "Comment": "データ取得失敗を記録",
+            "Parameters": {
+              "page_number.$": "$.page_number",
+              "status": "fetch_failed",
+              "error.$": "$.error"
+            },
+            "Next": "PageFailed"
+          },
+          "SaveFailed": {
+            "Type": "Pass",
+            "Comment": "データ保存失敗を記録（部分的失敗を許容）",
+            "Parameters": {
+              "page_number.$": "$.page_number",
+              "status": "save_failed",
+              "saved_count.$": "$.saveResult.saved_count",
+              "failed_count.$": "$.saveResult.failed_count",
+              "error.$": "$.error"
+            },
+            "Next": "PageFailed"
+          },
+          "PageFailed": {
+            "Type": "Succeed",
+            "Comment": "ページ処理失敗（Map全体は継続）"
+          }
+        }
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.mapError",
+          "Next": "AggregateResults",
+          "Comment": "Map全体のエラーをキャッチして集約処理へ"
+        }
+      ],
+      "Next": "AggregateResults"
+    },
+    "AggregateResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Comment": "実行結果の集約、統計情報の計算、実行状態更新",
+      "Parameters": {
+        "FunctionName": "${CollectorAggregateLambdaArn}",
+        "Payload": {
+          "execution_id.$": "$.initResult.execution_id",
+          "results.$": "$.processResults",
+          "total_count.$": "$.initResult.total_count",
+          "parameters.$": "$.initResult.parameters"
+        }
+      },
+      "ResultPath": "$.aggregateResult",
+      "ResultSelector": {
+        "execution_id.$": "$.Payload.execution_id",
+        "status.$": "$.Payload.status",
+        "total_collected.$": "$.Payload.total_collected",
+        "total_failed.$": "$.Payload.total_failed",
+        "success_rate.$": "$.Payload.success_rate"
+      },
+      "TimeoutSeconds": 30,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0,
+          "Comment": "Lambda サービスエラーの指数バックオフ再試行"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleAggregationError",
+          "Comment": "集約エラーをキャッチ"
+        }
+      ],
+      "Next": "CheckAggregateStatus"
+    },
+    "CheckAggregateStatus": {
+      "Type": "Choice",
+      "Comment": "集約結果のステータスに応じて分岐",
+      "Choices": [
+        {
+          "Variable": "$.aggregateResult.status",
+          "StringEquals": "completed",
+          "Next": "CollectionSuccess"
+        },
+        {
+          "Variable": "$.aggregateResult.status",
+          "StringEquals": "partial_success",
+          "Next": "PartialSuccess"
+        }
+      ],
+      "Default": "CollectionFailed"
+    },
+    "NoDataToCollect": {
+      "Type": "Succeed",
+      "Comment": "取得対象データが0件のため正常終了"
+    },
+    "CollectionSuccess": {
+      "Type": "Succeed",
+      "Comment": "データ収集完全成功"
+    },
+    "PartialSuccess": {
+      "Type": "Succeed",
+      "Comment": "データ収集部分的成功（一部失敗あり）"
+    },
+    "HandleInitializationError": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Comment": "初期化エラーの記録とDLQ送信",
+      "Parameters": {
+        "FunctionName": "${CollectorAggregateLambdaArn}",
+        "Payload": {
+          "execution_id.$": "$.initResult.execution_id",
+          "status": "initialization_failed",
+          "error.$": "$.error",
+          "parameters": {
+            "start_date.$": "$.start_date",
+            "end_date.$": "$.end_date",
+            "max_items.$": "$.max_items"
+          }
+        }
+      },
+      "ResultPath": null,
+      "TimeoutSeconds": 30,
+      "Next": "CollectionFailed"
+    },
+    "HandleAggregationError": {
+      "Type": "Pass",
+      "Comment": "集約エラーを記録（実行状態更新失敗）",
+      "Parameters": {
+        "execution_id.$": "$.initResult.execution_id",
+        "status": "aggregation_failed",
+        "error.$": "$.error"
+      },
+      "Next": "CollectionFailed"
+    },
+    "CollectionFailed": {
+      "Type": "Fail",
+      "Comment": "データ収集失敗",
+      "Error": "CollectionFailed",
+      "Cause": "データ収集処理が失敗しました。詳細はCloudWatch Logsを確認してください。"
+    }
+  }
+}
