@@ -41,10 +41,22 @@ Step Functions移行に向けたcollector-init Lambda関数の実装。収集パ
 
 ## 成果物
 
-- `src/lambda/collector-init/handler.ts`
-- `src/lambda/collector-init/__tests__/handler.test.ts`
-- `src/lambda/collector-init/__tests__/integration.test.ts`
+- `src/lambda/collector-init/handler.ts` - 初期化Lambda関数（約300行）
+- `src/lambda/collector-init/__tests__/handler.test.ts` - ユニットテスト（15テスト、全て成功）
 
 ## 申し送り事項
 
-（完了時に記録）
+### 完了した実装
+1. **パラメータ検証**: バッチモード・オンデマンドモード両対応
+2. **日付範囲生成**: 既存のgenerateDateRange関数を再利用
+3. **実行状態初期化**: 既存のupdateExecutionStatus関数を再利用
+4. **推定総件数**: 簡易版（1日200件と仮定）を実装
+
+### 今後の課題
+1. **TDnet APIメタデータ取得**: 実際のAPI呼び出しによる総件数取得は未実装
+   - 現在は簡易版（1日200件固定）を使用
+   - タスク2.2（collector-fetch）実装時に追加予定
+2. **統合テスト**: LocalStack環境でのDynamoDB連携テストは未実装
+   - E2Eテストで別途実装予定
+3. **エラーハンドリング**: RetryableErrorの再試行ロジックは未実装
+   - Step Functions側でRetry設定を行う予定
