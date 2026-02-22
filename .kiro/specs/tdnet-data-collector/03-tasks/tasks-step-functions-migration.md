@@ -337,7 +337,8 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `scripts/deploy-mock-lambdas.ps1`（デプロイスクリプト）
 
 #### タスク6.2: 本番環境検証
-- [x] 小規模データでの検証（1日分、100件以下）
+- [x] Step Functionsインフラデプロイ
+- [ ] 小規模データでの検証（1日分、100件以下）
 - [ ] 中規模データでの検証（1日分、500件程度）
 - [ ] 大規模データでの検証（1日分、2,000件以上）
 - [ ] パフォーマンス測定
@@ -351,6 +352,39 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 
 **成果物**:
 - `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-230732-production-validation.md`
+
+#### タスク6.3: Step Functions実行テスト（優先度: 高）
+- [ ] `/collect` APIエンドポイント経由でStep Functions実行
+- [ ] 小規模データ（2026-02-21、100件以下）での動作確認
+- [ ] 実行状態の監視（ExecutionStateTable確認）
+- [ ] CloudWatch Logsでの実行ログ確認
+- [ ] エラーハンドリングの動作確認
+- [ ] `/collect/{executionId}` APIでの状態取得確認
+
+**前提条件**:
+- Step Functionsステートマシンがデプロイ済み
+- すべてのLambda関数が正常動作
+
+**検証項目**:
+- Step Functions実行が正常に開始される
+- 各Lambda関数（init, fetch, save, aggregate）が順次実行される
+- DynamoDBにデータが正しく保存される
+- S3にPDFが正しくアップロードされる
+- ExecutionStateTableに実行状態が記録される
+- エラー発生時に適切にリトライされる
+
+**成果物**:
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-[日時]-step-functions-execution-test.md`
+
+#### タスク6.4: collect-statusテスト修正（優先度: 中）
+- [ ] `handler-step-functions.test.ts`の環境変数設定修正
+- [ ] モックの`STATE_MACHINE_ARN`設定追加
+- [ ] テスト再実行・成功確認
+
+**問題**: 現在4/4テストが失敗（環境変数`STATE_MACHINE_ARN`未設定）
+
+**成果物**:
+- `src/lambda/collect-status/__tests__/handler-step-functions.test.ts`（修正）
 
 ### フェーズ7: 移行・廃止（優先度: 低）
 
