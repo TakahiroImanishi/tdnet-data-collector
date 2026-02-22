@@ -68,6 +68,7 @@ const computeStack = new TdnetComputeStack(app, `TdnetCompute-${environment}`, {
   exportsBucket: foundationStack.exportsBucket,
   apiKeySecret: foundationStack.secretsManager.apiKeySecret,
   alertTopic,
+  enableStepFunctions: true, // Step Functions移行を有効化
 });
 
 // Compute StackはFoundation Stackに依存

@@ -5,7 +5,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 import { Environment } from '../config/environment-config';
 import { CloudWatchAlarms } from '../constructs/cloudwatch-alarms';
