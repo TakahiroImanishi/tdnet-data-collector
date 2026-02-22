@@ -22,21 +22,25 @@
   - _完了: 2026-02-22 10:06:18_
   - _成果物: scripts/register-api-key.ps1（200行）_
 
-- [ ] 1.2 登録スクリプトのドキュメント作成
+- [x] 1.2 登録スクリプトのドキュメント作成
   - 使用方法の説明
   - 前提条件（AWS CLI、IAM権限）
   - トラブルシューティング
   - _Requirements: 要件13.1（ドキュメント）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1時間_
+  - _完了: 2026-02-22 10:20:35_
+  - _成果物: scripts/README-register-api-key.md（包括的なドキュメント）_
 
-- [ ] 1.3 登録スクリプトのテスト
+- [x] 1.3 登録スクリプトのテスト
   - 開発環境でのテスト実行
   - エラーハンドリングの確認
   - ロールバック機能の確認
   - _Requirements: 要件14.1（テスト）_
   - _優先度: 🟠 High_
   - _推定工数: 1-2時間_
+  - _完了: 2026-02-22 10:20:35_
+  - _成果物: scripts/__tests__/register-api-key.test.ps1（10テストケース）_
 
 ### タスク2: Secrets ManagerからAPIキーを取得する機能の実装
 
@@ -108,7 +112,7 @@
 
 ### タスク4: ドキュメント化
 
-- [ ] 4.1 APIキー管理ガイドの作成
+- [x] 4.1 APIキー管理ガイドの作成
   - `docs/guides/api-key-management.md`の作成
   - 登録手順の説明
   - 取得手順の説明
@@ -117,14 +121,18 @@
   - _Requirements: 要件13.1（ドキュメント）_
   - _優先度: 🟠 High_
   - _推定工数: 2-3時間_
+  - _完了: 2026-02-22 10:20:45_
+  - _成果物: docs/guides/api-key-management.md（完全なAPIキー管理ガイド、6セクション構成）_
 
-- [ ] 4.2 セキュリティベストプラクティスの更新
+- [x] 4.2 セキュリティベストプラクティスの更新
   - `steering/security/security-best-practices.md`の更新
   - APIキー管理のベストプラクティスを追加
   - Secrets Manager使用のガイドライン
   - _Requirements: 要件13.1（ドキュメント）_
   - _優先度: 🟡 Medium_
   - _推定工数: 1時間_
+  - _完了: 2026-02-22 10:20:45_
+  - _成果物: .kiro/steering/security/security-best-practices.md（APIキー管理セクション追加）_
 
 ## 実装の優先順位
 
