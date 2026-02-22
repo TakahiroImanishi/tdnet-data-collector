@@ -13,7 +13,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { TdnetMonitoringStack } from '../monitoring-stack';
 
-function createMockStack(app: cdk.App, id: string, env: 'prod' | 'dev') {
+function createMockStack(app: cdk.App, id: string, env: 'prod' | 'local') {
   const stack = new cdk.Stack(app, `${id}BaseStack`);
 
   const mockLambdaFunctions = {
@@ -90,12 +90,12 @@ describe('TdnetMonitoringStack', () => {
     });
   });
 
-  describe('CloudWatch Logs - 開発環境', () => {
+  describe('CloudWatch Logs - ローカル環境', () => {
     let template: Template;
 
     beforeAll(() => {
       const app = new cdk.App();
-      const { template: t } = createMockStack(app, 'Dev', 'dev');
+      const { template: t } = createMockStack(app, 'Local', 'local');
       template = t;
     });
 
@@ -108,7 +108,7 @@ describe('TdnetMonitoringStack', () => {
       expect(oneWeekLogGroups.length).toBe(9);
     });
 
-    it('開発環境のLambda LogGroupにDESTROYポリシーが設定されている', () => {
+    it('ローカル環境のLambda LogGroupにDESTROYポリシーが設定されている', () => {
       const logGroups = template.findResources('AWS::Logs::LogGroup');
       const lambdaLogGroups = Object.values(logGroups).filter(
         (lg: any) => lg.Properties.RetentionInDays === 7

@@ -102,14 +102,14 @@ $PSVersionTable.PSVersion
 .\scripts\register-api-key.ps1 -Environment prod -ApiKeyValue "your-api-key-here"
 ```
 
-#### 2. 開発環境（dev）にAPIキーを登録
+#### 2. LocalStack環境にAPIキーを登録
 
 ```powershell
 # 対話形式
-.\scripts\register-api-key.ps1 -Environment dev
+.\scripts\register-api-key.ps1 -Environment local
 
 # パラメータ指定
-.\scripts\register-api-key.ps1 -Environment dev -ApiKeyValue "your-dev-api-key"
+.\scripts\register-api-key.ps1 -Environment local -ApiKeyValue "your-local-api-key"
 ```
 
 ### パラメータ
@@ -139,15 +139,15 @@ Secrets Managerに登録中...
 ✅ APIキーの登録が完了しました
 ```
 
-#### 例2: パラメータ指定で開発環境に登録
+#### 例2: パラメータ指定でLocalStack環境に登録
 
 ```powershell
-PS> .\scripts\register-api-key.ps1 -Environment dev -ApiKeyValue "dev-api-key-12345"
+PS> .\scripts\register-api-key.ps1 -Environment local -ApiKeyValue "local-api-key-12345"
 ========================================
 TDnet APIキー登録スクリプト
 ========================================
 
-環境: dev
+環境: local
 
 Secrets Managerに登録中...
 ✅ シークレットを作成しました
@@ -328,7 +328,7 @@ Remove-Item (Get-PSReadlineOption).HistorySavePath
 ### 3. Secrets Managerのアクセス制御
 
 - 最小権限の原則に従う
-- 本番環境と開発環境で異なるIAMロールを使用
+- 本番環境とLocalStack環境で異なるIAMロールを使用
 - CloudTrailでアクセスログを監視
 
 ## 確認方法

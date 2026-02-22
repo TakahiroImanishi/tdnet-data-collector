@@ -12,7 +12,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { TdnetComputeStack } from '../compute-stack';
 
-function createComputeStack(env: 'prod' | 'dev') {
+function createComputeStack(env: 'prod' | 'local') {
   const app = new cdk.App();
   const baseStack = new cdk.Stack(app, `${env}BaseStack`);
 
@@ -301,11 +301,11 @@ describe('TdnetComputeStack', () => {
       });
     });
 
-    it('開発環境の設定が正しい', () => {
-      const { template } = createComputeStack('dev');
+    it('ローカル環境の設定が正しい', () => {
+      const { template } = createComputeStack('local');
       
       template.hasResourceProperties('AWS::Lambda::Function', {
-        FunctionName: 'tdnet-collector-dev',
+        FunctionName: 'tdnet-collector-local',
       });
     });
   });

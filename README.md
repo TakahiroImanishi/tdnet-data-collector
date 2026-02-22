@@ -177,10 +177,19 @@ npm run build
 
 ### 環境変数の設定
 
-`.env.example` をコピーして `.env` を作成し、必要な環境変数を設定します。
+環境変数は以下の2つの環境で管理されます：
+
+- **LocalStack (開発・テスト)**: `.env.local` - E2Eテスト用のローカル環境
+- **AWS Production (本番)**: `.env.production` - 本番環境
+
+`.env.example` をコピーして必要な環境変数ファイルを作成します。
 
 ```bash
-cp .env.example .env
+# LocalStack環境用
+cp .env.example .env.local
+
+# 本番環境用
+cp .env.example .env.production
 ```
 
 **必須環境変数**:
@@ -198,7 +207,7 @@ cp .env.example .env
 
 スクリプト実行時にAPIキーが必要です。以下のいずれかの方法で設定してください：
 
-#### 方法1: 環境変数（推奨: 開発環境）
+#### 方法1: 環境変数（推奨: LocalStack環境）
 
 ```powershell
 # 一時的に設定（現在のセッションのみ）
@@ -462,12 +471,11 @@ curl -X POST "https://api.example.com/export" \
 | スクリプト | 説明 | 実行例 |
 |-----------|------|--------|
 | `deploy.ps1` | 基本デプロイスクリプト（全スタック一括デプロイ） | `.\scripts\deploy.ps1` |
-| `deploy-dev.ps1` | 開発環境への簡易デプロイ | `.\scripts\deploy-dev.ps1` |
 | `deploy-prod.ps1` | 本番環境への本格デプロイ | `.\scripts\deploy-prod.ps1` |
-| `deploy-split-stacks.ps1` | 分割スタックデプロイ（推奨）- 変更箇所のみ更新 | `.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack compute` |
+| `deploy-split-stacks.ps1` | 分割スタックデプロイ（推奨）- 変更箇所のみ更新 | `.\scripts\deploy-split-stacks.ps1 -Environment prod -Action deploy -Stack compute` |
 | `deploy-dashboard.ps1` | Webダッシュボードのデプロイ | `.\scripts\deploy-dashboard.ps1 -Environment prod` |
 
-**推奨**: 開発時は `deploy-split-stacks.ps1` を使用すると、変更したスタックのみをデプロイできるため、デプロイ時間を大幅に短縮できます（15-20分 → 2-5分）。
+**推奨**: `deploy-split-stacks.ps1` を使用すると、変更したスタックのみをデプロイできるため、デプロイ時間を大幅に短縮できます（15-20分 → 2-5分）。
 
 ### セットアップスクリプト
 
@@ -476,7 +484,7 @@ curl -X POST "https://api.example.com/export" \
 | `startup.ps1` | AWS SSO認証とプロファイル設定 | `.\scripts\startup.ps1` |
 | `localstack-setup.ps1` | LocalStack環境のセットアップ（E2Eテスト用） | `.\scripts\localstack-setup.ps1` |
 | `create-api-key-secret.ps1` | Secrets ManagerにAPIキーシークレットを作成 | `.\scripts\create-api-key-secret.ps1 -Environment prod` |
-| `generate-env-file.ps1` | 環境変数ファイル（.env）を生成 | `.\scripts\generate-env-file.ps1 -Environment dev` |
+| `generate-env-file.ps1` | 環境変数ファイル（.env）を生成 | `.\scripts\generate-env-file.ps1 -Environment prod` |
 | `register-api-key.ps1` | APIキーの登録・ローテーション | `.\scripts\register-api-key.ps1 -Environment prod -Action rotate` |
 
 **注意**: `register-api-key.ps1` は90日ごとのAPIキー自動ローテーションに使用します。詳細は [README-register-api-key.md](scripts/README-register-api-key.md) を参照してください。
@@ -487,7 +495,7 @@ curl -X POST "https://api.example.com/export" \
 |-----------|------|--------|
 | `manual-data-collection.ps1` | 手動でのデータ収集実行 | `.\scripts\manual-data-collection.ps1 -StartDate "2024-01-01" -EndDate "2024-01-31"` |
 | `fetch-data-range.ps1` | 指定期間のデータを一括取得 | `.\scripts\fetch-data-range.ps1 -StartDate "2024-01-01" -EndDate "2024-01-31"` |
-| `delete-all-data.ps1` | DynamoDBとS3のすべてのデータを削除（開発環境用） | `.\scripts\delete-all-data.ps1 -Confirm` |
+| `delete-all-data.ps1` | DynamoDBとS3のすべてのデータを削除（LocalStack環境用） | `.\scripts\delete-all-data.ps1 -Confirm` |
 | `migrate-disclosure-fields.ts` | 開示情報フィールドのマイグレーション | `npx ts-node scripts/migrate-disclosure-fields.ts` |
 
 **警告**: `delete-all-data.ps1` は本番環境では使用しないでください。すべてのデータが削除されます。
@@ -1354,7 +1362,7 @@ aws logs filter-log-events \
 
 **対策**:
 - **AWS Budgets設定**: 
-  - 月次予算: $5.00（開発環境）、$10.00（本番環境）
+  - 月次予算: $10.00（本番環境）
   - アラート閾値: 50%、80%、100%
   - SNS通知による早期警告
 - **コスト監視**: 

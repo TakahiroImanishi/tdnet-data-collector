@@ -13,7 +13,7 @@ function createMockLambdaFunction(stack: cdk.Stack, id: string, name: string): l
   return lambda.Function.fromFunctionName(stack, id, name);
 }
 
-function createApiStack(env: 'prod' | 'dev') {
+function createApiStack(env: 'prod' | 'local') {
   const app = new cdk.App();
   const baseStack = new cdk.Stack(app, `${env}BaseStack`);
 
@@ -201,11 +201,11 @@ describe('TdnetApiStack', () => {
       });
     });
 
-    it('開発環境の設定が正しい', () => {
-      const { template } = createApiStack('dev');
+    it('ローカル環境の設定が正しい', () => {
+      const { template } = createApiStack('local');
       
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
-        Name: 'tdnet-data-collector-api-dev',
+        Name: 'tdnet-data-collector-api-local',
       });
     });
   });

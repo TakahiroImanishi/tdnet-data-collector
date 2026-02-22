@@ -1,12 +1,12 @@
 # TDnet Data Collector - Environment File Generation Script
-# このスクリプトは、.env.developmentファイルを自動生成します
+# このスクリプトは、.env.productionファイルを自動生成します
 
 param(
     [Parameter(Mandatory=$false)]
     [string]$Region = "ap-northeast-1",
     
     [Parameter(Mandatory=$false)]
-    [string]$OutputFile = "config/.env.development",
+    [string]$OutputFile = "config/.env.production",
     
     [Parameter(Mandatory=$false)]
     [switch]$Force
@@ -79,7 +79,7 @@ Write-Host ""
 Write-Host "📝 Generating $OutputFile..." -ForegroundColor Yellow
 
 $envContent = @"
-# TDnet Data Collector - Development Environment Variables
+# TDnet Data Collector - Production Environment Variables
 # Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 
 # AWS Configuration

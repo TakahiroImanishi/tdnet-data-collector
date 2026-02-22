@@ -34,8 +34,9 @@ cd tdnet-data-collector
 npm install
 
 # 環境変数の設定
-cp .env.example .env
-# .envファイルを編集して必要な環境変数を設定
+cp .env.example .env.local  # LocalStack環境用
+cp .env.example .env.production  # 本番環境用
+# 各.envファイルを編集して必要な環境変数を設定
 
 # TypeScriptのビルド
 npm run build

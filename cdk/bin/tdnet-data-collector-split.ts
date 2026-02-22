@@ -9,14 +9,14 @@ import { Environment } from '../lib/config/environment-config';
 
 const app = new cdk.App();
 
-// Get environment from context or environment variable (default: 'dev')
+// Get environment from context or environment variable (default: 'local')
 const environment = (app.node.tryGetContext('environment') || 
                      process.env.ENVIRONMENT || 
-                     'dev') as Environment;
+                     'local') as Environment;
 
 // Validate environment value
-if (environment !== 'dev' && environment !== 'prod') {
-  throw new Error(`Invalid environment: ${environment}. Must be 'dev' or 'prod'.`);
+if (environment !== 'local' && environment !== 'prod') {
+  throw new Error(`Invalid environment: ${environment}. Must be 'local' or 'prod'.`);
 }
 
 // Common stack properties
