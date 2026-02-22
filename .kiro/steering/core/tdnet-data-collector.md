@@ -25,6 +25,10 @@
 
 ### 完了時
 - [ ] 作業記録に成果物・申し送り記入
+- [ ] **タスク完了条件の確認**:
+  - [ ] **コード変更時**: 関連するユニットテスト（UT）を修正し、再実行して成功を確認（必須）
+  - [ ] **関連ドキュメント・テストの更新**: 当該タスクの変更によって影響を受けるドキュメントやテストを修正
+  - [ ] **修正が間に合わない場合**: 新規タスクを作成して追跡（tasks.mdに追加）
 - [ ] Git commit & push（形式: `[feat/fix/docs/refactor/test/chore/improve] 変更内容`）
 - [ ] 問題発生時: 改善記録作成（`.kiro/specs/tdnet-data-collector/improvements/task-[番号]-improvement-[連番]-[YYYYMMDD-HHMMSS].md`）
 - [ ] ファイルエンコーディング確認: すべてのファイルがUTF-8 BOMなしであることを確認（`file-encoding-rules.md`参照）

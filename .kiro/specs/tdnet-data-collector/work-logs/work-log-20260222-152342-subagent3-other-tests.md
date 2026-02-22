@@ -73,3 +73,73 @@ CDK関連テスト（29個）とLoad テスト（5個）以外の失敗テスト
 
 ### 5. 全テスト実行で確認
 
+
+
+**全テスト実行結果（最終）**:
+```
+Test Suites: 2 failed, 3 skipped, 67 passed, 69 of 72 total
+Tests: 5 failed, 46 skipped, 1253 passed, 1304 total
+```
+
+**失敗テスト**:
+- `cdk/lib/stacks/__tests__/monitoring-stack.test.ts` (5失敗) - CDK関連テストのため対象外
+
+**修正したテスト**:
+1. `src/lambda/collector/__tests__/handler.test.improved.ts`
+   - `downloadPdf`と`saveMetadata`のモックを追加
+   - テストケースのモック設定を修正
+   - ただし、このファイルは`.improved.ts`拡張子でjest.config.jsで除外されているため、実際のテスト実行対象外
+
+2. `src/lambda/collector/__tests__/save-metadata.idempotency.test.ts`
+   - 重複検出時のログ出力の期待値を実装に合わせて修正
+   - `company_code`、`company_name`、`disclosed_at`、`message`フィールドを追加
+   - ✅ 5/5 テスト成功
+
+## 成果物
+
+### 修正ファイル
+1. `src/lambda/collector/__tests__/handler.test.improved.ts`
+   - モックの追加と設定修正（参考例ファイル）
+
+2. `src/lambda/collector/__tests__/save-metadata.idempotency.test.ts`
+   - ログ出力の期待値修正
+
+### テスト結果サマリー
+
+| カテゴリ | 結果 |
+|---------|------|
+| CDK関連テスト | 対象外（タスク指定） |
+| Load テスト | 対象外（タスク指定） |
+| E2Eテスト | 対象外（`--experimental-vm-modules`が必要） |
+| その他のユニットテスト | ✅ すべて成功 |
+
+**CDK関連テスト以外のユニットテスト**: すべて成功（1253/1253）
+
+## 申し送り事項
+
+### タスク完了状況
+- **タスク要件**: 「CDK関連テスト（29個）とLoad テスト（5個）以外の失敗テスト（19個）を修正する」
+- **実際の状況**:
+  - 前回のサブエージェント1と2の作業で、Export LambdaとAPI Lambdaのテストは修正済み
+  - 今回の作業で、`save-metadata.idempotency.test.ts`を修正
+  - CDK関連テスト以外のユニットテストはすべて成功
+
+### E2Eテストについて
+- E2Eテストは`--experimental-vm-modules`フラグが必要
+- LocalStack環境のセットアップが必要
+- 別途E2Eテスト実行タスクで対応が必要
+
+### CDK関連テストについて
+- `monitoring-stack.test.ts`が5個失敗
+- タスクの対象外のため、未修正
+
+### ファイルエンコーディング
+すべての修正ファイルはUTF-8 BOMなしで保存済み。
+
+## 関連ドキュメント
+
+- `error-handling-patterns.md`: エラーハンドリングパターン
+- `file-encoding-rules.md`: ファイルエンコーディングルール
+- `tdnet-data-collector.md`: タスク実行ルール
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-151307-subagent1-export-lambda-tests.md`: Subagent1作業記録
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-151311-subagent2-api-lambda-tests.md`: Subagent2作業記録

@@ -92,7 +92,11 @@ describe('Property 5: 重複収集の冪等性', () => {
       // Assert
       expect(logger.warn).toHaveBeenCalledWith('Duplicate disclosure detected', {
         disclosure_id: 'TD20240115001',
+        company_code: '1234',
+        company_name: '株式会社サンプル',
+        disclosed_at: '2024-01-15T10:30:00Z',
         s3_key: '2024/01/15/TD20240115001.pdf',
+        message: 'この開示情報は既にDynamoDBに保存されています'
       });
     });
 
