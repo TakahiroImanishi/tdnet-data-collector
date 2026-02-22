@@ -23,6 +23,13 @@
 - [ ] DynamoDB/S3リソース確認: `scripts/localstack-setup.ps1`
 - [ ] E2Eテスト実行: `npm run test:e2e`
 
+### 運用スクリプト実行時（必須）
+- [ ] AWS認証確認: `aws sts get-caller-identity --profile imanishi-awssso`（必要に応じて`aws sso login`）
+- [ ] 環境指定: `-Environment`パラメータで環境を指定（dev/prod、デフォルト: prod）
+- [ ] プロファイル指定: `-Profile`パラメータでAWS CLIプロファイルを指定（デフォルト: imanishi-awssso）
+- [ ] 環境情報は自動取得: CDK Outputsから自動取得されるため、ハードコーディング不要
+- [ ] エラー発生時: エラーメッセージの指示に従って対処（AWS認証、スタック存在確認等）
+
 ### 完了時
 - [ ] 作業記録に成果物・申し送り記入
 - [ ] **タスク完了条件の確認**:

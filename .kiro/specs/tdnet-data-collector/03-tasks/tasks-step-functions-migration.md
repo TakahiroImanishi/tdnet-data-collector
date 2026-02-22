@@ -337,8 +337,11 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 
 #### タスク6.2: 本番環境での動作確認（優先度: 高）
 - [x] Step Functionsインフラデプロイ
-- [ ] `/collect` APIエンドポイント経由でStep Functions実行
-- [ ] 小規模データ（2026-02-21、100件以下）での動作確認
+- [x] `/collect` APIエンドポイント経由でStep Functions実行
+- [x] 問題発見: IAM権限不足
+  - `collector-init` Lambda関数がExecutionStateテーブルへの書き込み権限を持っていない
+  - AccessDeniedException: dynamodb:PutItem権限が不足
+- [ ] 小規模データ（2026-02-20、100件以下）での動作確認（タスク6.2.1完了後に実施）
 - [ ] 実行状態の監視
   - ExecutionStateTableの確認
   - CloudWatch Logsでの実行ログ確認
@@ -347,9 +350,9 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
   - リトライ動作の確認
   - 部分的失敗時の挙動確認
 
-**完了日時**: 2026-02-22 23:25:00（Step Functionsデプロイ完了）
-**テスト結果**: Step Functionsステートマシン正常作成、ACTIVEステータス確認
-**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-230732-production-validation.md`
+**完了日時**: 2026-02-22 23:25:00（Step Functionsデプロイ完了）、2026-02-23 07:56:00（問題発見）
+**テスト結果**: Step Functionsステートマシン正常作成、ACTIVEステータス確認、IAM権限不足により実行失敗
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-230732-production-validation.md`、`.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-075604-production-validation-task62.md`
 
 **前提条件**:
 - Step Functionsステートマシンがデプロイ済み
@@ -365,6 +368,32 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 
 **成果物**:
 - `.kiro/specs/tdnet-data-collector/work-logs/work-log-[日時]-step-functions-execution-test.md`
+
+#### タスク6.2.1: IAM権限の修正（優先度: 高）
+- [ ] CDKでcollector-init Lambda関数にDynamoDB PutItem権限を付与
+- [ ] 他のcollector Lambda関数（fetch, save, aggregate）の権限も確認
+- [ ] ユニットテストの更新
+- [ ] 本番環境への再デプロイ
+- [ ] 動作確認（タスク6.2の続き）
+
+**問題**: `collector-init` Lambda関数がExecutionStateテーブル（`tdnet_executions`）への書き込み権限を持っていない
+
+**エラー**: `AccessDeniedException: User: arn:aws:sts::803879841964:assumed-role/TdnetCompute-prod-CollectorInitFunctionServiceRoleD-qvi2BLQ0PBAL/tdnet-collector-init-prod is not authorized to perform: dynamodb:PutItem on resource: arn:aws:dynamodb:ap-northeast-1:803879841964:table/tdnet_executions`
+
+**修正内容**:
+1. `cdk/lib/constructs/step-functions-collector.ts`でIAM権限を追加
+   - collector-init: PutItem, UpdateItem権限
+   - collector-aggregate: UpdateItem権限
+   - collector-fetch, collector-save: 権限確認（必要に応じて追加）
+
+2. ExecutionStateテーブルのテーブル名確認
+   - 現在: `tdnet_executions`
+   - CDK定義: `tdnet_executions_prod` または `tdnet_executions_dev`
+   - 環境変数の設定確認
+
+**成果物**:
+- `cdk/lib/constructs/step-functions-collector.ts`（更新）
+- `cdk/lib/constructs/__tests__/step-functions-collector.test.ts`（更新）
 
 #### タスク6.3: collect-statusテスト修正（優先度: 中）
 - [ ] `handler-step-functions.test.ts`の環境変数設定修正

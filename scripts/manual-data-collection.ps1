@@ -17,7 +17,7 @@ param(
     [string]$Environment = "prod",
     
     [Parameter(Mandatory=$false)]
-    [string]$Profile
+    [string]$Profile = "imanishi-awssso"
 )
 
 # UTF-8エンコーディング設定（包括的）

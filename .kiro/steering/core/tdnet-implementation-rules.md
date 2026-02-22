@@ -20,6 +20,52 @@ Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWat
 - **AWS SSO**: プロファイル`imanishi-awssso`を使用（`~/.aws/config`に設定済み）
 - **使用方法**: `aws sso login --profile imanishi-awssso` でログイン後、CDKデプロイやスクリプト実行時に`--profile imanishi-awssso`を指定
 
+## 運用スクリプト
+
+### 環境情報の自動取得
+
+すべての運用スクリプトは`scripts/lib/get-stack-outputs.ps1`を使用してCDK Outputsから環境情報を自動取得します。
+
+**取得される環境情報**:
+- `ApiEndpoint`: API Gateway URL
+- `ApiKeySecretName`: Secrets Manager シークレット名
+- `Region`: AWSリージョン
+- `Environment`: 環境名（dev/prod）
+- `StateMachineArn`: Step Functions ARN（Step Functions有効時のみ）
+
+### 共通パラメータ
+
+すべての運用スクリプトで以下のパラメータが使用可能:
+- `-Environment`: 環境指定（dev/prod、デフォルト: prod）
+- `-Profile`: AWS CLIプロファイル指定（デフォルト: imanishi-awssso）
+
+### 使用例
+
+```powershell
+# 本番環境でデータ収集（デフォルト）
+.\scripts\manual-data-collection.ps1 -StartDate "2026-02-21" -EndDate "2026-02-22"
+
+# 開発環境でデータ収集
+.\scripts\manual-data-collection.ps1 -Environment dev -StartDate "2026-02-21"
+
+# Step Functions実行状態確認
+.\scripts\check-step-functions-execution.ps1 -ExecutionId exec_123
+
+# Step Functions実行キャンセル
+.\scripts\cancel-step-functions-execution.ps1 -ExecutionId exec_123
+
+# データ取得（日付指定）
+.\scripts\fetch-data-range.ps1 -Date "2026-02-21"
+```
+
+### エラーハンドリング
+
+運用スクリプトは以下のエラーを検出し、適切なメッセージを表示:
+- `STACK_NOT_FOUND`: スタックが存在しない → CDKデプロイを確認
+- `AUTH_EXPIRED`: AWS認証が期限切れ → `aws sso login`を実行
+- `ACCESS_DENIED`: CloudFormationへのアクセス権限なし → IAMポリシーを確認
+- `MISSING_OUTPUT`: 必須の出力が見つからない → CDK Outputsを確認
+
 ## プロジェクト構造
 
 - **src/lambda/**: 11個のLambda関数（collector, query, export, api, get-disclosure, collect-status, stats, health, dlq-processor, api-key-rotation）

@@ -65,9 +65,9 @@ function Get-StackOutputs {
         return $script:StackOutputsCache[$cacheKey]
     }
     
-    # スタック名
-    $apiStackName = "tdnet-api-$Environment"
-    $computeStackName = "tdnet-compute-$Environment"
+    # スタック名（CDKで生成される実際の名前）
+    $apiStackName = "TdnetApi-$Environment"
+    $computeStackName = "TdnetCompute-$Environment"
     
     # AWS CLIコマンドのベース
     $awsCliBase = "aws cloudformation describe-stacks --region $Region"
@@ -193,6 +193,3 @@ function Get-StackOutputs {
         throw $_
     }
 }
-
-# エクスポート
-Export-ModuleMember -Function Get-StackOutputs
