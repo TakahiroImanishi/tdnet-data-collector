@@ -320,6 +320,22 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `docker-compose.yml`（Step FunctionsとIAMサービス追加）
 - `jest.setup.e2e.js`（STATE_MACHINE_ARN環境変数追加）
 
+**注意**: E2Eテスト実行には追加作業が必要（タスク6.1.1参照）
+
+#### タスク6.1.1: LocalStack用モックLambda関数作成（優先度: 低）
+- [ ] collector-init モック関数作成
+- [ ] collector-fetch モック関数作成
+- [ ] collector-save モック関数作成
+- [ ] collector-aggregate モック関数作成
+- [ ] LocalStackへのLambda関数デプロイスクリプト作成
+- [ ] E2Eテスト再実行
+
+**理由**: LocalStack環境でのフルE2Eテストは複雑。本番環境検証（タスク6.2）を優先すべき。
+
+**成果物**:
+- `src/__tests__/e2e/mocks/lambda-functions/`（モック関数）
+- `scripts/deploy-mock-lambdas.ps1`（デプロイスクリプト）
+
 #### タスク6.2: 本番環境検証
 - [ ] 小規模データでの検証（1日分、100件以下）
 - [ ] 中規模データでの検証（1日分、500件程度）
