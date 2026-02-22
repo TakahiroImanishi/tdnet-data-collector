@@ -37,6 +37,8 @@
 | `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1` | setup-scripts, powershell-encoding-guidelines |
 | `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*` | data-scripts, powershell-encoding-guidelines |
 | `scripts/{deploy-dashboard,check-iam-permissions}.ps1` | monitoring-scripts, powershell-encoding-guidelines |
+| `scripts/{analyze-cloudwatch-logs,check-cloudwatch-logs-simple,check-dynamodb-s3-consistency,check-waf-status,check-lambda-998-limit}.ps1` | monitoring-scripts, powershell-encoding-guidelines |
+| `scripts/{delete-all-data,register-api-key,startup}.ps1` | powershell-encoding-guidelines |
 
 **詳細**: `meta/pattern-matching-tests.md`
 
