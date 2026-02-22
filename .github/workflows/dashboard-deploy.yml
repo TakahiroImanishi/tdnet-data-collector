@@ -100,7 +100,7 @@ jobs:
 
       - name: テスト失敗時のスクリーンショットアップロード
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-screenshots
           path: dashboard/test-results/
