@@ -12,9 +12,14 @@ param(
     [int]$Limit = 100
 )
 
-# UTF-8エンコーディング設定
+# UTF-8エンコーディング設定（包括的）
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$PSDefaultParameterValues['Out-File:Encoding'] = 'UTF8NoBOM'
+$OutputEncoding = [System.Text.Encoding]::UTF8
+# PowerShell 5.1互換性のため
+if ($PSVersionTable.PSVersion.Major -le 5) {
+    $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+}
 
 $ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod"
 $Region = "ap-northeast-1"

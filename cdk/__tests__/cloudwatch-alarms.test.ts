@@ -110,14 +110,28 @@ describe('CloudWatchAlarms Construct', () => {
     // Assert
     const template = Template.fromStack(stack);
 
-    // Throttlesアラームが存在することを確認（AlarmNameとAlarmDescriptionはトークンなのでMatch.anyValue()を使用）
+    // ThrottleWarningアラームが存在することを確認（閾値0、GREATER_THAN_THRESHOLD）
     template.hasResourceProperties('AWS::CloudWatch::Alarm', {
-      AlarmName: Match.anyValue(), // トークンを含むため
-      AlarmDescription: Match.anyValue(), // トークンを含むため
-      ComparisonOperator: 'GreaterThanOrEqualToThreshold',
-      Threshold: 1,
+      AlarmName: Match.anyValue(),
+      AlarmDescription: Match.anyValue(),
+      ComparisonOperator: 'GreaterThanThreshold',
+      Threshold: 0,
       EvaluationPeriods: 1,
       TreatMissingData: 'notBreaching',
+      MetricName: 'Throttles',
+      Namespace: 'AWS/Lambda',
+    });
+
+    // ThrottleCriticalアラームが存在することを確認（閾値5、GREATER_THAN_THRESHOLD）
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: Match.anyValue(),
+      AlarmDescription: Match.anyValue(),
+      ComparisonOperator: 'GreaterThanThreshold',
+      Threshold: 5,
+      EvaluationPeriods: 1,
+      TreatMissingData: 'notBreaching',
+      MetricName: 'Throttles',
+      Namespace: 'AWS/Lambda',
     });
   });
 
@@ -203,10 +217,11 @@ describe('CloudWatchAlarms Construct', () => {
     // Assert
     const template = Template.fromStack(stack);
 
-    // 各Lambda関数に対して4つのアラーム（Error Rate, Duration Warning, Duration Critical, Throttles）が作成される
+    // 各Lambda関数に対して6つのアラーム
+    // （ErrorRateWarning, ErrorRateCritical, DurationWarning, DurationCritical, ThrottleWarning, ThrottleCritical）
     // + カスタムメトリクスアラーム3つ（CollectionSuccessRate, NoData, CollectionFailure）
-    // = 2 * 4 + 3 = 11個のアラーム
-    template.resourceCountIs('AWS::CloudWatch::Alarm', 11);
+    // = 2 * 6 + 3 = 15個のアラーム
+    template.resourceCountIs('AWS::CloudWatch::Alarm', 15);
   });
 
   test('すべてのアラームにSNSアクションが設定されること', () => {

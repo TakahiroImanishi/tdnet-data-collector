@@ -10,7 +10,6 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as sns from 'aws-cdk-lib/aws-sns';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Construct } from 'constructs';
@@ -94,17 +93,8 @@ export class LambdaDLQ extends Construct {
     this.queue.grantConsumeMessages(this.processor);
     props.alertTopic.grantPublish(this.processor);
 
-    // CloudWatch Logs権限（特定ロググループに限定）
-    this.processor.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-        resources: [
-          `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:/aws/lambda/${this.processor.functionName}`,
-          `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:/aws/lambda/${this.processor.functionName}:*`,
-        ],
-      })
-    );
+    // Note: CloudWatch Logs権限はLambda関数作成時に自動的に付与されるため、
+    // 明示的な追加は不要（循環依存を回避）
 
     // Create CloudWatch Alarm for DLQ messages
     this.alarm = new cloudwatch.Alarm(this, 'Alarm', {
