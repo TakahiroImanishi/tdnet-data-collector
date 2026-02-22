@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Lambda PDF Download Handler Unit Tests
  *
  * Requirements: 要件14.1（ユニットテスト）
