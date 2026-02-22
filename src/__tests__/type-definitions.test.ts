@@ -320,13 +320,13 @@ describe('TypeScript型定義とインターフェース', () => {
   describe('generateDisclosureId', () => {
     it('should generate disclosure ID in correct format', () => {
       const id = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1);
-      expect(id).toBe('20240115_1234_001');
+      expect(id).toBe('20240115_1234_0001');
     });
 
     it('should handle JST date conversion', () => {
       // UTC: 2024-01-31 15:30 → JST: 2024-02-01 00:30
       const id = generateDisclosureId('2024-01-31T15:30:00Z', '1234', 1);
-      expect(id).toBe('20240201_1234_001');
+      expect(id).toBe('20240201_1234_0001');
     });
 
     it('should pad sequence with zeros', () => {
@@ -355,6 +355,9 @@ describe('TypeScript型定義とインターフェース', () => {
         ValidationError
       );
       expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1.5)).toThrow(
+        ValidationError
+      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '1234', 10000)).toThrow(
         ValidationError
       );
     });
