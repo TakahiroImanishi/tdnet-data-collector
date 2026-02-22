@@ -126,6 +126,20 @@ export class TdnetMonitoringStack extends cdk.Stack {
         retention: logRetentionConfig.other,
         removalPolicy,
       });
+
+      // Health Lambda
+      new logs.LogGroup(this, 'HealthLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.health.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
+
+      // Stats Lambda
+      new logs.LogGroup(this, 'StatsLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.stats.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
     }
 
     // ========================================
