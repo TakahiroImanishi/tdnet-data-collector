@@ -12,13 +12,47 @@ param(
     [int]$Limit = 100
 )
 
+# UTF-8エンコーディング設定
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['Out-File:Encoding'] = 'UTF8NoBOM'
+
 $ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod"
-$ApiKey = "l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"
+$Region = "ap-northeast-1"
+$SecretName = "/tdnet/api-key-prod"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "TDnet Data Collector - Data Range Fetch" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
+
+# Secrets ManagerからAPIキーを取得
+Write-Host "[0/2] Retrieving API key..." -ForegroundColor Green
+try {
+    $secretJson = aws secretsmanager get-secret-value `
+        --secret-id $SecretName `
+        --region $Region `
+        --query SecretString `
+        --output text 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        throw "Secrets Manager connection failed: $secretJson"
+    }
+    
+    $secret = $secretJson | ConvertFrom-Json
+    $ApiKey = $secret.api_key
+    Write-Host "✅ API key retrieved successfully" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Failed to retrieve API key: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "Solution:" -ForegroundColor Yellow
+    Write-Host "1. Check if $SecretName is registered in Secrets Manager" -ForegroundColor White
+    Write-Host "2. If not registered, run:" -ForegroundColor White
+    Write-Host "   .\scripts\register-api-key.ps1 -Environment prod" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Yellow
+    exit 1
+}
+Write-Host ""
+
 Write-Host "Target Date: $Date" -ForegroundColor Yellow
 Write-Host "Range: $($Offset + 1) to $($Offset + $Limit)" -ForegroundColor Yellow
 Write-Host ""

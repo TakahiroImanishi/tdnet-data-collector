@@ -151,10 +151,11 @@ describe('CloudWatch Integration Tests', () => {
 
       const template = Template.fromStack(stack);
 
-      // 各Lambda関数に対して4つのアラーム（Error Rate, Duration, DurationCritical, Throttles）
+      // 各Lambda関数に対して6つのアラーム
+      // （ErrorRateWarning, ErrorRateCritical, DurationWarning, DurationCritical, ThrottleWarning, ThrottleCritical）
       // + カスタムメトリクスアラーム3つ（CollectionSuccessRate, NoData, CollectionFailure）
-      // = 3 * 4 + 3 = 15個のアラーム
-      template.resourceCountIs('AWS::CloudWatch::Alarm', 15);
+      // = 3 * 6 + 3 = 21個のアラーム
+      template.resourceCountIs('AWS::CloudWatch::Alarm', 21);
     });
 
     test('アラームにSNSトピックが関連付けられていること', () => {
@@ -381,7 +382,7 @@ describe('CloudWatch Integration Tests', () => {
       template.resourceCountIs('AWS::IAM::Policy', 3);
 
       // CloudWatch Alarmsが作成されていることを確認
-      template.resourceCountIs('AWS::CloudWatch::Alarm', 15);
+      template.resourceCountIs('AWS::CloudWatch::Alarm', 21);
 
       // SNS Topicが作成されていることを確認
       template.resourceCountIs('AWS::SNS::Topic', 1);
@@ -487,7 +488,7 @@ describe('CloudWatch Integration Tests', () => {
       const template = Template.fromStack(stack);
 
       // アラームが作成されていることを確認
-      template.resourceCountIs('AWS::CloudWatch::Alarm', 15);
+      template.resourceCountIs('AWS::CloudWatch::Alarm', 21);
     });
   });
 });

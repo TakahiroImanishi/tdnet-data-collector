@@ -12,12 +12,48 @@ param(
     [int]$MaxItems = 10
 )
 
+# UTF-8エンコーディング設定
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['Out-File:Encoding'] = 'UTF8NoBOM'
+
 # 本番環境設定
 $ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod"
-$ApiKey = "l2yePlH5s01Ax2y6whl796IaG5TYjuhD39vXRYzL"
+$Region = "ap-northeast-1"
+$SecretName = "/tdnet/api-key-prod"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "TDnet Data Collector - 手動データ収集" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Secrets ManagerからAPIキーを取得
+Write-Host "[0/4] APIキーを取得中..." -ForegroundColor Green
+try {
+    $secretJson = aws secretsmanager get-secret-value `
+        --secret-id $SecretName `
+        --region $Region `
+        --query SecretString `
+        --output text 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        throw "Secrets Manager接続失敗: $secretJson"
+    }
+    
+    $secret = $secretJson | ConvertFrom-Json
+    $ApiKey = $secret.api_key
+    Write-Host "✅ APIキーを取得しました" -ForegroundColor Green
+} catch {
+    Write-Host "❌ APIキー取得失敗: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. Secrets Managerに $SecretName が登録されているか確認" -ForegroundColor White
+    Write-Host "2. 登録されていない場合は、以下のコマンドで登録:" -ForegroundColor White
+    Write-Host "   .\scripts\register-api-key.ps1 -Environment prod" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Yellow
+    exit 1
+}
+Write-Host ""
+
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "収集期間: $StartDate 〜 $EndDate" -ForegroundColor Yellow

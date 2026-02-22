@@ -10,6 +10,8 @@ module.exports = {
     '\\.improved\\.ts$',
     // E2Eテストはローカル環境ではスキップ（CI/CD環境でのみ実行）
     process.env.RUN_E2E_TESTS !== 'true' ? '\\.e2e\\.test\\.ts$' : '',
+    // テストヘルパーファイルを除外
+    '/__tests__/test-helpers/',
   ].filter(Boolean),
   
   transform: {
