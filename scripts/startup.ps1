@@ -1,6 +1,15 @@
 # TDnet Data Collector - Startup Script
 # このスクリプトは、AWS SSO認証を実行します
 
+# パラメータ（スクリプトの最初に配置）
+param(
+    [Parameter(Mandatory=$false)]
+    [string]$Profile = "imanishi-awssso",
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$Force
+)
+
 # UTF-8エンコーディング設定（包括的）
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -11,15 +20,6 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
 
 # エラー時に停止
 $ErrorActionPreference = "Stop"
-
-# パラメータ
-param(
-    [Parameter(Mandatory=$false)]
-    [string]$Profile = "imanishi-awssso",
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$Force
-)
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "TDnet Data Collector - Startup" -ForegroundColor Cyan
