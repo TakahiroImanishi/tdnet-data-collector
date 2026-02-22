@@ -17,8 +17,8 @@ Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWat
 
 ## AWS認証
 
-- **AWS SSO**: プロファイル`manishi-awssso`を使用（`~/.aws/config`に設定済み）
-- **使用方法**: `aws sso login --profile manishi-awssso` でログイン後、CDKデプロイやスクリプト実行時に`--profile manishi-awssso`を指定
+- **AWS SSO**: プロファイル`imanishi-awssso`を使用（`~/.aws/config`に設定済み）
+- **使用方法**: `aws sso login --profile imanishi-awssso` でログイン後、CDKデプロイやスクリプト実行時に`--profile imanishi-awssso`を指定
 
 ## プロジェクト構造
 
