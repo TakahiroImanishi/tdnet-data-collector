@@ -395,12 +395,13 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `cdk/lib/constructs/step-functions-collector.ts`（更新）
 - `cdk/lib/constructs/__tests__/step-functions-collector.test.ts`（更新）
 
-#### タスク6.2.2: Secrets Manager APIキー取得の改善（優先度: 中）
+#### タスク6.2.2: Secrets Manager APIキー取得エラーの原因調査（優先度: 中）
 - [ ] Secrets Manager APIキー取得のネットワークエラー問題を調査
-- [ ] リトライロジックの改善（指数バックオフ、タイムアウト設定）
-- [ ] エラーハンドリングの改善（詳細なエラーメッセージ）
-- [ ] 代替手段の検討（環境変数フォールバック、キャッシュ機能）
-- [ ] 運用スクリプトへの適用
+- [ ] AWS CLI実行時のタイムアウト設定を確認
+- [ ] ネットワーク接続の安定性を確認
+- [ ] Secrets Manager APIのレート制限を確認
+- [ ] PowerShellのHTTPクライアント設定を確認
+- [ ] 調査結果をドキュメント化
 
 **問題**: `manual-data-collection.ps1`実行時にSecrets ManagerからのAPIキー取得で頻繁にネットワークエラーが発生
 
@@ -414,36 +415,14 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 
 **調査項目**:
 1. AWS CLI実行時のタイムアウト設定
-2. ネットワーク接続の安定性
-3. Secrets Manager APIのレート制限
+2. ネットワーク接続の安定性（ping、traceroute）
+3. Secrets Manager APIのレート制限（CloudWatch Logs確認）
 4. PowerShellのHTTPクライアント設定
-
-**改善案**:
-1. **リトライロジックの改善**:
-   - 初期遅延を増やす（2秒 → 5秒）
-   - 最大リトライ回数を増やす（3回 → 5回）
-   - タイムアウト設定を追加（30秒）
-
-2. **AWS CLI設定の最適化**:
-   ```powershell
-   # タイムアウト設定
-   $env:AWS_CLI_READ_TIMEOUT = 30
-   $env:AWS_CLI_CONNECT_TIMEOUT = 10
-   ```
-
-3. **キャッシュ機能の追加**:
-   - 取得したAPIキーを一時的にキャッシュ（セッション内）
-   - 同一セッション内での再取得を回避
-
-4. **環境変数フォールバックの推奨**:
-   - ドキュメントで環境変数設定を推奨
-   - スクリプト実行前に環境変数を確認するチェック機能
+5. AWS SSOセッションの有効期限
+6. リージョン間のレイテンシ
 
 **成果物**:
-- `scripts/lib/get-api-key.ps1`（新規、共通APIキー取得関数）
-- `scripts/manual-data-collection.ps1`（更新）
-- `scripts/fetch-data-range.ps1`（更新）
-- `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md`（更新）
+- `.kiro/specs/tdnet-data-collector/improvements/secrets-manager-error-investigation.md`（調査結果）
 
 #### タスク6.3: collect-statusテスト修正（優先度: 中）
 - [ ] `handler-step-functions.test.ts`の環境変数設定修正
