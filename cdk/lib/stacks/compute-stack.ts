@@ -691,6 +691,20 @@ export class TdnetComputeStack extends cdk.Stack {
       new cdk.CfnOutput(this, 'ExecutionStateTableName', {
         value: this.executionStateTable.tableName,
         exportName: `TdnetExecutionStateTableName-${env}`,
+        description: 'Step Functions execution state table name',
+      });
+
+      // Step Functions State Machine ARN（運用スクリプトで使用）
+      new cdk.CfnOutput(this, 'StateMachineArn', {
+        value: stepFunctionsCollectorConstruct.stateMachine.stateMachineArn,
+        exportName: `TdnetStateMachineArn-${env}`,
+        description: 'Step Functions State Machine ARN',
+      });
+
+      new cdk.CfnOutput(this, 'StateMachineName', {
+        value: stepFunctionsCollectorConstruct.stateMachine.stateMachineName,
+        exportName: `TdnetStateMachineName-${env}`,
+        description: 'Step Functions State Machine Name',
       });
     }
 

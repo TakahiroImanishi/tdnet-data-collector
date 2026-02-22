@@ -127,6 +127,9 @@ export async function handler(
     // 実行状態を初期化（pending）
     await updateExecutionStatus(event.execution_id, 'pending', 0);
 
+    // max_itemsのデフォルト値設定（未指定時は9999）
+    const maxItems = event.max_items ?? 9999;
+
     // 推定総件数を計算（簡易版: 1日あたり平均200件と仮定）
     const estimatedPerDay = 200;
     const estimatedTotal = dates.length * estimatedPerDay;
@@ -135,7 +138,7 @@ export async function handler(
       execution_id: event.execution_id,
       dates,
       total_days: dates.length,
-      max_items: event.max_items,
+      max_items: maxItems,
       estimated_total: estimatedTotal,
     };
 
@@ -144,6 +147,7 @@ export async function handler(
     logger.info('Lambda Collector-Init completed', {
       execution_id: event.execution_id,
       total_days: dates.length,
+      max_items: maxItems,
       estimated_total: estimatedTotal,
       duration_ms: duration,
     });

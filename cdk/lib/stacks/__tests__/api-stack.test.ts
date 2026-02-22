@@ -183,6 +183,36 @@ describe('TdnetApiStack', () => {
         },
       });
     });
+
+    it('API Key Secret Nameが出力されている', () => {
+      const { template } = createApiStack('prod');
+      
+      template.hasOutput('ApiKeySecretName', {
+        Export: {
+          Name: 'TdnetApiKeySecretName-prod',
+        },
+      });
+    });
+
+    it('Regionが出力されている', () => {
+      const { template } = createApiStack('prod');
+      
+      template.hasOutput('Region', {
+        Export: {
+          Name: 'TdnetRegion-prod',
+        },
+      });
+    });
+
+    it('Environmentが出力されている', () => {
+      const { template } = createApiStack('prod');
+      
+      template.hasOutput('Environment', {
+        Export: {
+          Name: 'TdnetEnvironment-prod',
+        },
+      });
+    });
   });
 
   describe('タグ付け', () => {

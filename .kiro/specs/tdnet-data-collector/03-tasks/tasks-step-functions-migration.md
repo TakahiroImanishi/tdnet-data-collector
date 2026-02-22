@@ -322,44 +322,34 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 
 **注意**: E2Eテスト実行には追加作業が必要（タスク6.1.1参照）
 
-#### タスク6.1.1: LocalStack用モックLambda関数作成（優先度: 低）
-- [x] collector-init モック関数作成
-- [ ] collector-fetch モック関数作成
-- [ ] collector-save モック関数作成
-- [ ] collector-aggregate モック関数作成
-- [ ] LocalStackへのLambda関数デプロイスクリプト作成
-- [ ] E2Eテスト再実行
+#### タスク6.1.1: LocalStack E2Eテスト改善（優先度: 低）
+- [ ] LocalStackでのStep Functions実行環境の完全構築
+- [ ] モックLambda関数のデプロイ自動化
+- [ ] E2Eテストの実行成功確認
 
-**理由**: LocalStack環境でのフルE2Eテストは複雑。本番環境検証（タスク6.2）を優先すべき。
+**現状**: E2Eテストの基本構造は実装済みだが、LocalStack環境でのLambda関数デプロイが未完了のため実行不可。
+
+**判断**: 本番環境での動作確認（タスク6.2）を優先。LocalStack E2Eテストは時間があれば実施。
 
 **成果物**:
-- `src/__tests__/e2e/mocks/lambda-functions/`（モック関数）
 - `scripts/deploy-mock-lambdas.ps1`（デプロイスクリプト）
+- E2Eテスト実行成功の確認
 
-#### タスク6.2: 本番環境検証
+#### タスク6.2: 本番環境での動作確認（優先度: 高）
 - [x] Step Functionsインフラデプロイ
-- [ ] 小規模データでの検証（1日分、100件以下）
-- [ ] 中規模データでの検証（1日分、500件程度）
-- [ ] 大規模データでの検証（1日分、2,000件以上）
-- [ ] パフォーマンス測定
-- [ ] コスト測定
+- [ ] `/collect` APIエンドポイント経由でStep Functions実行
+- [ ] 小規模データ（2026-02-21、100件以下）での動作確認
+- [ ] 実行状態の監視
+  - ExecutionStateTableの確認
+  - CloudWatch Logsでの実行ログ確認
+  - `/collect/{executionId}` APIでの状態取得確認
+- [ ] エラーハンドリングの動作確認
+  - リトライ動作の確認
+  - 部分的失敗時の挙動確認
 
 **完了日時**: 2026-02-22 23:25:00（Step Functionsデプロイ完了）
 **テスト結果**: Step Functionsステートマシン正常作成、ACTIVEステータス確認
 **作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-230732-production-validation.md`
-
-**注意**: 実際のデータ収集テストは未実施。Step Functionsインフラのデプロイのみ完了。
-
-**成果物**:
-- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-230732-production-validation.md`
-
-#### タスク6.3: Step Functions実行テスト（優先度: 高）
-- [ ] `/collect` APIエンドポイント経由でStep Functions実行
-- [ ] 小規模データ（2026-02-21、100件以下）での動作確認
-- [ ] 実行状態の監視（ExecutionStateTable確認）
-- [ ] CloudWatch Logsでの実行ログ確認
-- [ ] エラーハンドリングの動作確認
-- [ ] `/collect/{executionId}` APIでの状態取得確認
 
 **前提条件**:
 - Step Functionsステートマシンがデプロイ済み
@@ -376,7 +366,7 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 **成果物**:
 - `.kiro/specs/tdnet-data-collector/work-logs/work-log-[日時]-step-functions-execution-test.md`
 
-#### タスク6.4: collect-statusテスト修正（優先度: 中）
+#### タスク6.3: collect-statusテスト修正（優先度: 中）
 - [ ] `handler-step-functions.test.ts`の環境変数設定修正
 - [ ] モックの`STATE_MACHINE_ARN`設定追加
 - [ ] テスト再実行・成功確認
@@ -385,6 +375,33 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 
 **成果物**:
 - `src/lambda/collect-status/__tests__/handler-step-functions.test.ts`（修正）
+
+#### タスク6.4: 大規模データ取得テスト（優先度: 高）
+- [ ] 2026-02-13のデータ取得実行（2,700件以上）
+- [ ] Step Functions実行の完了確認
+- [ ] 実行時間の測定
+- [ ] エラー発生状況の確認
+- [ ] DynamoDB/S3へのデータ保存確認
+- [ ] 既存システムとの比較
+  - 処理時間の比較
+  - エラー率の比較
+  - データ整合性の確認
+
+**目的**: Step Functionsによる大規模データ処理の安定性を検証し、既存システムのタイムアウト問題が解決されたことを確認する。
+
+**前提条件**:
+- タスク6.2の小規模データテストが成功していること
+- すべてのLambda関数が正常動作していること
+
+**検証項目**:
+- 2,700件以上のデータが正常に収集される
+- タイムアウトが発生しない
+- エラー発生時に適切にリトライされる
+- 部分的失敗が適切に処理される
+- 実行状態が正確に記録される
+
+**成果物**:
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-[日時]-large-scale-data-test.md`
 
 ### フェーズ7: 移行・廃止（優先度: 低）
 
@@ -464,3 +481,152 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - 1回の収集で約10-20状態遷移（初期化、Map、集約など）
 - 月間200回の収集が可能（1日6-7回）
 - 無料枠を超える場合はExpress Workflowsへの移行を検討
+
+
+### フェーズ8: 運用効率化の根本原因分析（優先度: 中）
+
+#### タスク8.1: 運用時の課題と根本原因の分析
+- [x] 今回発生した非効率な作業の洗い出し
+  - 環境情報（API Gateway、Step Functions ARN等）の手動検索
+  - API Key取得の手動実行
+  - AWS SSO認証の確認
+  - スタック名の推測・確認
+- [x] 根本原因の分析
+  - なぜ環境情報を手動で取得する必要があったのか？
+  - CDK Outputsは適切に設定されているか？
+  - 運用スクリプトは環境情報を自動取得できる設計になっているか？
+  - ドキュメントに必要な情報が記載されているか？
+  - 設計・実装時に運用を考慮できていたか？
+- [x] 改善の方向性を検討
+  - **Option A**: CDK Outputsの改善（必要な情報をすべて出力）
+  - **Option B**: 運用スクリプトの改善（環境情報自動取得）
+  - **Option C**: 設定ファイル管理の導入（環境別設定の一元管理）
+  - **Option D**: ドキュメント整備（運用手順の明確化）
+  - **Option E**: 開発プロセスの改善（運用を考慮した設計・実装）
+- [x] 最適な改善策の選定
+  - 各オプションのメリット・デメリット評価
+  - 実装コストと効果の比較
+  - 優先順位の決定
+
+**完了日時**: 2026-02-23 07:11:51
+**成果物**:
+- `.kiro/specs/tdnet-data-collector/improvements/operation-root-cause-analysis.md`（根本原因分析書）✓
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-071151-operation-root-cause-analysis.md`（作業記録）✓
+- 改善タスク8.1.1～8.1.4を追加
+
+**分析結果**:
+- **根本原因**: 設計・実装・テスト・ドキュメント・プロセスの各段階で運用を考慮した作り込みが不足
+- **推奨改善策**: 段階的実装（フェーズ1: CDK Outputs + スクリプト改善、フェーズ2: 設定ファイル管理、フェーズ3: ドキュメント + プロセス改善）
+
+**背景**: 本番環境テスト時に環境情報を手動で検索する必要があった。これは運用スクリプトやCDK設計の作り込みが不十分な可能性がある。根本原因を分析し、適切な改善策を検討する。
+
+**検討の観点**:
+1. **設計段階**: 運用を考慮した設計になっていたか？
+2. **実装段階**: CDK Outputsや環境変数は適切に設定されていたか？
+3. **テスト段階**: 運用性のテストは実施されていたか？
+4. **ドキュメント**: 運用手順は明確に記載されていたか？
+5. **プロセス**: 運用を考慮した開発プロセスになっているか？
+
+#### タスク8.1.1: CDK Outputsの改善（優先度: 高）
+
+**目的**: 運用スクリプトで必要な環境情報をすべてOutputsから取得可能にする
+
+**実装内容**:
+1. API Stackに以下のOutputsを追加:
+   - `ApiKeySecretName`: Secret Name（例: `/tdnet/api-key-prod`）
+   - `Region`: AWS Region（例: `ap-northeast-1`）
+   - `Environment`: 環境名（例: `prod`）
+
+2. Compute Stackに以下のOutputsを追加（Step Functions有効時）:
+   - `StateMachineArn`: State Machine ARN（既存のStep Functions ConstructのOutputをスタックレベルで再出力）
+
+**完了日時**: 2026-02-23 07:16:09
+**テスト結果**: 新規追加Outputs 5/5テスト成功 ✓
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-071609-cdk-outputs-improvement.md`
+
+**成果物**:
+- `cdk/lib/stacks/api-stack.ts`（更新）✓
+- `cdk/lib/stacks/compute-stack.ts`（更新）✓
+- `cdk/lib/stacks/__tests__/api-stack.test.ts`（更新）✓
+- `cdk/lib/stacks/__tests__/compute-stack.test.ts`（更新）✓
+
+**完了条件**:
+- ✅ すべての運用スクリプトで必要な環境情報がCDK Outputsから取得可能
+- ✅ ユニットテストが成功
+
+#### タスク8.1.2: 運用スクリプトの改善（優先度: 高）
+
+**目的**: 運用スクリプトがCDK Outputsから環境情報を自動取得し、環境切り替えが容易になる
+
+**実装内容**:
+1. 共通関数の作成（`scripts/lib/get-stack-outputs.ps1`）:
+   - CDK Outputsから環境情報を取得する関数
+   - エラーハンドリング（スタックが存在しない、AWS CLI未設定等）
+   - キャッシュ機能（同一セッション内での再利用）
+
+2. 各運用スクリプトの修正:
+   - `manual-data-collection.ps1`
+   - `check-step-functions-execution.ps1`
+   - `cancel-step-functions-execution.ps1`
+   - `fetch-data-range.ps1`
+   - 環境（dev/prod）をパラメータで指定可能にする
+   - ハードコーディングを排除
+
+**成果物**:
+- `scripts/lib/get-stack-outputs.ps1`（新規）
+- `scripts/manual-data-collection.ps1`（更新）
+- `scripts/check-step-functions-execution.ps1`（更新）
+- `scripts/cancel-step-functions-execution.ps1`（更新）
+- `scripts/fetch-data-range.ps1`（更新）
+
+**完了条件**:
+- すべての運用スクリプトでハードコーディングが排除
+- 環境（dev/prod）の切り替えが容易
+- エラーハンドリングが適切に実装
+
+#### タスク8.1.3: 運用ドキュメントの整備（優先度: 中）
+
+**目的**: 運用者が環境情報の取得方法を理解し、問題発生時に迅速に対応できる
+
+**実装内容**:
+1. 運用手順書の作成:
+   - `.kiro/specs/tdnet-data-collector/docs/03-operations/operation-guide.md`
+   - 環境情報の取得方法
+   - 運用スクリプトの使用方法
+   - 環境切り替え方法
+
+2. トラブルシューティングガイドの作成:
+   - `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md`
+   - よくある問題と解決方法
+   - エラーメッセージの解説
+
+**成果物**:
+- `.kiro/specs/tdnet-data-collector/docs/03-operations/operation-guide.md`（新規）
+- `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md`（新規）
+
+**完了条件**:
+- 運用手順が明確に記載
+- トラブルシューティングガイドが充実
+
+#### タスク8.1.4: 開発プロセスの改善（優先度: 低）
+
+**目的**: 将来的な運用性の問題を予防し、品質を向上させる
+
+**実装内容**:
+1. 運用を考慮した設計・実装チェックリストの作成:
+   - `.kiro/steering/development/operation-checklist.md`
+   - 環境情報の管理方法
+   - 運用スクリプトの設計原則
+   - 運用性テストの実施
+
+2. コードレビューガイドラインの更新:
+   - 運用性の確認項目を追加
+
+**成果物**:
+- `.kiro/steering/development/operation-checklist.md`（新規）
+- コードレビューガイドライン（更新）
+
+**完了条件**:
+- チェックリストが作成され、チームに共有
+- コードレビューで運用性が確認される
+

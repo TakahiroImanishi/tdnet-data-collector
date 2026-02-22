@@ -207,11 +207,32 @@ export class TdnetApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiEndpoint', {
       value: this.api.url,
       exportName: `TdnetApiEndpoint-${env}`,
+      description: 'API Gateway endpoint URL',
     });
 
     new cdk.CfnOutput(this, 'ApiKeyId', {
       value: this.apiKey.keyId,
       exportName: `TdnetApiKeyId-${env}`,
+      description: 'API Key ID',
+    });
+
+    // 運用スクリプトで必要な環境情報を追加
+    new cdk.CfnOutput(this, 'ApiKeySecretName', {
+      value: `/tdnet/api-key-${env}`,
+      exportName: `TdnetApiKeySecretName-${env}`,
+      description: 'Secrets Manager secret name for API key',
+    });
+
+    new cdk.CfnOutput(this, 'Region', {
+      value: this.region,
+      exportName: `TdnetRegion-${env}`,
+      description: 'AWS Region',
+    });
+
+    new cdk.CfnOutput(this, 'Environment', {
+      value: env,
+      exportName: `TdnetEnvironment-${env}`,
+      description: 'Environment name (dev, staging, prod)',
     });
 
     // カスタムドメイン使用時のTLS 1.2設定例（コメントアウト）

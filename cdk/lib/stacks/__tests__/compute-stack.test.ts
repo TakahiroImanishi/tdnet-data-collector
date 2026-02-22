@@ -414,6 +414,12 @@ describe('TdnetComputeStack', () => {
       stepFunctionsStack.template.hasOutput('ExecutionStateTableName', {
         Export: { Name: 'TdnetExecutionStateTableName-prod' },
       });
+      stepFunctionsStack.template.hasOutput('StateMachineArn', {
+        Export: { Name: 'TdnetStateMachineArn-prod' },
+      });
+      stepFunctionsStack.template.hasOutput('StateMachineName', {
+        Export: { Name: 'TdnetStateMachineName-prod' },
+      });
     });
 
     it('Step Functions無効時は追加リソースが作成されない', () => {
