@@ -8,6 +8,9 @@
 // config/.env.localを読み込む（E2Eテスト実行前に環境変数を設定）
 require('dotenv').config({ path: 'config/.env.local' });
 
+// AWS_PROFILEを無効化（LocalStack使用時に認証情報プロバイダーの競合を防ぐ）
+delete process.env.AWS_PROFILE;
+
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',

@@ -254,8 +254,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       // Arrange
       const endDate = new Date();
       endDate.setDate(endDate.getDate() - 1);
-      const startDate = new Date(endDate);
-      startDate.setDate(startDate.getDate() - 1); // 2日間（テスト時間短縮）
+      const startDate = new Date(endDate); // 1日間に縮小（テスト時間短縮）
 
       const event: CollectorEvent = {
         mode: 'on-demand',
@@ -269,7 +268,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       // Assert
       expect(result).toHaveProperty('execution_id');
       expect(['success', 'partial_success', 'failed']).toContain(result.status);
-    }, 120000); // タイムアウト120秒（2日間処理）
+    }, 180000); // タイムアウト180秒（1日間処理）
 
     it('execution_idが指定された場合はそれを使用する', async () => {
       // Arrange

@@ -7,7 +7,7 @@ services:
       - "4510-4559:4510-4559"  # External service port range
     environment:
       # Services to emulate
-      - SERVICES=dynamodb,s3,cloudwatch,apigateway,lambda
+      - SERVICES=dynamodb,s3,cloudwatch,apigateway,lambda,sns,sqs
       # Debug mode
       - DEBUG=1
       # Data directory
