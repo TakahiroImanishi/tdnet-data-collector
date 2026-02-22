@@ -160,7 +160,8 @@ try {
 ]
 '@
     
-    $gsiJson | Out-File -FilePath "temp_gsi.json" -Encoding UTF8NoBOM
+    # PowerShell 5.1互換のUTF-8 BOMなし書き込み
+    [System.IO.File]::WriteAllText("$PWD/temp_gsi.json", $gsiJson, (New-Object System.Text.UTF8Encoding $false))
     
     aws --endpoint-url=$ENDPOINT `
         --region=$REGION `
