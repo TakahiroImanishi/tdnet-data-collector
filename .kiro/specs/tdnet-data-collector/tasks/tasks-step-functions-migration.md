@@ -34,19 +34,26 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
   - 状態遷移図の作成
   - エラーハンドリング戦略
   - **完了日時**: 2026-02-22 18:13:01
-  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-workflow-diagram.md`
-- [ ] Lambda関数の分割設計
+  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
+- [x] Lambda関数の分割設計
   - 既存collector関数の分解
   - 各ステップの責務定義
   - インターフェース設計
-- [ ] DynamoDB実行状態管理設計
+  - **完了日時**: 2026-02-22 18:13:01
+  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
+- [x] DynamoDB実行状態管理設計
   - 実行状態テーブルスキーマ
   - 進捗追跡方法
   - タイムアウト・リトライ戦略
-- [ ] コスト試算
+  - **完了日時**: 2026-02-22 18:13:01
+  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
+- [x] コスト試算
   - Step Functions料金（Standard: $25/100万状態遷移、Express: $1/100万リクエスト）
   - Lambda実行時間の変化
   - 無料枠内での運用可能性確認
+  - **完了日時**: 2026-02-22 18:13:01
+  - **成果物**: `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
+  - **作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-181251-subagent1-architecture-design.md`
 
 **成果物**:
 - `.kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md`
