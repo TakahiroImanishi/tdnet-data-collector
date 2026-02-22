@@ -124,18 +124,24 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
     });
   } catch (error: any) {
     if (error.name === 'ConditionalCheckFailedException') {
-      // 重複は警告レベルで記録（エラーではない）
+      // 重複検出ログ（詳細）
       logger.warn('Duplicate disclosure detected', {
         disclosure_id: disclosure.disclosure_id,
+        company_code: disclosure.company_code,
+        company_name: disclosure.company_name,
+        disclosed_at: disclosure.disclosed_at,
         s3_key,
+        message: 'この開示情報は既にDynamoDBに保存されています'
       });
       return; // 重複は無視
     }
 
     logger.error('Failed to save metadata', {
       disclosure_id: disclosure.disclosure_id,
+      company_code: disclosure.company_code,
       error_type: error.constructor?.name || 'Unknown',
       error_message: error.message || String(error),
+      s3_key
     });
 
     // エラーメトリクス送信

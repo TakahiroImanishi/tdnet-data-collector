@@ -54,7 +54,11 @@ export async function downloadPdf(
   disclosed_at: string
 ): Promise<string> {
   try {
-    logger.info('Downloading PDF', { disclosure_id, pdf_url });
+    // PDFダウンロード開始ログ
+    logger.info('Downloading PDF started', { 
+      disclosure_id, 
+      pdf_url 
+    });
 
     // レート制限を適用
     await rateLimiter.waitIfNeeded();
@@ -106,6 +110,13 @@ export async function downloadPdf(
     // S3パス生成（YYYY/MM/DD/disclosure_id.pdf）
     const s3Key = generateS3Key(disclosure_id, disclosed_at);
 
+    // S3アップロード開始ログ
+    logger.info('Uploading PDF to S3', {
+      disclosure_id,
+      s3_key: s3Key,
+      size_bytes: pdfBuffer.length
+    });
+
     // S3にアップロード
     await s3Client.send(
       new PutObjectCommand({
@@ -121,10 +132,11 @@ export async function downloadPdf(
       })
     );
 
-    logger.info('PDF uploaded to S3', {
+    // S3アップロード完了ログ
+    logger.info('PDF uploaded to S3 successfully', {
       disclosure_id,
       s3_key: s3Key,
-      size: pdfBuffer.length,
+      size_bytes: pdfBuffer.length
     });
 
     // 成功メトリクス送信
@@ -134,11 +146,13 @@ export async function downloadPdf(
 
     return s3Key;
   } catch (error) {
+    // エラーログ（詳細）
     logger.error('Failed to download PDF', {
       disclosure_id,
       pdf_url,
       error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
+      stack_trace: error instanceof Error ? error.stack : undefined
     });
 
     // エラーメトリクス送信

@@ -3,6 +3,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Template } from 'aws-cdk-lib/assertions';
 import { LambdaDLQ } from '../lib/constructs/lambda-dlq';
@@ -11,6 +12,7 @@ describe('LambdaDLQ Construct', () => {
   let app: cdk.App;
   let stack: cdk.Stack;
   let alertTopic: sns.Topic;
+  const mockCode = lambda.Code.fromInline('exports.handler = async () => {};');
 
   beforeEach(() => {
     app = new cdk.App();
@@ -26,6 +28,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -42,6 +45,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -67,6 +71,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -83,6 +88,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -104,6 +110,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -130,6 +137,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -151,6 +159,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -188,6 +197,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'prod',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -207,6 +217,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -227,6 +238,7 @@ describe('LambdaDLQ Construct', () => {
         environment: 'dev',
         alertTopic,
         queueNamePrefix: 'custom',
+        code: mockCode,
       });
 
       // Assert
@@ -243,6 +255,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -260,6 +273,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -277,6 +291,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert
@@ -294,6 +309,7 @@ describe('LambdaDLQ Construct', () => {
       new LambdaDLQ(stack, 'TestDLQ', {
         environment: 'dev',
         alertTopic,
+        code: mockCode,
       });
 
       // Assert

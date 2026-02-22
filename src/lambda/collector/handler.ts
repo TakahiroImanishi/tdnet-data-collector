@@ -515,10 +515,25 @@ async function processDisclosuresInParallel(
   concurrency: number = 5
 ): Promise<{ success: number; failed: number }> {
   const results = { success: 0, failed: 0 };
+  const totalCount = disclosureMetadata.length;
 
   // 並列度を制限して処理
   for (let i = 0; i < disclosureMetadata.length; i += concurrency) {
     const batch = disclosureMetadata.slice(i, i + concurrency);
+    const batchNumber = Math.floor(i / concurrency) + 1;
+    const totalBatches = Math.ceil(totalCount / concurrency);
+    
+    // バッチ開始ログ
+    logger.info('Processing batch', {
+      execution_id,
+      batch_number: batchNumber,
+      total_batches: totalBatches,
+      batch_size: batch.length,
+      processed_so_far: results.success + results.failed,
+      total_count: totalCount,
+      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
+    });
+
     const promises = batch.map((metadata, index) =>
       processDisclosure(metadata, execution_id, i + index + 1)
     );
@@ -536,7 +551,27 @@ async function processDisclosuresInParallel(
         });
       }
     }
+    
+    // バッチ完了ログ
+    logger.info('Batch completed', {
+      execution_id,
+      batch_number: batchNumber,
+      batch_success: settled.filter(r => r.status === 'fulfilled').length,
+      batch_failed: settled.filter(r => r.status === 'rejected').length,
+      total_success: results.success,
+      total_failed: results.failed,
+      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
+    });
   }
+
+  // 最終結果ログ
+  logger.info('All batches completed', {
+    execution_id,
+    total_success: results.success,
+    total_failed: results.failed,
+    total_count: totalCount,
+    success_rate: totalCount > 0 ? Math.floor((results.success / totalCount) * 100) : 0
+  });
 
   return results;
 }
@@ -557,21 +592,24 @@ async function processDisclosure(
   execution_id: string,
   sequence: number
 ): Promise<void> {
+  // 開示IDを生成
+  const disclosure_id = generateDisclosureId(
+    metadata.disclosed_at,
+    metadata.company_code,
+    sequence
+  );
+
+  // 処理開始ログ
+  logger.info('Processing disclosure started', {
+    execution_id,
+    disclosure_id,
+    sequence,
+    company_code: metadata.company_code,
+    company_name: metadata.company_name,
+    title: metadata.title
+  });
+
   try {
-    // 開示IDを生成
-    const disclosure_id = generateDisclosureId(
-      metadata.disclosed_at,
-      metadata.company_code,
-      sequence
-    );
-
-    logger.info('Processing disclosure', {
-      execution_id,
-      disclosure_id,
-      company_code: metadata.company_code,
-      title: metadata.title,
-    });
-
     // PDFをダウンロードしてS3に保存
     const s3_key = await downloadPdf(
       disclosure_id,
@@ -596,18 +634,24 @@ async function processDisclosure(
     // メタデータをDynamoDBに保存
     await saveMetadata(disclosure, s3_key);
 
-    logger.info('Successfully processed disclosure', {
+    // 処理完了ログ
+    logger.info('Processing disclosure completed', {
       execution_id,
       disclosure_id,
-      s3_key,
+      sequence,
+      s3_key
     });
   } catch (error) {
+    // エラーログ（詳細）
     logger.error(
-      'Failed to process disclosure',
+      'Processing disclosure failed',
       createErrorContext(error as Error, {
         execution_id,
+        disclosure_id,
+        sequence,
         company_code: metadata.company_code,
         title: metadata.title,
+        pdf_url: metadata.pdf_url
       })
     );
     throw error;

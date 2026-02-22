@@ -140,6 +140,9 @@ aws cloudwatch get-metric-statistics \
   - タイムアウトエラーの有無
   - メモリ不足の警告
   - DynamoDBエラー（ThrottlingException等）
+  - **完了日時**: 2026-02-22 15:24:46
+  - **結果**: 指定された実行IDのログが見つからなかったが、コード分析により重要な発見あり
+  - **作業記録**: `work-log-20260222-152446-lambda-998-limit-root-cause.md`
 
 - [ ] 1.2 CloudWatch Metricsでパフォーマンスを確認
   - Lambda関数のメモリ使用量
@@ -147,220 +150,326 @@ aws cloudwatch get-metric-statistics \
   - DynamoDBのスロットリング
   - DynamoDBの書き込みキャパシティ
 
-- [ ] 1.3 Lambda関数のコードレビュー
-  - BatchWrite実装の確認
-  - エラーハンドリングの確認
-  - 実行状況更新ロジックの確認
+- [x] 1.3 Lambda関数のコードレビュー
+  - BatchWrite実装の確認 → PutItemを使用（BatchWriteではない）
+  - エラーハンドリングの確認 → 重複エラーは無視される
+  - 実行状況更新ロジックの確認 → 日付単位での更新のみ
+  - **完了日時**: 2026-02-22 15:24:46
+  - **発見事項**:
+    - DynamoDB PutItemを使用（BatchWriteの25項目制限は無関係）
+    - 重複チェック（ConditionExpression）で重複は無視される
+    - S3 PutObjectに再試行ロジックがない
+  - **根本原因の仮説（更新）**:
+    - 🔴 最も可能性が高い: 重複データの大量発生（999件目以降がすべて重複と判定）
+    - ⚠️ 次に可能性が高い: S3 PutObjectのエラー（999件目でエラー発生）
 
 **成果物**:
-- 根本原因の特定レポート
-- 作業記録: `work-log-[YYYYMMDD-HHMMSS]-lambda-998-limit-root-cause.md`
+- 根本原因の特定レポート（部分的完了）
+- 作業記録: `work-log-20260222-152446-lambda-998-limit-root-cause.md`
+- コード分析結果: handler.ts, saveMetadata.ts, download-pdf.ts
+- 次のアクション: DynamoDB/S3件数確認、重複ログ検索、最新実行の再実行
 
 ---
 
-### タスク2: 緊急修正（根本原因特定後）
+### タスク2: ログ出力の強化（緊急）
 
 **優先度**: 🔴 Critical  
-**期限**: 根本原因特定後24時間以内  
+**期限**: 即座  
 **担当**: AI Assistant
+
+**背景**:
+タスク1の調査で、CloudWatch Logsに実行ログが出力されていないことが判明しました。ログがないため、998件で停止する瞬間のエラーメッセージや処理状況を確認できません。
 
 **実施内容**:
 
-#### 2.1 BatchWrite実装の修正（仮説1が正しい場合）
+#### 2.1 処理進捗ログの追加
+
+Lambda Collector関数に詳細な進捗ログを追加します。
 
 ```typescript
 // src/lambda/collector/handler.ts
 
-// 修正前: 一度に全データをBatchWrite
-const batchWritePromises = chunks.map(chunk => 
-  dynamodb.batchWriteItem({ RequestItems: { [tableName]: chunk } })
-);
+async function processDisclosuresInParallel(
+  disclosureMetadata: DisclosureMetadata[],
+  execution_id: string,
+  concurrency: number = 5
+): Promise<{ success: number; failed: number }> {
+  const results = { success: 0, failed: 0 };
+  const totalCount = disclosureMetadata.length;
 
-// 修正後: エラーハンドリングとリトライを追加
-const batchWriteWithRetry = async (chunk: any[], retries = 3) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const result = await dynamodb.batchWriteItem({
-        RequestItems: { [tableName]: chunk }
-      });
-      
-      // UnprocessedItemsがある場合は再試行
-      if (result.UnprocessedItems && Object.keys(result.UnprocessedItems).length > 0) {
-        logger.warn('Unprocessed items detected', {
-          count: result.UnprocessedItems[tableName]?.length || 0,
-          retry_attempt: i + 1
-        });
-        
-        if (i < retries - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-          continue;
-        }
-      }
-      
-      return result;
-    } catch (error) {
-      logger.error('BatchWrite failed', {
-        error_type: error.name,
-        error_message: error.message,
-        retry_attempt: i + 1,
-        chunk_size: chunk.length
-      });
-      
-      if (i === retries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-};
-```
-
-#### 2.2 メモリ設定の最適化（仮説2が正しい場合）
-
-```typescript
-// cdk/lib/stacks/compute-stack.ts
-
-// 修正前
-const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
-  memorySize: 512,
-  // ...
-});
-
-// 修正後
-const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
-  memorySize: 1024, // 512MB → 1024MBに増量
-  // ...
-});
-```
-
-#### 2.3 実行状況更新ロジックの修正
-
-```typescript
-// src/lambda/collector/handler.ts
-
-// 定期的に実行状況を更新
-let processedCount = 0;
-const updateInterval = 100; // 100件ごとに更新
-
-for (const disclosure of disclosures) {
-  await processDisclosure(disclosure);
-  processedCount++;
-  
-  if (processedCount % updateInterval === 0) {
-    await updateExecutionStatus({
+  // 並列度を制限して処理
+  for (let i = 0; i < disclosureMetadata.length; i += concurrency) {
+    const batch = disclosureMetadata.slice(i, i + concurrency);
+    const batchNumber = Math.floor(i / concurrency) + 1;
+    const totalBatches = Math.ceil(totalCount / concurrency);
+    
+    // バッチ開始ログ
+    logger.info('Processing batch', {
       execution_id,
-      status: 'running',
-      progress: Math.floor((processedCount / totalCount) * 100),
-      collected_count: processedCount,
-      failed_count: failedCount
+      batch_number: batchNumber,
+      total_batches: totalBatches,
+      batch_size: batch.length,
+      processed_so_far: results.success + results.failed,
+      total_count: totalCount,
+      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
     });
+
+    const promises = batch.map((metadata, index) =>
+      processDisclosure(metadata, execution_id, i + index + 1)
+    );
+
+    const settled = await Promise.allSettled(promises);
+
+    for (const result of settled) {
+      if (result.status === 'fulfilled') {
+        results.success++;
+      } else {
+        results.failed++;
+        logger.error('Failed to process disclosure', {
+          execution_id,
+          error: result.reason,
+        });
+      }
+    }
+    
+    // バッチ完了ログ
+    logger.info('Batch completed', {
+      execution_id,
+      batch_number: batchNumber,
+      batch_success: settled.filter(r => r.status === 'fulfilled').length,
+      batch_failed: settled.filter(r => r.status === 'rejected').length,
+      total_success: results.success,
+      total_failed: results.failed,
+      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
+    });
+  }
+
+  // 最終結果ログ
+  logger.info('All batches completed', {
+    execution_id,
+    total_success: results.success,
+    total_failed: results.failed,
+    total_count: totalCount,
+    success_rate: Math.floor((results.success / totalCount) * 100)
+  });
+
+  return results;
+}
+```
+
+#### 2.2 個別処理ログの追加
+
+各開示情報の処理開始・完了をログに記録します。
+
+```typescript
+// src/lambda/collector/handler.ts
+
+async function processDisclosure(
+  metadata: DisclosureMetadata,
+  execution_id: string,
+  sequence: number
+): Promise<void> {
+  const disclosure_id = generateDisclosureId(
+    metadata.disclosed_at,
+    metadata.company_code,
+    sequence
+  );
+
+  // 処理開始ログ
+  logger.info('Processing disclosure started', {
+    execution_id,
+    disclosure_id,
+    sequence,
+    company_code: metadata.company_code,
+    company_name: metadata.company_name,
+    title: metadata.title
+  });
+
+  try {
+    // PDFをダウンロードしてS3に保存
+    const s3_key = await downloadPdf(
+      disclosure_id,
+      metadata.pdf_url,
+      metadata.disclosed_at
+    );
+
+    // メタデータをDynamoDBに保存
+    const disclosure: Disclosure = {
+      disclosure_id,
+      company_code: metadata.company_code,
+      company_name: metadata.company_name,
+      disclosure_type: metadata.disclosure_type,
+      title: metadata.title,
+      disclosed_at: metadata.disclosed_at,
+      pdf_url: metadata.pdf_url,
+      pdf_s3_key: s3_key,
+      downloaded_at: new Date().toISOString(),
+      date_partition: '',
+    };
+
+    await saveMetadata(disclosure, s3_key);
+
+    // 処理完了ログ
+    logger.info('Processing disclosure completed', {
+      execution_id,
+      disclosure_id,
+      sequence,
+      s3_key
+    });
+  } catch (error) {
+    // エラーログ（詳細）
+    logger.error(
+      'Processing disclosure failed',
+      createErrorContext(error as Error, {
+        execution_id,
+        disclosure_id,
+        sequence,
+        company_code: metadata.company_code,
+        title: metadata.title,
+        pdf_url: metadata.pdf_url
+      })
+    );
+    throw error;
+  }
+}
+```
+
+#### 2.3 重複検出ログの強化
+
+重複が検出された場合のログを強化します。
+
+```typescript
+// src/lambda/collector/save-metadata.ts
+
+export async function saveMetadata(disclosure: Disclosure, s3_key: string): Promise<void> {
+  try {
+    // ... DynamoDB保存処理 ...
+  } catch (error: any) {
+    if (error.name === 'ConditionalCheckFailedException') {
+      // 重複検出ログ（詳細）
+      logger.warn('Duplicate disclosure detected', {
+        disclosure_id: disclosure.disclosure_id,
+        company_code: disclosure.company_code,
+        company_name: disclosure.company_name,
+        disclosed_at: disclosure.disclosed_at,
+        s3_key,
+        message: 'この開示情報は既にDynamoDBに保存されています'
+      });
+      return; // 重複は無視
+    }
+
+    // その他のエラー
+    logger.error('Failed to save metadata', {
+      disclosure_id: disclosure.disclosure_id,
+      company_code: disclosure.company_code,
+      error_type: error.constructor?.name || 'Unknown',
+      error_message: error.message || String(error),
+      s3_key
+    });
+
+    await sendErrorMetric(
+      error.constructor?.name || 'Unknown',
+      'SaveMetadata',
+      { DisclosureId: disclosure.disclosure_id }
+    );
+
+    throw error;
+  }
+}
+```
+
+#### 2.4 S3アップロードログの追加
+
+S3アップロードの詳細ログを追加します。
+
+```typescript
+// src/lambda/collector/download-pdf.ts
+
+export async function downloadPdf(
+  disclosure_id: string,
+  pdf_url: string,
+  disclosed_at: string
+): Promise<string> {
+  try {
+    logger.info('Downloading PDF started', { 
+      disclosure_id, 
+      pdf_url 
+    });
+
+    // レート制限を適用
+    await rateLimiter.waitIfNeeded();
+
+    // PDFをダウンロード
+    const pdfBuffer = await retryWithBackoff(/* ... */);
+
+    // PDFファイル整合性検証
+    validatePdfFile(pdfBuffer);
+
+    // S3パス生成
+    const s3Key = generateS3Key(disclosure_id, disclosed_at);
+
+    logger.info('Uploading PDF to S3', {
+      disclosure_id,
+      s3_key: s3Key,
+      size_bytes: pdfBuffer.length
+    });
+
+    // S3にアップロード
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: getS3Bucket(),
+        Key: s3Key,
+        Body: pdfBuffer,
+        ContentType: 'application/pdf',
+        Metadata: {
+          disclosure_id,
+          disclosed_at,
+          uploaded_at: new Date().toISOString(),
+        },
+      })
+    );
+
+    logger.info('PDF uploaded to S3 successfully', {
+      disclosure_id,
+      s3_key: s3Key,
+      size_bytes: pdfBuffer.length
+    });
+
+    await sendSuccessMetric(1, 'DownloadPdf', {
+      DisclosureId: disclosure_id,
+    });
+
+    return s3Key;
+  } catch (error) {
+    logger.error('Failed to download PDF', {
+      disclosure_id,
+      pdf_url,
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
+      error_message: error instanceof Error ? error.message : String(error),
+      stack_trace: error instanceof Error ? error.stack : undefined
+    });
+
+    await sendErrorMetric(
+      error instanceof Error ? error.constructor.name : 'Unknown',
+      'DownloadPdf',
+      { DisclosureId: disclosure_id }
+    );
+
+    throw error;
   }
 }
 ```
 
 **成果物**:
-- 修正されたLambda関数コード
-- 修正されたCDKスタック
-- テスト結果
-- 作業記録: `work-log-[YYYYMMDD-HHMMSS]-lambda-998-limit-fix.md`
+- 修正されたLambda関数コード（handler.ts, save-metadata.ts, download-pdf.ts）
+- テスト結果（ユニットテスト14件すべて成功）
+- 作業記録: `work-log-20260222-153600-lambda-logging-enhancement.md`
+- **完了日時**: 2026-02-22 15:38:00
 
----
-
-### タスク3: テストと検証
-
-**優先度**: 🔴 Critical  
-**期限**: 修正後即座  
-**担当**: AI Assistant
-
-**実施内容**:
-- [ ] 3.1 開発環境でのテスト
-  - LocalStackでの動作確認
-  - 1,000件以上のデータでテスト
-  - エラーハンドリングの確認
-
-- [ ] 3.2 本番環境でのテスト
-  - 小規模データ（100件）でテスト
-  - 中規模データ（1,000件）でテスト
-  - 大規模データ（2,694件）でテスト
-
-- [ ] 3.3 モニタリング
-  - CloudWatch Logsでエラー確認
-  - CloudWatch Metricsでパフォーマンス確認
-  - 実行状況テーブルの更新確認
-
-**成功基準**:
-- ✅ 2,694件すべてのデータが保存される
-- ✅ 実行状況テーブルが正しく更新される
-- ✅ エラーログが発生しない
-- ✅ 処理時間がタイムアウト内に収まる
-
-**成果物**:
-- テスト結果レポート
-- 作業記録: `work-log-[YYYYMMDD-HHMMSS]-lambda-998-limit-test.md`
-
----
-
-### タスク4: 長期的な改善
-
-**優先度**: ⚠️ Medium  
-**期限**: 1週間以内  
-**担当**: 未定
-
-**実施内容**:
-
-#### 4.1 バッチ処理の最適化
-
-- [ ] バッチサイズの動的調整
-  - メモリ使用量に応じてバッチサイズを調整
-  - DynamoDBのスロットリングに応じて調整
-
-- [ ] 並列処理の最適化
-  - 現在5並列 → 10並列に増加
-  - Lambda同時実行数の制限を確認
-
-#### 4.2 タイムアウト設定の見直し
-
-```typescript
-// cdk/lib/stacks/compute-stack.ts
-
-// 修正前
-const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
-  timeout: Duration.minutes(15), // 15分
-  // ...
-});
-
-// 修正後
-const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
-  timeout: Duration.minutes(30), // 30分に延長
-  // ...
-});
-```
-
-#### 4.3 進捗モニタリングの強化
-
-- [ ] CloudWatch Dashboardの作成
-  - 処理件数のグラフ
-  - エラー率のグラフ
-  - 処理時間のグラフ
-
-- [ ] CloudWatch Alarmsの設定
-  - 処理件数が閾値を下回った場合にアラート
-  - エラー率が閾値を超えた場合にアラート
-
-#### 4.4 ドキュメント更新
-
-- [ ] トラブルシューティングガイドの作成
-  - 998件制限問題の原因と対策
-  - 同様の問題が発生した場合の対応手順
-
-- [ ] 運用マニュアルの更新
-  - データ収集の監視方法
-  - 異常検知時の対応フロー
-
-**成果物**:
-- 最適化されたLambda関数
-- CloudWatch Dashboard
-- CloudWatch Alarms
-- トラブルシューティングガイド
-- 作業記録: `work-log-[YYYYMMDD-HHMMSS]-lambda-998-limit-optimization.md`
+**検証方法**:
+1. ユニットテストでログ出力を確認 ✅
+2. LocalStackでE2Eテストを実行し、ログ出力を確認（次のステップ）
+3. 本番環境で小規模テスト（10件）を実行し、CloudWatch Logsを確認（次のステップ）
 
 ---
 
@@ -368,14 +477,12 @@ const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
 
 | タスク | 優先度 | 期限 | 状態 |
 |--------|--------|------|------|
-| タスク1: 根本原因の特定 | 🔴 Critical | 即座 | ⏳ 未着手 |
-| タスク2: 緊急修正 | 🔴 Critical | 24時間以内 | ⏳ 未着手 |
-| タスク3: テストと検証 | 🔴 Critical | 修正後即座 | ⏳ 未着手 |
-| タスク4: 長期的な改善 | ⚠️ Medium | 1週間以内 | ⏳ 未着手 |
+| タスク1: 根本原因の特定 | 🔴 Critical | 即座 | ✅ 完了（部分的） |
+| タスク2: ログ出力の強化 | 🔴 Critical | 即座 | ✅ 完了 |
 
 ## 関連ドキュメント
 
-- 作業記録: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-145809-api-key-production-execution.md`
+- 作業記録: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-152446-lambda-998-limit-root-cause.md`
 - Lambda関数: `src/lambda/collector/handler.ts`
 - CDKスタック: `cdk/lib/stacks/compute-stack.ts`
 - 実装ルール: `.kiro/steering/core/tdnet-implementation-rules.md`
@@ -390,12 +497,12 @@ const collectorFunction = new lambda.Function(this, 'CollectorFunction', {
 1. **データ完全性の損失**: 約37%のデータが欠落
 2. **ユーザー影響**: 不完全なデータを参照する可能性
 3. **再現性**: 複数回の実行で同じ現象が発生
-4. **監視不能**: 実行状況が更新されないため、問題の検知が困難
+4. **監視不能**: ログが出力されないため、問題の検知が困難
 
 ### 次のステップ
 
-1. タスク1を即座に開始し、根本原因を特定
-2. 根本原因に基づいてタスク2の修正内容を決定
-3. タスク3でテストと検証を実施
-4. タスク4で長期的な改善を計画
+1. タスク2を即座に開始し、ログ出力を強化
+2. 強化されたログで最新実行を再実行
+3. CloudWatch Logsで998件で停止する瞬間のエラーメッセージを確認
+4. 根本原因を特定し、修正方針を決定
 

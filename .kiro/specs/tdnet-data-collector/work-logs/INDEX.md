@@ -1,6 +1,6 @@
 # 作業記録インデックス
 
-**最終更新**: 2026-02-22 14:53:51  
+**最終更新**: 2026-02-22 15:24:46  
 **作成者**: AI Assistant
 
 ---
@@ -317,3 +317,16 @@ Get-ChildItem -Recurse -Filter "work-log-*.md" | Select-String -Pattern "deploym
 
 **最終更新**: 2026-02-22 14:53:51  
 **作成者**: AI Assistant
+
+
+---
+
+## 📝 最新の作業記録（2026-02-22）
+
+### Lambda 998件制限問題の調査
+- `work-log-20260222-152446-lambda-998-limit-root-cause.md` - Lambda 998件制限問題の根本原因特定
+  - CloudWatch Logs分析（ログが見つからず）
+  - コード分析（handler.ts, saveMetadata.ts, download-pdf.ts）
+  - 根本原因の仮説: 重複データの大量発生（最も可能性が高い）
+  - 次のアクション: DynamoDB/S3件数確認、重複ログ検索
+

@@ -27,6 +27,11 @@ export interface SecretsManagerConstructProps {
    * trueの場合、既存の/tdnet/api-keyシークレットを参照します
    */
   useExistingSecret?: boolean;
+
+  /**
+   * Lambda code (optional, for testing)
+   */
+  rotationFunctionCode?: lambda.Code;
 }
 
 /**
@@ -57,7 +62,7 @@ export class SecretsManagerConstruct extends Construct {
   constructor(scope: Construct, id: string, props: SecretsManagerConstructProps) {
     super(scope, id);
 
-    const { environment, enableRotation = true, rotationDays = 90, useExistingSecret = false } = props;
+    const { environment, enableRotation = true, rotationDays = 90, useExistingSecret = false, rotationFunctionCode } = props;
 
     // 既存シークレットを使用するか、新規作成するか
     if (useExistingSecret) {
@@ -92,7 +97,7 @@ export class SecretsManagerConstruct extends Construct {
           functionName: `tdnet-api-key-rotation-${environment}`,
           runtime: lambda.Runtime.NODEJS_20_X,
           handler: 'index.handler',
-          code: lambda.Code.fromAsset('../dist/src/lambda/api-key-rotation'),
+          code: rotationFunctionCode || lambda.Code.fromAsset('../dist/src/lambda/api-key-rotation'),
           timeout: cdk.Duration.seconds(30),
           memorySize: 128,
           environment: {

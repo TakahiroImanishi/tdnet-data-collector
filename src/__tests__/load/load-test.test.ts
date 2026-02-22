@@ -3,8 +3,18 @@
  * 
  * 大量データ収集と同時アクセスのテスト
  * 
+ * 【重要】このテストは実際のAWS環境（Lambda + API Gateway + DynamoDB）が必要です
+ * LocalStack環境では実行できません
+ * 
  * 実行方法:
- * npm test -- load-test.test.ts --testTimeout=600000
+ * 1. AWS環境にデプロイ
+ * 2. 環境変数を設定:
+ *    - RUN_LOAD_TESTS=true
+ *    - API_BASE_URL=https://your-api-gateway-url
+ *    - API_KEY=your-api-key
+ *    - COLLECTOR_FUNCTION_NAME=your-collector-function-name
+ *    - DISCLOSURES_TABLE_NAME=your-table-name
+ * 3. npm test -- load-test.test.ts --testTimeout=600000
  */
 
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
@@ -23,13 +33,32 @@ const COLLECTOR_FUNCTION_NAME = process.env.COLLECTOR_FUNCTION_NAME || 'tdnet-co
 // DynamoDB テーブル名
 const DISCLOSURES_TABLE_NAME = process.env.DISCLOSURES_TABLE_NAME || 'tdnet-disclosures-dev';
 
-// AWS クライアント
-const lambdaClient = new LambdaClient({ region: AWS_REGION });
-const dynamodbClient = new DynamoDBClient({ region: AWS_REGION });
+// Load テスト実行フラグ
+const RUN_LOAD_TESTS = process.env.RUN_LOAD_TESTS === 'true';
 
-describe('負荷テスト', () => {
+// AWS クライアント（Load テスト有効時のみ初期化）
+let lambdaClient: LambdaClient | undefined;
+let dynamodbClient: DynamoDBClient | undefined;
+
+if (RUN_LOAD_TESTS) {
+  lambdaClient = new LambdaClient({ region: AWS_REGION });
+  dynamodbClient = new DynamoDBClient({ region: AWS_REGION });
+}
+
+// テストスキップ条件
+const describeOrSkip = RUN_LOAD_TESTS ? describe : describe.skip;
+
+describeOrSkip('負荷テスト', () => {
   // タイムアウトを10分に設定
   jest.setTimeout(600000);
+
+  beforeAll(() => {
+    if (!RUN_LOAD_TESTS) {
+      console.log('\n⚠️  Load テストはスキップされました');
+      console.log('実行するには環境変数 RUN_LOAD_TESTS=true を設定してください');
+      console.log('詳細はテストファイルのコメントを参照してください\n');
+    }
+  });
 
   describe('シナリオ1: 大量データ収集（100件以上）', () => {
     it('100件以上の開示情報を収集できること', async () => {
@@ -47,6 +76,10 @@ describe('負荷テスト', () => {
       const startTime = Date.now();
 
       // Lambda Collector を呼び出し
+      if (!lambdaClient) {
+        throw new Error('Lambda client is not initialized');
+      }
+
       const invokeCommand = new InvokeCommand({
         FunctionName: COLLECTOR_FUNCTION_NAME,
         Payload: JSON.stringify({
@@ -87,6 +120,10 @@ describe('負荷テスト', () => {
       console.log(`\n📊 DynamoDB データ確認`);
 
       // DynamoDB から最近のデータを取得
+      if (!dynamodbClient) {
+        throw new Error('DynamoDB client is not initialized');
+      }
+
       const scanCommand = new ScanCommand({
         TableName: DISCLOSURES_TABLE_NAME,
         Limit: 100,

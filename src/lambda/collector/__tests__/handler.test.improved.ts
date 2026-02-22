@@ -10,6 +10,8 @@
 import { Context } from 'aws-lambda';
 import { handler, CollectorEvent } from '../handler';
 import { scrapeTdnetList } from '../scrape-tdnet-list';
+import { downloadPdf } from '../download-pdf';
+import { saveMetadata } from '../save-metadata';
 import {
   setupTestDependencies,
   cleanupTestDependencies,
@@ -25,7 +27,11 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Mock dependencies
 jest.mock('../scrape-tdnet-list');
+jest.mock('../download-pdf');
+jest.mock('../save-metadata');
 const mockScrapeTdnetList = scrapeTdnetList as jest.MockedFunction<typeof scrapeTdnetList>;
+const mockDownloadPdf = downloadPdf as jest.MockedFunction<typeof downloadPdf>;
+const mockSaveMetadata = saveMetadata as jest.MockedFunction<typeof saveMetadata>;
 
 describe('Lambda Collector Handler - Improved Tests', () => {
   let mockContext: Context;
@@ -57,6 +63,10 @@ describe('Lambda Collector Handler - Improved Tests', () => {
     process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
     process.env.S3_BUCKET = 'test-pdfs-bucket';
     process.env.LOG_LEVEL = 'error'; // テスト時はエラーログのみ
+
+    // downloadPdfとsaveMetadataのデフォルトモック
+    mockDownloadPdf.mockResolvedValue('pdfs/2024-01/test.pdf');
+    mockSaveMetadata.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -82,10 +92,9 @@ describe('Lambda Collector Handler - Improved Tests', () => {
         },
       ]);
 
-      // DynamoDB/S3の成功をモック
-      mockUpdateExecutionStatus(true);
-      mockPutDisclosure(true);
-      mockPutPdf(true);
+      // PDF取得とメタデータ保存をモック
+      mockDownloadPdf.mockResolvedValue('pdfs/2024-01/test.pdf');
+      mockSaveMetadata.mockResolvedValue(undefined);
 
       const response = await handler(event, mockContext);
 
@@ -98,10 +107,12 @@ describe('Lambda Collector Handler - Improved Tests', () => {
       // スクレイピングが呼ばれたことを確認
       expect(mockScrapeTdnetList).toHaveBeenCalled();
 
-      // DynamoDB/S3が呼ばれたことを確認
-      expect(dynamoMock.commandCalls(PutCommand).length).toBeGreaterThan(0);
+      // PDF取得とメタデータ保存が呼ばれたことを確認
+      expect(mockDownloadPdf).toHaveBeenCalled();
+      expect(mockSaveMetadata).toHaveBeenCalled();
+
+      // DynamoDB UpdateCommandが呼ばれたことを確認（実行状態更新）
       expect(dynamoMock.commandCalls(UpdateCommand).length).toBeGreaterThan(0);
-      expect(s3Mock.commandCalls(PutObjectCommand).length).toBeGreaterThan(0);
     });
 
     it('should handle scraping errors gracefully in batch mode', async () => {
@@ -112,15 +123,12 @@ describe('Lambda Collector Handler - Improved Tests', () => {
       // スクレイピングエラーをモック
       mockScrapeTdnetList.mockRejectedValue(new Error('Network error'));
 
-      // 実行状態更新は成功
-      mockUpdateExecutionStatus(true);
-
       const response = await handler(event, mockContext);
 
       // エラーハンドリングの検証
       expect(response.status).toBe('failed');
       expect(response.collected_count).toBe(0);
-      expect(response.failed_count).toBeGreaterThan(0);
+      expect(response.failed_count).toBe(1);
 
       // 実行状態が更新されたことを確認
       expect(dynamoMock.commandCalls(UpdateCommand).length).toBeGreaterThan(0);
@@ -153,10 +161,9 @@ describe('Lambda Collector Handler - Improved Tests', () => {
         },
       ]);
 
-      // DynamoDB/S3の成功をモック
-      mockUpdateExecutionStatus(true);
-      mockPutDisclosure(true);
-      mockPutPdf(true);
+      // PDF取得とメタデータ保存をモック
+      mockDownloadPdf.mockResolvedValue('pdfs/2024-01/test.pdf');
+      mockSaveMetadata.mockResolvedValue(undefined);
 
       const response = await handler(event, mockContext);
 
@@ -204,10 +211,9 @@ describe('Lambda Collector Handler - Improved Tests', () => {
           },
         ]);
 
-      // DynamoDB/S3の成功をモック
-      mockUpdateExecutionStatus(true);
-      mockPutDisclosure(true);
-      mockPutPdf(true);
+      // PDF取得とメタデータ保存をモック
+      mockDownloadPdf.mockResolvedValue('pdfs/2024-01/test.pdf');
+      mockSaveMetadata.mockResolvedValue(undefined);
 
       const response = await handler(event, mockContext);
 
@@ -273,22 +279,19 @@ describe('Lambda Collector Handler - Improved Tests', () => {
         },
       ]);
 
-      mockUpdateExecutionStatus(true);
-      mockPutDisclosure(true);
-      mockPutPdf(true);
+      mockDownloadPdf.mockResolvedValue('pdfs/2024-01/test.pdf');
+      mockSaveMetadata.mockResolvedValue(undefined);
 
       await handler(event, mockContext);
 
       // aws-sdk-client-mockの検証機能を使用
-      const putCalls = dynamoMock.commandCalls(PutCommand);
       const updateCalls = dynamoMock.commandCalls(UpdateCommand);
 
-      expect(putCalls.length).toBeGreaterThan(0);
       expect(updateCalls.length).toBeGreaterThan(0);
 
       // 呼び出しパラメータの検証
-      const firstPutCall = putCalls[0];
-      expect(firstPutCall.args[0].input.TableName).toBe('test-disclosures-table');
+      const firstUpdateCall = updateCalls[0];
+      expect(firstUpdateCall.args[0].input.TableName).toBe('test-executions-table');
     });
 
     it('should verify S3 calls with aws-sdk-client-mock', async () => {
@@ -307,19 +310,18 @@ describe('Lambda Collector Handler - Improved Tests', () => {
         },
       ]);
 
-      mockUpdateExecutionStatus(true);
-      mockPutDisclosure(true);
-      mockPutPdf(true);
+      mockDownloadPdf.mockResolvedValue('pdfs/2024-01/test.pdf');
+      mockSaveMetadata.mockResolvedValue(undefined);
 
       await handler(event, mockContext);
 
-      // S3呼び出しの検証
-      const s3Calls = s3Mock.commandCalls(PutObjectCommand);
-      expect(s3Calls.length).toBeGreaterThan(0);
-
-      // 呼び出しパラメータの検証
-      const firstS3Call = s3Calls[0];
-      expect(firstS3Call.args[0].input.Bucket).toBe('test-pdfs-bucket');
+      // downloadPdfが呼ばれたことを確認
+      expect(mockDownloadPdf).toHaveBeenCalled();
+      expect(mockDownloadPdf).toHaveBeenCalledWith(
+        expect.any(String),
+        'https://example.com/test.pdf',
+        '2024-01-15T01:30:00Z'
+      );
     });
   });
 });

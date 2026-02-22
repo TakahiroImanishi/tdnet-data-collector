@@ -33,6 +33,11 @@ export interface LambdaDLQProps {
    * Queue name prefix
    */
   queueNamePrefix?: string;
+
+  /**
+   * Lambda code (optional, for testing)
+   */
+  code?: lambda.Code;
 }
 
 /**
@@ -71,7 +76,7 @@ export class LambdaDLQ extends Construct {
       functionName: `tdnet-dlq-processor-${props.environment}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset('../dist/src/lambda/dlq-processor'),
+      code: props.code || lambda.Code.fromAsset('../dist/src/lambda/dlq-processor'),
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {

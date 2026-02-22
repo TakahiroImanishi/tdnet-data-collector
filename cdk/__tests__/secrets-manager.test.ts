@@ -7,6 +7,7 @@ import { SecretsManagerConstruct } from '../lib/constructs/secrets-manager';
 describe('SecretsManagerConstruct', () => {
   let app: cdk.App;
   let stack: cdk.Stack;
+  const mockCode = lambda.Code.fromInline('exports.handler = async () => {};');
 
   beforeEach(() => {
     app = new cdk.App();
@@ -23,6 +24,7 @@ describe('SecretsManagerConstruct', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -37,6 +39,7 @@ describe('SecretsManagerConstruct', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'prod',
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -51,6 +54,7 @@ describe('SecretsManagerConstruct', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -72,6 +76,7 @@ describe('SecretsManagerConstruct', () => {
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: true,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -102,6 +107,7 @@ describe('SecretsManagerConstruct', () => {
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: true,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -119,6 +125,7 @@ describe('SecretsManagerConstruct', () => {
         environment: 'prod',
         enableRotation: true,
         rotationDays: 30,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -135,6 +142,7 @@ describe('SecretsManagerConstruct', () => {
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: true,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -241,6 +249,7 @@ describe('SecretsManagerConstruct', () => {
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: true,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -262,6 +271,7 @@ describe('SecretsManagerConstruct', () => {
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'prod',
         enableRotation: true,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -284,6 +294,7 @@ describe('SecretsManagerConstruct', () => {
       // Arrange & Act
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
@@ -297,6 +308,7 @@ describe('SecretsManagerConstruct', () => {
       new SecretsManagerConstruct(stack, 'SecretsManager', {
         environment: 'dev',
         enableRotation: true,
+        rotationFunctionCode: mockCode,
       });
 
       // Assert
