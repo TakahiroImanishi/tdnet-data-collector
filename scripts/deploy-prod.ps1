@@ -61,6 +61,13 @@ Get-Content "config/.env.production" | ForEach-Object {
     }
 }
 
+# Set CDK environment variables for deployment
+Write-Host "📋 Setting CDK environment variables..." -ForegroundColor Yellow
+[Environment]::SetEnvironmentVariable("CDK_DEFAULT_ACCOUNT", $env:AWS_ACCOUNT_ID, "Process")
+[Environment]::SetEnvironmentVariable("CDK_DEFAULT_REGION", $env:AWS_REGION, "Process")
+Write-Host "  ✓ Set CDK_DEFAULT_ACCOUNT=$env:AWS_ACCOUNT_ID" -ForegroundColor Green
+Write-Host "  ✓ Set CDK_DEFAULT_REGION=$env:AWS_REGION" -ForegroundColor Green
+
 Write-Host ""
 Write-Host "⚠️  WARNING: You are about to deploy to PRODUCTION!" -ForegroundColor Red
 Write-Host "🌏 Region: $env:AWS_REGION" -ForegroundColor Cyan
@@ -100,6 +107,16 @@ if (-not (Test-Path "$cdkPath/node_modules")) {
     Set-Location $rootPath
     Write-Host ""
 }
+
+# Build TypeScript code
+Write-Host "🔨 Building TypeScript code..." -ForegroundColor Yellow
+npm run build
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Error: Build failed" -ForegroundColor Red
+    exit 1
+}
+Write-Host "✓ Build successful" -ForegroundColor Green
+Write-Host ""
 
 # Run CDK synth to validate the stack
 Write-Host "🔍 Validating CDK stack..." -ForegroundColor Yellow
