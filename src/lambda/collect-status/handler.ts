@@ -109,6 +109,8 @@ export async function handler(
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Api-Key',
       },
       body: JSON.stringify(response),
     };
@@ -215,6 +217,8 @@ function toErrorResponse(error: Error, requestId: string): APIGatewayProxyResult
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Api-Key',
     },
     body: JSON.stringify({
       status: 'error',

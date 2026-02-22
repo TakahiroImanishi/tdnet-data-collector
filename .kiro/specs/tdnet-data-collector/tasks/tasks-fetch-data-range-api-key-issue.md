@@ -281,39 +281,52 @@ catch {
 #### タスク4: ドキュメント更新
 
 **対応内容**:
-- [ ] `.kiro/steering/development/data-scripts.md` にAPIキー取得方法を追記
-- [ ] `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md` にAPIキーエラーのトラブルシューティングを追加
-- [ ] `README.md` に環境変数設定方法を追記
+- [x] `.kiro/steering/development/data-scripts.md` にAPIキー取得方法を追記
+- [x] `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md` にAPIキーエラーのトラブルシューティングを追加
+- [x] `README.md` に環境変数設定方法を追記
 
-**担当**: AI Assistant
+**担当**: AI Assistant (Subagent3)
 
 **期限**: 2026-03-07
 
 **優先度**: ⚠️ 中
 
-**状態**: ⏳ 未着手
+**状態**: ✅ 完了
+
+**完了日時**: 2026-02-22 16:08
 
 **関連ファイル**:
-- `.kiro/steering/development/data-scripts.md`
-- `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md`
-- `README.md`
+- `.kiro/steering/development/data-scripts.md` (更新済み)
+- `.kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md` (新規作成)
+- `README.md` (更新済み)
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-160754-subagent3-documentation-update-task4.md`
 
 ---
 
 #### タスク5: manual-data-collection.ps1への適用
 
 **対応内容**:
-- [ ] `Get-ApiKeyWithRetry` 関数を `manual-data-collection.ps1` にも適用
-- [ ] 環境変数フォールバック機能を追加
-- [ ] エラーメッセージを改善
+- [x] `Get-ApiKeyWithRetry` 関数を `manual-data-collection.ps1` にも適用
+- [x] 環境変数フォールバック機能を追加
+- [x] エラーメッセージを改善
 
-**担当**: AI Assistant
+**担当**: AI Assistant (Subagent2)
 
 **期限**: 2026-03-07
 
 **優先度**: ⚠️ 中
 
-**状態**: ⏳ 未着手
+**状態**: ✅ 完了
+
+**完了日時**: 2026-02-22 16:10
+
+**関連ファイル**:
+- `scripts/manual-data-collection.ps1` (更新済み)
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-160749-subagent2-manual-data-collection-api-key-task5.md`
+
+**完了メモ**: fetch-data-range.ps1の改善内容をmanual-data-collection.ps1に適用しました。`Get-ApiKeyWithRetry`関数、環境変数フォールバック、改善されたエラーメッセージを実装し、UTF-8 BOMなしエンコーディングを確認しました。
 
 **関連ファイル**:
 - `scripts/manual-data-collection.ps1`
@@ -327,8 +340,8 @@ catch {
 | 1 | エラー分類とリトライ機能の実装 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-29 |
 | 2 | 環境変数フォールバックの実装 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-29 |
 | 3 | エラーメッセージの改善 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-29 |
-| 4 | ドキュメント更新 | ⚠️ 中 | ⏳ 未着手 | AI Assistant | 2026-03-07 |
-| 5 | manual-data-collection.ps1への適用 | ⚠️ 中 | ⏳ 未着手 | AI Assistant | 2026-03-07 |
+| 4 | ドキュメント更新 | ⚠️ 中 | ✅ 完了 | AI Assistant (Subagent3) | 2026-03-07 |
+| 5 | manual-data-collection.ps1への適用 | ⚠️ 中 | ✅ 完了 | AI Assistant (Subagent2) | 2026-03-07 |
 
 ## テスト計画
 

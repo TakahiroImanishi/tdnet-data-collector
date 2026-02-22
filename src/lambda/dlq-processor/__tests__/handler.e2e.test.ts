@@ -217,18 +217,19 @@ describe('DLQ Processor Handler E2E Tests', () => {
  * モックSQSイベントを作成
  */
 function createMockSQSEvent(
-  messages: Array<{ messageId: string; body: string; attributes?: Record<string, string> }>
+  messages: Array<{ messageId: string; body: string; attributes?: Partial<import('aws-lambda').SQSRecordAttributes> }>
 ): SQSEvent {
   return {
     Records: messages.map(msg => ({
       messageId: msg.messageId,
       receiptHandle: `receipt-${msg.messageId}`,
       body: msg.body,
-      attributes: msg.attributes || {
+      attributes: {
         ApproximateReceiveCount: '1',
         SentTimestamp: Date.now().toString(),
         SenderId: 'test-sender',
         ApproximateFirstReceiveTimestamp: Date.now().toString(),
+        ...msg.attributes,
       },
       messageAttributes: {},
       md5OfBody: 'test-md5',

@@ -194,6 +194,35 @@ cp .env.example .env
 
 詳細は [環境変数ガイド](.kiro/steering/infrastructure/environment-variables.md) を参照してください。
 
+### APIキーの設定
+
+スクリプト実行時にAPIキーが必要です。以下のいずれかの方法で設定してください：
+
+#### 方法1: 環境変数（推奨: 開発環境）
+
+```powershell
+# 一時的に設定（現在のセッションのみ）
+$env:TDNET_API_KEY = "your-api-key"
+
+# 永続的に設定（ユーザー環境変数）
+[System.Environment]::SetEnvironmentVariable("TDNET_API_KEY", "your-api-key", "User")
+```
+
+**注意**: 永続的に設定した場合、PowerShellを再起動して反映を確認してください。
+
+#### 方法2: Secrets Manager（推奨: 本番環境）
+
+```powershell
+.\scripts\register-api-key.ps1 -Environment prod
+```
+
+**利点**:
+- セキュリティ: APIキーが暗号化されて保存される
+- 監査ログ: CloudTrailでアクセス履歴を追跡可能
+- 自動ローテーション: 90日ごとの自動更新（設定済み）
+
+詳細: [データ操作スクリプト](.kiro/steering/development/data-scripts.md)
+
 ---
 
 ## 開発
@@ -421,6 +450,70 @@ curl -X POST "https://api.example.com/export" \
     "company_code": "7203"
   }'
 ```
+
+---
+
+## スクリプト
+
+プロジェクトには運用を効率化するための各種スクリプトが用意されています。
+
+### デプロイスクリプト
+
+| スクリプト | 説明 | 実行例 |
+|-----------|------|--------|
+| `deploy.ps1` | 基本デプロイスクリプト（全スタック一括デプロイ） | `.\scripts\deploy.ps1` |
+| `deploy-dev.ps1` | 開発環境への簡易デプロイ | `.\scripts\deploy-dev.ps1` |
+| `deploy-prod.ps1` | 本番環境への本格デプロイ | `.\scripts\deploy-prod.ps1` |
+| `deploy-split-stacks.ps1` | 分割スタックデプロイ（推奨）- 変更箇所のみ更新 | `.\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy -Stack compute` |
+| `deploy-dashboard.ps1` | Webダッシュボードのデプロイ | `.\scripts\deploy-dashboard.ps1 -Environment prod` |
+
+**推奨**: 開発時は `deploy-split-stacks.ps1` を使用すると、変更したスタックのみをデプロイできるため、デプロイ時間を大幅に短縮できます（15-20分 → 2-5分）。
+
+### セットアップスクリプト
+
+| スクリプト | 説明 | 実行例 |
+|-----------|------|--------|
+| `startup.ps1` | AWS SSO認証とプロファイル設定 | `.\scripts\startup.ps1` |
+| `localstack-setup.ps1` | LocalStack環境のセットアップ（E2Eテスト用） | `.\scripts\localstack-setup.ps1` |
+| `create-api-key-secret.ps1` | Secrets ManagerにAPIキーシークレットを作成 | `.\scripts\create-api-key-secret.ps1 -Environment prod` |
+| `generate-env-file.ps1` | 環境変数ファイル（.env）を生成 | `.\scripts\generate-env-file.ps1 -Environment dev` |
+| `register-api-key.ps1` | APIキーの登録・ローテーション | `.\scripts\register-api-key.ps1 -Environment prod -Action rotate` |
+
+**注意**: `register-api-key.ps1` は90日ごとのAPIキー自動ローテーションに使用します。詳細は [README-register-api-key.md](scripts/README-register-api-key.md) を参照してください。
+
+### データ操作スクリプト
+
+| スクリプト | 説明 | 実行例 |
+|-----------|------|--------|
+| `manual-data-collection.ps1` | 手動でのデータ収集実行 | `.\scripts\manual-data-collection.ps1 -StartDate "2024-01-01" -EndDate "2024-01-31"` |
+| `fetch-data-range.ps1` | 指定期間のデータを一括取得 | `.\scripts\fetch-data-range.ps1 -StartDate "2024-01-01" -EndDate "2024-01-31"` |
+| `delete-all-data.ps1` | DynamoDBとS3のすべてのデータを削除（開発環境用） | `.\scripts\delete-all-data.ps1 -Confirm` |
+| `migrate-disclosure-fields.ts` | 開示情報フィールドのマイグレーション | `npx ts-node scripts/migrate-disclosure-fields.ts` |
+
+**警告**: `delete-all-data.ps1` は本番環境では使用しないでください。すべてのデータが削除されます。
+
+### 監視・診断スクリプト
+
+| スクリプト | 説明 | 実行例 |
+|-----------|------|--------|
+| `check-iam-permissions.ps1` | IAM権限の確認と診断 | `.\scripts\check-iam-permissions.ps1` |
+| `check-waf-status.ps1` | AWS WAFの状態確認 | `.\scripts\check-waf-status.ps1 -Environment prod` |
+| `check-lambda-998-limit.ps1` | Lambda 998件制限問題の診断 | `.\scripts\check-lambda-998-limit.ps1` |
+| `check-dynamodb-s3-consistency.ps1` | DynamoDBとS3のデータ整合性確認 | `.\scripts\check-dynamodb-s3-consistency.ps1 -Environment prod` |
+| `check-cloudwatch-logs-simple.ps1` | CloudWatchログの簡易確認 | `.\scripts\check-cloudwatch-logs-simple.ps1 -FunctionName tdnet-collector` |
+| `analyze-cloudwatch-logs.ps1` | CloudWatchログの詳細分析 | `.\scripts\analyze-cloudwatch-logs.ps1 -FunctionName tdnet-collector -Hours 24` |
+
+**ヒント**: 問題発生時は `check-cloudwatch-logs-simple.ps1` で概要を確認し、詳細が必要な場合は `analyze-cloudwatch-logs.ps1` を使用してください。
+
+### スクリプト実行の前提条件
+
+すべてのスクリプトを実行する前に、以下を確認してください：
+
+1. **AWS認証**: `.\scripts\startup.ps1` でAWS SSO認証を完了
+2. **環境変数**: `.env` ファイルが正しく設定されている
+3. **PowerShell実行ポリシー**: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+詳細は各スクリプトのヘッダーコメントまたは関連ドキュメントを参照してください。
 
 ---
 

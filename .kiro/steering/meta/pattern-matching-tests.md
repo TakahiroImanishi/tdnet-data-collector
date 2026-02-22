@@ -472,6 +472,92 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ---
 
+## development/deployment-scripts.md
+
+### fileMatchPattern
+```text
+scripts/deploy*.ps1
+```
+
+### マッチすべきファイル ✅
+- `scripts/deploy.ps1`
+- `scripts/deploy-dev.ps1`
+- `scripts/deploy-prod.ps1`
+- `scripts/deploy-split-stacks.ps1`
+- `scripts/deploy-dashboard.ps1`
+
+### マッチすべきでないファイル ❌
+- `scripts/manual-data-collection.ps1`
+- `scripts/check-iam-permissions.ps1`
+- `src/lambda/collector/handler.ts`
+- `README.md`
+
+---
+
+## development/setup-scripts.md
+
+### fileMatchPattern
+```text
+scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1
+```
+
+### マッチすべきファイル ✅
+- `scripts/create-api-key-secret.ps1`
+- `scripts/generate-env-file.ps1`
+- `scripts/localstack-setup.ps1`
+
+### マッチすべきでないファイル ❌
+- `scripts/deploy.ps1`
+- `scripts/manual-data-collection.ps1`
+- `scripts/check-iam-permissions.ps1`
+- `README.md`
+
+---
+
+## development/data-scripts.md
+
+### fileMatchPattern
+```text
+scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*
+```
+
+### マッチすべきファイル ✅
+- `scripts/fetch-data-range.ps1`
+- `scripts/manual-data-collection.ps1`
+- `scripts/migrate-disclosure-fields.ts`
+
+### マッチすべきでないファイル ❌
+- `scripts/deploy.ps1`
+- `scripts/check-iam-permissions.ps1`
+- `src/lambda/collector/handler.ts`
+- `README.md`
+
+---
+
+## infrastructure/monitoring-scripts.md
+
+### fileMatchPattern
+```text
+scripts/{deploy-dashboard,check-iam-permissions,analyze-cloudwatch-logs,check-cloudwatch-logs-simple,check-dynamodb-s3-consistency,check-waf-status,check-lambda-998-limit}.ps1
+```
+
+### マッチすべきファイル ✅
+- `scripts/deploy-dashboard.ps1`
+- `scripts/check-iam-permissions.ps1`
+- `scripts/analyze-cloudwatch-logs.ps1`
+- `scripts/check-cloudwatch-logs-simple.ps1`
+- `scripts/check-dynamodb-s3-consistency.ps1`
+- `scripts/check-waf-status.ps1`
+- `scripts/check-lambda-998-limit.ps1`
+
+### マッチすべきでないファイル ❌
+- `scripts/deploy.ps1`
+- `scripts/manual-data-collection.ps1`
+- `src/lambda/collector/handler.ts`
+- `README.md`
+
+---
+
 ## パターンマッチングのルール
 
 ### ワイルドカード
@@ -749,3 +835,8 @@ Test-MultiPattern "**/*.test.ts|**/*.spec.ts" "src/validators/disclosure.ts"
 - 2026-02-22: powershell-encoding-guidelines.mdのテストケースを追加
   - fileMatchPattern: `**/*.ps1`
   - PowerShellスクリプト編集時にエンコーディングガイドラインを読み込み
+- 2026-02-22: スクリプト関連steeringファイルのテストケースを追加
+  - `development/deployment-scripts.md`: `scripts/deploy*.ps1`
+  - `development/setup-scripts.md`: `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1`
+  - `development/data-scripts.md`: `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*`
+  - `infrastructure/monitoring-scripts.md`: `scripts/{deploy-dashboard,check-iam-permissions,analyze-cloudwatch-logs,check-cloudwatch-logs-simple,check-dynamodb-s3-consistency,check-waf-status,check-lambda-998-limit}.ps1`
