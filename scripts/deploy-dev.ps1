@@ -13,9 +13,34 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
 # Set error action preference
 $ErrorActionPreference = "Stop"
 
+# スクリプトのルートディレクトリ
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "TDnet Data Collector - Development Deploy" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# ========================================
+# AWS SSO認証
+# ========================================
+Write-Host "🔐 AWS SSO Authentication..." -ForegroundColor Cyan
+
+try {
+    & "$scriptRoot\startup.ps1" -Profile "imanishi-awssso"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ AWS SSO authentication failed" -ForegroundColor Red
+        exit 1
+    }
+    # 環境変数を設定
+    $env:AWS_PROFILE = "imanishi-awssso"
+    Write-Host "✅ AWS SSO authenticated (Profile: imanishi-awssso)" -ForegroundColor Green
+} catch {
+    Write-Host "❌ AWS SSO authentication failed" -ForegroundColor Red
+    Write-Host "Error: $_" -ForegroundColor Red
+    exit 1
+}
+
 Write-Host ""
 
 # Check if config/.env.development exists

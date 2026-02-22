@@ -448,6 +448,39 @@ export function generateDatePartition(disclosedAt: string): string {
 
 ## CI/CDパイプライン
 
+### AWS認証
+
+**AWS SSO認証:**
+- プロファイル: `imanishi-awssso`
+- 起動スクリプト: `scripts/startup.ps1`
+- 自動認証: すべてのデプロイスクリプトで起動時に自動実行
+
+**認証フロー:**
+1. デプロイスクリプト実行時に `startup.ps1` を呼び出し
+2. AWS SSO認証状態を確認（`aws sts get-caller-identity`）
+3. 未認証または期限切れの場合、`aws sso login --profile imanishi-awssso` を実行
+4. 認証成功後、環境変数 `AWS_PROFILE=imanishi-awssso` を設定
+5. デプロイ処理を継続
+
+**使用方法:**
+```powershell
+# 手動でSSO認証のみ実行
+npm run startup
+# または
+.\scripts\startup.ps1
+
+# デプロイ時は自動的にSSO認証が実行される
+.\scripts\deploy.ps1 -Environment dev
+.\scripts\deploy-dev.ps1
+.\scripts\deploy-prod.ps1
+```
+
+**再認証:**
+```powershell
+# 強制的に再認証
+.\scripts\startup.ps1 -Force
+```
+
 ### GitHub Actions ワークフロー
 
 **テストワークフロー (.github/workflows/test.yml):**

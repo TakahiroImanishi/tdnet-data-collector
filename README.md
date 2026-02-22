@@ -2,6 +2,8 @@
 
 TDnet Data Collectorは、日本取引所グループのTDnet（適時開示情報閲覧サービス）から上場企業の開示情報を自動収集するAWSベースのサーバーレスシステムです。
 
+**最終更新日**: 2026-02-22
+
 ## 📋 目次
 
 - [概要](#概要)
@@ -22,7 +24,7 @@ TDnet Data Collectorは、日本取引所グループのTDnet（適時開示情�
 
 TDnet Data Collectorは、日本の上場企業が公開する適時開示情報を自動的に収集・保存するシステムです。サーバーレスアーキテクチャを採用し、AWS無料枠内で運用可能なコスト効率の高い設計となっています。
 
-**実装状況**: Phase 1-4完了（基本機能、API実装、Webダッシュボード、運用改善）、Phase 5未完了（本番運用後の自動化強化）
+**実装状況**: Phase 1-4完了（基本機能、API実装、Webダッシュボード、運用改善）、Phase 5進行中（本番運用後の自動化強化）
 
 ### 主要機能
 
@@ -41,12 +43,34 @@ TDnet Data Collectorは、日本の上場企業が公開する適時開示情報
 - ✅ **CI/CDパイプライン**: GitHub Actionsによる自動テスト・デプロイ（Phase 4）
 - ✅ **セキュリティ強化**: CloudTrail監査ログ、WAF保護（Phase 4）
 
-#### ⚠️ 未実装（Phase 5）
+#### 🚧 Phase 5進行中（設定・ドキュメント更新）
+
+- ✅ **Secrets Managerローテーション**: 90日ごとの自動ローテーション有効化
+- ✅ **CloudFront TLS 1.2**: カスタムドメイン使用時の設定方法をドキュメント化
+- ✅ **監視アラート**: API Gateway 4XXErrorアラーム閾値の明確化
+- ✅ **ドキュメント更新**: README.md、monitoring-alerts.mdの更新
+
+#### ⚠️ 未実装（Phase 5残タスク）
 
 - ⚠️ **自動収集**: 毎日午前9時（JST）の自動収集（EventBridge未設定）
 - ⚠️ **SNS通知**: エラー発生時・バッチ完了時の通知（SNS未設定）
 
-### 技術スタック
+---
+
+## 本番環境
+
+### ダッシュボード
+- **URL**: `https://[CLOUDFRONT_DISTRIBUTION_ID].cloudfront.net` （デプロイ後に更新）
+- **説明**: TDnet開示情報の検索・閲覧Webアプリ
+
+### API Endpoint
+- **URL**: `https://[API_GATEWAY_ID].execute-api.ap-northeast-1.amazonaws.com/prod` （デプロイ後に更新）
+- **認証**: APIキー必須（`x-api-key`ヘッダー）
+- **ドキュメント**: [API設計ガイドライン](.kiro/steering/api/api-design-guidelines.md)
+
+---
+
+## 技術スタック
 
 | カテゴリ | 技術 |
 |---------|------|

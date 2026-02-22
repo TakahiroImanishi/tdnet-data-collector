@@ -4,6 +4,7 @@
   "description": "TDnet Data Collector - AWS serverless application for collecting disclosure information from TDnet",
   "main": "index.js",
   "scripts": {
+    "startup": "pwsh -File scripts/startup.ps1",
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --config test/jest.config.js",

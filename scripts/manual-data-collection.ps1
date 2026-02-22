@@ -88,7 +88,8 @@ try {
         -Body $collectBody `
         -ErrorAction Stop
     
-    $executionId = $collectResponse.execution_id
+    # レスポンス構造: { status: "success", data: { execution_id: "..." } }
+    $executionId = $collectResponse.data.execution_id
     Write-Host "✅ データ収集開始: execution_id = $executionId" -ForegroundColor Green
     Write-Host ""
 } catch {
@@ -112,10 +113,12 @@ while ($retryCount -lt $maxRetries) {
             -Headers @{ "x-api-key" = $ApiKey } `
             -ErrorAction Stop
         
-        $status = $statusResponse.status
-        $progress = $statusResponse.progress_percentage
-        $collected = $statusResponse.collected_count
-        $failed = $statusResponse.failed_count
+        # レスポンス構造: { status: "success", data: { status: "...", progress: ..., ... } }
+        $data = $statusResponse.data
+        $status = $data.status
+        $progress = $data.progress
+        $collected = $data.collected_count
+        $failed = $data.failed_count
         
         Write-Host "  進捗: $progress% | 収集: $collected 件 | 失敗: $failed 件 | 状態: $status" -ForegroundColor Cyan
         
@@ -125,7 +128,7 @@ while ($retryCount -lt $maxRetries) {
             break
         } elseif ($status -eq "failed") {
             Write-Host "❌ データ収集失敗" -ForegroundColor Red
-            Write-Host "エラー: $($statusResponse.error_message)" -ForegroundColor Red
+            Write-Host "エラー: $($data.error_message)" -ForegroundColor Red
             exit 1
         }
         
@@ -158,8 +161,10 @@ try {
         -Headers @{ "x-api-key" = $ApiKey } `
         -ErrorAction Stop
     
-    $totalCount = $disclosuresResponse.total_count
-    $items = $disclosuresResponse.items
+    # レスポンス構造: { status: "success", data: { total_count: ..., items: [...] } }
+    $data = $disclosuresResponse.data
+    $totalCount = $data.total_count
+    $items = $data.items
     
     Write-Host "✅ 収集データ確認: 合計 $totalCount 件" -ForegroundColor Green
     Write-Host ""
