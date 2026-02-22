@@ -44,6 +44,54 @@ logger.error('Operation failed', {
 - [ ] DLQ設定（非同期Lambda/SQSのみ。API Gateway統合Lambdaは不要）
 - [ ] CloudWatch Alarms（エラー率、DLQメッセージ数）
 
+## テストでのエラー分類検証パターン
+
+```typescript
+// Retryableエラーのテスト
+describe('Retryable errors', () => {
+  it('should retry on network errors', async () => {
+    // ネットワークエラーをシミュレート
+    mockAxios.onGet().networkError();
+    await expect(handler(event)).rejects.toThrow('NetworkError');
+  });
+
+  it('should retry on 5xx errors', async () => {
+    mockAxios.onGet().reply(500);
+    await expect(handler(event)).rejects.toThrow('ServerError');
+  });
+
+  it('should retry on 429 errors', async () => {
+    mockAxios.onGet().reply(429);
+    await expect(handler(event)).rejects.toThrow('RateLimitError');
+  });
+});
+
+// Non-Retryableエラーのテスト
+describe('Non-Retryable errors', () => {
+  it('should fail immediately on 404', async () => {
+    mockAxios.onGet().reply(404);
+    await expect(handler(event)).rejects.toThrow('NotFoundError');
+  });
+
+  it('should fail immediately on validation errors', async () => {
+    const invalidEvent = { ...event, startDate: 'invalid' };
+    await expect(handler(invalidEvent)).rejects.toThrow('ValidationError');
+  });
+});
+
+// 部分的失敗のテスト
+describe('Partial failure', () => {
+  it('should continue processing on partial failure', async () => {
+    const result = await handler(eventWithMultipleItems);
+    expect(result.successCount).toBeGreaterThan(0);
+    expect(result.failureCount).toBeGreaterThan(0);
+    expect(result.status).toBe('partial_success');
+  });
+});
+```
+
+**参照:** `work-log-20260222-185043-subagent3-testing-requirements.md`
+
 ## 関連
 
 `tdnet-implementation-rules.md`, `../development/error-handling-implementation.md`, `../development/error-handling-enforcement.md`

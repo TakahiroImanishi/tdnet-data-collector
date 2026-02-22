@@ -1,122 +1,75 @@
-# 03-testing - テストドキュメント
+# テスト戦略
 
-**最終更新**: 2026-02-15
+**最終更新:** 2026-02-22
 
-## フォルダの目的
+## 統合テストの必須要件
 
-テスト環境構築、E2Eテスト、負荷テスト、スモークテストに関するドキュメントを管理します。
+### LocalStack環境
 
----
+すべての統合テストはLocalStack環境で実行すること：
 
-## ファイル一覧
+- **必須サービス**: DynamoDB、S3、Lambda
+- **環境変数**: 
+  - `AWS_ENDPOINT_URL`: LocalStackエンドポイント
+  - `DYNAMODB_TABLE`: テスト用テーブル名
+  - `S3_BUCKET`: テスト用バケット名
 
-### 1. localstack-setup.md
-**目的**: LocalStack環境構築ガイド
+### 条件付き実行
 
-**内容**:
-- LocalStackのインストール手順
-- Docker Compose設定
-- セットアップスクリプトの実行方法
-- DynamoDB/S3リソースの作成
-- トラブルシューティング
+LocalStack環境でない場合は`test.skip`でスキップ：
 
-**対象者**: 開発者（ローカル環境でのテスト実施）
+```typescript
+const isLocalStack = process.env.AWS_ENDPOINT_URL?.includes('localhost');
 
----
-
-### 2. e2e-test-guide.md
-**目的**: E2Eテスト実行ガイド
-
-**内容**:
-- LocalStack環境でのE2Eテスト実行方法
-- 実装済みテストケース一覧（28テストケース）
-- Query Lambda E2Eテスト（12テストケース）
-- Export Lambda E2Eテスト（16テストケース）
-- APIキー認証テスト
-- 環境変数設定
-
-**対象者**: 開発者（機能追加・変更時のテスト実施）
-
----
-
-### 3. smoke-test-guide.md
-**目的**: スモークテスト手順書
-
-**内容**:
-- デプロイ後の基本機能確認手順
-- インフラ確認（CloudFormation、Lambda、DynamoDB、S3）
-- API動作確認（ヘルスチェック、統計情報、開示情報検索）
-- データ収集テスト
-- エクスポート機能テスト
-- 監視・アラート確認
-- Webダッシュボード確認
-
-**対象者**: 開発者・運用担当者（デプロイ後の動作確認）
-
----
-
-### 4. load-testing-guide.md
-**目的**: 負荷テストガイド
-
-**内容**:
-- 負荷テストシナリオ（5シナリオ）
-  - 大量データ収集（100件以上）
-  - 同時API呼び出し（10並列）
-  - エクスポート同時実行（5並列）
-  - レート制限の確認
-  - エラーハンドリングの確認
-- テスト実行方法
-- パフォーマンス目標
-- トラブルシューティング
-
-**対象者**: 開発者・運用担当者（パフォーマンス確認）
-
----
-
-## 推奨される読み順
-
-### 初回セットアップ時
-1. **localstack-setup.md** - LocalStack環境を構築
-2. **e2e-test-guide.md** - E2Eテストを実行して動作確認
-
-### 開発中
-- **e2e-test-guide.md** - 機能追加・変更時にE2Eテストを実行
-
-### デプロイ後
-1. **smoke-test-guide.md** - デプロイ後の基本機能を確認
-2. **load-testing-guide.md** - パフォーマンスを確認（必要に応じて）
-
----
-
-## 関連ドキュメント
-
-- **上位ドキュメント**: [../README.md](../README.md) - ドキュメント全体の構造
-- **デプロイ**: [../04-deployment/](../04-deployment/) - デプロイ手順
-- **運用**: [../05-operations/](../05-operations/) - 運用ガイド
-- **Steering Files**: [../../../../.kiro/steering/development/testing-strategy.md](../../../../.kiro/steering/development/testing-strategy.md) - テスト戦略
-
----
-
-## テスト実行コマンド早見表
-
-```powershell
-# LocalStack起動
-docker-compose up -d
-
-# LocalStackセットアップ
-.\scripts\localstack-setup.ps1
-
-# E2Eテスト実行
-npm run test:e2e
-
-# スモークテスト実行（デプロイ後）
-.\scripts\smoke-test.ps1 -Environment dev
-
-# LocalStack停止
-docker-compose down
+(isLocalStack ? describe : describe.skip)('Integration tests', () => {
+  // テストケース
+});
 ```
 
----
+### テストケース
 
-**最終更新**: 2026-02-15  
-**作成者**: TDnet Data Collector Team
+- DynamoDBへのデータ保存確認
+- S3へのPDFアップロード確認
+- 実行状態の遷移確認
+- 複数データの一括保存確認
+- エラー時の適切なハンドリング確認
+
+### タイムアウト設定
+
+統合テストは30秒のタイムアウトを設定：
+
+```typescript
+jest.setTimeout(30000);
+```
+
+## モック/スタブの標準パターン
+
+### axios-mock-adapter
+
+HTTPリクエストのモック：
+
+```typescript
+import MockAdapter from 'axios-mock-adapter';
+import axios from 'axios';
+
+const mockAxios = new MockAdapter(axios);
+
+mockAxios.onGet('/api/endpoint').reply(200, { data: 'test' });
+```
+
+### AWS SDK v3のモック
+
+```typescript
+import { mockClient } from 'aws-sdk-client-mock';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+
+const ddbMock = mockClient(DynamoDBDocumentClient);
+
+ddbMock.on(PutCommand).resolves({});
+```
+
+## 参照
+
+- [testing-strategy.md](../../../steering/development/testing-strategy.md)
+- [error-handling-patterns.md](../../../steering/core/error-handling-patterns.md)
+- `work-log-20260222-185043-subagent3-testing-requirements.md`

@@ -8,6 +8,8 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 import { Environment, getEnvironmentConfig } from '../config/environment-config';
 import { LambdaDLQ } from '../constructs/lambda-dlq';
+import { StepFunctionsCollector } from '../constructs/step-functions-collector';
+import { ExecutionStateTableConstruct } from '../constructs/execution-state-table';
 
 /**
  * Compute Stack - Lambda関数とDLQ
@@ -28,6 +30,11 @@ export interface TdnetComputeStackProps extends cdk.StackProps {
   exportsBucket: s3.IBucket;
   apiKeySecret: secretsmanager.ISecret;
   alertTopic: sns.ITopic;
+  /**
+   * Step Functions移行を有効化するフラグ
+   * @default false（段階的移行のため）
+   */
+  enableStepFunctions?: boolean;
 }
 
 export class TdnetComputeStack extends cdk.Stack {
@@ -42,6 +49,14 @@ export class TdnetComputeStack extends cdk.Stack {
   public readonly healthFunction: lambda.Function;
   public readonly statsFunction: lambda.Function;
   public readonly dlq: LambdaDLQ;
+  
+  // Step Functions関連（段階的移行）
+  public readonly collectorInitFunction?: lambda.Function;
+  public readonly collectorFetchFunction?: lambda.Function;
+  public readonly collectorSaveFunction?: lambda.Function;
+  public readonly collectorAggregateFunction?: lambda.Function;
+  public readonly executionStateTable?: dynamodb.ITable;
+  public readonly stepFunctionsCollector?: StepFunctionsCollector;
 
   constructor(scope: Construct, id: string, props: TdnetComputeStackProps) {
     super(scope, id, props);
@@ -455,6 +470,229 @@ export class TdnetComputeStack extends cdk.Stack {
         },
       })
     );
+
+    // ========================================
+    // Step Functions関連（段階的移行）
+    // ========================================
+
+    if (props.enableStepFunctions) {
+      // 実行状態管理テーブル作成
+      const executionStateTableConstruct = new ExecutionStateTableConstruct(
+        this,
+        'ExecutionStateTable',
+        {
+          environment: env,
+          removalPolicy: env === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+        }
+      );
+      this.executionStateTable = executionStateTableConstruct.table;
+
+      // 1. Collector-Init Function
+      this.collectorInitFunction = new NodejsFunction(this, 'CollectorInitFunction', {
+        functionName: `tdnet-collector-init-${env}`,
+        runtime: lambda.Runtime.NODEJS_20_X,
+        entry: 'src/lambda/collector-init/handler.ts',
+        handler: 'handler',
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 256,
+        environment: {
+          EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
+          LOG_LEVEL: envConfig.collector.logLevel,
+          ENVIRONMENT: env,
+          NODE_OPTIONS: '--enable-source-maps',
+        },
+        bundling: {
+          minify: true,
+          sourceMap: true,
+          target: 'node20',
+          externalModules: ['@aws-sdk/*'],
+        },
+        tracing: lambda.Tracing.ACTIVE,
+      });
+
+      this.executionStateTable.grantReadWriteData(this.collectorInitFunction);
+
+      this.collectorInitFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['cloudwatch:PutMetricData'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'cloudwatch:namespace': 'TDnet',
+            },
+          },
+        })
+      );
+
+      // 2. Collector-Fetch Function
+      this.collectorFetchFunction = new NodejsFunction(this, 'CollectorFetchFunction', {
+        functionName: `tdnet-collector-fetch-${env}`,
+        runtime: lambda.Runtime.NODEJS_20_X,
+        entry: 'src/lambda/collector-fetch/handler.ts',
+        handler: 'handler',
+        timeout: cdk.Duration.seconds(60),
+        memorySize: 256,
+        environment: {
+          EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
+          TDNET_BASE_URL: 'https://www.release.tdnet.info/inbs',
+          LOG_LEVEL: envConfig.collector.logLevel,
+          ENVIRONMENT: env,
+          NODE_OPTIONS: '--enable-source-maps',
+        },
+        bundling: {
+          minify: true,
+          sourceMap: true,
+          target: 'node20',
+          externalModules: ['@aws-sdk/*'],
+        },
+        tracing: lambda.Tracing.ACTIVE,
+      });
+
+      this.executionStateTable.grantReadWriteData(this.collectorFetchFunction);
+
+      this.collectorFetchFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['cloudwatch:PutMetricData'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'cloudwatch:namespace': 'TDnet',
+            },
+          },
+        })
+      );
+
+      // 3. Collector-Save Function
+      this.collectorSaveFunction = new NodejsFunction(this, 'CollectorSaveFunction', {
+        functionName: `tdnet-collector-save-${env}`,
+        runtime: lambda.Runtime.NODEJS_20_X,
+        entry: 'src/lambda/collector-save/handler.ts',
+        handler: 'handler',
+        timeout: cdk.Duration.seconds(120),
+        memorySize: 512,
+        environment: {
+          DYNAMODB_TABLE: props.disclosuresTable.tableName,
+          S3_BUCKET: props.pdfsBucket.bucketName,
+          EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
+          LOG_LEVEL: envConfig.collector.logLevel,
+          ENVIRONMENT: env,
+          NODE_OPTIONS: '--enable-source-maps',
+        },
+        bundling: {
+          minify: true,
+          sourceMap: true,
+          target: 'node20',
+          externalModules: ['@aws-sdk/*'],
+        },
+        tracing: lambda.Tracing.ACTIVE,
+      });
+
+      props.disclosuresTable.grantReadWriteData(this.collectorSaveFunction);
+      props.pdfsBucket.grantPut(this.collectorSaveFunction);
+      props.pdfsBucket.grantRead(this.collectorSaveFunction);
+      this.executionStateTable.grantReadWriteData(this.collectorSaveFunction);
+
+      this.collectorSaveFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['cloudwatch:PutMetricData'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'cloudwatch:namespace': 'TDnet',
+            },
+          },
+        })
+      );
+
+      // 4. Collector-Aggregate Function
+      this.collectorAggregateFunction = new NodejsFunction(this, 'CollectorAggregateFunction', {
+        functionName: `tdnet-collector-aggregate-${env}`,
+        runtime: lambda.Runtime.NODEJS_20_X,
+        entry: 'src/lambda/collector-aggregate/handler.ts',
+        handler: 'handler',
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 256,
+        environment: {
+          EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
+          LOG_LEVEL: envConfig.collector.logLevel,
+          ENVIRONMENT: env,
+          NODE_OPTIONS: '--enable-source-maps',
+        },
+        bundling: {
+          minify: true,
+          sourceMap: true,
+          target: 'node20',
+          externalModules: ['@aws-sdk/*'],
+        },
+        tracing: lambda.Tracing.ACTIVE,
+      });
+
+      this.executionStateTable.grantReadWriteData(this.collectorAggregateFunction);
+
+      this.collectorAggregateFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['cloudwatch:PutMetricData'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'cloudwatch:namespace': 'TDnet',
+            },
+          },
+        })
+      );
+
+      // Step Functions Collector Construct
+      const stepFunctionsCollectorConstruct = new StepFunctionsCollector(
+        this,
+        'StepFunctionsCollector',
+        {
+          collectorInitFunction: this.collectorInitFunction,
+          collectorFetchFunction: this.collectorFetchFunction,
+          collectorSaveFunction: this.collectorSaveFunction,
+          collectorAggregateFunction: this.collectorAggregateFunction,
+        }
+      );
+      this.stepFunctionsCollector = stepFunctionsCollectorConstruct;
+
+      // Collect Functionの環境変数を更新（Step Functions ARNを追加）
+      this.collectFunction.addEnvironment(
+        'STATE_MACHINE_ARN',
+        stepFunctionsCollectorConstruct.stateMachine.stateMachineArn
+      );
+
+      // Collect FunctionにStep Functions実行権限を付与
+      stepFunctionsCollectorConstruct.stateMachine.grantStartExecution(this.collectFunction);
+
+      // CloudFormation Outputs（Step Functions関連）
+      new cdk.CfnOutput(this, 'CollectorInitFunctionArn', {
+        value: this.collectorInitFunction.functionArn,
+        exportName: `TdnetCollectorInitFunctionArn-${env}`,
+      });
+
+      new cdk.CfnOutput(this, 'CollectorFetchFunctionArn', {
+        value: this.collectorFetchFunction.functionArn,
+        exportName: `TdnetCollectorFetchFunctionArn-${env}`,
+      });
+
+      new cdk.CfnOutput(this, 'CollectorSaveFunctionArn', {
+        value: this.collectorSaveFunction.functionArn,
+        exportName: `TdnetCollectorSaveFunctionArn-${env}`,
+      });
+
+      new cdk.CfnOutput(this, 'CollectorAggregateFunctionArn', {
+        value: this.collectorAggregateFunction.functionArn,
+        exportName: `TdnetCollectorAggregateFunctionArn-${env}`,
+      });
+
+      new cdk.CfnOutput(this, 'ExecutionStateTableName', {
+        value: this.executionStateTable.tableName,
+        exportName: `TdnetExecutionStateTableName-${env}`,
+      });
+    }
 
     // ========================================
     // CloudFormation Outputs

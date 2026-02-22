@@ -14,7 +14,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { TdnetComputeStack } from '../compute-stack';
 
-function createComputeStack(env: 'prod' | 'local') {
+function createComputeStack(env: 'prod' | 'local', enableStepFunctions = false) {
   const app = new cdk.App();
   const baseStack = new cdk.Stack(app, `${env}BaseStack`);
 
@@ -30,6 +30,7 @@ function createComputeStack(env: 'prod' | 'local') {
 
   const computeStack = new TdnetComputeStack(app, `${env}ComputeStack`, {
     environment: env,
+    enableStepFunctions,
     ...mockResources,
   });
 
@@ -326,6 +327,137 @@ describe('TdnetComputeStack', () => {
       expect(computeStack.healthFunction).toBeDefined();
       expect(computeStack.statsFunction).toBeDefined();
       expect(computeStack.dlq).toBeDefined();
+    });
+  });
+
+  describe('Step Functions統合（enableStepFunctions=true）', () => {
+    it('Step Functions有効時に追加のLambda関数が作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      // 既存9個 + Step Functions用4個 = 13個
+      const functions = template.findResources('AWS::Lambda::Function');
+      expect(Object.keys(functions).length).toBe(13);
+    });
+
+    it('Collector-Init Functionが作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-collector-init-prod',
+        Runtime: 'nodejs20.x',
+        Timeout: 30,
+        MemorySize: 256,
+      });
+    });
+
+    it('Collector-Fetch Functionが作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-collector-fetch-prod',
+        Runtime: 'nodejs20.x',
+        Timeout: 60,
+        MemorySize: 256,
+      });
+    });
+
+    it('Collector-Save Functionが作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-collector-save-prod',
+        Runtime: 'nodejs20.x',
+        Timeout: 120,
+        MemorySize: 512,
+      });
+    });
+
+    it('Collector-Aggregate Functionが作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-collector-aggregate-prod',
+        Runtime: 'nodejs20.x',
+        Timeout: 30,
+        MemorySize: 256,
+      });
+    });
+
+    it('ExecutionStateTableが作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::DynamoDB::Table', {
+        TableName: 'ExecutionState_prod',
+      });
+    });
+
+    it('Step Functions StateMachineが作成される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::StepFunctions::StateMachine', {
+        StateMachineName: 'tdnet-collector-workflow',
+        StateMachineType: 'STANDARD',
+      });
+    });
+
+    it('Collect FunctionにSTATE_MACHINE_ARN環境変数が設定される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: 'tdnet-collect-prod',
+        Environment: {
+          Variables: Match.objectLike({
+            STATE_MACHINE_ARN: Match.anyValue(),
+          }),
+        },
+      });
+    });
+
+    it('Step Functions関連のCloudFormation Outputsが出力される', () => {
+      const { template } = createComputeStack('prod', true);
+      
+      template.hasOutput('CollectorInitFunctionArn', {
+        Export: { Name: 'TdnetCollectorInitFunctionArn-prod' },
+      });
+      template.hasOutput('CollectorFetchFunctionArn', {
+        Export: { Name: 'TdnetCollectorFetchFunctionArn-prod' },
+      });
+      template.hasOutput('CollectorSaveFunctionArn', {
+        Export: { Name: 'TdnetCollectorSaveFunctionArn-prod' },
+      });
+      template.hasOutput('CollectorAggregateFunctionArn', {
+        Export: { Name: 'TdnetCollectorAggregateFunctionArn-prod' },
+      });
+      template.hasOutput('ExecutionStateTableName', {
+        Export: { Name: 'TdnetExecutionStateTableName-prod' },
+      });
+    });
+
+    it('Step Functions無効時は追加リソースが作成されない', () => {
+      const { template } = createComputeStack('prod', false);
+      
+      // 既存9個のみ
+      const functions = template.findResources('AWS::Lambda::Function');
+      expect(Object.keys(functions).length).toBe(9);
+      
+      // ExecutionStateTableは作成されない
+      const tables = template.findResources('AWS::DynamoDB::Table');
+      expect(Object.keys(tables).length).toBe(0);
+      
+      // StateMachineは作成されない
+      const stateMachines = template.findResources('AWS::StepFunctions::StateMachine');
+      expect(Object.keys(stateMachines).length).toBe(0);
+    });
+
+    it('Step Functions有効時のpublicプロパティが設定される', () => {
+      const { computeStack } = createComputeStack('prod', true);
+      
+      expect(computeStack.collectorInitFunction).toBeDefined();
+      expect(computeStack.collectorFetchFunction).toBeDefined();
+      expect(computeStack.collectorSaveFunction).toBeDefined();
+      expect(computeStack.collectorAggregateFunction).toBeDefined();
+      expect(computeStack.executionStateTable).toBeDefined();
+      expect(computeStack.stepFunctionsCollector).toBeDefined();
     });
   });
 });
