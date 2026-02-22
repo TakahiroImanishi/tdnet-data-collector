@@ -109,3 +109,38 @@ README.mdのトラブルシューティングセクションを確認しまし�
 
 Git commitを実行します。
 
+
+
+### 5. Git commit実行
+
+コミットメッセージ: `[docs] トラブルシューティングガイドを拡充（API Gateway、CloudFront、Secrets Manager）`
+
+変更ファイル:
+- README.md
+- .kiro/specs/tdnet-data-collector/tasks/tasks-improvements-20260222.md
+- .kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-123232-task39-troubleshooting.md
+
+## 作業完了
+
+タスク39「トラブルシューティングガイドの拡充」を完了しました。
+
+### 追加したエラー項目（合計10項目）
+
+**API Gateway（4項目）**:
+1. CORSエラー - Access-Control-Allow-Originヘッダー不足
+2. 認証エラー - APIキー不正、期限切れ
+3. レート制限エラー - 429 Too Many Requests
+4. タイムアウトエラー - 504 Gateway Timeout
+
+**CloudFront（3項目）**:
+1. キャッシュ問題 - 古いコンテンツが表示される
+2. SSL証明書エラー - 証明書期限切れ、ドメイン不一致
+3. オリジンエラー - 502 Bad Gateway、503 Service Unavailable
+
+**Secrets Manager（3項目）**:
+1. アクセス拒否 - IAM権限不足
+2. シークレット未作成 - ResourceNotFoundException
+3. シークレット値の取得失敗 - DecryptionFailure
+
+各エラーについて、エラーメッセージ、原因、解決方法、確認コマンドを記載しました。
+

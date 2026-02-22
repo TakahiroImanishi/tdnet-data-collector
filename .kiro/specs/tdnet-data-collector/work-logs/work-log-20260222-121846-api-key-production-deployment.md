@@ -140,22 +140,24 @@ $disclosuresResponse = Invoke-RestMethod `
 #### 4.1 修正ファイル
 - `scripts/register-api-key.ps1`: UTF-8 BOMなし一時ファイル使用に修正
 - `scripts/manual-data-collection.ps1`: URL構築方法を修正（アンパサンド問題解決）
+- `scripts/__tests__/api-key-integration.test.ps1`: Test 3のエラーハンドリング修正
 
 #### 4.2 Secrets Manager
 - `/tdnet/api-key-prod`: 正しいJSON形式で登録完了
 
 #### 4.3 テスト結果
-- 統合テスト: 7/8成功（Test 1のJSON形式エラーを解決）
+- 統合テスト: 8/8成功（すべてのテスト成功）✅
 - 共通関数テスト: 3/4成功
 - 構文チェック: すべて成功
 
 ### 5. 申し送り事項
 
-#### 5.1 残課題
-- Test 3（Secrets Manager接続失敗ハンドリング）: Test-Case関数のcatchブロックで例外メッセージが空文字列になる既知の問題（実際のエラーハンドリングは正常に動作）
-  - 原因: PowerShellの`$ErrorActionPreference = "Stop"`設定とAWS CLIのエラー出力の扱い
-  - 影響: テスト結果の表示のみ（実際の機能には影響なし）
-  - 対応: コメントを追加して明確化
+#### 5.1 完了事項
+- ✅ Secrets ManagerのJSON形式問題を解決
+- ✅ register-api-key.ps1の修正完了
+- ✅ manual-data-collection.ps1のURL構築問題を解決
+- ✅ Test 3のエラーハンドリング問題を解決（ErrorActionPreference一時変更）
+- ✅ すべての統合テストが成功（8/8）
 
 #### 5.2 次のステップ
 1. 実際のスクリプト（manual-data-collection.ps1, fetch-data-range.ps1）での動作確認

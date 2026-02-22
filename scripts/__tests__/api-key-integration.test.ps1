@@ -97,12 +97,13 @@ Test-Case -Name "Environment variable fallback" -Test {
 }
 
 # Test 3: Secrets Manager connection failure handling
-# Note: このテストは正常に動作していますが、Test-Case関数のcatchブロックで
-# 例外メッセージが空になる既知の問題があります。実際のエラーハンドリングは
-# 正しく動作しています（exit code 254でエラーを検出）。
 Test-Case -Name "Secrets Manager connection failure handling" -Test {
     $Region = "ap-northeast-1"
     $InvalidSecretName = "/tdnet/invalid-secret-name-that-does-not-exist"
+    
+    # ErrorActionPreferenceを一時的にContinueに設定してAWS CLIエラーをキャプチャ
+    $previousErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     
     $secretJson = aws secretsmanager get-secret-value `
         --secret-id $InvalidSecretName `
@@ -110,12 +111,15 @@ Test-Case -Name "Secrets Manager connection failure handling" -Test {
         --query SecretString `
         --output text 2>&1
     
-    if ($LASTEXITCODE -eq 0) {
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorAction
+    
+    if ($exitCode -eq 0) {
         throw "Non-existent secret succeeded unexpectedly"
     }
     
     # エラーが発生したことを確認（exit code != 0）
-    Write-Host "  Error occurred as expected (exit code: $LASTEXITCODE)" -ForegroundColor Gray
+    Write-Host "  Error occurred as expected (exit code: $exitCode)" -ForegroundColor Gray
 }
 
 # Test 4: manual-data-collection.ps1 syntax check

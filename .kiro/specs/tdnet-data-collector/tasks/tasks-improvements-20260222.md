@@ -1194,7 +1194,7 @@ const event = {
 
 ---
 
-### 36. 16スクリプトにUTF-8エンコーディング設定追加（高優先度）
+### 36. 16スクリプトにUTF-8エンコーディング設定追加（高優先度）✅
 
 **問題**: 20スクリプト中16スクリプトに包括的UTF-8エンコーディング設定が未実装
 
@@ -1203,7 +1203,7 @@ const event = {
 **影響**: 日本語メッセージの文字化けリスク
 
 **対応内容**:
-- [ ] 16スクリプトに包括的UTF-8エンコーディング設定を追加
+- [x] 16スクリプトに包括的UTF-8エンコーディング設定を追加
 ```powershell
 # UTF-8エンコーディング設定（包括的）
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
@@ -1215,31 +1215,39 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
 ```
 
 **対象スクリプト**:
-- `deploy.ps1`
-- `deploy-dev.ps1`
-- `deploy-prod.ps1`
-- `deploy-split-stacks.ps1`
-- `deploy-dashboard.ps1`
-- `create-api-key-secret.ps1`
-- `generate-env-file.ps1`
-- `delete-all-data.ps1`
-- `check-iam-permissions.ps1`
-- `analyze-cloudwatch-logs.ps1`
-- `check-cloudwatch-logs-simple.ps1`
-- `check-dynamodb-s3-consistency.ps1`
-- `check-waf-status.ps1`
-- その他3スクリプト
+- `deploy.ps1` ✅
+- `deploy-dev.ps1` ✅
+- `deploy-prod.ps1` ✅
+- `deploy-split-stacks.ps1` ✅
+- `deploy-dashboard.ps1` ✅
+- `create-api-key-secret.ps1` ✅
+- `generate-env-file.ps1` ✅
+- `delete-all-data.ps1` ✅
+- `check-iam-permissions.ps1` ✅
+- `analyze-cloudwatch-logs.ps1` ✅
+- `check-cloudwatch-logs-simple.ps1` ✅
+- `check-dynamodb-s3-consistency.ps1` ✅
+- `check-waf-status.ps1` ✅
+- `fetch-data-range.ps1` ✅（既存）
+- `manual-data-collection.ps1` ✅（既存）
+- `migrate-disclosure-fields.ps1` ⚠️（ファイル不存在）
 
-**担当**: 未定
+**実施結果**:
+- 修正: 13スクリプト
+- 既存設定済み: 2スクリプト
+- 対象外: 1スクリプト（ファイル不存在）
+- 構文チェック: ✅ 全スクリプトパス
 
-**期限**: 1週間以内
+**担当**: Kiro AI Assistant
+
+**完了日時**: 2026-02-22 12:35
 
 **優先度**: 🔴 高
 
 **関連ファイル**:
-- `scripts/*.ps1`（16ファイル）
+- `scripts/*.ps1`（15ファイル）
 
-**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121323-quality-check-scripts.md`
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-123226-task36-utf8-encoding.md`
 
 ---
 
@@ -1628,8 +1636,8 @@ app.synth();
 | 33 | カスタムメトリクスNamespace統一 | 🔴 最高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 34 | カバレッジ測定の修正 | 🔴 高 | ⏳ 未着手 | - | - | - |
 | 35 | E2Eテストの追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
-| 36 | 16スクリプトにUTF-8エンコーディング設定追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
-| 37 | CDK Nag統合 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 36 | 16スクリプトにUTF-8エンコーディング設定追加 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 37 | CDK Nag統合 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 38 | OpenAPI仕様書の整合性確認 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 39 | トラブルシューティングガイドの拡充 | 🔴 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 40 | 統合テストの拡充 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
@@ -1646,15 +1654,15 @@ app.synth();
 ## タスク実行の推奨順序
 
 ### 最優先（即座に対応）
-1. **タスク33**: カスタムメトリクスNamespace統一 → 監視機能の正常化
+1. ~~**タスク33**: カスタムメトリクスNamespace統一 → 監視機能の正常化~~ ✅ 完了
 
 ### 高優先度（1週間以内）
 2. **タスク34**: カバレッジ測定の修正 → テスト品質の可視化
 3. **タスク35**: E2Eテストの追加 → エンドツーエンド検証の強化
-4. **タスク36**: 16スクリプトにUTF-8エンコーディング設定追加 → 文字化け防止
-5. **タスク37**: CDK Nag統合 → セキュリティ検証の自動化
-6. **タスク38**: OpenAPI仕様書の整合性確認 → API仕様の正確性確保
-7. **タスク39**: トラブルシューティングガイドの拡充 → 運用サポート強化
+4. ~~**タスク36**: 16スクリプトにUTF-8エンコーディング設定追加 → 文字化け防止~~ ✅ 完了
+5. ~~**タスク37**: CDK Nag統合 → セキュリティ検証の自動化~~ ✅ 完了
+6. ~~**タスク38**: OpenAPI仕様書の整合性確認 → API仕様の正確性確保~~ ✅ 完了
+7. ~~**タスク39**: トラブルシューティングガイドの拡充 → 運用サポート強化~~ ✅ 完了
 
 ### 中優先度（2週間以内）
 8. **タスク40**: 統合テストの拡充
