@@ -57,7 +57,15 @@ $pdfErrorResult = aws logs start-query `
     --region $Region `
     --output json | ConvertFrom-Json
 
-if ($pdfErrorResult.queryId) {
+if (-not $pdfErrorResult.queryId) {
+    Write-Host "❌ クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
+    Write-Host "2. CloudWatch Logs権限を確認: logs:StartQuery, logs:GetQueryResults" -ForegroundColor White
+    Write-Host "3. ログループが存在することを確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host ""
+} else {
     Write-Host "クエリID: $($pdfErrorResult.queryId)"
     
     # クエリ完了を待つ

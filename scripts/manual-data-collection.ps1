@@ -13,10 +13,11 @@ param(
 )
 
 # UTF-8エンコーディング設定（包括的）
+# PowerShell 5.1では明示的にUTF8エンコーディングオブジェクトを使用
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[Console]::OutputEncoding = $utf8NoBom
+$OutputEncoding = $utf8NoBom
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$OutputEncoding = [System.Text.Encoding]::UTF8
-# PowerShell 5.1互換性のため
 if ($PSVersionTable.PSVersion.Major -le 5) {
     $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 }

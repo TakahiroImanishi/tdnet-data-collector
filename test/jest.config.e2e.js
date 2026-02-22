@@ -11,7 +11,7 @@ require('dotenv').config({ path: 'config/.env.local' });
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/../src'],
   
   // E2Eテストのみを実行
   testMatch: ['**/__tests__/**/*.e2e.test.ts'],
@@ -27,11 +27,15 @@ module.exports = {
         esModuleInterop: true,
         allowSyntheticDefaultImports: true,
       },
+      useESM: false,
     }],
   },
   
+  // CommonJS形式を使用
+  extensionsToTreatAsEsm: [],
+  
   // E2Eテスト用のセットアップファイル
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.e2e.js'],
+  setupFilesAfterEnv: ['<rootDir>/../jest.setup.e2e.js'],
   
   moduleFileExtensions: ['ts', 'js', 'json'],
   verbose: true,
@@ -44,7 +48,7 @@ module.exports = {
   
   // モジュール解決
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/../src/$1',
   },
   
   // キャッシュの有効化

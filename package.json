@@ -8,7 +8,7 @@
     "watch": "tsc -w",
     "test": "jest --config test/jest.config.js",
     "test:watch": "jest --config test/jest.config.js --watch",
-    "test:coverage": "jest --config test/jest.config.js --coverage",
+    "test:coverage": "jest --config test/jest.config.js --coverage --maxWorkers=75% --forceExit",
     "test:e2e": "jest --config test/jest.config.e2e.js",
     "test:e2e:watch": "jest --config test/jest.config.e2e.js --watch",
     "lint": "eslint . --ext .ts",

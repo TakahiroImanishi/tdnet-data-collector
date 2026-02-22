@@ -52,13 +52,25 @@ module.exports = {
   },
   
   moduleFileExtensions: ['ts', 'js', 'json'],
-  verbose: true,
+  verbose: false, // 詳細ログを無効化してパフォーマンス向上
   
   // タイムアウト設定の最適化
   testTimeout: 30000,
   
   // テスト実行の最適化
-  maxWorkers: '50%', // CPU使用率を50%に制限
+  maxWorkers: '75%', // CPU使用率を75%に増やして並列実行を強化
+  
+  // テスト実行順序の最適化（遅いテストを先に実行）
+  testSequencer: '<rootDir>/jest.sequencer.js',
+  
+  // カバレッジ収集の最適化
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/__tests__/',
+    '/test-helpers/',
+    '\\.test\\.ts$',
+    '\\.spec\\.ts$',
+  ],
   
   // モジュール解決の最適化
   moduleNameMapper: {
