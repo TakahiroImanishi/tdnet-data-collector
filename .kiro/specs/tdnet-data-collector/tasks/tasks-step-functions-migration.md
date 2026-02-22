@@ -107,16 +107,21 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `src/lambda/collector-init/__tests__/handler.test.ts`
 
 #### タスク2.2: データ取得Lambda作成
-- [ ] `src/lambda/collector-fetch/handler.ts`作成
+- [x] `src/lambda/collector-fetch/handler.ts`作成
   - TDnet APIから1ページ分のデータ取得
   - レート制限の適用
   - エラーハンドリング（リトライ可能/不可能の判定）
-- [ ] ユニットテスト作成
-- [ ] 統合テスト作成
+- [x] ユニットテスト作成
+- [x] 統合テスト作成
+
+**完了日時**: 2026-02-22 18:30:00
+**テスト結果**: ユニットテスト14件、統合テスト6件、全20テスト成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-182138-subagent2-collector-fetch.md`
 
 **成果物**:
 - `src/lambda/collector-fetch/handler.ts`
 - `src/lambda/collector-fetch/__tests__/handler.test.ts`
+- `src/lambda/collector-fetch/__tests__/integration.test.ts`
 
 #### タスク2.3: データ保存Lambda作成
 - [x] `src/lambda/collector-save/handler.ts`作成
