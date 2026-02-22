@@ -482,7 +482,7 @@ export class TdnetComputeStack extends cdk.Stack {
         'ExecutionStateTable',
         {
           environment: env,
-          removalPolicy: env === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+          removalPolicy: env === 'local' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
         }
       );
       this.executionStateTable = executionStateTableConstruct.table;

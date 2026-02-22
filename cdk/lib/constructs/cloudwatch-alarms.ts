@@ -7,6 +7,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 
 /**
@@ -70,6 +71,12 @@ export interface CloudWatchAlarmsProps {
    * 指定された場合、API Gatewayアラームを作成
    */
   apiGateway?: apigateway.IRestApi;
+
+  /**
+   * Step Functions State Machine（オプション）
+   * 指定された場合、Step Functionsアラームを作成
+   */
+  stateMachine?: sfn.IStateMachine;
 }
 
 /**
@@ -459,6 +466,77 @@ export class CloudWatchAlarms extends Construct {
 
       apiLatencyAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(apiLatencyAlarm);
+    }
+
+    // ========================================
+    // Step Functionsアラーム（オプション）
+    // ========================================
+    if (props.stateMachine) {
+      // Step Functions実行失敗アラーム（Critical）
+      const sfnExecutionFailedAlarm = new cloudwatch.Alarm(this, 'StepFunctionsExecutionFailedAlarm', {
+        alarmName: `tdnet-step-functions-execution-failed-${props.environment}`,
+        alarmDescription: 'Step Functions実行が失敗しました（Critical）',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/States',
+          metricName: 'ExecutionsFailed',
+          dimensionsMap: {
+            StateMachineArn: props.stateMachine.stateMachineArn,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      sfnExecutionFailedAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(sfnExecutionFailedAlarm);
+
+      // Step Functions実行時間超過アラーム（Warning）
+      const sfnExecutionTimeoutAlarm = new cloudwatch.Alarm(this, 'StepFunctionsExecutionTimeoutAlarm', {
+        alarmName: `tdnet-step-functions-execution-timeout-${props.environment}`,
+        alarmDescription: 'Step Functions実行時間が15分を超えました（Warning）',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/States',
+          metricName: 'ExecutionTime',
+          dimensionsMap: {
+            StateMachineArn: props.stateMachine.stateMachineArn,
+          },
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 900000, // 15分 = 900秒 = 900000ミリ秒
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      sfnExecutionTimeoutAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(sfnExecutionTimeoutAlarm);
+
+      // Step Functionsスロットリングアラーム（Critical）
+      const sfnExecutionThrottledAlarm = new cloudwatch.Alarm(this, 'StepFunctionsExecutionThrottledAlarm', {
+        alarmName: `tdnet-step-functions-execution-throttled-${props.environment}`,
+        alarmDescription: 'Step Functions実行がスロットリングされました（Critical）',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/States',
+          metricName: 'ExecutionThrottled',
+          dimensionsMap: {
+            StateMachineArn: props.stateMachine.stateMachineArn,
+          },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      sfnExecutionThrottledAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(sfnExecutionThrottledAlarm);
     }
 
     // ========================================

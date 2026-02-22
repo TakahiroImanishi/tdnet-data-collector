@@ -5,11 +5,13 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 import { Environment } from '../config/environment-config';
 import { CloudWatchAlarms } from '../constructs/cloudwatch-alarms';
 import { CloudWatchDashboard } from '../constructs/cloudwatch-dashboard';
 import { CloudTrailConstruct } from '../constructs/cloudtrail';
+import { StepFunctionsCollector } from '../constructs/step-functions-collector';
 
 /**
  * Monitoring Stack - CloudWatch Alarms, Dashboard, CloudTrail
@@ -46,6 +48,19 @@ export interface TdnetMonitoringStackProps extends cdk.StackProps {
   };
   api: apigateway.IRestApi;
   alertTopic: sns.ITopic;
+  /**
+   * Step Functions Collector（段階的移行）
+   */
+  stepFunctionsCollector?: StepFunctionsCollector;
+  /**
+   * Step Functions用Lambda関数（段階的移行）
+   */
+  stepFunctionsLambdas?: {
+    collectorInit?: lambda.IFunction;
+    collectorFetch?: lambda.IFunction;
+    collectorSave?: lambda.IFunction;
+    collectorAggregate?: lambda.IFunction;
+  };
 }
 
 export class TdnetMonitoringStack extends cdk.Stack {
@@ -168,6 +183,7 @@ export class TdnetMonitoringStack extends cdk.Stack {
       errorRateThreshold: 10,
       durationThreshold: 840,
       collectionSuccessRateThreshold: 95,
+      stateMachine: props.stepFunctionsCollector?.stateMachine,
     });
 
     // ========================================
@@ -183,6 +199,8 @@ export class TdnetMonitoringStack extends cdk.Stack {
         exports: props.s3Buckets.exports,
       },
       apiGateway: props.api,
+      stateMachine: props.stepFunctionsCollector?.stateMachine,
+      stepFunctionsLambdas: props.stepFunctionsLambdas,
     });
 
     // ========================================

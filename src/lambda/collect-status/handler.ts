@@ -15,44 +15,44 @@
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { SFNClient, DescribeExecutionCommand } from '@aws-sdk/client-sfn';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric } from '../../utils/cloudwatch-metrics';
 import { ValidationError, NotFoundError } from '../../errors';
 
-// DynamoDB クライアントはグローバルスコープで初期化（再利用される）
+// クライアントはグローバルスコープで初期化（再利用される）
 const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const sfnClient = new SFNClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
 
 // 環境変数
 const EXECUTIONS_TABLE_NAME = process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
+const EXECUTION_STATE_TABLE_NAME = process.env.EXECUTION_STATE_TABLE;
+const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN;
 
 /**
- * 実行状態
+ * 実行状態（Step Functions対応）
  */
 interface ExecutionStatus {
   /** 実行ID */
   execution_id: string;
 
   /** ステータス */
-  status: 'pending' | 'running' | 'completed' | 'failed';
-
-  /** 進捗率（0-100） */
-  progress: number;
-
-  /** 収集成功件数 */
-  collected_count: number;
-
-  /** 収集失敗件数 */
-  failed_count: number;
+  status: 'running' | 'succeeded' | 'failed' | 'timed_out' | 'aborted' | 'pending' | 'completed';
 
   /** 開始日時（ISO 8601形式） */
-  started_at: string;
+  start_time: string;
 
-  /** 更新日時（ISO 8601形式） */
-  updated_at: string;
+  /** 終了日時（ISO 8601形式、完了時のみ） */
+  end_time?: string;
 
-  /** 完了日時（ISO 8601形式、completed/failedの場合のみ） */
-  completed_at?: string;
+  /** 進捗情報（Step Functions実行中のみ） */
+  progress?: {
+    /** 収集成功件数 */
+    collected_count: number;
+    /** 収集失敗件数 */
+    failed_count: number;
+  };
 
   /** エラーメッセージ（failedの場合のみ） */
   error_message?: string;
@@ -95,8 +95,10 @@ export async function handler(
       throw new ValidationError('execution_id is required');
     }
 
-    // 実行状態を取得
-    const executionStatus = await getExecutionStatus(execution_id);
+    // 実行状態を取得（Step Functions優先）
+    const executionStatus = STATE_MACHINE_ARN
+      ? await getStepFunctionsExecutionStatus(execution_id)
+      : await getExecutionStatus(execution_id);
 
     // レスポンス
     const response: CollectStatusResponse = {
@@ -141,7 +143,101 @@ export async function handler(
 }
 
 /**
- * 実行状態を取得
+ * Step Functions実行状態を取得
+ *
+ * @param execution_id 実行ID
+ * @returns 実行状態
+ * @throws NotFoundError 実行状態が存在しない場合
+ */
+async function getStepFunctionsExecutionStatus(execution_id: string): Promise<ExecutionStatus> {
+  try {
+    logger.info('Getting Step Functions execution status', {
+      execution_id,
+      stateMachineArn: STATE_MACHINE_ARN,
+    });
+
+    // Step Functions実行ARNを構築
+    const executionArn = `${STATE_MACHINE_ARN?.replace(':stateMachine:', ':execution:')}:${execution_id}`;
+
+    // Step Functions実行状態を取得
+    const command = new DescribeExecutionCommand({
+      executionArn,
+    });
+
+    const response = await sfnClient.send(command);
+
+    // ステータスマッピング
+    const statusMap: Record<string, ExecutionStatus['status']> = {
+      RUNNING: 'running',
+      SUCCEEDED: 'succeeded',
+      FAILED: 'failed',
+      TIMED_OUT: 'timed_out',
+      ABORTED: 'aborted',
+    };
+
+    const status = statusMap[response.status || 'RUNNING'] || 'running';
+
+    // 実行状態テーブルから詳細情報を取得（進捗情報）
+    let progress: ExecutionStatus['progress'] | undefined;
+    if (EXECUTION_STATE_TABLE_NAME && status === 'running') {
+      try {
+        const stateCommand = new GetItemCommand({
+          TableName: EXECUTION_STATE_TABLE_NAME,
+          Key: {
+            execution_id: { S: execution_id },
+          },
+        });
+
+        const stateResult = await dynamoClient.send(stateCommand);
+        if (stateResult.Item) {
+          const stateItem = unmarshall(stateResult.Item) as any;
+          progress = {
+            collected_count: stateItem.collected_count || 0,
+            failed_count: stateItem.failed_count || 0,
+          };
+        }
+      } catch (error) {
+        logger.warn('Failed to get execution state details', {
+          execution_id,
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    const executionStatus: ExecutionStatus = {
+      execution_id,
+      status,
+      start_time: response.startDate?.toISOString() || new Date().toISOString(),
+      end_time: response.stopDate?.toISOString(),
+      progress,
+      error_message: response.error || response.cause,
+    };
+
+    logger.info('Step Functions execution status retrieved successfully', {
+      execution_id,
+      status: executionStatus.status,
+    });
+
+    return executionStatus;
+  } catch (error) {
+    if ((error as any).name === 'ExecutionDoesNotExist') {
+      throw new NotFoundError(`Execution not found: ${execution_id}`);
+    }
+
+    logger.error(
+      'Failed to get Step Functions execution status',
+      createErrorContext(error as Error, {
+        execution_id,
+        stateMachineArn: STATE_MACHINE_ARN,
+      })
+    );
+
+    throw new Error('Failed to retrieve execution status');
+  }
+}
+
+/**
+ * 実行状態を取得（レガシー: DynamoDBのみ）
  *
  * @param execution_id 実行ID
  * @returns 実行状態
@@ -167,15 +263,27 @@ async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus
       throw new NotFoundError(`Execution not found: ${execution_id}`);
     }
 
-    const item = unmarshall(result.Item) as ExecutionStatus;
+    const item = unmarshall(result.Item) as any;
+
+    // レガシー形式から新形式へ変換
+    const executionStatus: ExecutionStatus = {
+      execution_id,
+      status: item.status === 'completed' ? 'succeeded' : item.status === 'pending' ? 'running' : item.status,
+      start_time: item.started_at,
+      end_time: item.completed_at,
+      progress: item.status === 'running' ? {
+        collected_count: item.collected_count || 0,
+        failed_count: item.failed_count || 0,
+      } : undefined,
+      error_message: item.error_message,
+    };
 
     logger.info('Execution status retrieved successfully', {
       execution_id,
-      status: item.status,
-      progress: item.progress,
+      status: executionStatus.status,
     });
 
-    return item;
+    return executionStatus;
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw error;

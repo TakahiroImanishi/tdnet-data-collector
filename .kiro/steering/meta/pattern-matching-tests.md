@@ -518,13 +518,15 @@ scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1
 
 ### fileMatchPattern
 ```text
-scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*
+scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields,check-step-functions-execution,cancel-step-functions-execution}.*
 ```
 
 ### マッチすべきファイル ✅
 - `scripts/fetch-data-range.ps1`
 - `scripts/manual-data-collection.ps1`
 - `scripts/migrate-disclosure-fields.ts`
+- `scripts/check-step-functions-execution.ps1`
+- `scripts/cancel-step-functions-execution.ps1`
 
 ### マッチすべきでないファイル ❌
 - `scripts/deploy.ps1`
@@ -838,5 +840,5 @@ Test-MultiPattern "**/*.test.ts|**/*.spec.ts" "src/validators/disclosure.ts"
 - 2026-02-22: スクリプト関連steeringファイルのテストケースを追加
   - `development/deployment-scripts.md`: `scripts/deploy*.ps1`
   - `development/setup-scripts.md`: `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1`
-  - `development/data-scripts.md`: `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*`
+  - `development/data-scripts.md`: `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields,check-step-functions-execution,cancel-step-functions-execution}.*`
   - `infrastructure/monitoring-scripts.md`: `scripts/{deploy-dashboard,check-iam-permissions,analyze-cloudwatch-logs,check-cloudwatch-logs-simple,check-dynamodb-s3-consistency,check-waf-status,check-lambda-998-limit}.ps1`

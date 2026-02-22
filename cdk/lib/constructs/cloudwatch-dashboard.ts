@@ -4,6 +4,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 
 /**
@@ -49,6 +50,21 @@ export interface CloudWatchDashboardProps {
    * API Gateway to monitor
    */
   apiGateway: apigateway.IRestApi;
+
+  /**
+   * Step Functions State Machine（オプション）
+   */
+  stateMachine?: sfn.IStateMachine;
+
+  /**
+   * Step Functions用Lambda関数（オプション）
+   */
+  stepFunctionsLambdas?: {
+    collectorInit?: lambda.IFunction;
+    collectorFetch?: lambda.IFunction;
+    collectorSave?: lambda.IFunction;
+    collectorAggregate?: lambda.IFunction;
+  };
 }
 
 /**
@@ -75,6 +91,11 @@ export class CloudWatchDashboard extends Construct {
 
     // Lambda実行メトリクスウィジェット
     this.addLambdaMetricsWidgets(props);
+
+    // Step Functionsメトリクスウィジェット（オプション）
+    if (props.stateMachine) {
+      this.addStepFunctionsMetricsWidgets(props);
+    }
 
     // DynamoDBメトリクスウィジェット
     this.addDynamoDBMetricsWidgets(props);
@@ -168,6 +189,271 @@ export class CloudWatchDashboard extends Construct {
         width: 12,
         period: cdk.Duration.minutes(5),
         statistic: 'Sum',
+      })
+    );
+  }
+
+  /**
+   * Step Functionsメトリクスウィジェットを追加
+   */
+  private addStepFunctionsMetricsWidgets(props: CloudWatchDashboardProps): void {
+    const { stateMachine, stepFunctionsLambdas } = props;
+
+    if (!stateMachine) {
+      return;
+    }
+
+    // Step Functions実行状況
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Step Functions - Executions',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsStarted',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            label: 'Started',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsSucceeded',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            label: 'Succeeded',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsFailed',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            label: 'Failed',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsAborted',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            label: 'Aborted',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsTimedOut',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            label: 'TimedOut',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
+
+    // Step Functions実行時間
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Step Functions - Execution Time (ms)',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionTime',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Average',
+            label: 'Average',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionTime',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Maximum',
+            label: 'Maximum',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
+
+    // Step Functions実行中の数
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Step Functions - Running Executions',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsStarted',
+            dimensionsMap: {
+              StateMachineArn: stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            label: 'Started',
+          }),
+          new cloudwatch.MathExpression({
+            expression: 'started - (succeeded + failed + aborted + timedout)',
+            usingMetrics: {
+              started: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsStarted',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+              succeeded: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsSucceeded',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+              failed: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsFailed',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+              aborted: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsAborted',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+              timedout: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsTimedOut',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+            },
+            label: 'Running',
+            period: cdk.Duration.minutes(5),
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
+
+    // Step Functions用Lambda関数のメトリクス
+    if (stepFunctionsLambdas) {
+      const sfnLambdas = [
+        { name: 'Init', func: stepFunctionsLambdas.collectorInit },
+        { name: 'Fetch', func: stepFunctionsLambdas.collectorFetch },
+        { name: 'Save', func: stepFunctionsLambdas.collectorSave },
+        { name: 'Aggregate', func: stepFunctionsLambdas.collectorAggregate },
+      ].filter((item) => item.func !== undefined) as Array<{ name: string; func: lambda.IFunction }>;
+
+      if (sfnLambdas.length > 0) {
+        // Step Functions Lambda Invocations
+        this.dashboard.addWidgets(
+          new cloudwatch.GraphWidget({
+            title: 'Step Functions Lambda - Invocations',
+            left: sfnLambdas.map((item) => item.func.metricInvocations({ label: item.name })),
+            width: 12,
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+          })
+        );
+
+        // Step Functions Lambda Errors
+        this.dashboard.addWidgets(
+          new cloudwatch.GraphWidget({
+            title: 'Step Functions Lambda - Errors',
+            left: sfnLambdas.map((item) => item.func.metricErrors({ label: item.name })),
+            width: 12,
+            period: cdk.Duration.minutes(5),
+            statistic: 'Sum',
+          })
+        );
+
+        // Step Functions Lambda Duration
+        this.dashboard.addWidgets(
+          new cloudwatch.GraphWidget({
+            title: 'Step Functions Lambda - Duration (ms)',
+            left: sfnLambdas.map((item) => item.func.metricDuration({ label: item.name })),
+            width: 12,
+            period: cdk.Duration.minutes(5),
+            statistic: 'Average',
+          })
+        );
+
+        // Step Functions Lambda同時実行数
+        this.dashboard.addWidgets(
+          new cloudwatch.GraphWidget({
+            title: 'Step Functions Lambda - Concurrent Executions',
+            left: sfnLambdas.map((item) =>
+              new cloudwatch.Metric({
+                namespace: 'AWS/Lambda',
+                metricName: 'ConcurrentExecutions',
+                dimensionsMap: {
+                  FunctionName: item.func.functionName,
+                },
+                statistic: 'Maximum',
+                label: item.name,
+              })
+            ),
+            width: 12,
+            period: cdk.Duration.minutes(5),
+          })
+        );
+      }
+    }
+
+    // エラー率グラフ（Step Functions全体）
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'Step Functions - Error Rate (%)',
+        left: [
+          new cloudwatch.MathExpression({
+            expression: '(failed / started) * 100',
+            usingMetrics: {
+              failed: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsFailed',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+              started: new cloudwatch.Metric({
+                namespace: 'AWS/States',
+                metricName: 'ExecutionsStarted',
+                dimensionsMap: {
+                  StateMachineArn: stateMachine.stateMachineArn,
+                },
+                statistic: 'Sum',
+              }),
+            },
+            label: 'Error Rate',
+            period: cdk.Duration.minutes(5),
+          }),
+        ],
+        width: 12,
+        leftYAxis: {
+          min: 0,
+          max: 100,
+        },
       })
     );
   }

@@ -15,6 +15,7 @@
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
 import { randomUUID } from 'crypto';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric } from '../../utils/cloudwatch-metrics';
@@ -22,9 +23,11 @@ import { ValidationError } from '../../errors';
 
 // クライアント（グローバルスコープで初期化）
 const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const sfnClient = new SFNClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
 
 // 環境変数
 const COLLECTOR_FUNCTION_NAME = process.env.COLLECTOR_FUNCTION_NAME || 'tdnet-collector';
+const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN; // Step Functions ARN（オプション）
 
 /**
  * POST /collect リクエストボディ
@@ -90,8 +93,13 @@ export async function handler(
     // バリデーション
     validateRequest(request);
 
-    // Lambda Collectorを非同期で呼び出し
-    const execution_id = await invokeCollector(request, context);
+    // 環境変数を動的に読み込み（テスト対応）
+    const stateMachineArn = process.env.STATE_MACHINE_ARN;
+
+    // Step Functions または Lambda Collectorを呼び出し
+    const execution_id = stateMachineArn
+      ? await invokeStepFunctions(request, context, stateMachineArn)
+      : await invokeCollector(request, context);
 
     // レスポンス
     const response: CollectResponse = {
@@ -218,6 +226,66 @@ function validateRequest(request: CollectRequest): void {
     throw new ValidationError(
       `end_date (${request.end_date}) cannot be in the future.`
     );
+  }
+}
+
+/**
+ * Step Functionsワークフローを開始
+ *
+ * @param request CollectRequest
+ * @param context Lambda Context
+ * @param stateMachineArn Step Functions ARN
+ * @returns 実行ID
+ */
+async function invokeStepFunctions(
+  request: CollectRequest,
+  context: Context,
+  stateMachineArn: string
+): Promise<string> {
+  // 実行IDを事前に生成
+  const execution_id = randomUUID();
+
+  // Step Functionsの入力
+  const input = {
+    start_date: request.start_date,
+    end_date: request.end_date,
+    max_items: request.max_items,
+  };
+
+  logger.info('Starting Step Functions execution', {
+    requestId: context.awsRequestId,
+    stateMachineArn,
+    execution_id,
+    input,
+  });
+
+  try {
+    // Step Functions実行開始
+    const command = new StartExecutionCommand({
+      stateMachineArn,
+      name: execution_id, // 実行名として使用
+      input: JSON.stringify(input),
+    });
+
+    const response = await sfnClient.send(command);
+
+    logger.info('Step Functions execution started successfully', {
+      requestId: context.awsRequestId,
+      execution_id,
+      executionArn: response.executionArn,
+    });
+
+    return execution_id;
+  } catch (error) {
+    logger.error(
+      'Failed to start Step Functions execution',
+      createErrorContext(error as Error, {
+        requestId: context.awsRequestId,
+        stateMachineArn,
+        execution_id,
+      })
+    );
+    throw new Error('Failed to start data collection');
   }
 }
 

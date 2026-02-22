@@ -187,8 +187,9 @@ try {
 # 2. 実行状態をポーリング
 Write-Host "[2/4] 実行状態を確認中..." -ForegroundColor Green
 
-$maxRetries = 60  # 最大5分間（5秒間隔）
+$maxRetries = 360  # 最大30分間（5秒間隔）
 $retryCount = 0
+$startTime = Get-Date
 
 while ($retryCount -lt $maxRetries) {
     Start-Sleep -Seconds 5
@@ -207,7 +208,11 @@ while ($retryCount -lt $maxRetries) {
         $collected = $data.collected_count
         $failed = $data.failed_count
         
-        Write-Host "  進捗: $progress% | 収集: $collected 件 | 失敗: $failed 件 | 状態: $status" -ForegroundColor Cyan
+        # 経過時間を計算
+        $elapsed = (Get-Date) - $startTime
+        $elapsedStr = "{0:mm}分{0:ss}秒" -f $elapsed
+        
+        Write-Host "  進捗: $progress% | 収集: $collected 件 | 失敗: $failed 件 | 状態: $status | 経過: $elapsedStr" -ForegroundColor Cyan
         
         if ($status -eq "completed") {
             Write-Host "✅ データ収集完了" -ForegroundColor Green
@@ -227,7 +232,9 @@ while ($retryCount -lt $maxRetries) {
 }
 
 if ($retryCount -ge $maxRetries) {
-    Write-Host "⚠️ タイムアウト: 実行状態の確認に失敗しました" -ForegroundColor Yellow
+    Write-Host "⚠️ タイムアウト: 実行状態の確認に失敗しました（30分経過）" -ForegroundColor Yellow
+    Write-Host "ℹ️ 実行は継続中の可能性があります。以下のコマンドで状態を確認してください:" -ForegroundColor Cyan
+    Write-Host "   .\scripts\check-step-functions-execution.ps1 -ExecutionId $executionId" -ForegroundColor Gray
 }
 
 # 3. 収集結果を確認

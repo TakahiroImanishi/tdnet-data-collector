@@ -7,10 +7,12 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { handler } from '../handler';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
 import { mockClient } from 'aws-sdk-client-mock';
 
 // AWS SDK Mocks
 const lambdaMock = mockClient(LambdaClient);
+const sfnMock = mockClient(SFNClient);
 
 // Mock Context
 const mockContext: Context = {
@@ -88,13 +90,16 @@ describe('POST /collect Handler', () => {
     // 環境変数を先に設定
     process.env.COLLECTOR_FUNCTION_NAME = 'tdnet-collector';
     process.env.AWS_REGION = 'ap-northeast-1';
+    delete process.env.STATE_MACHINE_ARN; // デフォルトはLambda直接呼び出し
     
     lambdaMock.reset();
+    sfnMock.reset();
   });
 
   afterEach(() => {
     delete process.env.COLLECTOR_FUNCTION_NAME;
     delete process.env.AWS_REGION;
+    delete process.env.STATE_MACHINE_ARN;
   });
 
   describe('正常系', () => {
@@ -418,6 +423,90 @@ describe('POST /collect Handler', () => {
       expect(body.status).toBe('error');
       expect(body.error.code).toBe('INTERNAL_ERROR');
       expect(body.error.message).toContain('Failed to start data collection');
+    });
+  });
+
+  describe('Step Functions統合（STATE_MACHINE_ARN設定時）', () => {
+    beforeEach(() => {
+      // Step Functions ARNを設定
+      process.env.STATE_MACHINE_ARN = 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow';
+      
+      // Step Functionsのモックを設定
+      sfnMock.on(StartExecutionCommand).resolves({
+        executionArn: 'arn:aws:states:ap-northeast-1:123456789012:execution:tdnet-collector-workflow:test-execution-id',
+        startDate: new Date(),
+      });
+    });
+
+    it('Step Functions実行が開始される', async () => {
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('success');
+      expect(body.data).toHaveProperty('execution_id');
+      expect(body.data).toHaveProperty('status', 'pending');
+
+      // StartExecutionCommandが呼ばれたことを確認
+      const calls = sfnMock.commandCalls(StartExecutionCommand);
+      expect(calls.length).toBe(1);
+      expect(calls[0].args[0].input.stateMachineArn).toBe(process.env.STATE_MACHINE_ARN);
+      
+      // 実行名がexecution_idと一致することを確認
+      expect(calls[0].args[0].input.name).toBe(body.data.execution_id);
+      
+      // 入力パラメータを確認
+      const input = JSON.parse(calls[0].args[0].input.input as string);
+      expect(input).toHaveProperty('start_date', testDates.start_date);
+      expect(input).toHaveProperty('end_date', testDates.end_date);
+    });
+
+    it('max_itemsが指定された場合、Step Functionsに渡される', async () => {
+      const testDates = getTestDates();
+      const event = createTestEvent({
+        ...testDates,
+        max_items: 100,
+      });
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(200);
+
+      // 入力パラメータにmax_itemsが含まれることを確認
+      const calls = sfnMock.commandCalls(StartExecutionCommand);
+      const input = JSON.parse(calls[0].args[0].input.input as string);
+      expect(input).toHaveProperty('max_items', 100);
+    });
+
+    it('Step Functions実行開始に失敗した場合は500を返す', async () => {
+      // モックをリセットしてエラーを返すように設定
+      sfnMock.reset();
+      sfnMock.on(StartExecutionCommand).rejects(new Error('Step Functions execution failed'));
+
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      const result = await handler(event, mockContext);
+
+      expect(result.statusCode).toBe(500);
+      const body = JSON.parse(result.body);
+      expect(body.status).toBe('error');
+      expect(body.error.code).toBe('INTERNAL_ERROR');
+      expect(body.error.message).toContain('Failed to start data collection');
+    });
+
+    it('Lambda Collectorは呼び出されない', async () => {
+      const testDates = getTestDates();
+      const event = createTestEvent(testDates);
+
+      await handler(event, mockContext);
+
+      // Lambda Collectorは呼び出されないことを確認
+      const lambdaCalls = lambdaMock.commandCalls(InvokeCommand);
+      expect(lambdaCalls.length).toBe(0);
     });
   });
 });

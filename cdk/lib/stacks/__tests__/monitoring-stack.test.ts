@@ -129,6 +129,82 @@ describe('TdnetMonitoringStack', () => {
       expect(monitoringStack.alarms).toBeDefined();
       expect(monitoringStack.alarms.alarms.length).toBeGreaterThan(0);
     });
+
+    it('Step Functions用のアラームが作成されている（Step Functions有効時）', () => {
+      const app = new cdk.App();
+      const stack = new cdk.Stack(app, 'TestBaseStack');
+
+      // Step Functions State Machineのモック作成
+      const mockStateMachine = {
+        stateMachineArn: 'arn:aws:states:us-east-1:123456789012:stateMachine:test-state-machine',
+        stateMachineName: 'test-state-machine',
+      } as any;
+
+      const mockLambdaFunctions = {
+        collector: lambda.Function.fromFunctionName(stack, 'Collector', 'test-collector'),
+        query: lambda.Function.fromFunctionName(stack, 'Query', 'test-query'),
+        export: lambda.Function.fromFunctionName(stack, 'Export', 'test-export'),
+        collect: lambda.Function.fromFunctionName(stack, 'Collect', 'test-collect'),
+        collectStatus: lambda.Function.fromFunctionName(stack, 'CollectStatus', 'test-collect-status'),
+        exportStatus: lambda.Function.fromFunctionName(stack, 'ExportStatus', 'test-export-status'),
+        pdfDownload: lambda.Function.fromFunctionName(stack, 'PdfDownload', 'test-pdf-download'),
+        health: lambda.Function.fromFunctionName(stack, 'Health', 'test-health'),
+        stats: lambda.Function.fromFunctionName(stack, 'Stats', 'test-stats'),
+      };
+
+      const mockDynamodbTables = {
+        disclosures: dynamodb.Table.fromTableName(stack, 'Disclosures', 'test-disclosures'),
+        executions: dynamodb.Table.fromTableName(stack, 'Executions', 'test-executions'),
+        exportStatus: dynamodb.Table.fromTableName(stack, 'ExportStatusTable', 'test-export-status'),
+      };
+
+      const mockS3Buckets = {
+        pdfs: s3.Bucket.fromBucketName(stack, 'Pdfs', 'test-pdfs'),
+        exports: s3.Bucket.fromBucketName(stack, 'Exports', 'test-exports'),
+        cloudtrailLogs: s3.Bucket.fromBucketName(stack, 'CloudTrail', 'test-cloudtrail'),
+      };
+
+      const mockApi = apigateway.RestApi.fromRestApiId(stack, 'Api', 'test-api-id');
+      const mockAlertTopic = sns.Topic.fromTopicArn(
+        stack,
+        'AlertTopic',
+        'arn:aws:sns:us-east-1:123456789012:test-topic'
+      );
+
+      const mockStepFunctionsCollector = {
+        stateMachine: mockStateMachine,
+      } as any;
+
+      const monitoringStack = new TdnetMonitoringStack(app, 'TestMonitoringStackWithSFN', {
+        environment: 'prod',
+        lambdaFunctions: mockLambdaFunctions,
+        dynamodbTables: mockDynamodbTables,
+        s3Buckets: mockS3Buckets,
+        api: mockApi,
+        alertTopic: mockAlertTopic,
+        stepFunctionsCollector: mockStepFunctionsCollector,
+      });
+
+      const template = Template.fromStack(monitoringStack);
+
+      // Step Functions実行失敗アラームが作成されていることを確認
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        MetricName: 'ExecutionsFailed',
+        Namespace: 'AWS/States',
+      });
+
+      // Step Functions実行時間超過アラームが作成されていることを確認
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        MetricName: 'ExecutionTime',
+        Namespace: 'AWS/States',
+      });
+
+      // Step Functionsスロットリングアラームが作成されていることを確認
+      template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+        MetricName: 'ExecutionThrottled',
+        Namespace: 'AWS/States',
+      });
+    });
   });
 
   describe('CloudWatch Dashboard', () => {
