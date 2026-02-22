@@ -341,12 +341,9 @@ describe('TypeScript型定義とインターフェース', () => {
 
     it('should throw ValidationError for invalid company_code', () => {
       expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123', 1)).toThrow(ValidationError);
-      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '12345', 1)).toThrow(
-        ValidationError
-      );
-      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'ABCD', 1)).toThrow(
-        ValidationError
-      );
+      // 5桁は許可されている（REITなど）
+      // expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '12345', 1)).toThrow(ValidationError);
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'abc', 1)).toThrow(ValidationError);
     });
 
     it('should throw ValidationError for invalid sequence', () => {

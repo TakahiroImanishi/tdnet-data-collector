@@ -139,6 +139,29 @@ try {
     
     # Create table
     Write-Info "Creating table 'tdnet_executions' with GSI..."
+    $gsiJson = @'
+[
+  {
+    "IndexName": "StartedAtIndex",
+    "KeySchema": [
+      {
+        "AttributeName": "started_at",
+        "KeyType": "HASH"
+      }
+    ],
+    "Projection": {
+      "ProjectionType": "ALL"
+    },
+    "ProvisionedThroughput": {
+      "ReadCapacityUnits": 5,
+      "WriteCapacityUnits": 5
+    }
+  }
+]
+'@
+    
+    $gsiJson | Out-File -FilePath "temp_gsi.json" -Encoding UTF8NoBOM
+    
     aws --endpoint-url=$ENDPOINT `
         --region=$REGION `
         dynamodb create-table `
@@ -148,12 +171,13 @@ try {
             AttributeName=started_at,AttributeType=S `
         --key-schema `
             AttributeName=execution_id,KeyType=HASH `
-        --global-secondary-indexes `
-            '[{"IndexName":"StartedAtIndex","KeySchema":[{"AttributeName":"started_at","KeyType":"HASH"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' `
+        --global-secondary-indexes file://temp_gsi.json `
         --provisioned-throughput `
             ReadCapacityUnits=5,WriteCapacityUnits=5 `
         --no-cli-pager `
         2>&1 | Out-Null
+    
+    Remove-Item -Path "temp_gsi.json" -ErrorAction SilentlyContinue
     
     if ($LASTEXITCODE -eq 0) {
         Write-Success "Table 'tdnet_executions' created successfully with StartedAtIndex GSI"

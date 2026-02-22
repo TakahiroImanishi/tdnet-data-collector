@@ -75,7 +75,7 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
   }
 
   // file_sizeのバリデーション（オプショナル）
-  if (disclosure.file_size !== undefined) {
+  if (disclosure.file_size !== undefined && disclosure.file_size !== null) {
     // 整数チェック
     if (!Number.isInteger(disclosure.file_size)) {
       throw new ValidationError(
