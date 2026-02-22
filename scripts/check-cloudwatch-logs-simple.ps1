@@ -54,7 +54,10 @@ try {
     Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "3. CloudWatch Logs権限を確認（必要な権限: logs:DescribeLogStreams）:" -ForegroundColor White
-    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host "   scripts/check-iam-permissions.ps1" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "4. CloudWatch Logsコンソールで確認:" -ForegroundColor White
+    Write-Host "   https://console.aws.amazon.com/cloudwatch/home?region=$Region#logsV2:log-groups/log-group/$([uri]::EscapeDataString($LogGroupName))" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
@@ -134,7 +137,10 @@ if ($streams.logStreams) {
     Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "5. CloudWatch Logs権限を確認（必要な権限: logs:DescribeLogStreams, logs:GetLogEvents）:" -ForegroundColor White
-    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host "   scripts/check-iam-permissions.ps1" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "6. CloudWatch Logsコンソールで確認:" -ForegroundColor White
+    Write-Host "   https://console.aws.amazon.com/cloudwatch/home?region=$Region#logsV2:log-groups/log-group/$([uri]::EscapeDataString($LogGroupName))" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""

@@ -65,13 +65,16 @@ if (-not $pdfErrorResult.queryId) {
     Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "2. CloudWatch Logs権限を確認（必要な権限: logs:StartQuery, logs:GetQueryResults）:" -ForegroundColor White
-    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host "   scripts/check-iam-permissions.ps1" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "3. ログループが存在することを確認:" -ForegroundColor White
     Write-Host "   aws logs describe-log-groups --log-group-name-prefix $LogGroupName --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "4. Lambda関数が実行されているか確認:" -ForegroundColor White
     Write-Host "   aws lambda list-functions --query 'Functions[?contains(FunctionName, ``Collector``)]' --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "5. CloudWatch Logsコンソールで確認:" -ForegroundColor White
+    Write-Host "   https://console.aws.amazon.com/cloudwatch/home?region=$Region#logsV2:log-groups" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
@@ -147,6 +150,8 @@ if (-not $pdfErrorResult.queryId) {
             Write-Host ""
             Write-Host "3. 手動でクエリ結果を取得:" -ForegroundColor White
             Write-Host "   aws logs get-query-results --query-id $($pdfErrorResult.queryId) --profile $Profile --region $Region" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "4. ログデータ量が多い場合は、フィルター条件を追加してください" -ForegroundColor White
             Write-Host ""
             break
         }

@@ -82,13 +82,16 @@ try {
     Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "3. DynamoDB権限を確認（必要な権限: dynamodb:Scan）:" -ForegroundColor White
-    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host "   scripts/check-iam-permissions.ps1" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "4. テーブルが存在することを確認:" -ForegroundColor White
     Write-Host "   aws dynamodb describe-table --table-name $TableName --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "5. テーブルがACTIVE状態であることを確認:" -ForegroundColor White
     Write-Host "   aws dynamodb describe-table --table-name $TableName --query 'Table.TableStatus' --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "6. DynamoDBコンソールで確認:" -ForegroundColor White
+    Write-Host "   https://console.aws.amazon.com/dynamodbv2/home?region=$Region#table?name=$TableName" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
@@ -204,13 +207,16 @@ try {
     Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "3. S3権限を確認（必要な権限: s3:ListBucket）:" -ForegroundColor White
-    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host "   scripts/check-iam-permissions.ps1" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "4. バケットが存在することを確認:" -ForegroundColor White
     Write-Host "   aws s3 ls s3://$BucketName --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "5. バケットのリージョンを確認:" -ForegroundColor White
     Write-Host "   aws s3api get-bucket-location --bucket $BucketName --profile $Profile" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "6. S3コンソールで確認:" -ForegroundColor White
+    Write-Host "   https://s3.console.aws.amazon.com/s3/buckets/$BucketName?region=$Region" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
