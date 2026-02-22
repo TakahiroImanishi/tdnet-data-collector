@@ -70,6 +70,28 @@ cat .kiro/specs/tdnet-data-collector/tasks/archive/tasks-improvements-20260222-1
 - `work-log-20260222-160939-parallel-subagent-execution-round5.md`
 - `work-log-20260222-161019-subagent2-e2e-test-completion.md`
 
+## 2026-02-22 17:22:33 アーカイブ追加
+
+### tasks-test-optimization-20260222-163805.md
+- **作成日時**: 2026-02-22 16:38:05
+- **状態**: 統合済み
+- **概要**: テスト最適化タスク（カバレッジ80%、E2Eテスト全パス、実行時間最適化）
+- **統合先**: `tasks-test-improvements-20260222-172233.md`
+
+### tasks-test-final-improvements-20260222-164001.md
+- **作成日時**: 2026-02-22 16:40:01
+- **状態**: 統合済み
+- **概要**: テスト最終改善タスク（カバレッジ、E2Eテスト、テスト安定化）
+- **統合先**: `tasks-test-improvements-20260222-172233.md`
+
+### tasks-remaining-issues-20260222-164151.md
+- **作成日時**: 2026-02-22 16:41:51
+- **状態**: 統合済み
+- **概要**: 残課題タスク（第5回並列実行後の残存課題）
+- **統合先**: `tasks-test-improvements-20260222-172233.md`
+
+**統合理由**: 3つのタスクファイルに重複する内容が多く、統一されたタスクファイルに整理
+
 ---
 
-**最終更新**: 2026-02-22 16:41:51
+**最終更新**: 2026-02-22 17:22:33
