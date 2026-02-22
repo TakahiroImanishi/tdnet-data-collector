@@ -38,8 +38,8 @@ export function generateDisclosureId(
     throw new ValidationError(`Invalid companyCode: ${companyCode}`);
   }
 
-  if (!Number.isInteger(sequence) || sequence < 0 || sequence > 999) {
-    throw new ValidationError(`Invalid sequence: ${sequence} (must be an integer between 0-999)`);
+  if (!Number.isInteger(sequence) || sequence < 0 || sequence > 9999) {
+    throw new ValidationError(`Invalid sequence: ${sequence} (must be an integer between 0-9999)`);
   }
 
   // UTCからJSTに変換（UTC+9時間）してから日付を抽出
@@ -53,8 +53,8 @@ export function generateDisclosureId(
   const day = String(jstDate.getUTCDate()).padStart(2, '0');
   const date = `${year}${month}${day}`;
 
-  // 連番を3桁にゼロパディング
-  const seq = String(sequence).padStart(3, '0');
+  // 連番を4桁にゼロパディング
+  const seq = String(sequence).padStart(4, '0');
 
   return `${date}_${companyCode}_${seq}`;
 }

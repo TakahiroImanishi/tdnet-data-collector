@@ -35,6 +35,9 @@ interface CollectRequest {
 
   /** 終了日（YYYY-MM-DD形式） */
   end_date: string;
+
+  /** 最大収集件数（オプション） */
+  max_items?: number;
 }
 
 /**
@@ -238,6 +241,7 @@ async function invokeCollector(
     mode: 'on-demand',
     start_date: request.start_date,
     end_date: request.end_date,
+    max_items: request.max_items, // max_itemsを追加
   };
 
   logger.info('Invoking Lambda Collector asynchronously', {

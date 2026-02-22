@@ -333,10 +333,14 @@ describe('TypeScript型定義とインターフェース', () => {
       const id1 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1);
       const id2 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 99);
       const id3 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 999);
+      const id4 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1000);
+      const id5 = generateDisclosureId('2024-01-15T10:30:00Z', '1234', 9999);
 
-      expect(id1).toBe('20240115_1234_001');
-      expect(id2).toBe('20240115_1234_099');
-      expect(id3).toBe('20240115_1234_999');
+      expect(id1).toBe('20240115_1234_0001');
+      expect(id2).toBe('20240115_1234_0099');
+      expect(id3).toBe('20240115_1234_0999');
+      expect(id4).toBe('20240115_1234_1000');
+      expect(id5).toBe('20240115_1234_9999');
     });
 
     it('should throw ValidationError for invalid company_code', () => {

@@ -1,0 +1,263 @@
+# タスク: 999件制限バグの修正
+
+**作成日時**: 2026-02-22 17:30:00  
+**優先度**: 🔴 Critical  
+**ステータス**: 進行中
+
+## 問題の概要
+
+Lambda Collector関数が999件でデータ収集を停止するバグが発見されました。
+
+**根本原因**: `generateDisclosureId`関数の`sequence`パラメータが0-999の範囲に制限されており、1000件目以降は`ValidationError`がスローされる。
+
+**影響範囲**:
+- 1日のデータ件数が1000件以上の場合、1000件目以降が保存されない
+- 実際には1日3000件以上のデータが存在する日もある
+- 2026-02-13: 2,694件取得→998件保存（約37%欠落）
+- 2026-02-12: 999件で停止（実際は1000件以上存在）
+
+## 調査経緯
+
+### 発見日時
+- 2026-02-22 14:58:09: 998件制限問題を発見
+- 2026-02-22 17:18:19: 根本原因（sequence制限999）を特定
+
+### 実施した調査
+1. **CloudWatch Logs分析** (2026-02-22 15:24:46)
+   - 指定された実行IDのログが見つからず
+   - コード分析により重要な発見あり
+   - 作業記録: `work-log-20260222-152446-lambda-998-limit-root-cause.md`
+
+2. **ログ出力の強化** (2026-02-22 15:38:00)
+   - 処理進捗ログの追加（バッチ単位、個別処理）
+   - 重複検出ログの強化
+   - S3アップロードログの追加
+   - ユニットテスト14件すべて成功
+   - 作業記録: `work-log-20260222-153600-lambda-logging-enhancement.md`
+
+3. **根本原因の特定** (2026-02-22 17:18:19)
+   - `generateDisclosureId`のsequence制限（0-999）を発見
+   - 1000件目で`ValidationError`がスローされることを確認
+   - 作業記録: `work-log-20260222-171819-investigate-999-log-missing.md`
+
+### 発見された事実
+- DynamoDB PutItemを使用（BatchWriteの25項目制限は無関係）
+- 重複チェック（ConditionExpression）で重複は無視される
+- S3 PutObjectに再試行ロジックがない（タスク2で追加済み）
+- **最重要**: `generateDisclosureId`のsequence制限が999
+
+## 修正方針
+
+**sequence制限を999から9999に拡張**
+
+- 開示IDフォーマット変更: `YYYYMMDD_CCCC_SSS` → `YYYYMMDD_CCCC_SSSS`（4桁連番）
+- 1日最大9999件まで収集可能
+- 既存データとの互換性を維持（3桁連番も引き続きサポート）
+
+## タスク一覧
+
+### タスク1: generateDisclosureId関数の修正
+
+**ファイル**: `src/utils/disclosure-id.ts`
+
+**変更内容**:
+1. `sequence`の最大値を999から9999に変更
+2. 連番のゼロパディングを3桁から4桁に変更
+3. バリデーションエラーメッセージを更新
+
+**修正前**:
+```typescript
+if (!Number.isInteger(sequence) || sequence < 0 || sequence > 999) {
+  throw new ValidationError(`Invalid sequence: ${sequence} (must be an integer between 0-999)`);
+}
+
+const seq = String(sequence).padStart(3, '0');
+```
+
+**修正後**:
+```typescript
+if (!Number.isInteger(sequence) || sequence < 0 || sequence > 9999) {
+  throw new ValidationError(`Invalid sequence: ${sequence} (must be an integer between 0-9999)`);
+}
+
+const seq = String(sequence).padStart(4, '0');
+```
+
+**完了条件**:
+- [ ] コード修正完了
+- [ ] ユニットテスト修正（0-9999の範囲をテスト）
+- [ ] ユニットテスト実行成功
+
+---
+
+### タスク2: ユニットテストの更新
+
+**ファイル**: 
+- `src/__tests__/type-definitions.test.ts`
+- `src/utils/__tests__/disclosure-id.property.test.ts`
+
+**変更内容**:
+1. sequence範囲のテストケースを更新（0-9999）
+2. 4桁連番のテストケースを追加
+3. 既存の3桁連番テストは維持（後方互換性確認）
+
+**追加テストケース**:
+```typescript
+it('should handle 4-digit sequence', () => {
+  expect(generateDisclosureId('2024-01-15T10:30:00Z', '1234', 1000)).toBe('20240115_1234_1000');
+  expect(generateDisclosureId('2024-01-15T10:30:00Z', '1234', 9999)).toBe('20240115_1234_9999');
+});
+
+it('should throw ValidationError for sequence > 9999', () => {
+  expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '1234', 10000)).toThrow(ValidationError);
+});
+```
+
+**完了条件**:
+- [ ] テストケース追加完了
+- [ ] すべてのテスト実行成功
+- [ ] カバレッジ維持（100%）
+
+---
+
+### タスク3: 既存データとの互換性確認
+
+**確認内容**:
+1. DynamoDBの既存データ（3桁連番）が正常に読み取れることを確認
+2. 新規データ（4桁連番）が正常に保存できることを確認
+3. 3桁と4桁が混在しても問題ないことを確認
+
+**確認方法**:
+```powershell
+# 既存データの確認（3桁連番）
+aws dynamodb get-item --table-name tdnet_disclosures_prod --key '{"disclosure_id":{"S":"20260212_1234_001"}}' --profile tdnet-prod
+
+# 新規データの確認（4桁連番）
+# テスト環境で1000件以上のデータを収集して確認
+```
+
+**完了条件**:
+- [ ] 既存データ読み取り成功
+- [ ] 新規データ保存成功
+- [ ] 混在データ確認成功
+
+---
+
+### タスク4: E2Eテストの実行
+
+**テスト内容**:
+1. LocalStack環境で1000件以上のデータを収集
+2. 999件目、1000件目、1001件目が正常に保存されることを確認
+3. エラーログに`ValidationError`が出力されないことを確認
+
+**実行コマンド**:
+```bash
+npm run test:e2e
+```
+
+**完了条件**:
+- [ ] E2Eテスト実行成功
+- [ ] 1000件以上のデータ保存確認
+- [ ] エラーログなし
+
+---
+
+### タスク5: 本番環境での動作確認
+
+**確認内容**:
+1. 2026-02-12のデータを再収集（999件→全件）
+2. 2026-02-13のデータを再収集（998件→2,694件）
+3. CloudWatch Logsで1000件目以降の処理ログを確認
+4. DynamoDBで1000件以上のデータが保存されていることを確認
+
+**実行コマンド**:
+```powershell
+# 2026-02-12のデータを再収集
+.\scripts\manual-data-collection.ps1 -Date "2026-02-12"
+
+# 2026-02-13のデータを再収集
+.\scripts\manual-data-collection.ps1 -Date "2026-02-13"
+
+# データ件数確認
+aws dynamodb scan --table-name tdnet_disclosures_prod --filter-expression "begins_with(disclosed_at, :date)" --expression-attribute-values '{":date":{"S":"2026-02-12"}}' --select COUNT --profile tdnet-prod
+
+aws dynamodb scan --table-name tdnet_disclosures_prod --filter-expression "begins_with(disclosed_at, :date)" --expression-attribute-values '{":date":{"S":"2026-02-13"}}' --select COUNT --profile tdnet-prod
+```
+
+**完了条件**:
+- [ ] 2026-02-12のデータ再収集成功
+- [ ] 2026-02-13のデータ再収集成功（2,694件）
+- [ ] 1000件以上のデータ保存確認
+- [ ] CloudWatch Logsで1000件目以降の処理ログ確認
+
+---
+
+### タスク6: ドキュメント更新
+
+**更新ファイル**:
+- `src/utils/README.md`: generateDisclosureId関数の仕様更新
+- `.kiro/specs/tdnet-data-collector/docs/02-design/data-model.md`: 開示IDフォーマット更新
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-171819-investigate-999-log-missing.md`: 修正完了を記録
+
+**更新内容**:
+- 開示IDフォーマット: `YYYYMMDD_CCCC_SSSS`（4桁連番）
+- sequence範囲: 0-9999
+- 1日最大9999件まで収集可能
+
+**完了条件**:
+- [ ] ドキュメント更新完了
+- [ ] 作業記録更新完了
+
+---
+
+## 完了条件（全体）
+
+- [ ] タスク1-6すべて完了
+- [ ] すべてのユニットテスト成功
+- [ ] E2Eテスト成功
+- [ ] 本番環境で1000件以上のデータ収集成功
+- [ ] ドキュメント更新完了
+- [ ] Git commit & push
+
+## 関連ドキュメント
+
+### 調査記録
+- `work-log-20260222-164736-investigate-998-limit-20260213.md`: 998件制限問題の初期調査
+- `work-log-20260222-152446-lambda-998-limit-root-cause.md`: 根本原因の特定（コード分析）
+- `work-log-20260222-153600-lambda-logging-enhancement.md`: ログ出力の強化
+- `work-log-20260222-171819-investigate-999-log-missing.md`: 根本原因の特定（sequence制限999）
+
+### コード
+- Lambda関数: `src/lambda/collector/handler.ts`
+- ユーティリティ: `src/utils/disclosure-id.ts`
+- テスト: `src/__tests__/type-definitions.test.ts`, `src/utils/__tests__/disclosure-id.property.test.ts`
+
+### 設計
+- CDKスタック: `cdk/lib/stacks/compute-stack.ts`
+- データモデル: `.kiro/specs/tdnet-data-collector/docs/02-design/data-model.md`
+
+### ルール
+- 実装ルール: `.kiro/steering/core/tdnet-implementation-rules.md`
+- エラーハンドリング: `.kiro/steering/core/error-handling-patterns.md`
+
+## 備考
+
+### 緊急性の理由
+
+この問題は本番環境でのデータ収集に直接影響するため、最優先で対応する必要があります。
+
+1. **データ完全性の損失**: 約37%のデータが欠落（2026-02-13: 998/2,694件）
+2. **ユーザー影響**: 不完全なデータを参照する可能性
+3. **再現性**: 複数回の実行で同じ現象が発生
+4. **根本原因特定済み**: sequence制限999が原因
+
+### 既存データとの互換性
+
+- 既存データ（3桁連番）との互換性を維持
+- 4桁連番への移行は段階的に実施
+- 本番環境での動作確認を慎重に実施
+
+### 今後の対応
+
+- 1日9999件を超える場合の対応は別途検討（現時点では不要）
+- Step Functionsへの移行も検討（`tasks-step-functions-migration.md`参照）
