@@ -328,7 +328,7 @@ export class CloudWatchAlarms extends Construct {
         { name: 'ExportStatus', table: props.dynamodbTables.exportStatus },
       ];
 
-      tables.forEach(({ name, table }, index) => {
+      tables.forEach(({ name, table }) => {
         if (!table) return;
 
         // DynamoDB UserErrors アラーム

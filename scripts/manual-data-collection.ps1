@@ -143,8 +143,16 @@ if ($retryCount -ge $maxRetries) {
 Write-Host "[3/4] 収集結果を確認中..." -ForegroundColor Green
 
 try {
+    $queryParams = @(
+        "limit=10",
+        "start_date=$StartDate",
+        "end_date=$EndDate"
+    )
+    $queryString = $queryParams -join '&'
+    $uri = "$ApiEndpoint/disclosures?$queryString"
+    
     $disclosuresResponse = Invoke-RestMethod `
-        -Uri "$ApiEndpoint/disclosures?limit=10&start_date=$StartDate&end_date=$EndDate" `
+        -Uri $uri `
         -Method Get `
         -Headers @{ "x-api-key" = $ApiKey } `
         -ErrorAction Stop

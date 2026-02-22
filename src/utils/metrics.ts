@@ -28,7 +28,7 @@ export interface MetricDimension {
  */
 export interface MetricOptions {
   /**
-   * メトリクス名前空間（デフォルト: TDnetDataCollector）
+   * メトリクス名前空間（デフォルト: TDnet）
    */
   namespace?: string;
 
@@ -80,7 +80,7 @@ export async function sendMetric(
   options: MetricOptions = {}
 ): Promise<void> {
   const {
-    namespace = 'TDnetDataCollector',
+    namespace = 'TDnet',
     dimensions = [],
     unit = 'Count',
     timestamp = new Date(),

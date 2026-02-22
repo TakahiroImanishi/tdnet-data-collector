@@ -1099,10 +1099,554 @@ const event = {
 | 31 | テスト修正: プロジェクト構造とLambda最適化 | 高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 | 32 | テスト修正: その他の失敗テスト | 中 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
 
+---
+
+## 品質チェック（2026-02-22 12:00-13:00）で発見された追加改善項目
+
+### 33. カスタムメトリクスNamespace統一（最優先）
+
+**問題**: カスタムメトリクスのNamespaceが不統一
+- `src/utils/metrics.ts`: デフォルトNamespace `TDnetDataCollector`
+- `cdk/lib/constructs/cloudwatch-alarms.ts`: Namespace `TDnet`
+- `cdk/lib/stacks/compute-stack.ts`: IAM条件 `cloudwatch:namespace: TDnet`
+
+**影響範囲**: CloudWatch Metrics、Alarms
+
+**影響**: メトリクスが正しく記録されない可能性がある
+
+**対応内容**:
+- [x] `src/utils/metrics.ts`のデフォルトNamespaceを`TDnet`に変更
+- [x] すべてのメトリクス送信で`TDnet`を使用
+- [x] テストを更新
+
+**担当**: AI Assistant
+
+**期限**: 即座
+
+**完了日**: 2026-02-22
+
+**優先度**: 🔴 最高（監視機能に影響）
+
+**関連ファイル**:
+- `src/utils/metrics.ts`
+- `src/utils/__tests__/metrics.test.ts`
+- `src/__tests__/integration/aws-sdk-integration.test.ts`
+- `cdk/lib/constructs/cloudwatch-alarms.ts`
+- `cdk/lib/stacks/compute-stack.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122732-task33-metrics-namespace.md`
+
+---
+
+### 34. カバレッジ測定の修正（高優先度）
+
+**問題**: `npm run test:coverage`が120秒でタイムアウト
+
+**影響範囲**: テスト全体
+
+**影響**: カバレッジ達成状況が不明、目標との差分が把握できない
+
+**対応内容**:
+- [ ] テスト実行時間の分析
+- [ ] 遅いテストの特定と最適化
+- [ ] カバレッジ収集の並列化検討
+- [ ] タイムアウト設定の見直し
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: 🔴 高
+
+**関連ファイル**:
+- `test/jest.config.js`
+- すべてのテストファイル
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122015-quality-check-testing.md`
+
+---
+
+### 35. E2Eテストの追加（高優先度）
+
+**問題**: E2Eテストが2ファイルのみ（query、export）
+
+**影響範囲**: E2Eテスト
+
+**影響**: エンドツーエンドの動作検証が不十分
+
+**対応内容**:
+- [ ] collector E2Eテスト（日付範囲収集の完全性）
+- [ ] collect-status E2Eテスト（実行状態取得）
+- [ ] dlq-processor E2Eテスト（DLQメッセージ処理）
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: 🔴 高
+
+**関連ファイル**:
+- `src/lambda/collector/__tests__/handler.e2e.test.ts`（新規作成）
+- `src/lambda/collect-status/__tests__/handler.e2e.test.ts`（新規作成）
+- `src/lambda/dlq-processor/__tests__/handler.e2e.test.ts`（新規作成）
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122015-quality-check-testing.md`
+
+---
+
+### 36. 16スクリプトにUTF-8エンコーディング設定追加（高優先度）
+
+**問題**: 20スクリプト中16スクリプトに包括的UTF-8エンコーディング設定が未実装
+
+**影響範囲**: PowerShellスクリプト
+
+**影響**: 日本語メッセージの文字化けリスク
+
+**対応内容**:
+- [ ] 16スクリプトに包括的UTF-8エンコーディング設定を追加
+```powershell
+# UTF-8エンコーディング設定（包括的）
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+if ($PSVersionTable.PSVersion.Major -le 5) {
+    $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+}
+```
+
+**対象スクリプト**:
+- `deploy.ps1`
+- `deploy-dev.ps1`
+- `deploy-prod.ps1`
+- `deploy-split-stacks.ps1`
+- `deploy-dashboard.ps1`
+- `create-api-key-secret.ps1`
+- `generate-env-file.ps1`
+- `delete-all-data.ps1`
+- `check-iam-permissions.ps1`
+- `analyze-cloudwatch-logs.ps1`
+- `check-cloudwatch-logs-simple.ps1`
+- `check-dynamodb-s3-consistency.ps1`
+- `check-waf-status.ps1`
+- その他3スクリプト
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: 🔴 高
+
+**関連ファイル**:
+- `scripts/*.ps1`（16ファイル）
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121323-quality-check-scripts.md`
+
+---
+
+### 37. CDK Nag統合（高優先度）
+
+**問題**: CDK Nagがインストール済みだが、アプリケーションレベルで適用されていない
+
+**影響範囲**: CDKデプロイ
+
+**影響**: デプロイ前のセキュリティ検証が自動化されていない
+
+**対応内容**:
+- [ ] `cdk/bin/tdnet-data-collector-split.ts`に`AwsSolutionsChecks.check(app)`を追加
+- [ ] デプロイ前にセキュリティチェックを自動化
+
+**実装例**:
+```typescript
+import { AwsSolutionsChecks } from 'cdk-nag';
+
+const app = new cdk.App();
+// ... スタック作成 ...
+AwsSolutionsChecks.check(app);
+app.synth();
+```
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: 🔴 高
+
+**関連ファイル**:
+- `cdk/bin/tdnet-data-collector-split.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121336-quality-check-security.md`
+
+---
+
+### 38. OpenAPI仕様書の整合性確認（高優先度）
+
+**問題**: OpenAPI仕様書の内容を確認していないため、実装との整合性が不明
+
+**影響範囲**: API仕様書
+
+**影響**: API仕様書が古い場合、開発者が誤った仕様で実装する可能性がある
+
+**対応内容**:
+- [ ] OpenAPI仕様書の内容を確認
+- [ ] 実装との整合性を検証
+- [ ] 不一致がある場合は更新
+
+**担当**: 未定
+
+**期限**: 1週間以内
+
+**優先度**: 🔴 高
+
+**関連ファイル**:
+- `.kiro/specs/tdnet-data-collector/docs/01-requirements/openapi.yaml`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121334-quality-check-documentation.md`
+
+---
+
+### 39. トラブルシューティングガイドの拡充（高優先度）
+
+**問題**: API Gateway、CloudFront、Secrets Managerのエラーが記載されていない
+
+**影響範囲**: トラブルシューティングガイド
+
+**影響**: これらのサービスでエラーが発生した場合、解決に時間がかかる
+
+**対応内容**:
+- [ ] API Gatewayエラー（CORS、認証、レート制限）を追加
+- [ ] CloudFrontエラー（キャッシュ、SSL証明書）を追加
+- [ ] Secrets Managerエラー（アクセス拒否、シークレット未作成）を追加
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: 🔴 高
+
+**関連ファイル**:
+- `README.md`（トラブルシューティングセクション）
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121334-quality-check-documentation.md`
+
+---
+
+### 40. 統合テストの拡充（中優先度）
+
+**問題**: 統合テストが3ファイルのみ
+
+**影響範囲**: 統合テスト
+
+**影響**: テスト比率が目標（統合20%）に未達
+
+**対応内容**:
+- [ ] API Gateway統合テストの追加
+- [ ] CloudWatch Alarms統合テストの追加
+- [ ] WAF統合テストの追加
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `src/__tests__/integration/api-gateway-integration.test.ts`（新規作成）
+- `src/__tests__/integration/cloudwatch-alarms-integration.test.ts`（新規作成）
+- `src/__tests__/integration/waf-integration.test.ts`（新規作成）
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122015-quality-check-testing.md`
+
+---
+
+### 41. PowerShellテストの追加（中優先度）
+
+**問題**: PowerShellテストが4ファイルのみ（全スクリプトの一部）
+
+**影響範囲**: PowerShellスクリプト
+
+**影響**: 運用スクリプトの品質保証が不十分
+
+**対応内容**:
+- [ ] deploy-dashboard.ps1のテスト追加
+- [ ] check-iam-permissions.ps1のテスト追加
+- [ ] fetch-data-range.ps1のテスト追加
+- [ ] manual-data-collection.ps1のテスト追加
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `scripts/__tests__/deploy-dashboard.test.ps1`（新規作成）
+- `scripts/__tests__/check-iam-permissions.test.ps1`（新規作成）
+- `scripts/__tests__/fetch-data-range.test.ps1`（新規作成）
+- `scripts/__tests__/manual-data-collection.test.ps1`（新規作成）
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-122015-quality-check-testing.md`
+
+---
+
+### 42. 監視スクリプトのエラーメッセージ改善（中優先度）
+
+**問題**: 一部の監視スクリプトでエラー時の対処方法が不明確
+
+**影響範囲**: 監視スクリプト
+
+**影響**: エラー発生時の対応が遅れる可能性
+
+**対応内容**:
+- [ ] `analyze-cloudwatch-logs.ps1`のエラーメッセージ改善
+- [ ] `check-cloudwatch-logs-simple.ps1`のエラーメッセージ改善
+- [ ] `check-dynamodb-s3-consistency.ps1`のエラーメッセージ改善
+- [ ] `check-waf-status.ps1`のエラーメッセージ改善
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `scripts/analyze-cloudwatch-logs.ps1`
+- `scripts/check-cloudwatch-logs-simple.ps1`
+- `scripts/check-dynamodb-s3-consistency.ps1`
+- `scripts/check-waf-status.ps1`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121323-quality-check-scripts.md`
+
+---
+
+### 43. Secrets Managerローテーション有効化（中優先度）
+
+**問題**: Secrets Managerローテーション機能が実装済みだが、デフォルトで無効化
+
+**影響範囲**: Secrets Manager
+
+**影響**: APIキーの定期的なローテーションが行われない
+
+**対応内容**:
+- [ ] `cdk/lib/stacks/foundation-stack.ts`で`enableRotation: true`に変更
+- [ ] 90日ごとのローテーションスケジュール設定
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `cdk/lib/stacks/foundation-stack.ts`
+- `cdk/lib/constructs/secrets-manager.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121336-quality-check-security.md`
+
+---
+
+### 44. CloudFront TLS 1.2強制（中優先度）
+
+**問題**: デフォルトCloudFront証明書使用のため、TLS 1.2を強制できない
+
+**影響範囲**: CloudFront
+
+**影響**: セキュリティ強化の余地あり
+
+**対応内容**:
+- [ ] Route 53でカスタムドメイン設定
+- [ ] ACM証明書発行
+- [ ] CloudFront Distributionで`minimumProtocolVersion: SecurityPolicy.TLS_1_2`設定
+
+**担当**: 未定
+
+**期限**: 1ヶ月以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `cdk/lib/constructs/cloudfront.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121336-quality-check-security.md`
+
+---
+
+### 45. API Gateway 4XXErrorアラーム閾値の明確化（中優先度）
+
+**問題**: ドキュメントと実装で閾値が異なる
+- ドキュメント: `>10%`（割合）
+- 実装: `>10/5分`（絶対値）
+
+**影響範囲**: CloudWatch Alarms
+
+**影響**: 軽微（実用上は問題なし）
+
+**対応内容**:
+- [ ] ドキュメントを実装に合わせて修正
+- [ ] または実装を割合ベースに変更
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `cdk/lib/constructs/cloudwatch-alarms.ts`
+- `.kiro/steering/infrastructure/monitoring-alerts.md`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121335-quality-check-monitoring.md`
+
+---
+
+### 46. README.mdの更新（中優先度）
+
+**問題**: 最終更新日未記載、Phase 5進捗未記載、本番環境URL未記載
+
+**影響範囲**: README.md
+
+**影響**: ドキュメントの最新性が不明
+
+**対応内容**:
+- [ ] 最終更新日を追記
+- [ ] Phase 5の進捗状況を追記
+- [ ] 本番環境のダッシュボードURLを追記
+- [ ] 本番環境のAPI Endpointを追記
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `README.md`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121334-quality-check-documentation.md`
+
+---
+
+### 47. デプロイガイドの更新（中優先度）
+
+**問題**: 最終更新日が古い（2026-02-15）
+
+**影響範囲**: デプロイガイド
+
+**影響**: デプロイ手順が古い可能性
+
+**対応内容**:
+- [ ] デプロイガイドの内容を確認
+- [ ] 最終更新日を更新
+- [ ] スクリプトパスを確認
+- [ ] 本番環境のCloudFront URLを追記
+
+**担当**: 未定
+
+**期限**: 2週間以内
+
+**優先度**: ⚠️ 中
+
+**関連ファイル**:
+- `.kiro/specs/tdnet-data-collector/docs/04-deployment/deployment-guide.md`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121334-quality-check-documentation.md`
+
+---
+
+### 48. LogGroup管理の統一（低優先度）
+
+**問題**: Health/Stats FunctionのLogGroupがCDK管理外
+
+**影響範囲**: CloudWatch Logs
+
+**影響**: 一貫性に欠ける
+
+**対応内容**:
+- [ ] Health/Stats FunctionのLogGroupもCDK管理下に追加
+
+**担当**: 未定
+
+**期限**: 1ヶ月以内
+
+**優先度**: 🟢 低
+
+**関連ファイル**:
+- `cdk/lib/stacks/monitoring-stack.ts`
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121335-quality-check-monitoring.md`
+
+---
+
+### 49. 作業記録のインデックス作成（低優先度）
+
+**問題**: 作業記録が多数存在するが、インデックスファイルがないため検索が困難
+
+**影響範囲**: 作業記録
+
+**影響**: 過去の作業記録を探すのに時間がかかる
+
+**対応内容**:
+- [ ] 作業記録のインデックスファイルを作成（タスク番号、日付、作業概要で検索可能）
+- [ ] 統計情報を追加（総作業時間、タスク数、問題発生件数）
+
+**担当**: 未定
+
+**期限**: 1ヶ月以内
+
+**優先度**: 🟢 低
+
+**関連ファイル**:
+- `.kiro/specs/tdnet-data-collector/work-logs/INDEX.md`（新規作成）
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-121334-quality-check-documentation.md`
+
+---
+
+## 進捗管理（最終更新: 2026-02-22 13:00）
+
+| タスク番号 | タスク名 | 優先度 | 状態 | 担当 | 開始日 | 完了日 |
+|-----------|---------|--------|------|------|--------|--------|
+| 1-32 | 既存タスク | - | 🔄 進行中 | - | - | - |
+| 33 | カスタムメトリクスNamespace統一 | 🔴 最高 | ✅ 完了 | AI Assistant | 2026-02-22 | 2026-02-22 |
+| 34 | カバレッジ測定の修正 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 35 | E2Eテストの追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 36 | 16スクリプトにUTF-8エンコーディング設定追加 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 37 | CDK Nag統合 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 38 | OpenAPI仕様書の整合性確認 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 39 | トラブルシューティングガイドの拡充 | 🔴 高 | ⏳ 未着手 | - | - | - |
+| 40 | 統合テストの拡充 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 41 | PowerShellテストの追加 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 42 | 監視スクリプトのエラーメッセージ改善 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 43 | Secrets Managerローテーション有効化 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 44 | CloudFront TLS 1.2強制 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 45 | API Gateway 4XXErrorアラーム閾値の明確化 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 46 | README.mdの更新 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 47 | デプロイガイドの更新 | ⚠️ 中 | ⏳ 未着手 | - | - | - |
+| 48 | LogGroup管理の統一 | 🟢 低 | ⏳ 未着手 | - | - | - |
+| 49 | 作業記録のインデックス作成 | 🟢 低 | ⏳ 未着手 | - | - | - |
+
 ## タスク実行の推奨順序
 
-1. **タスク30（高優先度）**: PDF Download Handler修正 → 20テスト修正、約170テスト失敗削減
-2. **タスク31（高優先度）**: プロジェクト構造とLambda最適化 → 10テスト修正
-3. **タスク32（中優先度）**: その他の失敗テスト → 16テスト修正
+### 最優先（即座に対応）
+1. **タスク33**: カスタムメトリクスNamespace統一 → 監視機能の正常化
 
-**合計**: 46テスト修正により、200個のテスト失敗を解消
+### 高優先度（1週間以内）
+2. **タスク34**: カバレッジ測定の修正 → テスト品質の可視化
+3. **タスク35**: E2Eテストの追加 → エンドツーエンド検証の強化
+4. **タスク36**: 16スクリプトにUTF-8エンコーディング設定追加 → 文字化け防止
+5. **タスク37**: CDK Nag統合 → セキュリティ検証の自動化
+6. **タスク38**: OpenAPI仕様書の整合性確認 → API仕様の正確性確保
+7. **タスク39**: トラブルシューティングガイドの拡充 → 運用サポート強化
+
+### 中優先度（2週間以内）
+8. **タスク40**: 統合テストの拡充
+9. **タスク41**: PowerShellテストの追加
+10. **タスク42**: 監視スクリプトのエラーメッセージ改善
+11. **タスク43**: Secrets Managerローテーション有効化
+12. **タスク44**: CloudFront TLS 1.2強制
+13. **タスク45**: API Gateway 4XXErrorアラーム閾値の明確化
+14. **タスク46**: README.mdの更新
+15. **タスク47**: デプロイガイドの更新
+
+### 低優先度（1ヶ月以内）
+16. **タスク48**: LogGroup管理の統一
+17. **タスク49**: 作業記録のインデックス作成

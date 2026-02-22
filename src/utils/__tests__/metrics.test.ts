@@ -46,7 +46,7 @@ describe('CloudWatch Metrics', () => {
       expect(mockClient.send).toHaveBeenCalledTimes(1);
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
-          Namespace: 'TDnetDataCollector',
+          Namespace: 'TDnet',
           MetricData: expect.arrayContaining([
             expect.objectContaining({
               MetricName: 'TestMetric',

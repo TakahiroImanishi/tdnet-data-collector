@@ -89,6 +89,15 @@ paths:
               - 配当予想修正
               - 自己株式取得
               - その他
+        - name: format
+          in: query
+          description: Response format (json or csv)
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+            default: json
         - name: limit
           in: query
           description: Number of results per page
@@ -185,6 +194,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PDFUrlResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -269,8 +280,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ExportRequest'
       responses:
-        '200':
-          description: Export started
+        '202':
+          description: Export accepted and processing started
           content:
             application/json:
               schema:
@@ -497,10 +508,10 @@ components:
         data:
           type: object
           required:
-            - pdf_url
+            - download_url
             - expires_at
           properties:
-            pdf_url:
+            download_url:
               type: string
               format: uri
               description: Signed URL for PDF download
@@ -584,6 +595,7 @@ components:
               type: integer
             skipped_count:
               type: integer
+              description: Number of skipped disclosures
             started_at:
               type: string
               format: date-time
@@ -625,12 +637,22 @@ components:
           required:
             - export_id
             - status
+            - message
+            - progress
           properties:
             export_id:
               type: string
             status:
               type: string
               enum: [pending]
+            message:
+              type: string
+              example: 'Export job created successfully'
+            progress:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: Export progress percentage
 
     ExportStatusResponse:
       type: object

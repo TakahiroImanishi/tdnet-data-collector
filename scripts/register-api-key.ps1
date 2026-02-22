@@ -43,12 +43,16 @@ if (-not $ApiKeyValue) {
 
 Write-Host ""
 
-# シークレット値の準備
-$secretValue = @{
+# シークレット値の準備（一時ファイルに保存、UTF-8 BOMなし）
+$secretObject = @{
     api_key = $ApiKeyValue
     created_at = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
     environment = $Environment
-} | ConvertTo-Json -Compress
+}
+$secretValue = $secretObject | ConvertTo-Json -Depth 10 -Compress
+$tempFile = [System.IO.Path]::GetTempFileName()
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($tempFile, $secretValue, $utf8NoBom)
 
 # Secrets Managerに登録
 Write-Host "Secrets Managerに登録中..." -ForegroundColor Green
@@ -64,7 +68,7 @@ try {
         # 既存のシークレットを更新
         $result = aws secretsmanager put-secret-value `
             --secret-id $SecretName `
-            --secret-string $secretValue `
+            --secret-string "file://$tempFile" `
             --region $Region `
             --output json
         
@@ -74,11 +78,16 @@ try {
         $result = aws secretsmanager create-secret `
             --name $SecretName `
             --description "TDnet Data Collector API Key ($Environment)" `
-            --secret-string $secretValue `
+            --secret-string "file://$tempFile" `
             --region $Region `
             --output json
         
         Write-Host "✅ シークレットを作成しました" -ForegroundColor Green
+    }
+    
+    # 一時ファイルを削除
+    if (Test-Path $tempFile) {
+        Remove-Item $tempFile -Force
     }
     
     Write-Host ""

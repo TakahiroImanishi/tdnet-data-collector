@@ -291,7 +291,7 @@ describe('AWS SDK統合テスト', () => {
       // PutMetricDataCommand実行
       await cloudWatchClient.send(
         new PutMetricDataCommand({
-          Namespace: 'TDnetDataCollector',
+          Namespace: 'TDnet',
           MetricData: [
             {
               MetricName: 'DisclosuresCollected',
@@ -317,7 +317,7 @@ describe('AWS SDK統合テスト', () => {
       // PutMetricDataCommand実行（複数メトリクス）
       await cloudWatchClient.send(
         new PutMetricDataCommand({
-          Namespace: 'TDnetDataCollector',
+          Namespace: 'TDnet',
           MetricData: [
             {
               MetricName: 'DisclosuresCollected',
@@ -379,7 +379,7 @@ describe('AWS SDK統合テスト', () => {
       // 3. CloudWatchにメトリクスを送信
       await cloudWatchClient.send(
         new PutMetricDataCommand({
-          Namespace: 'TDnetDataCollector',
+          Namespace: 'TDnet',
           MetricData: [
             {
               MetricName: 'DisclosuresCollected',
