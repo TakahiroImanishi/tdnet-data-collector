@@ -21,6 +21,7 @@ import { logger, createErrorContext } from '../../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../../utils/cloudwatch-metrics';
 import { ValidationError, NotFoundError, AuthenticationError } from '../../../errors';
 import { retryWithBackoff } from '../../../utils/retry';
+import { getApiKey } from '../../../utils/secrets-manager';
 
 // クライアント（グローバルスコープで初期化）
 const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
@@ -64,7 +65,7 @@ export async function handler(
     });
 
     // API認証
-    validateApiKey(event);
+    await validateApiKey(event);
 
     // disclosure_idの取得とバリデーション
     const disclosureId = validateDisclosureId(event);
@@ -156,18 +157,27 @@ export async function handler(
 /**
  * APIキー認証
  *
+ * Secrets Managerから取得したAPIキーと比較して認証します。
+ *
  * @param event APIGatewayProxyEvent
  * @throws AuthenticationError APIキーが無効な場合
  */
-function validateApiKey(event: APIGatewayProxyEvent): void {
+async function validateApiKey(event: APIGatewayProxyEvent): Promise<void> {
   const apiKey = event.headers?.['x-api-key'] || event.headers?.['X-Api-Key'];
-  const expectedApiKey = process.env.API_KEY;
 
   if (!apiKey) {
     throw new AuthenticationError('API key is required');
   }
 
-  if (!expectedApiKey) {
+  // Secrets ManagerからAPIキーを取得（キャッシュ使用）
+  let expectedApiKey: string;
+  try {
+    expectedApiKey = await getApiKey();
+  } catch (error) {
+    logger.error('Failed to get API key from Secrets Manager', {
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
+      error_message: error instanceof Error ? error.message : String(error),
+    });
     throw new AuthenticationError('API key configuration is missing');
   }
 

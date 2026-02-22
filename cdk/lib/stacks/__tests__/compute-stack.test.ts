@@ -229,7 +229,7 @@ describe('TdnetComputeStack', () => {
         Environment: {
           Variables: Match.objectLike({
             DYNAMODB_TABLE: Match.anyValue(),
-            DYNAMODB_EXECUTIONS_TABLE: Match.anyValue(),
+            EXECUTION_STATE_TABLE: Match.anyValue(),
             S3_BUCKET: Match.anyValue(),
             TDNET_BASE_URL: 'https://www.release.tdnet.info/inbs',
             ENVIRONMENT: 'prod',

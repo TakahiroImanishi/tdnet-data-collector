@@ -6,6 +6,9 @@
 
 import { Context } from 'aws-lambda';
 import { handler } from '../handler';
+import * as secretsManager from '../../../../utils/secrets-manager';
+
+jest.mock('../../../../utils/secrets-manager');
 import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
@@ -46,13 +49,11 @@ describe('Lambda PDF Download Handler', () => {
     jest.clearAllMocks();
 
     // デフォルトのモック設定
-    process.env.API_KEY = 'test-api-key';
     process.env.DYNAMODB_TABLE_NAME = 'tdnet_disclosures';
     process.env.S3_BUCKET_NAME = 'tdnet-pdfs';
 
-    secretsManagerMock.on(GetSecretValueCommand).resolves({
-      SecretString: 'test-api-key',
-    });
+    // Secrets Manager モック（getApiKey関数をモック）
+    (secretsManager.getApiKey as jest.Mock).mockResolvedValue('test-api-key');
 
     (getSignedUrl as jest.Mock).mockResolvedValue('https://s3.amazonaws.com/signed-url');
   });
@@ -552,10 +553,12 @@ describe('Lambda PDF Download Handler', () => {
   });
 
   describe('異常系: API認証設定', () => {
-    it('API_KEY環境変数が未設定の場合は401エラーを返す', async () => {
+    it('Secrets ManagerからAPIキー取得失敗時は401エラーを返す', async () => {
       // Arrange
-      const originalApiKey = process.env.API_KEY;
-      delete process.env.API_KEY; // 環境変数未設定
+      // Secrets Manager取得失敗をモック
+      (secretsManager.getApiKey as jest.Mock).mockRejectedValueOnce(
+        new Error('Failed to get API key')
+      );
 
       const event: any = {
         pathParameters: {
@@ -585,9 +588,6 @@ describe('Lambda PDF Download Handler', () => {
       const body = JSON.parse(result.body);
       expect(body.error.code).toBe('UNAUTHORIZED');
       expect(body.error.message).toContain('API key configuration is missing');
-
-      // 環境変数を復元
-      if (originalApiKey) process.env.API_KEY = originalApiKey;
     });
   });
 

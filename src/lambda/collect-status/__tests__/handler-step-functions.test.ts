@@ -37,14 +37,12 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
     dynamoMock.reset();
     process.env.STATE_MACHINE_ARN = 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow';
     process.env.EXECUTION_STATE_TABLE = 'test-execution-state-table';
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
     process.env.AWS_REGION = 'ap-northeast-1';
   });
 
   afterEach(() => {
     delete process.env.STATE_MACHINE_ARN;
     delete process.env.EXECUTION_STATE_TABLE;
-    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
     delete process.env.AWS_REGION;
   });
 

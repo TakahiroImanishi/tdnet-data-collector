@@ -16,7 +16,7 @@ const dynamoClient = new DynamoDBClient({});
 
 // 環境変数は関数内で取得（テスト時の柔軟性のため）
 function getDynamoExecutionsTable(): string {
-  return process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
+  return process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod';
 }
 
 /**

@@ -32,12 +32,12 @@ const mockContext: Context = {
 describe('GET /collect/{execution_id} Handler', () => {
   beforeEach(() => {
     dynamoMock.reset();
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+    process.env.EXECUTION_STATE_TABLE = 'test-executions-table';
     process.env.AWS_REGION = 'ap-northeast-1';
   });
 
   afterEach(() => {
-    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+    delete process.env.EXECUTION_STATE_TABLE;
     delete process.env.AWS_REGION;
   });
 
@@ -717,9 +717,9 @@ describe('GET /collect/{execution_id} Handler', () => {
       process.env.AWS_REGION = 'ap-northeast-1';
     });
 
-    it('DYNAMODB_EXECUTIONS_TABLEが未設定の場合もハンドラーが正常に動作する', async () => {
-      // DYNAMODB_EXECUTIONS_TABLEを削除してデフォルト値（tdnet_executions）を使用
-      delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+    it('EXECUTION_STATE_TABLEが未設定の場合もハンドラーが正常に動作する', async () => {
+      // EXECUTION_STATE_TABLEを削除してデフォルト値（ExecutionState_prod）を使用
+      delete process.env.EXECUTION_STATE_TABLE;
 
       const executionStatus = {
         execution_id: 'exec_default_table',
@@ -759,8 +759,8 @@ describe('GET /collect/{execution_id} Handler', () => {
       expect(body.status).toBe('success');
       expect(body.data.execution_id).toBe('exec_default_table');
 
-      // DYNAMODB_EXECUTIONS_TABLEを元に戻す
-      process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+      // EXECUTION_STATE_TABLEを元に戻す
+      process.env.EXECUTION_STATE_TABLE = 'test-executions-table';
     });
   });
 });

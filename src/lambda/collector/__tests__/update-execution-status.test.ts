@@ -15,13 +15,13 @@ const dynamoMock = mockClient(DynamoDBClient);
 describe('updateExecutionStatus', () => {
   beforeEach(() => {
     dynamoMock.reset();
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+    process.env.EXECUTION_STATE_TABLE = 'test-executions-table';
     process.env.AWS_REGION = 'ap-northeast-1';
     process.env.ENVIRONMENT = 'test';
   });
 
   afterEach(() => {
-    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+    delete process.env.EXECUTION_STATE_TABLE;
     delete process.env.AWS_REGION;
     delete process.env.ENVIRONMENT;
   });
@@ -178,11 +178,11 @@ describe('updateExecutionStatus', () => {
 describe('getExecutionStatus', () => {
   beforeEach(() => {
     dynamoMock.reset();
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+    process.env.EXECUTION_STATE_TABLE = 'test-executions-table';
   });
 
   afterEach(() => {
-    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+    delete process.env.EXECUTION_STATE_TABLE;
   });
 
   describe('正常系', () => {

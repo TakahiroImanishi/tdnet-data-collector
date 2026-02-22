@@ -370,30 +370,32 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `.kiro/specs/tdnet-data-collector/work-logs/work-log-[日時]-step-functions-execution-test.md`
 
 #### タスク6.2.1: IAM権限の修正（優先度: 高）
-- [ ] CDKでcollector-init Lambda関数にDynamoDB PutItem権限を付与
-- [ ] 他のcollector Lambda関数（fetch, save, aggregate）の権限も確認
-- [ ] ユニットテストの更新
+- [x] CDKでcollector-init Lambda関数にDynamoDB PutItem権限を付与
+- [x] 他のcollector Lambda関数（fetch, save, aggregate）の権限も確認
+- [x] ユニットテストの更新
 - [ ] 本番環境への再デプロイ
 - [ ] 動作確認（タスク6.2の続き）
 
+**完了日時**: 2026-02-23 08:06:00（環境変数修正完了）
+**テスト結果**: update-execution-status 10/10成功、collector-init 15/15成功
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-080330-iam-permissions-fix.md`
+
 **問題**: `collector-init` Lambda関数がExecutionStateテーブル（`tdnet_executions`）への書き込み権限を持っていない
 
-**エラー**: `AccessDeniedException: User: arn:aws:sts::803879841964:assumed-role/TdnetCompute-prod-CollectorInitFunctionServiceRoleD-qvi2BLQ0PBAL/tdnet-collector-init-prod is not authorized to perform: dynamodb:PutItem on resource: arn:aws:dynamodb:ap-northeast-1:803879841964:table/tdnet_executions`
+**根本原因**: 環境変数名の不一致
+- CDK設定: `EXECUTION_STATE_TABLE`
+- Lambda実装: `DYNAMODB_EXECUTIONS_TABLE`（`src/lambda/collector/update-execution-status.ts`）
 
 **修正内容**:
-1. `cdk/lib/constructs/step-functions-collector.ts`でIAM権限を追加
-   - collector-init: PutItem, UpdateItem権限
-   - collector-aggregate: UpdateItem権限
-   - collector-fetch, collector-save: 権限確認（必要に応じて追加）
+1. `src/lambda/collector/update-execution-status.ts`の環境変数名を`EXECUTION_STATE_TABLE`に統一
+2. デフォルトテーブル名を`ExecutionState_prod`に変更
+3. 10個のテストファイルで環境変数名を統一
 
-2. ExecutionStateテーブルのテーブル名確認
-   - 現在: `tdnet_executions`
-   - CDK定義: `tdnet_executions_prod` または `tdnet_executions_dev`
-   - 環境変数の設定確認
+**IAM権限について**: Compute Stackでは既に`grantReadWriteData`を使用してIAM権限を付与済み。今回の問題は環境変数名の不一致が原因であり、IAM権限自体は正しく設定されていた。
 
 **成果物**:
-- `cdk/lib/constructs/step-functions-collector.ts`（更新）
-- `cdk/lib/constructs/__tests__/step-functions-collector.test.ts`（更新）
+- `src/lambda/collector/update-execution-status.ts`（更新）✓
+- 10個のテストファイル（更新）✓
 
 #### タスク6.2.2: Secrets Manager APIキー取得エラーの原因調査（優先度: 中）
 - [ ] Secrets Manager APIキー取得のネットワークエラー問題を調査

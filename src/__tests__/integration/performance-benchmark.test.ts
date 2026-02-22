@@ -37,7 +37,7 @@ describe('パフォーマンスベンチマーク', () => {
   beforeAll(() => {
     // 環境変数の設定
     process.env.DYNAMODB_TABLE = 'tdnet_disclosures_test';
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'tdnet_executions_test';
+    process.env.EXECUTION_STATE_TABLE = 'ExecutionState_prod_test';
     process.env.S3_BUCKET = 'tdnet-pdfs-test';
     process.env.LOG_LEVEL = 'ERROR'; // ベンチマーク中はログを最小限に
   });
@@ -45,7 +45,7 @@ describe('パフォーマンスベンチマーク', () => {
   afterAll(() => {
     // 環境変数のクリーンアップ
     delete process.env.DYNAMODB_TABLE;
-    delete process.env.DYNAMODB_EXECUTIONS_TABLE;
+    delete process.env.EXECUTION_STATE_TABLE;
     delete process.env.S3_BUCKET;
     delete process.env.LOG_LEVEL;
   });

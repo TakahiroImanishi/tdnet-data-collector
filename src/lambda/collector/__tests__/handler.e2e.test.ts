@@ -48,7 +48,7 @@ const s3Client = new S3Client({
 describe('Lambda Collector Handler E2E Tests', () => {
   let mockContext: Context;
   const tableName = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
-  const executionsTableName = process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
+  const executionsTableName = process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod';
   const bucketName = process.env.S3_BUCKET_NAME || 'tdnet-pdfs-local';
 
   beforeEach(() => {
@@ -70,7 +70,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
 
     // 環境変数設定
     process.env.DYNAMODB_TABLE_NAME = tableName;
-    process.env.DYNAMODB_EXECUTIONS_TABLE = executionsTableName;
+    process.env.EXECUTION_STATE_TABLE = executionsTableName;
     process.env.S3_BUCKET_NAME = bucketName;
   });
 

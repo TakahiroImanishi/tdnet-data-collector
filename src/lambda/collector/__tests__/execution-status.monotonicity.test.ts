@@ -18,7 +18,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     dynamoMock.reset();
-    process.env.DYNAMODB_EXECUTIONS_TABLE = 'test-executions-table';
+    process.env.EXECUTION_STATE_TABLE = 'test-executions-table';
   });
 
   describe('ユニットテスト', () => {

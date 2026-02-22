@@ -82,7 +82,7 @@ describe('Lambda Collector Aggregate Handler - 統合テスト', () => {
     // DynamoDBから実行状態を取得
     const result = await dynamoClient.send(
       new GetItemCommand({
-        TableName: process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions',
+        TableName: process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod',
         Key: marshall({ execution_id }),
       })
     );
@@ -126,7 +126,7 @@ describe('Lambda Collector Aggregate Handler - 統合テスト', () => {
     // DynamoDBから実行状態を取得
     const result = await dynamoClient.send(
       new GetItemCommand({
-        TableName: process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions',
+        TableName: process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod',
         Key: marshall({ execution_id }),
       })
     );
@@ -164,7 +164,7 @@ describe('Lambda Collector Aggregate Handler - 統合テスト', () => {
     // DynamoDBから実行状態を取得
     const result = await dynamoClient.send(
       new GetItemCommand({
-        TableName: process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions',
+        TableName: process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod',
         Key: marshall({ execution_id }),
       })
     );
