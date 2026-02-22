@@ -1,5 +1,6 @@
 # Step Functions実行キャンセルスクリプト
 # タスク5.3: 運用スクリプト更新
+# タスク8.1.2: 運用スクリプトの改善（環境情報自動取得）
 
 param(
     [Parameter(Mandatory=$false)]
@@ -7,6 +8,13 @@ param(
     
     [Parameter(Mandatory=$false)]
     [string]$ExecutionId,
+    
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("dev", "prod")]
+    [string]$Environment = "prod",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$Profile,
     
     [Parameter(Mandatory=$false)]
     [string]$Reason,
@@ -40,6 +48,8 @@ if ($Help) {
     Write-Host "パラメータ:" -ForegroundColor Yellow
     Write-Host "  -ExecutionId   : 実行ID（例: exec_1234567890_abc123_12345678）" -ForegroundColor White
     Write-Host "  -ExecutionArn  : 実行ARN（例: arn:aws:states:...）" -ForegroundColor White
+    Write-Host "  -Environment   : 環境名（dev または prod、デフォルト: prod）" -ForegroundColor White
+    Write-Host "  -Profile       : AWS CLIプロファイル名（オプション）" -ForegroundColor White
     Write-Host "  -Reason        : キャンセル理由（オプション）" -ForegroundColor White
     Write-Host "  -Force         : 確認プロンプトをスキップ" -ForegroundColor White
     Write-Host "  -Help          : このヘルプメッセージを表示" -ForegroundColor White
@@ -52,6 +62,9 @@ if ($Help) {
     exit 0
 }
 
+# 共通関数の読み込み
+. "$PSScriptRoot/lib/get-stack-outputs.ps1"
+
 # パラメータ検証
 if (-not $ExecutionArn -and -not $ExecutionId) {
     Write-Host "❌ エラー: ExecutionArn または ExecutionId のいずれかを指定してください" -ForegroundColor Red
@@ -62,12 +75,36 @@ if (-not $ExecutionArn -and -not $ExecutionId) {
     exit 1
 }
 
-# 本番環境設定
-$Region = "ap-northeast-1"
-$StateMachineName = "tdnet-collector-prod"
-
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Step Functions実行キャンセル" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# 環境情報を取得
+try {
+    Write-Host "環境情報を取得中..." -ForegroundColor Cyan
+    $stackOutputs = Get-StackOutputs -Environment $Environment -Profile $Profile
+    $Region = $stackOutputs.Region
+    
+    # StateMachineArnが存在する場合は取得（Step Functions有効時のみ）
+    if ($stackOutputs.ContainsKey("StateMachineArn")) {
+        $stateMachineArn = $stackOutputs.StateMachineArn
+        # StateMachine名を抽出
+        if ($stateMachineArn -match ":stateMachine:(.+)$") {
+            $StateMachineName = $Matches[1]
+        }
+    } else {
+        # フォールバック: 環境名から推測
+        $StateMachineName = "tdnet-collector-$Environment"
+    }
+    
+    Write-Host "✅ 環境情報を取得しました（環境: $Environment）" -ForegroundColor Green
+    Write-Host ""
+} catch {
+    Write-Host ""
+    Write-Host "詳細: .kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md" -ForegroundColor Gray
+    exit 1
+}
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 

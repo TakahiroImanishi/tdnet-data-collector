@@ -569,20 +569,26 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
    - `check-step-functions-execution.ps1`
    - `cancel-step-functions-execution.ps1`
    - `fetch-data-range.ps1`
-   - 環境（dev/prod）をパラメータで指定可能にする
-   - ハードコーディングを排除
+
+各スクリプトで以下を実現:
+- 環境（dev/prod）をパラメータで指定可能
+- CDK Outputsから環境情報を自動取得
+- エラーハンドリングの改善
+
+**完了日時**: 2026-02-23 07:29:28
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-072928-operation-scripts-improvement.md`
 
 **成果物**:
-- `scripts/lib/get-stack-outputs.ps1`（新規）
-- `scripts/manual-data-collection.ps1`（更新）
-- `scripts/check-step-functions-execution.ps1`（更新）
-- `scripts/cancel-step-functions-execution.ps1`（更新）
-- `scripts/fetch-data-range.ps1`（更新）
+- `scripts/lib/get-stack-outputs.ps1`（新規）✓
+- `scripts/manual-data-collection.ps1`（更新）✓
+- `scripts/check-step-functions-execution.ps1`（更新）✓
+- `scripts/cancel-step-functions-execution.ps1`（更新）✓
+- `scripts/fetch-data-range.ps1`（更新）✓
 
 **完了条件**:
-- すべての運用スクリプトでハードコーディングが排除
-- 環境（dev/prod）の切り替えが容易
-- エラーハンドリングが適切に実装
+- ✅ すべての運用スクリプトでハードコーディングが排除
+- ✅ 環境（dev/prod）の切り替えが容易
+- ✅ エラーハンドリングが適切に実装
 
 #### タスク8.1.3: 運用ドキュメントの整備（優先度: 中）
 

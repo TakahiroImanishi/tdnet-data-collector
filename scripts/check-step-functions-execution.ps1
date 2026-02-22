@@ -1,5 +1,6 @@
 # Step Functions実行状態確認スクリプト
 # タスク5.3: 運用スクリプト更新
+# タスク8.1.2: 運用スクリプトの改善（環境情報自動取得）
 
 param(
     [Parameter(Mandatory=$false)]
@@ -7,6 +8,13 @@ param(
     
     [Parameter(Mandatory=$false)]
     [string]$ExecutionId,
+    
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("dev", "prod")]
+    [string]$Environment = "prod",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$Profile,
     
     [Parameter(Mandatory=$false)]
     [switch]$Json,
@@ -24,6 +32,9 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
     $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 }
 
+# 共通関数の読み込み
+. "$PSScriptRoot/lib/get-stack-outputs.ps1"
+
 # ヘルプメッセージ
 if ($Help) {
     Write-Host "========================================" -ForegroundColor Cyan
@@ -37,6 +48,8 @@ if ($Help) {
     Write-Host "パラメータ:" -ForegroundColor Yellow
     Write-Host "  -ExecutionId   : 実行ID（例: exec_1234567890_abc123_12345678）" -ForegroundColor White
     Write-Host "  -ExecutionArn  : 実行ARN（例: arn:aws:states:...）" -ForegroundColor White
+    Write-Host "  -Environment   : 環境名（dev または prod、デフォルト: prod）" -ForegroundColor White
+    Write-Host "  -Profile       : AWS CLIプロファイル名（オプション）" -ForegroundColor White
     Write-Host "  -Json          : JSON形式で出力" -ForegroundColor White
     Write-Host "  -Help          : このヘルプメッセージを表示" -ForegroundColor White
     Write-Host ""
@@ -57,17 +70,41 @@ if (-not $ExecutionArn -and -not $ExecutionId) {
     exit 1
 }
 
-# 本番環境設定
-$ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod"
-$Region = "ap-northeast-1"
-$SecretName = "/tdnet/api-key-prod"
+if (-not $Json) {
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "Step Functions実行状態確認" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host ""
+}
+
+# 環境情報を取得
+try {
+    if (-not $Json) {
+        Write-Host "環境情報を取得中..." -ForegroundColor Cyan
+    }
+    $stackOutputs = Get-StackOutputs -Environment $Environment -Profile $Profile
+    $ApiEndpoint = $stackOutputs.ApiEndpoint
+    $Region = $stackOutputs.Region
+    $SecretName = $stackOutputs.ApiKeySecretName
+    if (-not $Json) {
+        Write-Host "✅ 環境情報を取得しました（環境: $Environment）" -ForegroundColor Green
+        Write-Host ""
+    }
+} catch {
+    if (-not $Json) {
+        Write-Host ""
+        Write-Host "詳細: .kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md" -ForegroundColor Gray
+    }
+    exit 1
+}
 
 # APIキー取得関数（リトライ機能付き）
 function Get-ApiKeyWithRetry {
     param(
         [string]$SecretName,
         [string]$Region,
-        [int]$MaxRetries = 3
+        [int]$MaxRetries = 3,
+        [bool]$Silent = $false
     )
     
     $retryCount = 0
@@ -100,7 +137,9 @@ function Get-ApiKeyWithRetry {
             
             if ($errorType -eq "NETWORK_ERROR" -and $retryCount -lt ($MaxRetries - 1)) {
                 $retryCount++
-                Write-Host "⚠️ ネットワークエラー。$delay 秒後にリトライします... ($retryCount/$MaxRetries)" -ForegroundColor Yellow
+                if (-not $Silent) {
+                    Write-Host "⚠️ ネットワークエラー。$delay 秒後にリトライします... ($retryCount/$MaxRetries)" -ForegroundColor Yellow
+                }
                 Start-Sleep -Seconds $delay
                 $delay *= 2
                 continue
@@ -126,10 +165,12 @@ if ($envApiKey) {
     $ApiKey = $envApiKey
 } else {
     try {
-        $ApiKey = Get-ApiKeyWithRetry -SecretName $SecretName -Region $Region
+        $ApiKey = Get-ApiKeyWithRetry -SecretName $SecretName -Region $Region -Silent $Json
     } catch {
-        Write-Host "❌ APIキーの取得に失敗しました" -ForegroundColor Red
-        Write-Host "詳細: 環境変数 TDNET_API_KEY を設定するか、Secrets Managerにシークレットを登録してください" -ForegroundColor Yellow
+        if (-not $Json) {
+            Write-Host "❌ APIキーの取得に失敗しました" -ForegroundColor Red
+            Write-Host "詳細: 環境変数 TDNET_API_KEY を設定するか、Secrets Managerにシークレットを登録してください" -ForegroundColor Yellow
+        }
         exit 1
     }
 }

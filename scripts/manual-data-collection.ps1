@@ -1,5 +1,6 @@
 # 手動データ収集スクリプト
 # タスク31.6: 初回データ収集の実行
+# タスク8.1.2: 運用スクリプトの改善（環境情報自動取得）
 
 param(
     [Parameter(Mandatory=$false)]
@@ -9,7 +10,14 @@ param(
     [string]$EndDate = (Get-Date).ToString("yyyy-MM-dd"),
     
     [Parameter(Mandatory=$false)]
-    [int]$MaxItems = 10
+    [int]$MaxItems = 10,
+    
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("dev", "prod")]
+    [string]$Environment = "prod",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$Profile
 )
 
 # UTF-8エンコーディング設定（包括的）
@@ -21,10 +29,23 @@ if ($PSVersionTable.PSVersion.Major -le 5) {
     $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 }
 
-# 本番環境設定
-$ApiEndpoint = "https://g7fy393l2j.execute-api.ap-northeast-1.amazonaws.com/prod"
-$Region = "ap-northeast-1"
-$SecretName = "/tdnet/api-key-prod"
+# 共通関数の読み込み
+. "$PSScriptRoot/lib/get-stack-outputs.ps1"
+
+# 環境情報を取得
+try {
+    Write-Host "環境情報を取得中..." -ForegroundColor Cyan
+    $stackOutputs = Get-StackOutputs -Environment $Environment -Profile $Profile
+    $ApiEndpoint = $stackOutputs.ApiEndpoint
+    $Region = $stackOutputs.Region
+    $SecretName = $stackOutputs.ApiKeySecretName
+    Write-Host "✅ 環境情報を取得しました（環境: $Environment）" -ForegroundColor Green
+    Write-Host ""
+} catch {
+    Write-Host ""
+    Write-Host "詳細: .kiro/specs/tdnet-data-collector/docs/03-operations/troubleshooting.md" -ForegroundColor Gray
+    exit 1
+}
 
 # APIキー取得関数（リトライ機能付き）
 function Get-ApiKeyWithRetry {
