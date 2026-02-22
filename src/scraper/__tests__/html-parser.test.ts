@@ -1,10 +1,6 @@
 /**
  * HTMLパーサーのユニットテスト
  *
- * steeringファイル準拠:
- * - development/tdnet-scraping-patterns.md
- * - core/error-handling-patterns.md
- *
  * Requirements: 要件1.2（メタデータ抽出）
  */
 

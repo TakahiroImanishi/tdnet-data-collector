@@ -53,17 +53,17 @@ TDnet Dashboardは、S3 + CloudFrontを使用した静的Webサイトとして�
 
 ## 環境変数の設定
 
-### 開発環境 (.env.development)
+### LocalStack環境 (.env.local)
 
 ```env
 # API Gateway URL (LocalStack)
 REACT_APP_API_URL=http://localhost:4566
 
-# API Key (開発用)
+# API Key (LocalStack用)
 REACT_APP_API_KEY=dev-api-key-12345
 
 # 環境
-REACT_APP_ENV=development
+REACT_APP_ENV=local
 ```
 
 ### 本番環境 (.env.production)

@@ -15,7 +15,7 @@ describe('RateLimiter - Property Tests', () => {
      * 任意の回数のリクエストに対して、連続リクエスト間で
      * 最小遅延時間が確保されることを検証する。
      * 
-     * Steering準拠: development/testing-strategy.md
+     * テスト戦略:
      * - 最低100回の反復実行（推奨1000回）
      * 
      * 検証内容:

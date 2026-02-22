@@ -221,3 +221,30 @@ AWS上のdev環境は既に削除されています。すべてのdev環境ス�
 - `.kiro/specs/tdnet-data-collector/docs/03-operations/deployment.md`
 - `scripts/deploy-dev.ps1`
 - `cdk/README.md`
+
+
+### S3バケット確認
+
+```powershell
+aws s3 ls --profile imanishi-awssso | Select-String "tdnet"
+```
+
+**結果**: dev環境のS3バケットが残存
+
+| バケット名 | 作成日時 | 状態 |
+|-----------|---------|------|
+| tdnet-cloudtrail-logs-dev-803879841964 | 2026-02-22 16:38:37 | 存在 |
+| tdnet-dashboard-dev-803879841964 | 2026-02-22 16:38:37 | 存在 |
+| tdnet-data-collector-exports-dev-803879841964 | 2026-02-14 17:39:21 | 存在 |
+| tdnet-data-collector-pdfs-dev-803879841964 | 2026-02-14 17:39:21 | 存在 |
+
+**prod環境のバケット（削除対象外）**:
+- tdnet-cloudtrail-logs-prod-803879841964
+- tdnet-dashboard-prod-803879841964
+- tdnet-data-collector-exports-prod-803879841964
+- tdnet-data-collector-pdfs-prod-803879841964
+
+### S3バケット削除
+
+dev環境のS3バケットを削除します。
+

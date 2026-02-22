@@ -49,17 +49,17 @@ npm install
 
 ### 環境変数の設定
 
-`.env.development`ファイルを作成し、以下の環境変数を設定してください：
+`.env.local`ファイルを作成し、以下の環境変数を設定してください：
 
 ```env
-# API Gateway URL（開発環境）
+# API Gateway URL（LocalStack環境）
 REACT_APP_API_URL=http://localhost:4566
 
-# API Key（開発環境用）
+# API Key（LocalStack環境用）
 REACT_APP_API_KEY=dev-api-key-12345
 
 # 環境
-REACT_APP_ENV=development
+REACT_APP_ENV=local
 ```
 
 本番環境用には`.env.production`を作成してください。
@@ -97,7 +97,7 @@ dashboard/
 │   │   └── disclosure.ts         # 開示情報の型
 │   ├── App.tsx          # アプリケーションルート
 │   └── index.tsx        # エントリーポイント
-├── .env.development     # 開発環境変数
+├── .env.local           # LocalStack環境変数
 ├── package.json
 └── README.md
 ```

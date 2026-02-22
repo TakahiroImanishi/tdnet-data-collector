@@ -122,8 +122,6 @@ npm run format
 
 ### ファイル命名規則
 
-詳細は [.kiro/steering/development/tdnet-file-naming.md](.kiro/steering/development/tdnet-file-naming.md) を参照してください。
-
 - **ケバブケース**: `disclosure-validator.ts`
 - **テストファイル**: `disclosure-validator.test.ts`
 - **型定義**: `src/types/index.ts`
@@ -132,8 +130,6 @@ npm run format
 ---
 
 ## テスト要件
-
-このプロジェクトは、[.kiro/steering/development/testing-strategy.md](.kiro/steering/development/testing-strategy.md)に定義されたテスト戦略に従います。
 
 ### テストカバレッジ目標
 
@@ -315,8 +311,6 @@ git commit -m "[docs] CONTRIBUTING.mdを作成"
 
 ### ドキュメント標準
 
-詳細は [.kiro/steering/development/documentation-standards.md](.kiro/steering/development/documentation-standards.md) を参照してください。
-
 ### ドキュメントの種類
 
 #### 1. コード内ドキュメント
@@ -437,7 +431,6 @@ export function generateDisclosureId(
 
 - [README.md](README.md) - プロジェクト概要
 - [実装ルール](.kiro/steering/core/tdnet-implementation-rules.md) - 基本的な実装原則
-- [テスト戦略](.kiro/steering/development/testing-strategy.md) - テストガイドライン
 - [エラーハンドリングパターン](.kiro/steering/core/error-handling-patterns.md) - エラー処理のベストプラクティス
 - [タスクリスト](.kiro/specs/tdnet-data-collector/tasks.md) - 開発タスクと進捗
 

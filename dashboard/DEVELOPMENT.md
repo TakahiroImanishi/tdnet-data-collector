@@ -20,8 +20,8 @@ cd tdnet-data-collector/dashboard
 npm install
 
 # 環境変数の設定
-cp .env.development.example .env.development
-# .env.developmentを編集してAPI URLとAPI Keyを設定
+cp .env.example .env.local
+# .env.localを編集してAPI URLとAPI Keyを設定
 
 # 開発サーバーの起動
 npm start
