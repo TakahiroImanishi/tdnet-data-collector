@@ -1666,9 +1666,11 @@ app.synth();
 - [ ] Lambda Query Handlerテストの3つの失敗を修正
   - ファイル: `src/lambda/query/__tests__/handler.test.ts`
   - 失敗数: 3テスト（成功: 23テスト）
-- [ ] Lambda Export to S3テストの1つの失敗を修正
+- [x] Lambda Export to S3テストの1つの失敗を修正
   - ファイル: `src/lambda/export/__tests__/export-to-s3.test.ts`
-  - 失敗数: 1テスト（成功: 9テスト）
+  - 失敗数: 0テスト（成功: 10テスト）
+  - 完了日時: 2026-02-22 14:40
+  - 修正内容: CSVフィールドマッピング不整合を解消（`s3_key`/`collected_at` → `pdf_s3_key`/`downloaded_at`）
 
 **修正方針**:
 1. 各テストファイルの失敗原因を特定（モック設定、実装との不整合等）

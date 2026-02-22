@@ -98,6 +98,16 @@ describe('Lambda Query Handler', () => {
   });
 
   describe('APIキー認証', () => {
+    beforeEach(() => {
+      // APIキー認証テストでは認証を有効化
+      delete process.env.TEST_ENV;
+    });
+
+    afterEach(() => {
+      // 他のテストのために元に戻す
+      process.env.TEST_ENV = 'e2e';
+    });
+
     it('有効なAPIキーで認証成功', async () => {
       const mockDisclosures: Disclosure[] = [
         {
@@ -559,12 +569,18 @@ describe('Lambda Query Handler', () => {
     });
 
     it('エラーレスポンスにもCORSヘッダーが含まれる', async () => {
+      // APIキー認証を有効化
+      delete process.env.TEST_ENV;
+      
       mockEvent.headers = {}; // APIキーなし
 
       const result = await handler(mockEvent, mockContext);
 
       expect(result.statusCode).toBe(401);
       expect(result.headers!['Access-Control-Allow-Origin']).toBe('*');
+      
+      // 元に戻す
+      process.env.TEST_ENV = 'e2e';
     });
   });
 
