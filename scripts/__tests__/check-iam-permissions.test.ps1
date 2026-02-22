@@ -25,7 +25,7 @@ $script:TestResults = @{
 
 # テスト用の変数
 $ScriptPath = Join-Path $PSScriptRoot ".." "check-iam-permissions.ps1"
-$TestEnvironment = "dev"
+$TestEnvironment = "local"
 $TestRegion = "ap-northeast-1"
 $TestFunctionName = "tdnet-collector-$TestEnvironment"
 

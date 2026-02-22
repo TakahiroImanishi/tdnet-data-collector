@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory=$false)]
-    [string]$Environment = "dev",
+    [ValidateSet("local", "production")]
+    [string]$Environment = "local",
     [Parameter(Mandatory=$false)]
     [switch]$SkipBuild = $false
 )
@@ -34,7 +35,7 @@ $buildDir = Join-Path $dashboardDir "build"
 $envFile = Join-Path $dashboardDir ".env.production"
 
 # Secrets Managerから環境変数を取得して.env.productionを生成
-if ($Environment -eq "prod") {
+if ($Environment -eq "production") {
     Write-ColorOutput "`nSecrets Managerから環境変数を取得中..." "Cyan"
     
     try {

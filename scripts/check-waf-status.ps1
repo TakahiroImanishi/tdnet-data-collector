@@ -3,8 +3,8 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet('dev', 'prod')]
-    [string]$Environment = 'prod'
+    [ValidateSet('local', 'production')]
+    [string]$Environment = 'production'
 )
 
 # UTF-8エンコーディング設定（包括的）

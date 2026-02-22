@@ -159,3 +159,65 @@ aws cloudformation describe-stacks --query "Stacks[?contains(StackName, 'dev')].
 
 #### 1. Monitoring Stack削除
 
+
+
+### 実行結果
+
+#### AWS SSO認証
+
+```powershell
+aws sso login --profile imanishi-awssso
+# 成功: ブラウザでSSOログイン完了
+```
+
+#### 現在のスタック確認
+
+```powershell
+aws cloudformation list-stacks --profile imanishi-awssso --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE ROLLBACK_COMPLETE UPDATE_ROLLBACK_COMPLETE --query "StackSummaries[].{Name:StackName,Status:StackStatus}" --output table
+```
+
+**結果**: 現在存在するスタック
+- TdnetMonitoring-prod (UPDATE_COMPLETE)
+- TdnetApi-prod (UPDATE_COMPLETE)
+- TdnetCompute-prod (UPDATE_COMPLETE)
+- TdnetFoundation-prod (UPDATE_COMPLETE)
+- CDKToolkit (CREATE_COMPLETE)
+
+#### dev環境削除状況確認
+
+```powershell
+aws cloudformation list-stacks --profile imanishi-awssso --query "StackSummaries[?contains(StackName, 'dev')].{Name:StackName,Status:StackStatus,DeletionTime:DeletionTime}" --output table
+```
+
+**結果**: dev環境のスタックは既に削除済み
+
+| スタック名 | ステータス | 削除日時 |
+|-----------|-----------|---------|
+| TdnetMonitoring-dev | DELETE_COMPLETE | 2026-02-22T07:33:56 |
+| TdnetApi-dev | DELETE_COMPLETE | 2026-02-22T07:34:46 |
+| TdnetCompute-dev | DELETE_COMPLETE | 2026-02-22T07:35:37 |
+| TdnetFoundation-dev | DELETE_COMPLETE | 2026-02-22T07:38:25 |
+
+## 結論
+
+AWS上のdev環境は既に削除されています。すべてのdev環境スタック（Foundation, Compute, API, Monitoring）が`DELETE_COMPLETE`ステータスで、2026-02-22の朝に削除されたことが確認できました。
+
+現在AWS上に存在するのはprod環境のみです。
+
+## 成果物
+
+- dev環境の削除状況確認完了
+- prod環境のみが稼働中であることを確認
+
+## 申し送り事項
+
+1. **dev環境は既に削除済み**: 追加の削除作業は不要です
+2. **prod環境は正常稼働中**: すべてのスタックが`UPDATE_COMPLETE`ステータス
+3. **AWS SSOプロファイル**: `imanishi-awssso`プロファイルを使用してAWS操作を実行
+4. **次回のdev環境デプロイ**: 必要に応じて`scripts/deploy-dev.ps1`で再デプロイ可能
+
+## 関連ドキュメント
+
+- `.kiro/specs/tdnet-data-collector/docs/03-operations/deployment.md`
+- `scripts/deploy-dev.ps1`
+- `cdk/README.md`

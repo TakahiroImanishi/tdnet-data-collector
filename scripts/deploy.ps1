@@ -3,8 +3,8 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet("dev", "prod")]
-    [string]$Environment = "dev",
+    [ValidateSet("local", "production")]
+    [string]$Environment = "local",
     
     [Parameter(Mandatory=$false)]
     [string]$Region = "ap-northeast-1",
@@ -258,7 +258,7 @@ Write-Host "[$step/$totalSteps] 🚢 Deploying to AWS..." -ForegroundColor Cyan
 $step++
 
 # 本番環境の場合は承認を要求
-$requireApproval = if ($Environment -eq "prod") { "always" } else { "never" }
+$requireApproval = if ($Environment -eq "production") { "always" } else { "never" }
 
 try {
     cdk deploy --require-approval $requireApproval

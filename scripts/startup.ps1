@@ -112,7 +112,6 @@ Write-Host "Environment variable set:" -ForegroundColor Yellow
 Write-Host "  AWS_PROFILE=$Profile" -ForegroundColor Gray
 Write-Host ""
 Write-Host "You can now run deployment scripts:" -ForegroundColor Yellow
-Write-Host "  .\scripts\deploy.ps1 -Environment dev" -ForegroundColor Gray
-Write-Host "  .\scripts\deploy-dev.ps1" -ForegroundColor Gray
-Write-Host "  .\scripts\deploy-prod.ps1" -ForegroundColor Gray
+Write-Host "  .\scripts\deploy.ps1 -Environment local" -ForegroundColor Gray
+Write-Host "  .\scripts\deploy.ps1 -Environment production" -ForegroundColor Gray
 Write-Host ""

@@ -25,7 +25,7 @@ $script:TestResults = @{
 
 # テスト用の変数
 $ScriptPath = Join-Path $PSScriptRoot ".." "register-api-key.ps1"
-$TestEnvironment = "dev"
+$TestEnvironment = "local"
 $TestApiKey = "test-api-key-$(Get-Random -Minimum 1000 -Maximum 9999)"
 $TestSecretName = "/tdnet/api-key-$TestEnvironment"
 $Region = "ap-northeast-1"

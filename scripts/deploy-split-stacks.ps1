@@ -1,9 +1,9 @@
 # Stack Split Deploy Script
-# Usage: .\scripts\deploy-split-stacks.ps1 -Environment dev -Action deploy
+# Usage: .\scripts\deploy-split-stacks.ps1 -Environment local -Action deploy
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet('dev', 'prod')]
+    [ValidateSet('local', 'production')]
     [string]$Environment,
     
     [Parameter(Mandatory=$true)]

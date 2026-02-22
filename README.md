@@ -140,7 +140,6 @@ tdnet-data-collector/
 │   │       └── improvements/     # 改善記録
 │   └── steering/                 # 実装ガイドライン
 │       ├── core/                 # 基本ルール
-│       ├── development/          # 開発ガイドライン
 │       ├── infrastructure/       # インフラ・デプロイ
 │       ├── security/             # セキュリティ
 │       └── api/                  # API設計
@@ -230,8 +229,6 @@ $env:TDNET_API_KEY = "your-api-key"
 - 監査ログ: CloudTrailでアクセス履歴を追跡可能
 - 自動ローテーション: 90日ごとの自動更新（設定済み）
 
-詳細: [データ操作スクリプト](.kiro/steering/development/data-scripts.md)
-
 ---
 
 ## 開発
@@ -295,8 +292,6 @@ npm run test:coverage
 - **Lines**: 80%以上
 - **統合テスト**: 主要フロー100%
 - **プロパティベーステスト**: 重要な関数100%
-
-詳細は [テスト戦略ガイド](.kiro/steering/development/testing-strategy.md) を参照してください。
 
 ---
 
@@ -1138,14 +1133,6 @@ aws logs filter-log-events \
 - [エラーハンドリングパターン](.kiro/steering/core/error-handling-patterns.md) - エラー分類と基本原則
 - [タスク実行ルール](.kiro/steering/core/tdnet-data-collector.md) - タスク実行とフィードバックループ
 
-#### 開発ガイドライン
-
-- [テスト戦略](.kiro/steering/development/testing-strategy.md) - ユニット、統合、プロパティテスト
-- [データバリデーション](.kiro/steering/development/data-validation.md) - バリデーションルール
-- [TDnetスクレイピングパターン](.kiro/steering/development/tdnet-scraping-patterns.md) - スクレイピングのベストプラクティス
-- [エラーハンドリング実装](.kiro/steering/development/error-handling-implementation.md) - 詳細な実装パターン
-- [Lambda実装ガイド](.kiro/steering/development/lambda-implementation.md) - Lambda関数の実装ガイドライン
-
 #### インフラ・デプロイ
 
 - [デプロイチェックリスト](.kiro/steering/infrastructure/deployment-checklist.md) - デプロイ前後のチェックリスト
@@ -1254,7 +1241,6 @@ aws logs filter-log-events \
 **実装箇所**:
 - `src/scraper/html-parser.ts` - 柔軟なセレクタ設計
 - `src/utils/logger.ts` - 構造化ログ
-- `.kiro/steering/development/tdnet-scraping-patterns.md` - スクレイピングパターンガイド
 
 #### 2. AWS Lambda実行時間制限リスク
 
@@ -1319,7 +1305,6 @@ aws logs filter-log-events \
 - `src/lambda/collector/save-metadata.ts` - バッチ書き込み
 - `src/utils/retry.ts` - 再試行ロジック
 - `cdk/lib/constructs/dynamodb-construct.ts` - オンデマンドモード設定
-- `.kiro/steering/infrastructure/performance-optimization.md` - パフォーマンス最適化ガイド
 
 ### 外部依存リスク
 
@@ -1352,7 +1337,6 @@ aws logs filter-log-events \
 
 **詳細ドキュメント**:
 - [外部依存監視ガイド](docs/external-dependency-monitoring.md) - 監視設定と対応フロー
-- [TDnetスクレイピングパターン](.kiro/steering/development/tdnet-scraping-patterns.md) - スクレイピングのベストプラクティス
 
 ### コスト管理
 

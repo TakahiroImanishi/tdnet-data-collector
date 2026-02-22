@@ -25,7 +25,7 @@ $script:TestResults = @{
 
 # テスト用の変数
 $ScriptPath = Join-Path $PSScriptRoot ".." "deploy-dashboard.ps1"
-$TestEnvironment = "dev"
+$TestEnvironment = "local"
 $DashboardDir = Join-Path $PSScriptRoot ".." ".." "dashboard"
 $BuildDir = Join-Path $DashboardDir "build"
 

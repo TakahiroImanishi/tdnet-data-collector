@@ -3,8 +3,8 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet("prod", "dev")]
-    [string]$Environment = "prod",
+    [ValidateSet("production", "local")]
+    [string]$Environment = "production",
     
     [Parameter(Mandatory=$false)]
     [switch]$NoCache,

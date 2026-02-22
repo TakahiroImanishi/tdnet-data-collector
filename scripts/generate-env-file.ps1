@@ -75,7 +75,7 @@ if (Test-Path $OutputFile) {
 
 Write-Host ""
 
-# .env.developmentファイルを生成
+# .env.productionファイルを生成
 Write-Host "📝 Generating $OutputFile..." -ForegroundColor Yellow
 
 $envContent = @"
