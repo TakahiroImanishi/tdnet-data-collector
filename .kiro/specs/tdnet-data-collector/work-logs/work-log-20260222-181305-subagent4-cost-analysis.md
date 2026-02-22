@@ -38,8 +38,10 @@ Step Functions移行に伴うコスト影響を詳細に分析し、現在のア
 - [x] コスト分析ドキュメント作成
   - `.kiro/specs/tdnet-data-collector/designs/step-functions-cost-analysis.md`
   - 詳細な料金計算、比較分析、最適化推奨事項を含む
-- [ ] tasks-step-functions-migration.md更新
-- [ ] Git commit
+- [x] tasks-step-functions-migration.md更新
+  - タスク1.1「コスト試算」に詳細な結果を追記
+- [x] Git commit
+  - コミットメッセージ: `[docs] Step Functionsコスト分析完了 - 詳細な料金計算と最適化推奨事項を追加`
 
 ## 分析結果サマリー
 
