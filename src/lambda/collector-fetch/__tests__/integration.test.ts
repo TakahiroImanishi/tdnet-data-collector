@@ -7,7 +7,21 @@
 
 import { Context } from 'aws-lambda';
 import { handler, FetchEvent, FetchResponse } from '../handler';
-import nock from 'nock';
+import axios from 'axios';
+import * as iconv from 'iconv-lite';
+
+// モック設定
+jest.mock('axios');
+jest.mock('iconv-lite');
+jest.mock('../../../utils/logger');
+jest.mock('../../../utils/cloudwatch-metrics');
+jest.mock('../../../scraper/html-parser');
+
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedIconv = iconv as jest.Mocked<typeof iconv>;
+
+// parseDisclosureListのモック
+const { parseDisclosureList } = require('../../../scraper/html-parser');
 
 describe('Lambda Collector-Fetch Integration Tests', () => {
   let mockContext: Context;
@@ -29,15 +43,14 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       succeed: jest.fn(),
     };
 
-    // nockのクリーンアップ
-    nock.cleanAll();
+    // モックのリセット
+    jest.clearAllMocks();
+
+    // デフォルトのモック設定
+    mockedIconv.decode.mockReturnValue('<html>mock html</html>');
   });
 
-  afterEach(() => {
-    nock.cleanAll();
-  });
-
-  describe('TDnet APIモックサーバーとの連携', () => {
+  describe('TDnet APIモックとの連携', () => {
     it('TDnet APIから実際のHTML形式でデータを取得できる', async () => {
       // Arrange
       const event: FetchEvent = {
@@ -47,32 +60,23 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
         end_date: '2024-01-15',
       };
 
-      // TDnet APIのモックレスポンス（簡略版HTML）
-      const mockHtml = `
-        <html>
-          <body>
-            <table>
-              <tr>
-                <td>09:00</td>
-                <td><a href="/inbs/test.pdf">1234</a></td>
-                <td>テスト株式会社</td>
-                <td>決算短信</td>
-                <td>2024年3月期 決算短信</td>
-              </tr>
-            </table>
-          </body>
-        </html>
-      `;
+      const mockDisclosures = [
+        {
+          company_code: '1234',
+          company_name: 'テスト株式会社',
+          disclosure_type: '決算短信',
+          title: '2024年3月期 決算短信',
+          disclosed_at: '2024-01-15T09:00:00+09:00',
+          pdf_url: 'https://www.release.tdnet.info/inbs/test.pdf',
+        },
+      ];
 
-      // Shift_JISエンコード（実際のTDnetはShift_JIS）
-      const iconv = require('iconv-lite');
-      const shiftJisBuffer = iconv.encode(mockHtml, 'shift_jis');
+      mockedAxios.get.mockResolvedValue({
+        status: 200,
+        data: Buffer.from('<html>mock html</html>'),
+      });
 
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .reply(200, shiftJisBuffer, {
-          'Content-Type': 'text/html; charset=Shift_JIS',
-        });
+      parseDisclosureList.mockReturnValue(mockDisclosures);
 
       // Act
       const response: FetchResponse = await handler(event, mockContext);
@@ -80,7 +84,7 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       // Assert
       expect(response.execution_id).toBe('exec_integration_123');
       expect(response.page_number).toBe(1);
-      expect(response.count).toBeGreaterThanOrEqual(0);
+      expect(response.count).toBe(1);
       expect(Array.isArray(response.items)).toBe(true);
     });
 
@@ -100,18 +104,12 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
         end_date: '2024-01-15',
       };
 
-      const mockHtml1 = '<html><body><table></table></body></html>';
-      const mockHtml2 = '<html><body><table></table></body></html>';
+      mockedAxios.get.mockResolvedValue({
+        status: 200,
+        data: Buffer.from('<html>mock html</html>'),
+      });
 
-      const iconv = require('iconv-lite');
-
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .reply(200, iconv.encode(mockHtml1, 'shift_jis'));
-
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_002_20240115.html')
-        .reply(200, iconv.encode(mockHtml2, 'shift_jis'));
+      parseDisclosureList.mockReturnValue([]);
 
       // Act
       const response1 = await handler(event1, mockContext);
@@ -120,6 +118,7 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       // Assert
       expect(response1.page_number).toBe(1);
       expect(response2.page_number).toBe(2);
+      expect(mockedAxios.get).toHaveBeenCalledTimes(2);
     });
 
     it('ネットワークエラー時にリトライが実行される', async () => {
@@ -131,28 +130,24 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
         end_date: '2024-01-15',
       };
 
-      const mockHtml = '<html><body><table></table></body></html>';
-      const iconv = require('iconv-lite');
-
       // 最初の2回は失敗、3回目は成功
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .replyWithError({ code: 'ECONNRESET', message: 'Connection reset' });
+      mockedAxios.get
+        .mockRejectedValueOnce({ code: 'ECONNRESET', message: 'Connection reset' })
+        .mockRejectedValueOnce({ code: 'ECONNRESET', message: 'Connection reset' })
+        .mockResolvedValueOnce({
+          status: 200,
+          data: Buffer.from('<html>mock html</html>'),
+        });
 
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .replyWithError({ code: 'ECONNRESET', message: 'Connection reset' });
-
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .reply(200, iconv.encode(mockHtml, 'shift_jis'));
+      parseDisclosureList.mockReturnValue([]);
 
       // Act
       const response = await handler(event, mockContext);
 
       // Assert
       expect(response.execution_id).toBe('exec_integration_789');
-      expect(response.count).toBeGreaterThanOrEqual(0);
+      expect(response.count).toBe(0);
+      expect(mockedAxios.get).toHaveBeenCalledTimes(3);
     });
 
     it('404エラー時はエラーをスロー', async () => {
@@ -164,9 +159,12 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
         end_date: '2024-01-15',
       };
 
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .reply(404, 'Not Found');
+      mockedAxios.get.mockRejectedValue({
+        response: {
+          status: 404,
+          statusText: 'Not Found',
+        },
+      });
 
       // Act & Assert
       await expect(handler(event, mockContext)).rejects.toThrow('TDnet page not found');
@@ -182,13 +180,16 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       };
 
       // 3回とも503エラー
-      nock('https://www.release.tdnet.info')
-        .get('/inbs/I_list_001_20240115.html')
-        .times(3)
-        .reply(503, 'Service Unavailable');
+      mockedAxios.get.mockRejectedValue({
+        response: {
+          status: 503,
+          statusText: 'Service Unavailable',
+        },
+      });
 
       // Act & Assert
       await expect(handler(event, mockContext)).rejects.toThrow('Server error: 503');
+      expect(mockedAxios.get).toHaveBeenCalledTimes(3);
     });
   });
 

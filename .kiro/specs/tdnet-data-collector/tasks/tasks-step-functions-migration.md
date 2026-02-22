@@ -119,13 +119,21 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `src/lambda/collector-fetch/__tests__/handler.test.ts`
 
 #### タスク2.3: データ保存Lambda作成
-- [ ] `src/lambda/collector-save/handler.ts`作成
+- [x] `src/lambda/collector-save/handler.ts`作成
   - DynamoDBへの保存
   - S3へのPDFアップロード
   - バリデーション
   - 部分的失敗の処理
-- [ ] ユニットテスト作成
-- [ ] 統合テスト作成
+  - 既存collector関数から以下を再利用:
+    - `downloadPdf`: PDFダウンロード
+    - `saveMetadata`: DynamoDBメタデータ保存
+    - `generateDisclosureId`: 開示ID生成
+- [x] ユニットテスト作成
+- [x] 統合テスト作成
+
+**完了日時**: 2026-02-22 18:26:00
+**テスト結果**: ユニットテスト9/9成功、統合テストはLocalStack環境が必要（E2Eテスト時に実施）
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-182143-subagent3-collector-save.md`
 
 **成果物**:
 - `src/lambda/collector-save/handler.ts`
