@@ -65,7 +65,7 @@
     "@aws-sdk/client-secrets-manager": "^3.515.0",
     "@aws-sdk/client-sns": "^3.515.0",
     "@aws-sdk/lib-dynamodb": "^3.515.0",
-    "@aws-sdk/s3-request-presigner": "^3.515.0",
+    "@aws-sdk/s3-request-presigner": "^3.995.0",
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",
     "iconv-lite": "^0.6.3",
