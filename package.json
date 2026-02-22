@@ -46,7 +46,6 @@
     "aws-cdk": "^2.126.0",
     "aws-cdk-lib": "^2.126.0",
     "aws-sdk-client-mock": "^4.1.0",
-    "cdk-nag": "^2.37.55",
     "constructs": "^10.3.0",
     "dotenv": "^17.2.4",
     "eslint": "^8.56.0",

@@ -92,7 +92,7 @@ export class SecretsManagerConstruct extends Construct {
           functionName: `tdnet-api-key-rotation-${environment}`,
           runtime: lambda.Runtime.NODEJS_20_X,
           handler: 'index.handler',
-          code: lambda.Code.fromAsset('dist/src/lambda/api-key-rotation'),
+          code: lambda.Code.fromAsset('../dist/src/lambda/api-key-rotation'),
           timeout: cdk.Duration.seconds(30),
           memorySize: 128,
           environment: {

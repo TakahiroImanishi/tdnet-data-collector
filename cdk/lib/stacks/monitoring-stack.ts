@@ -71,60 +71,62 @@ export class TdnetMonitoringStack extends cdk.Stack {
 
     const removalPolicy = env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY;
 
-    // Collector Lambda（スクレイピング処理、長期保持）
-    new logs.LogGroup(this, 'CollectorLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.collector.functionName}`,
-      retention: logRetentionConfig.collector,
-      removalPolicy,
-    });
+    // 本番環境では既存のLogGroupsを参照、開発環境では新規作成
+    if (env === 'prod') {
+      // 本番環境: 既存のLogGroupsを参照（CDKで管理しない）
+      // Lambda関数作成時に自動生成されたLogGroupsをそのまま使用
+    } else {
+      // 開発環境: LogGroupsを新規作成して保持期間を設定
 
-    // Query Lambda
-    new logs.LogGroup(this, 'QueryLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.query.functionName}`,
-      retention: logRetentionConfig.other,
-      removalPolicy,
-    });
+      // Collector Lambda（スクレイピング処理、長期保持）
+      new logs.LogGroup(this, 'CollectorLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.collector.functionName}`,
+        retention: logRetentionConfig.collector,
+        removalPolicy,
+      });
 
-    // Export Lambda
-    new logs.LogGroup(this, 'ExportLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.export.functionName}`,
-      retention: logRetentionConfig.other,
-      removalPolicy,
-    });
+      // Query Lambda
+      new logs.LogGroup(this, 'QueryLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.query.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
 
-    // Collect Lambda
-    new logs.LogGroup(this, 'CollectLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.collect.functionName}`,
-      retention: logRetentionConfig.other,
-      removalPolicy,
-    });
+      // Export Lambda
+      new logs.LogGroup(this, 'ExportLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.export.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
 
-    // Collect Status Lambda
-    new logs.LogGroup(this, 'CollectStatusLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.collectStatus.functionName}`,
-      retention: logRetentionConfig.other,
-      removalPolicy,
-    });
+      // Collect Lambda
+      new logs.LogGroup(this, 'CollectLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.collect.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
 
-    // Export Status Lambda
-    new logs.LogGroup(this, 'ExportStatusLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.exportStatus.functionName}`,
-      retention: logRetentionConfig.other,
-      removalPolicy,
-    });
+      // Collect Status Lambda
+      new logs.LogGroup(this, 'CollectStatusLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.collectStatus.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
 
-    // PDF Download Lambda
-    new logs.LogGroup(this, 'PdfDownloadLogGroup', {
-      logGroupName: `/aws/lambda/${props.lambdaFunctions.pdfDownload.functionName}`,
-      retention: logRetentionConfig.other,
-      removalPolicy,
-    });
+      // Export Status Lambda
+      new logs.LogGroup(this, 'ExportStatusLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.exportStatus.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
 
-    // Health Lambda - 既存のLogGroupを使用（CDKで管理しない）
-    // /aws/lambda/${props.lambdaFunctions.health.functionName}
-
-    // Stats Lambda - 既存のLogGroupを使用（CDKで管理しない）
-    // /aws/lambda/${props.lambdaFunctions.stats.functionName}
+      // PDF Download Lambda
+      new logs.LogGroup(this, 'PdfDownloadLogGroup', {
+        logGroupName: `/aws/lambda/${props.lambdaFunctions.pdfDownload.functionName}`,
+        retention: logRetentionConfig.other,
+        removalPolicy,
+      });
+    }
 
     // ========================================
     // CloudWatch Alarms

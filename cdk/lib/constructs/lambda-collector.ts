@@ -65,7 +65,7 @@ export class LambdaCollector extends Construct {
       functionName: 'tdnet-collector',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/collector'),
+      code: lambda.Code.fromAsset('../dist/src/lambda/collector'),
       timeout: cdk.Duration.seconds(props.config.timeout),
       memorySize: props.config.memorySize,
       environment: {

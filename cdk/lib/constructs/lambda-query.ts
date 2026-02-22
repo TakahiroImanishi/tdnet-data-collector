@@ -60,7 +60,7 @@ export class LambdaQuery extends Construct {
       functionName: 'tdnet-query',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/query'),
+      code: lambda.Code.fromAsset('../dist/src/lambda/query'),
       timeout: cdk.Duration.seconds(props.config.timeout),
       memorySize: props.config.memorySize,
       environment: {

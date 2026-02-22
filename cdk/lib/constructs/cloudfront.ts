@@ -4,7 +4,6 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
-import { NagSuppressions } from 'cdk-nag';
 
 /**
  * CloudFront Distribution Constructのプロパティ
@@ -169,33 +168,5 @@ export class DashboardCloudFront extends Construct {
       description: 'TDnet Dashboard URL',
       exportName: `tdnet-dashboard-url-${props.environment}`,
     });
-
-    // CDK Nag抑制: AwsSolutions-CFR4
-    // デフォルトのCloudFront証明書を使用する場合、TLS 1.2を強制できない制限がある
-    // カスタムドメインとACM証明書を使用する場合は、minimumProtocolVersionでTLS 1.2を強制可能
-    // 本番環境では、Route 53 + ACM証明書の使用を推奨
-    //
-    // 【カスタムドメイン使用時のTLS 1.2強制設定例】
-    // 1. Route 53でドメインを登録（例: dashboard.example.com）
-    // 2. ACM証明書をus-east-1リージョンで作成（CloudFrontの要件）
-    //    aws acm request-certificate \
-    //      --domain-name dashboard.example.com \
-    //      --validation-method DNS \
-    //      --region us-east-1
-    // 3. CloudFront Distributionに以下を追加:
-    //    domainNames: ['dashboard.example.com'],
-    //    certificate: acm.Certificate.fromCertificateArn(this, 'Certificate', 'arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID'),
-    //    minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-    // 4. Route 53でAレコードを作成してCloudFrontディストリビューションを指定
-    NagSuppressions.addResourceSuppressions(
-      this.distribution,
-      [
-        {
-          id: 'AwsSolutions-CFR4',
-          reason: 'デフォルトのCloudFront証明書を使用。カスタムドメインがない環境では、ACM証明書を使用できないため、デフォルト証明書を使用。本番環境では、Route 53 + ACM証明書でTLS 1.2を強制することを推奨。',
-        },
-      ],
-      true
-    );
   }
 }

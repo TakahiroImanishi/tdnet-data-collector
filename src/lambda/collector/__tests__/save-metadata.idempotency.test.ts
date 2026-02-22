@@ -44,7 +44,7 @@ describe('Property 5: 重複収集の冪等性', () => {
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
         pdf_s3_key: '',
-        downloaded_at: '',
+        collected_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -77,7 +77,7 @@ describe('Property 5: 重複収集の冪等性', () => {
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
         pdf_s3_key: '',
-        downloaded_at: '',
+        collected_at: '',
         date_partition: '',
       };
       const s3_key = '2024/01/15/TD20240115001.pdf';
@@ -92,7 +92,7 @@ describe('Property 5: 重複収集の冪等性', () => {
       // Assert
       expect(logger.warn).toHaveBeenCalledWith('Duplicate disclosure detected', {
         disclosure_id: 'TD20240115001',
-        pdf_s3_key: '2024/01/15/TD20240115001.pdf',
+        s3_key: '2024/01/15/TD20240115001.pdf',
       });
     });
 
@@ -107,7 +107,7 @@ describe('Property 5: 重複収集の冪等性', () => {
         disclosed_at: '2024-01-15T10:30:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115001.pdf',
         pdf_s3_key: '',
-        downloaded_at: '',
+        collected_at: '',
         date_partition: '',
       };
 
@@ -120,7 +120,7 @@ describe('Property 5: 重複収集の冪等性', () => {
         disclosed_at: '2024-01-15T11:00:00Z',
         pdf_url: 'https://www.release.tdnet.info/inbs/140120240115002.pdf',
         pdf_s3_key: '',
-        downloaded_at: '',
+        collected_at: '',
         date_partition: '',
       };
 
@@ -157,7 +157,7 @@ describe('Property 5: 重複収集の冪等性', () => {
             const disclosure: Disclosure = {
               ...disclosureData,
               pdf_s3_key: '',
-              downloaded_at: '',
+              collected_at: '',
               date_partition: '',
             };
             const s3_key = `2024/01/15/${disclosure.disclosure_id}.pdf`;
@@ -209,7 +209,7 @@ describe('Property 5: 重複収集の冪等性', () => {
               const disclosure: Disclosure = {
                 ...disclosureData,
                 pdf_s3_key: '',
-                downloaded_at: '',
+                collected_at: '',
                 date_partition: '',
               };
               const s3_key = `2024/01/15/${disclosure.disclosure_id}.pdf`;

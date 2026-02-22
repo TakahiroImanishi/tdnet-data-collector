@@ -1,33 +1,34 @@
 /**
  * DynamoDB Table Structure Verification Test
  *
- * Task 3.2: DynamoDBチE�Eブル構造の検証チE��チE
- * Requirements: 要件2.5, 13.3�E�データベ�Eス、暗号化！E
+ * Task 3.2: DynamoDBチE�Eブル構造の検証チE��チE
+ * Requirements: 要件2.5, 13.3�E�データベ�Eス、暗号化！E
  *
- * こ�EチE��ト�E、CDKで定義されたDynamoDBチE�Eブルが設計通りに構�EされてぁE��ことを検証します、E
+ * こ�EチE��ト�E、CDKで定義されたDynamoDBチE�Eブルが設計通りに構�EされてぁE��ことを検証します、E
  */
 
 import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
-import { TdnetDataCollectorStack } from '../lib/tdnet-data-collector-stack';
+import { TdnetFoundationStack } from '../lib/stacks/foundation-stack';
 
 describe('DynamoDB Tables', () => {
   let template: Template;
 
   beforeAll(() => {
     const app = new cdk.App();
-    const stack = new TdnetDataCollectorStack(app, 'TestStack', {
+    const stack = new TdnetFoundationStack(app, 'TestStack', {
       env: { account: '123456789012', region: 'ap-northeast-1' },
+      environment: 'dev',
     });
     template = Template.fromStack(stack);
   });
 
   describe('tdnet_disclosures table', () => {
     it('should be created with correct configuration', () => {
-      // チE�Eブルが存在することを確誁E
+      // チE�Eブルが存在することを確誁E
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_disclosures_dev',
-        BillingMode: 'PAY_PER_REQUEST', // オンチE�EンドモーチE
+        BillingMode: 'PAY_PER_REQUEST', // オンチE�EンドモーチE
         SSESpecification: {
           SSEEnabled: true, // 暗号化有効匁E
         },
@@ -43,7 +44,7 @@ describe('DynamoDB Tables', () => {
         KeySchema: [
           {
             AttributeName: 'disclosure_id',
-            KeyType: 'HASH', // パ�EチE��ションキー
+            KeyType: 'HASH', // パ�EチE��ションキー
           },
         ],
         AttributeDefinitions: Match.arrayWith([
@@ -64,7 +65,7 @@ describe('DynamoDB Tables', () => {
             KeySchema: [
               {
                 AttributeName: 'company_code',
-                KeyType: 'HASH', // パ�EチE��ションキー
+                KeyType: 'HASH', // パ�EチE��ションキー
               },
               {
                 AttributeName: 'disclosed_at',
@@ -98,7 +99,7 @@ describe('DynamoDB Tables', () => {
             KeySchema: [
               {
                 AttributeName: 'date_partition',
-                KeyType: 'HASH', // パ�EチE��ションキー
+                KeyType: 'HASH', // パ�EチE��ションキー
               },
               {
                 AttributeName: 'disclosed_at',
@@ -134,7 +135,7 @@ describe('DynamoDB Tables', () => {
     it('should be created with correct configuration', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_executions_dev',
-        BillingMode: 'PAY_PER_REQUEST', // オンチE�EンドモーチE
+        BillingMode: 'PAY_PER_REQUEST', // オンチE�EンドモーチE
         SSESpecification: {
           SSEEnabled: true, // 暗号化有効匁E
         },
@@ -150,7 +151,7 @@ describe('DynamoDB Tables', () => {
         KeySchema: [
           {
             AttributeName: 'execution_id',
-            KeyType: 'HASH', // パ�EチE��ションキー
+            KeyType: 'HASH', // パ�EチE��ションキー
           },
         ],
         AttributeDefinitions: Match.arrayWith([
@@ -181,7 +182,7 @@ describe('DynamoDB Tables', () => {
             KeySchema: [
               {
                 AttributeName: 'status',
-                KeyType: 'HASH', // パ�EチE��ションキー
+                KeyType: 'HASH', // パ�EチE��ションキー
               },
               {
                 AttributeName: 'started_at',
@@ -223,7 +224,7 @@ describe('DynamoDB Tables', () => {
           Ref: Match.stringLikeRegexp('DisclosuresTable'),
         },
         Export: {
-          Name: 'TdnetDisclosuresTableName',
+          Name: 'TdnetDisclosuresTableName-dev',
         },
       });
     });
@@ -234,7 +235,7 @@ describe('DynamoDB Tables', () => {
           Ref: Match.stringLikeRegexp('ExecutionsTable'),
         },
         Export: {
-          Name: 'TdnetExecutionsTableName',
+          Name: 'TdnetExecutionsTableName-dev',
         },
       });
     });
@@ -242,7 +243,7 @@ describe('DynamoDB Tables', () => {
 
   describe('Security and Compliance', () => {
     it('should have encryption enabled on all tables', () => {
-      // すべてのDynamoDBチE�Eブルで暗号化が有効化されてぁE��ことを確誁E
+      // すべてのDynamoDBチE�Eブルで暗号化が有効化されてぁE��ことを確誁E
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableKeys = Object.keys(tables);
 
@@ -256,7 +257,7 @@ describe('DynamoDB Tables', () => {
     });
 
     it('should have point-in-time recovery enabled on all tables', () => {
-      // すべてのDynamoDBチE�Eブルでポイントインタイムリカバリが有効化されてぁE��ことを確誁E
+      // すべてのDynamoDBチE�Eブルでポイントインタイムリカバリが有効化されてぁE��ことを確誁E
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableKeys = Object.keys(tables);
 
@@ -273,7 +274,7 @@ describe('DynamoDB Tables', () => {
     });
 
     it('should use on-demand billing mode for cost optimization', () => {
-      // すべてのDynamoDBチE�EブルでオンチE�Eンドモードが使用されてぁE��ことを確誁E
+      // すべてのDynamoDBチE�EブルでオンチE�Eンドモードが使用されてぁE��ことを確誁E
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableKeys = Object.keys(tables);
 
@@ -286,7 +287,7 @@ describe('DynamoDB Tables', () => {
 
   describe('Table Count', () => {
     it('should have exactly 3 DynamoDB tables', () => {
-      // DynamoDBチE�Eブルが正確に3つ存在することを確誁E
+      // DynamoDBチE�Eブルが正確に3つ存在することを確誁E
       // 1. tdnet_disclosures
       // 2. tdnet_executions
       // 3. tdnet_export_status

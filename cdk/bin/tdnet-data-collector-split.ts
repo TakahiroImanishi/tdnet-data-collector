@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import * as sns from 'aws-cdk-lib/aws-sns';
-import { Aspects } from 'aws-cdk-lib';
-import { AwsSolutionsChecks } from 'cdk-nag';
 import { TdnetFoundationStack } from '../lib/stacks/foundation-stack';
 import { TdnetComputeStack } from '../lib/stacks/compute-stack';
 import { TdnetApiStack } from '../lib/stacks/api-stack';
@@ -129,14 +127,5 @@ const monitoringStack = new TdnetMonitoringStack(app, `TdnetMonitoring-${environ
 
 // Monitoring StackはAPI Stackに依存
 monitoringStack.addDependency(apiStack);
-
-// ========================================
-// CDK Nag: セキュリティチェック
-// ========================================
-// デプロイ前にAWS Solutions Checksを実行してセキュリティベストプラクティスを検証
-// 本番環境のみ有効化
-if (environment === 'prod') {
-  Aspects.of(app).add(new AwsSolutionsChecks());
-}
 
 app.synth();

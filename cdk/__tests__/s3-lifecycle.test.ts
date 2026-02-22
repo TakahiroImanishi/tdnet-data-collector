@@ -9,15 +9,16 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { TdnetDataCollectorStack } from '../lib/tdnet-data-collector-stack';
+import { TdnetFoundationStack } from '../lib/stacks/foundation-stack';
 
 describe('S3ライフサイクルポリシー', () => {
   let template: Template;
 
   beforeAll(() => {
     const app = new cdk.App();
-    const stack = new TdnetDataCollectorStack(app, 'TestStack', {
-      environmentConfig: { environment: 'dev' },
+    const stack = new TdnetFoundationStack(app, 'TestStack', {
+      env: { account: '123456789012', region: 'ap-northeast-1' },
+      environment: 'dev',
     });
     template = Template.fromStack(stack);
   });
@@ -175,7 +176,7 @@ describe('S3ライフサイクルポリシー', () => {
           'Fn::Join': [
             '',
             [
-              'tdnet-cloudtrail-logs-',
+              'tdnet-cloudtrail-logs-dev-',
               { Ref: 'AWS::AccountId' },
             ],
           ],
@@ -204,7 +205,7 @@ describe('S3ライフサイクルポリシー', () => {
           'Fn::Join': [
             '',
             [
-              'tdnet-cloudtrail-logs-',
+              'tdnet-cloudtrail-logs-dev-',
               { Ref: 'AWS::AccountId' },
             ],
           ],

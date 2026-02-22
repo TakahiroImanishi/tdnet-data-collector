@@ -65,7 +65,7 @@ export class LambdaExport extends Construct {
       functionName: 'tdnet-export',
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset('dist/src/lambda/export'),
+      code: lambda.Code.fromAsset('../dist/src/lambda/export'),
       timeout: cdk.Duration.seconds(props.config.timeout),
       memorySize: props.config.memorySize,
       environment: {

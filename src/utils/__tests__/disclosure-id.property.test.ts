@@ -22,7 +22,10 @@ describe('generateDisclosureId - Property Tests', () => {
               disclosedAt: fc
                 .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
                 .map((d) => d.toISOString()),
-              companyCode: fc.integer({ min: 1000, max: 9999 }).map(String),
+              companyCode: fc.oneof(
+                fc.integer({ min: 1000, max: 9999 }).map(String), // 4桁数字
+                fc.integer({ min: 10000, max: 99999 }).map(String) // 5桁数字
+              ),
               sequence: fc.integer({ min: 1, max: 999 }),
             }),
             { minLength: 2, maxLength: 100 }
@@ -48,7 +51,10 @@ describe('generateDisclosureId - Property Tests', () => {
             disclosedAt: fc
               .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
               .map((d) => d.toISOString()),
-            companyCode: fc.integer({ min: 1000, max: 9999 }).map(String),
+            companyCode: fc.oneof(
+              fc.integer({ min: 1000, max: 9999 }).map(String), // 4桁数字
+              fc.integer({ min: 10000, max: 99999 }).map(String) // 5桁数字
+            ),
             sequence: fc.integer({ min: 1, max: 999 }),
           }),
           (input) => {
@@ -132,8 +138,8 @@ describe('generateDisclosureId - Property Tests', () => {
       const disclosedAt = '2024-01-15T10:30:00Z';
 
       expect(() => generateDisclosureId(disclosedAt, '123', 1)).toThrow(ValidationError); // 3桁
-      expect(() => generateDisclosureId(disclosedAt, '12345', 1)).toThrow(ValidationError); // 5桁
-      expect(() => generateDisclosureId(disclosedAt, 'ABCD', 1)).toThrow(ValidationError); // 非数字
+      expect(() => generateDisclosureId(disclosedAt, '123456', 1)).toThrow(ValidationError); // 6桁
+      expect(() => generateDisclosureId(disclosedAt, 'abc', 1)).toThrow(ValidationError); // 小文字
       expect(() => generateDisclosureId(disclosedAt, '', 1)).toThrow(ValidationError); // 空文字
     });
 
@@ -143,6 +149,24 @@ describe('generateDisclosureId - Property Tests', () => {
 
       expect(() => generateDisclosureId(disclosedAt, companyCode, -1)).toThrow(ValidationError); // 負数
       expect(() => generateDisclosureId(disclosedAt, companyCode, 1000)).toThrow(ValidationError); // 1000以上
+    });
+
+    it('有効な4桁数字の企業コードを受け入れる', () => {
+      const disclosedAt = '2024-01-15T10:30:00Z';
+      expect(() => generateDisclosureId(disclosedAt, '1234', 1)).not.toThrow();
+      expect(() => generateDisclosureId(disclosedAt, '9999', 1)).not.toThrow();
+    });
+
+    it('有効な5桁数字の企業コードを受け入れる', () => {
+      const disclosedAt = '2024-01-15T10:30:00Z';
+      expect(() => generateDisclosureId(disclosedAt, '12345', 1)).not.toThrow();
+      expect(() => generateDisclosureId(disclosedAt, '99999', 1)).not.toThrow();
+    });
+
+    it('有効な4桁英数字の企業コードを受け入れる', () => {
+      const disclosedAt = '2024-01-15T10:30:00Z';
+      expect(() => generateDisclosureId(disclosedAt, 'ABCD', 1)).not.toThrow();
+      expect(() => generateDisclosureId(disclosedAt, '12AB', 1)).not.toThrow();
     });
   });
 

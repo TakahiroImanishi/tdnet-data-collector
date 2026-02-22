@@ -9,7 +9,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Template, Match } from 'aws-cdk-lib/assertions';
-import { TdnetDataCollectorStack } from '../lib/tdnet-data-collector-stack';
+import { TdnetFoundationStack } from '../lib/stacks/foundation-stack';
 
 describe('S3 Buckets', () => {
   let template: Template;
@@ -17,8 +17,9 @@ describe('S3 Buckets', () => {
 
   beforeAll(() => {
     const app = new cdk.App();
-    const stack = new TdnetDataCollectorStack(app, 'TestStack', {
+    const stack = new TdnetFoundationStack(app, 'TestStack', {
       env: { account: testAccountId, region: 'ap-northeast-1' },
+      environment: 'dev',
     });
     template = Template.fromStack(stack);
   });
@@ -209,13 +210,13 @@ describe('S3 Buckets', () => {
   describe('CloudTrail Logs Bucket', () => {
     it('should be created with correct name', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-cloudtrail-logs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]] },
       });
     });
 
     it('should have encryption enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-cloudtrail-logs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]] },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -230,7 +231,7 @@ describe('S3 Buckets', () => {
 
     it('should have public access blocked', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-cloudtrail-logs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]] },
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -242,7 +243,7 @@ describe('S3 Buckets', () => {
 
     it('should have versioning enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-cloudtrail-logs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]] },
         VersioningConfiguration: {
           Status: 'Enabled',
         },
@@ -251,7 +252,7 @@ describe('S3 Buckets', () => {
 
     it('should have lifecycle rules for compliance', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: `tdnet-cloudtrail-logs-${testAccountId}`,
+        BucketName: { 'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]] },
         LifecycleConfiguration: {
           Rules: [
             {
@@ -278,7 +279,7 @@ describe('S3 Buckets', () => {
           Ref: Match.stringLikeRegexp('PdfsBucket'),
         },
         Export: {
-          Name: 'TdnetPdfsBucketName',
+          Name: 'TdnetPdfsBucketName-dev',
         },
       });
     });
@@ -289,7 +290,7 @@ describe('S3 Buckets', () => {
           Ref: Match.stringLikeRegexp('ExportsBucket'),
         },
         Export: {
-          Name: 'TdnetExportsBucketName',
+          Name: 'TdnetExportsBucketName-dev',
         },
       });
     });
@@ -300,7 +301,7 @@ describe('S3 Buckets', () => {
           Ref: Match.stringLikeRegexp('DashboardBucket'),
         },
         Export: {
-          Name: 'TdnetDashboardBucketName',
+          Name: 'TdnetDashboardBucketName-dev',
         },
       });
     });
@@ -311,7 +312,7 @@ describe('S3 Buckets', () => {
           Ref: Match.stringLikeRegexp('CloudTrailLogsBucket'),
         },
         Export: {
-          Name: 'TdnetCloudTrailLogsBucketName',
+          Name: 'TdnetCloudTrailLogsBucketName-dev',
         },
       });
     });
@@ -381,13 +382,29 @@ describe('S3 Buckets', () => {
       // PDFバケットとCloudTrailログバケットにライフサイクルルールが設定されていることを確認
       const pdfsBucket = template.findResources('AWS::S3::Bucket', {
         Properties: {
-          BucketName: `tdnet-data-collector-pdfs-${testAccountId}`,
+          BucketName: {
+            'Fn::Join': [
+              '',
+              [
+                'tdnet-data-collector-pdfs-dev-',
+                { Ref: 'AWS::AccountId' },
+              ],
+            ],
+          },
         },
       });
 
       const cloudtrailBucket = template.findResources('AWS::S3::Bucket', {
         Properties: {
-          BucketName: `tdnet-cloudtrail-logs-${testAccountId}`,
+          BucketName: {
+            'Fn::Join': [
+              '',
+              [
+                'tdnet-cloudtrail-logs-dev-',
+                { Ref: 'AWS::AccountId' },
+              ],
+            ],
+          },
         },
       });
 
