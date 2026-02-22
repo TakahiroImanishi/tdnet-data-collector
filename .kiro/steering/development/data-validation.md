@@ -9,7 +9,7 @@ fileMatchPattern: '**/validators/**/*.ts|**/models/**/*.ts|**/types/**/*.ts|**/u
 
 | フィールド | 必須 | 形式/範囲 |
 |-----------|------|----------|
-| disclosure_id | ✓ | `YYYYMMDD_CODE_NNN`、最大50文字 |
+| disclosure_id | ✓ | `YYYYMMDD_CODE_NNNN`、最大50文字（連番4桁、0-9999） |
 | company_code | ✓ | 4桁数字、1000-9999 |
 | company_name | ✓ | 最大200文字 |
 | disclosed_at | ✓ | ISO8601、1990年以降、未来不可 |
