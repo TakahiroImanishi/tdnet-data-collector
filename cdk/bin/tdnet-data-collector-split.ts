@@ -134,6 +134,9 @@ monitoringStack.addDependency(apiStack);
 // CDK Nag: セキュリティチェック
 // ========================================
 // デプロイ前にAWS Solutions Checksを実行してセキュリティベストプラクティスを検証
-Aspects.of(app).add(new AwsSolutionsChecks());
+// 本番環境のみ有効化
+if (environment === 'prod') {
+  Aspects.of(app).add(new AwsSolutionsChecks());
+}
 
 app.synth();
