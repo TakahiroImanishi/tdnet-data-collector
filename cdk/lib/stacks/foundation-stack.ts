@@ -231,7 +231,7 @@ export class TdnetFoundationStack extends cdk.Stack {
 
     this.secretsManager = new SecretsManagerConstruct(this, 'SecretsManager', {
       environment: env,
-      enableRotation: false,
+      enableRotation: true, // 90日ごとの自動ローテーション有効化
       useExistingSecret: true,
     });
 

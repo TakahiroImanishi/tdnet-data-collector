@@ -72,13 +72,25 @@ try {
     Write-Host ""
 } catch {
     Write-Host ""
-    Write-Host "❌ DynamoDBスキャンに失敗しました: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "❌ [ERR-DDB-001] DynamoDBスキャンに失敗しました: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ""
     Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. テーブル名を確認: aws dynamodb list-tables --query 'TableNames[?contains(@, ``tdnet``)]'" -ForegroundColor White
-    Write-Host "2. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
-    Write-Host "3. DynamoDB権限を確認: dynamodb:Scan" -ForegroundColor White
-    Write-Host "4. テーブルが存在することを確認: aws dynamodb describe-table --table-name $TableName" -ForegroundColor White
+    Write-Host "1. テーブル名を確認:" -ForegroundColor White
+    Write-Host "   aws dynamodb list-tables --query 'TableNames[?contains(@, ``tdnet``)]' --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "2. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. DynamoDB権限を確認（必要な権限: dynamodb:Scan）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "4. テーブルが存在することを確認:" -ForegroundColor White
+    Write-Host "   aws dynamodb describe-table --table-name $TableName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "5. テーブルがACTIVE状態であることを確認:" -ForegroundColor White
+    Write-Host "   aws dynamodb describe-table --table-name $TableName --query 'Table.TableStatus' --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
     exit 1
 }
@@ -182,13 +194,25 @@ try {
     Write-Host ""
 } catch {
     Write-Host ""
-    Write-Host "❌ S3オブジェクトリストの取得に失敗しました: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "❌ [ERR-S3-001] S3オブジェクトリストの取得に失敗しました: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ""
     Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. バケット名を確認: aws s3 ls | grep tdnet" -ForegroundColor White
-    Write-Host "2. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
-    Write-Host "3. S3権限を確認: s3:ListBucket" -ForegroundColor White
-    Write-Host "4. バケットが存在することを確認: aws s3 ls s3://$BucketName" -ForegroundColor White
+    Write-Host "1. バケット名を確認:" -ForegroundColor White
+    Write-Host "   aws s3 ls --profile $Profile --region $Region | Select-String tdnet" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "2. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. S3権限を確認（必要な権限: s3:ListBucket）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "4. バケットが存在することを確認:" -ForegroundColor White
+    Write-Host "   aws s3 ls s3://$BucketName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "5. バケットのリージョンを確認:" -ForegroundColor White
+    Write-Host "   aws s3api get-bucket-location --bucket $BucketName --profile $Profile" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
     exit 1
 }

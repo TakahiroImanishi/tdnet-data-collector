@@ -29,14 +29,37 @@ Write-Host ""
 
 # Get recent log streams
 Write-Host "Getting recent log streams..." -ForegroundColor Yellow
-$streams = aws logs describe-log-streams `
-    --log-group-name $LogGroupName `
-    --order-by LastEventTime `
-    --descending `
-    --max-items 5 `
-    --profile $Profile `
-    --region $Region `
-    --output json | ConvertFrom-Json
+
+try {
+    $streams = aws logs describe-log-streams `
+        --log-group-name $LogGroupName `
+        --order-by LastEventTime `
+        --descending `
+        --max-items 5 `
+        --profile $Profile `
+        --region $Region `
+        --output json 2>&1 | ConvertFrom-Json
+    
+    if ($LASTEXITCODE -ne 0) {
+        throw "AWS CLI command failed with exit code $LASTEXITCODE"
+    }
+} catch {
+    Write-Host "❌ [ERR-CWL-004] ログストリームの取得に失敗しました: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. ログループが存在することを確認:" -ForegroundColor White
+    Write-Host "   aws logs describe-log-groups --log-group-name-prefix $LogGroupName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "2. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. CloudWatch Logs権限を確認（必要な権限: logs:DescribeLogStreams）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
+    Write-Host ""
+    exit 1
+}
 
 if ($streams.logStreams) {
     Write-Host "Found $($streams.logStreams.Count) recent log streams" -ForegroundColor Green
@@ -95,13 +118,25 @@ if ($streams.logStreams) {
         Write-Host ""
     }
 } else {
-    Write-Host "❌ ログストリームが見つかりませんでした" -ForegroundColor Red
+    Write-Host "❌ [ERR-CWL-003] ログストリームが見つかりませんでした" -ForegroundColor Red
     Write-Host ""
     Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. ログループ名を確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
-    Write-Host "2. Lambda関数が実行されているか確認: aws lambda list-functions --query 'Functions[?contains(FunctionName, ``collector``)]'" -ForegroundColor White
-    Write-Host "3. 時間範囲（-Hours）を拡大してください" -ForegroundColor White
-    Write-Host "4. AWS認証情報とCloudWatch Logs権限を確認してください" -ForegroundColor White
+    Write-Host "1. ログループ名を確認:" -ForegroundColor White
+    Write-Host "   aws logs describe-log-groups --log-group-name-prefix $LogGroupName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "2. Lambda関数が実行されているか確認:" -ForegroundColor White
+    Write-Host "   aws lambda list-functions --query 'Functions[?contains(FunctionName, ``Collector``)]' --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. 時間範囲を拡大してください:" -ForegroundColor White
+    Write-Host "   .\scripts\check-cloudwatch-logs-simple.ps1 -Hours 72 -Profile $Profile -Region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "4. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "5. CloudWatch Logs権限を確認（必要な権限: logs:DescribeLogStreams, logs:GetLogEvents）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
     Write-Host ""
 }
 

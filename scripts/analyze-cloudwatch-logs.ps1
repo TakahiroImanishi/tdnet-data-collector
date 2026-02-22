@@ -58,13 +58,24 @@ $pdfErrorResult = aws logs start-query `
     --output json | ConvertFrom-Json
 
 if (-not $pdfErrorResult.queryId) {
-    Write-Host "❌ クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host "❌ [ERR-CWL-001] クエリの開始に失敗しました。" -ForegroundColor Red
     Write-Host ""
     Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
-    Write-Host "2. CloudWatch Logs権限を確認: logs:StartQuery, logs:GetQueryResults" -ForegroundColor White
-    Write-Host "3. ログループが存在することを確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host "1. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
+    Write-Host "2. CloudWatch Logs権限を確認（必要な権限: logs:StartQuery, logs:GetQueryResults）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. ログループが存在することを確認:" -ForegroundColor White
+    Write-Host "   aws logs describe-log-groups --log-group-name-prefix $LogGroupName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "4. Lambda関数が実行されているか確認:" -ForegroundColor White
+    Write-Host "   aws lambda list-functions --query 'Functions[?contains(FunctionName, ``Collector``)]' --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
+    Write-Host ""
+    exit 1
 } else {
     Write-Host "クエリID: $($pdfErrorResult.queryId)"
     
@@ -125,7 +136,18 @@ if (-not $pdfErrorResult.queryId) {
         
         if ($waitedSeconds -ge $maxWaitSeconds) {
             Write-Host ""
-            Write-Host "タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host "❌ [ERR-CWL-002] タイムアウト: クエリが完了しませんでした（${maxWaitSeconds}秒経過）。" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "対処方法:" -ForegroundColor Yellow
+            Write-Host "1. 時間範囲を短縮してください:" -ForegroundColor White
+            Write-Host "   .\scripts\analyze-cloudwatch-logs.ps1 -Hours 12 -Profile $Profile -Region $Region" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認:" -ForegroundColor White
+            Write-Host "   https://console.aws.amazon.com/cloudwatch/home?region=$Region#logsV2:logs-insights" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "3. 手動でクエリ結果を取得:" -ForegroundColor White
+            Write-Host "   aws logs get-query-results --query-id $($pdfErrorResult.queryId) --profile $Profile --region $Region" -ForegroundColor Cyan
+            Write-Host ""
             break
         }
     } while ($true)
@@ -195,24 +217,37 @@ if ($summaryResult.queryId) {
         
         if ($waitedSeconds -ge $maxWaitSeconds) {
             Write-Host ""
-            Write-Host "❌ タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host "❌ [ERR-CWL-002] タイムアウト: クエリが完了しませんでした（${maxWaitSeconds}秒経過）。" -ForegroundColor Red
             Write-Host ""
             Write-Host "対処方法:" -ForegroundColor Yellow
-            Write-Host "1. クエリが複雑すぎる可能性があります。時間範囲（-Hours）を短縮してください" -ForegroundColor White
-            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認してください" -ForegroundColor White
-            Write-Host "3. 手動でクエリ結果を取得: aws logs get-query-results --query-id $($summaryResult.queryId)" -ForegroundColor White
+            Write-Host "1. 時間範囲を短縮してください:" -ForegroundColor White
+            Write-Host "   .\scripts\analyze-cloudwatch-logs.ps1 -Hours 12 -Profile $Profile -Region $Region" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認:" -ForegroundColor White
+            Write-Host "   https://console.aws.amazon.com/cloudwatch/home?region=$Region#logsV2:logs-insights" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "3. 手動でクエリ結果を取得:" -ForegroundColor White
+            Write-Host "   aws logs get-query-results --query-id $($summaryResult.queryId) --profile $Profile --region $Region" -ForegroundColor Cyan
             Write-Host ""
             break
         }
     } while ($true)
 } else {
-    Write-Host "❌ クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host "❌ [ERR-CWL-001] クエリの開始に失敗しました。" -ForegroundColor Red
     Write-Host ""
     Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
-    Write-Host "2. CloudWatch Logs権限を確認: logs:StartQuery, logs:GetQueryResults" -ForegroundColor White
-    Write-Host "3. ログループが存在することを確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host "1. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
+    Write-Host "2. CloudWatch Logs権限を確認（必要な権限: logs:StartQuery, logs:GetQueryResults）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. ログループが存在することを確認:" -ForegroundColor White
+    Write-Host "   aws logs describe-log-groups --log-group-name-prefix $LogGroupName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
+    Write-Host ""
+    exit 1
 }
 
 Write-Host ""
@@ -276,24 +311,37 @@ if ($s3ErrorResult.queryId) {
         
         if ($waitedSeconds -ge $maxWaitSeconds) {
             Write-Host ""
-            Write-Host "❌ タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host "❌ [ERR-CWL-002] タイムアウト: クエリが完了しませんでした（${maxWaitSeconds}秒経過）。" -ForegroundColor Red
             Write-Host ""
             Write-Host "対処方法:" -ForegroundColor Yellow
-            Write-Host "1. クエリが複雑すぎる可能性があります。時間範囲（-Hours）を短縮してください" -ForegroundColor White
-            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認してください" -ForegroundColor White
-            Write-Host "3. 手動でクエリ結果を取得: aws logs get-query-results --query-id $($s3ErrorResult.queryId)" -ForegroundColor White
+            Write-Host "1. 時間範囲を短縮してください:" -ForegroundColor White
+            Write-Host "   .\scripts\analyze-cloudwatch-logs.ps1 -Hours 12 -Profile $Profile -Region $Region" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認:" -ForegroundColor White
+            Write-Host "   https://console.aws.amazon.com/cloudwatch/home?region=$Region#logsV2:logs-insights" -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "3. 手動でクエリ結果を取得:" -ForegroundColor White
+            Write-Host "   aws logs get-query-results --query-id $($s3ErrorResult.queryId) --profile $Profile --region $Region" -ForegroundColor Cyan
             Write-Host ""
             break
         }
     } while ($true)
 } else {
-    Write-Host "❌ クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host "❌ [ERR-CWL-001] クエリの開始に失敗しました。" -ForegroundColor Red
     Write-Host ""
     Write-Host "対処方法:" -ForegroundColor Yellow
-    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
-    Write-Host "2. CloudWatch Logs権限を確認: logs:StartQuery, logs:GetQueryResults" -ForegroundColor White
-    Write-Host "3. ログループが存在することを確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host "1. AWS認証情報を確認:" -ForegroundColor White
+    Write-Host "   aws sts get-caller-identity --profile $Profile --region $Region" -ForegroundColor Cyan
     Write-Host ""
+    Write-Host "2. CloudWatch Logs権限を確認（必要な権限: logs:StartQuery, logs:GetQueryResults）:" -ForegroundColor White
+    Write-Host "   aws iam get-user-policy --user-name <ユーザー名> --policy-name <ポリシー名>" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "3. ログループが存在することを確認:" -ForegroundColor White
+    Write-Host "   aws logs describe-log-groups --log-group-name-prefix $LogGroupName --profile $Profile --region $Region" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "詳細: .kiro/steering/infrastructure/monitoring-alerts.md" -ForegroundColor Gray
+    Write-Host ""
+    exit 1
 }
 
 Write-Host ""

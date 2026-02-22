@@ -398,6 +398,9 @@ export class CloudWatchAlarms extends Construct {
     // ========================================
     if (props.apiGateway) {
       // API Gateway 4XXError アラーム
+      // 閾値: 5分間で10件以上の4XXエラー
+      // 理由: 4XXエラーは通常クライアント側の問題（認証エラー、不正なリクエスト等）だが、
+      //       急激な増加はAPIキーの問題やクライアント実装の問題を示す可能性がある
       const api4xxErrorAlarm = new cloudwatch.Alarm(this, 'ApiGateway4XXErrorAlarm', {
         alarmName: `tdnet-api-gateway-4xx-error-${props.environment}`,
         alarmDescription: 'API Gatewayで4XXエラーが多発しています',
