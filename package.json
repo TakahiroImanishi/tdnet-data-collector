@@ -47,7 +47,7 @@
     "aws-cdk-lib": "^2.126.0",
     "aws-sdk-client-mock": "^4.1.0",
     "constructs": "^10.3.0",
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
