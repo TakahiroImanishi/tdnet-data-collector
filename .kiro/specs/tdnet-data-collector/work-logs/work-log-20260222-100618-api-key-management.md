@@ -126,13 +126,27 @@ try {
 2. ✅ `scripts/manual-data-collection.ps1`
    - APIキーのハードコーディングを削除
    - Secrets Managerから動的に取得
+   - 包括的なUTF-8エンコーディング設定を追加
 
 3. ✅ `scripts/fetch-data-range.ps1`
    - APIキーのハードコーディングを削除
    - Secrets Managerから動的に取得
+   - 包括的なUTF-8エンコーディング設定を追加
+
+4. ✅ `.kiro/steering/development/powershell-encoding-guidelines.md`
+   - 包括的なエンコーディング設定を追加
+   - 文字化け防止のベストプラクティスを記載
+
+5. ✅ `.kiro/steering/meta/pattern-matching-tests.md`
+   - powershell-encoding-guidelines.mdのテストケースを追加
+   - fileMatchPattern: `**/*.ps1`
+
+6. ✅ `.kiro/steering/README.md`
+   - powershell-encoding-guidelines.mdの情報を追加
+   - 主要fileMatchパターンテーブルを更新
 
 ### 作業記録
-4. ✅ `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-100618-api-key-management.md`
+7. ✅ `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-100618-api-key-management.md`
 
 ## 次のステップ
 

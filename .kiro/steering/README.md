@@ -28,14 +28,15 @@
 | `**/utils/error*.ts` | error-handling-implementation |
 | `**/.env*` | environment-variables |
 | `**/config/**/*.ts` | environment-variables |
+| `**/*.ps1` | powershell-encoding-guidelines |
 | `**/docs/**/*.md` | documentation-standards, mcp-documentation-guidelines |
 | `README.md` | documentation-standards |
 | `**/.kiro/specs/**/tasks*.md` | workflow-guidelines |
 | `**/.kiro/specs/**/work-logs/**/*.md` | workflow-guidelines, mcp-documentation-guidelines |
-| `scripts/deploy*.ps1` | deployment-scripts |
-| `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1` | setup-scripts |
-| `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*` | data-scripts |
-| `scripts/{deploy-dashboard,check-iam-permissions}.ps1` | monitoring-scripts |
+| `scripts/deploy*.ps1` | deployment-scripts, powershell-encoding-guidelines |
+| `scripts/{create-api-key-secret,generate-env-file,localstack-setup}.ps1` | setup-scripts, powershell-encoding-guidelines |
+| `scripts/{fetch-data-range,manual-data-collection,migrate-disclosure-fields}.*` | data-scripts, powershell-encoding-guidelines |
+| `scripts/{deploy-dashboard,check-iam-permissions}.ps1` | monitoring-scripts, powershell-encoding-guidelines |
 
 **詳細**: `meta/pattern-matching-tests.md`
 

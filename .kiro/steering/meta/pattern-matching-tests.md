@@ -443,6 +443,35 @@ fileMatchPattern: '**/.kiro/steering/**/*.md'
 
 ---
 
+## development/powershell-encoding-guidelines.md
+
+### fileMatchPattern
+```text
+**/*.ps1
+```
+
+### マッチすべきファイル ✅
+- `scripts/manual-data-collection.ps1`
+- `scripts/fetch-data-range.ps1`
+- `scripts/register-api-key.ps1`
+- `scripts/delete-all-data.ps1`
+- `scripts/deploy-dashboard.ps1`
+- `scripts/localstack-setup.ps1`
+- `scripts/create-api-key-secret.ps1`
+- `scripts/generate-env-file.ps1`
+- `scripts/check-iam-permissions.ps1`
+- `scripts/migrate-disclosure-fields.ps1`
+- `scripts/__tests__/delete-all-data.test.ps1`
+
+### マッチすべきでないファイル ❌
+- `src/lambda/collector/handler.ts` (TypeScriptファイル)
+- `cdk/lib/tdnet-stack.ts` (TypeScriptファイル)
+- `README.md` (Markdownファイル)
+- `package.json` (JSONファイル)
+- `.gitignore` (設定ファイル)
+
+---
+
 ## パターンマッチングのルール
 
 ### ワイルドカード
@@ -717,3 +746,6 @@ Test-MultiPattern "**/*.test.ts|**/*.spec.ts" "src/validators/disclosure.ts"
 - 2026-02-07: mcp-server-guidelines.mdのテストケースを追加
   - fileMatchPattern: `**/lambda/**/*.ts|**/cdk/**/*.ts|**/api/**/*.ts|**/scraper/**/*.ts|**/collector/**/*.ts|**/*.test.ts|**/*.spec.ts|**/docs/**/*.md|**/.kiro/specs/**/*.md`
   - AWS実装、テスト、ドキュメント作成時にMCPサーバー活用ガイドラインを読み込み
+- 2026-02-22: powershell-encoding-guidelines.mdのテストケースを追加
+  - fileMatchPattern: `**/*.ps1`
+  - PowerShellスクリプト編集時にエンコーディングガイドラインを読み込み
