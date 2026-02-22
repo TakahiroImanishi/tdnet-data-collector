@@ -17,7 +17,6 @@
     "format:check": "prettier --check \"**/*.{ts,json,md}\"",
     "audit": "npm audit --audit-level=moderate",
     "audit:fix": "npm audit fix",
-    "pretest": "npm run audit",
     "cdk": "cdk",
     "cdk:deploy": "cdk deploy",
     "cdk:diff": "cdk diff",

@@ -77,7 +77,10 @@ function Remove-DynamoDBItems {
     Write-Info "Table: $TableName"
     Write-Info "Scanning data..."
     
-    $tableCheck = aws dynamodb describe-table --table-name $TableName 2>&1
+    $ErrorActionPreference = "SilentlyContinue"
+    $tableCheck = aws dynamodb describe-table --table-name $TableName 2>&1 | Out-Null
+    $ErrorActionPreference = "Stop"
+    
     if ($LASTEXITCODE -ne 0) {
         Write-Warning-Custom "Warning: Table $TableName not found. Skipping."
         return
@@ -165,7 +168,10 @@ function Remove-S3Objects {
     Write-Host ""
     Write-Info "Bucket: $BucketName"
     
-    $bucketCheck = aws s3api head-bucket --bucket $BucketName 2>&1
+    $ErrorActionPreference = "SilentlyContinue"
+    $bucketCheck = aws s3api head-bucket --bucket $BucketName 2>&1 | Out-Null
+    $ErrorActionPreference = "Stop"
+    
     if ($LASTEXITCODE -ne 0) {
         Write-Warning-Custom "Warning: Bucket $BucketName not found. Skipping."
         return
