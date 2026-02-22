@@ -5,24 +5,24 @@
 ## 📁 フォルダ構成
 
 ```
-docs/
-├── 01-requirements/      # 要件・設計（8ファイル）
-├── 02-implementation/    # 実装ガイド（3ファイル）
+02-designs/
+├── 01-design/            # 設計ドキュメント（8ファイル）
+├── 02-implementation/    # 実装ガイド（4ファイル）
 ├── 03-testing/           # テスト（4ファイル）
 ├── 04-deployment/        # デプロイ（6ファイル）
-├── 05-operations/        # 運用（7ファイル）
+├── 05-operations/        # 運用（8ファイル）
 ├── 06-scripts/           # スクリプト（3ファイル）
+├── 07-step-functions/    # Step Functions設計（6ファイル）
 ├── milestones.md         # マイルストーン達成状況
 └── README.md             # このファイル
 ```
 
-## 01-requirements/ - 要件・設計
+## 01-design/ - 設計ドキュメント
 
 プロジェクトの要件定義、アーキテクチャ設計、API設計など。
 
 | ファイル | 内容 |
 |---------|------|
-| requirements.md | 要件定義書（要件1-15） |
 | design.md | 詳細設計書（アーキテクチャ、データモデル、API設計を統合） |
 | api-design.md | REST API設計概要 |
 | database-schema.md | DynamoDBスキーマ設計 |
@@ -30,6 +30,7 @@ docs/
 | rate-limiting-design.md | レート制限設計 |
 | error-recovery-strategy.md | エラー回復戦略 |
 | openapi.yaml | OpenAPI 3.0仕様 |
+| README.md | フォルダ概要 |
 
 ## 02-implementation/ - 実装ガイド
 
@@ -40,6 +41,7 @@ docs/
 | implementation-checklist.md | 実装開始前チェックリスト（100項目以上） |
 | correctness-properties-checklist.md | 設計検証項目（15項目） |
 | cdk-infrastructure.md | CDKインフラストラクチャ完全ガイド |
+| README.md | フォルダ概要 |
 
 ## 03-testing/ - テスト
 
@@ -51,6 +53,7 @@ docs/
 | localstack-setup.md | LocalStack環境構築手順 |
 | load-testing-guide.md | 負荷テストガイド（Phase 5実施予定） |
 | smoke-test-guide.md | スモークテストガイド |
+| README.md | フォルダ概要 |
 
 ## 04-deployment/ - デプロイ
 
@@ -60,10 +63,10 @@ docs/
 |---------|------|
 | environment-setup.md | 環境セットアップ手順 |
 | cdk-bootstrap-guide.md | CDKブートストラップガイド |
-| deployment-guide.md | デプロイガイド（手動デプロイ） |
 | ci-cd-guide.md | CI/CDガイド（自動デプロイ） |
 | production-deployment-checklist.md | 本番デプロイチェックリスト |
 | rollback-procedures.md | ロールバック手順 |
+| README.md | フォルダ概要 |
 
 ## 05-operations/ - 運用
 
@@ -71,13 +74,14 @@ docs/
 
 | ファイル | 内容 |
 |---------|------|
+| operations-manual.md | 運用マニュアル（包括的ガイド） |
 | monitoring-guide.md | 監視ガイド（CloudWatch、Alarms、Dashboard） |
+| metrics-and-kpi.md | メトリクスとKPI |
 | cost-monitoring.md | コスト監視ガイド |
-| troubleshooting.md | 包括的なトラブルシューティングガイド（Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視） |
+| troubleshooting.md | 包括的なトラブルシューティングガイド（Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視、APIキー関連） |
 | backup-strategy.md | バックアップ戦略 |
 | lambda-power-tuning.md | Lambda Power Tuningガイド（Phase 5実施予定） |
-| operations-manual.md | 運用マニュアル |
-| ../03-operations/troubleshooting.md | APIキー関連エラーのトラブルシューティング（Secrets Manager、環境変数、ネットワーク） |
+| README.md | フォルダ概要 |
 
 ## 06-scripts/ - スクリプト
 
@@ -88,6 +92,20 @@ docs/
 | scripts-overview.md | スクリプト概要 |
 | deployment-scripts.md | デプロイスクリプト |
 | setup-scripts.md | セットアップスクリプト |
+| README.md | フォルダ概要 |
+
+## 07-step-functions/ - Step Functions設計
+
+AWS Step Functionsを使用したデータ収集ワークフローの設計ドキュメント。
+
+| ファイル | 内容 |
+|---------|------|
+| step-functions-architecture.md | Step Functionsアーキテクチャ設計 |
+| step-functions-workflow-diagram.md | ワークフロー図と状態遷移 |
+| step-functions-state-machine.json | ステートマシン定義（JSON） |
+| step-functions-error-handling.md | エラーハンドリング戦略 |
+| step-functions-cost-analysis.md | コスト分析と最適化 |
+| README.md | フォルダ概要 |
 
 ## milestones.md - マイルストーン
 
@@ -96,17 +114,17 @@ Phase 1-4の達成状況とPhase 5の計画。
 ## 📖 ドキュメント読み順
 
 ### 初めての方
-1. `01-requirements/requirements.md` - 要件を理解
-2. `01-requirements/design.md` - アーキテクチャと詳細設計を確認
-3. `02-implementation/implementation-checklist.md` - 実装前チェック
-4. `milestones.md` - プロジェクトの進捗状況を確認
+1. `01-design/design.md` - アーキテクチャと詳細設計を確認
+2. `02-implementation/implementation-checklist.md` - 実装前チェック
+3. `milestones.md` - プロジェクトの進捗状況を確認
 
 ### 実装者
 1. `02-implementation/implementation-checklist.md` - 実装前チェック
 2. `02-implementation/cdk-infrastructure.md` - CDKインフラ構成理解
-3. `01-requirements/api-design.md` - API設計確認
-4. `01-requirements/openapi.yaml` - API仕様確認
+3. `01-design/api-design.md` - API設計確認
+4. `01-design/openapi.yaml` - API仕様確認
 5. `04-deployment/environment-setup.md` - 環境構築
+6. `07-step-functions/step-functions-architecture.md` - Step Functions設計確認
 
 ### テスター
 1. `03-testing/localstack-setup.md` - テスト環境構築
@@ -117,12 +135,12 @@ Phase 1-4の達成状況とPhase 5の計画。
 1. `04-deployment/environment-setup.md` - 環境構築
 2. `02-implementation/cdk-infrastructure.md` - CDKインフラ構成理解
 3. `04-deployment/cdk-bootstrap-guide.md` - CDKブートストラップ
-4. `04-deployment/ci-cd-setup.md` - CI/CD構築
-5. `04-deployment/deployment-smoke-test.md` - デプロイ検証
+4. `04-deployment/ci-cd-guide.md` - CI/CD構築
 
 ### 運用担当者
-1. `05-operations/metrics-and-kpi.md` - メトリクス確認
-2. `05-operations/troubleshooting.md` - トラブルシューティング
+1. `05-operations/operations-manual.md` - 運用マニュアル
+2. `05-operations/monitoring-guide.md` - 監視ガイド
+3. `05-operations/troubleshooting.md` - トラブルシューティング
 
 ## 🔗 関連ドキュメント
 
@@ -144,10 +162,11 @@ Phase 1-4の達成状況とPhase 5の計画。
 ## 📝 ドキュメント更新ルール
 
 1. ドキュメント更新時は関連するsteeringファイルも確認
-2. 設計変更時は `01-requirements/` 配下を更新
+2. 設計変更時は `01-design/` 配下を更新
 3. 実装手順変更時は `02-implementation/` 配下を更新
 4. 運用手順変更時は `05-operations/` 配下を更新
-5. 更新後は作業記録に記載
+5. Step Functions設計変更時は `07-step-functions/` 配下を更新
+6. 更新後は作業記録に記載
 
 ## 📚 ドキュメント作成ガイドライン
 

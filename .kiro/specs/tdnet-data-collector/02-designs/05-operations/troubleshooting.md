@@ -1,506 +1,333 @@
-# トラブルシューティングガイド
+# トラブルシューティング - APIキー関連エラー
 
-**バージョン:** 1.0.0  
-**最終更新:** 2026-02-22
+**役割**: このドキュメントは、APIキー取得に関連するエラー（Secrets Manager、環境変数、ネットワーク）のトラブルシューティングに特化しています。
 
-**役割**: このドキュメントは、TDnet Data Collectorの包括的なトラブルシューティングガイドです。Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視などの問題を網羅しています。
+**包括的なトラブルシューティング**: Lambda、DynamoDB、S3、スクレイピング、API Gateway、CDK、監視などの問題については、[05-operations/troubleshooting.md](../05-operations/troubleshooting.md) を参照してください。
 
-**APIキー関連エラー**: Secrets Manager、環境変数、ネットワークに関連するAPIキーエラーについては、[03-operations/troubleshooting.md](../03-operations/troubleshooting.md) を参照してください。
+このドキュメントでは、TDnet Data Collectorの運用中に発生する可能性のあるAPIキー関連の問題と、その解決方法を説明します。
 
-TDnet Data Collectorの開発・運用中に発生する可能性のある問題と解決策をまとめたものです。
+## 目次
 
----
-
-## 関連ドキュメント
-
-- **設計書**: `design.md` - システムアーキテクチャと詳細設計
-- **環境セットアップ**: `../04-deployment/environment-setup.md` - 開発環境構築手順
-- **メトリクスとKPI**: `metrics-and-kpi.md` - パフォーマンス指標
-- **エラーハンドリング**: `../../.kiro/steering/core/error-handling-patterns.md` - エラー処理パターン
-- **監視とアラート**: `../../.kiro/steering/infrastructure/monitoring-alerts.md` - CloudWatch設定
+- [APIキーエラー](#apiキーエラー)
+- [Lambda実行エラー](#lambda実行エラー)
+- [DynamoDBエラー](#dynamodbエラー)
+- [S3エラー](#s3エラー)
+- [スクレイピングエラー](#スクレイピングエラー)
 
 ---
 
-## Lambda関連
+## APIキーエラー
 
-### 問題: Lambda関数がタイムアウトする
+### エラー: SECRET_NOT_FOUND
 
-**症状:**
-```
-Task timed out after 900.00 seconds
-```
+**症状**: Secrets Managerにシークレットが登録されていません
 
-**原因:**
-- TDnetからのレスポンスが遅い
-- 大量のPDFダウンロードで時間がかかる
-- 無限ループやデッドロック
+**原因**: `/tdnet/api-key-prod` がSecrets Managerに存在しない
 
-**解決策:**
+**対処方法**:
 
-1. **タイムアウト時間を延長**
-   ```typescript
-   const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
-       timeout: cdk.Duration.minutes(15), // 最大15分
-   });
+1. シークレットを登録:
+   ```powershell
+   .\scripts\register-api-key.ps1 -Environment prod
    ```
 
-2. **バッチサイズを削減**
-   ```typescript
-   const BATCH_SIZE = 10; // 50 → 10に削減
+2. または、環境変数を設定:
+   ```powershell
+   $env:TDNET_API_KEY = "your-api-key"
    ```
 
-3. **並列処理を制限**
-   ```typescript
-   import pMap from 'p-map';
-   await pMap(disclosures, processDisclosure, { concurrency: 3 });
+3. 永続的に環境変数を設定:
+   ```powershell
+   [System.Environment]::SetEnvironmentVariable("TDNET_API_KEY", "your-api-key", "User")
    ```
 
 ---
 
-### 問題: Lambda関数のメモリ不足
+### エラー: ACCESS_DENIED
 
-**症状:**
-```
-Runtime exited with error: signal: killed
-Runtime.ExitError
-```
+**症状**: Secrets Managerへのアクセス権限がありません
 
-**原因:**
-- 大きなPDFファイルをメモリに保持
-- メモリリーク
-- 不適切なバッファ管理
+**原因**: IAMユーザー/ロールに `secretsmanager:GetSecretValue` 権限がない
 
-**解決策:**
+**対処方法**:
 
-1. **メモリサイズを増やす**
-   ```typescript
-   const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
-       memorySize: 1024, // 512MB → 1024MBに増加
-   });
+1. IAMポリシーを確認:
+   ```bash
+   aws iam get-user-policy --user-name your-user --policy-name your-policy
    ```
 
-2. **ストリーミング処理を使用**
-   ```typescript
-   const stream = await axios.get(url, { responseType: 'stream' });
-   await s3.upload({
-       Bucket: bucketName,
-       Key: s3Key,
-       Body: stream.data,
-   }).promise();
-   ```
-
-3. **不要なオブジェクトを解放**
-   ```typescript
-   let pdfBuffer = await downloadPDF(url);
-   await uploadToS3(pdfBuffer, s3Key);
-   pdfBuffer = null; // 明示的に解放
-   ```
-
----
-
-## DynamoDB関連
-
-### 問題: ConditionalCheckFailedException
-
-**症状:**
-```
-ConditionalCheckFailedException: The conditional request failed
-```
-
-**原因:**
-- 重複する開示情報IDの登録試行
-- 条件付き書込の条件が満たされない
-
-**解決策:**
-
-```typescript
-try {
-    await docClient.send(new PutCommand({
-        TableName: tableName,
-        Item: disclosure,
-        ConditionExpression: 'attribute_not_exists(disclosure_id)',
-    }));
-} catch (error) {
-    if (error.name === 'ConditionalCheckFailedException') {
-        logger.info('Disclosure already exists, skipping', {
-            disclosure_id: disclosure.disclosure_id,
-        });
-        return; // 正常な動作
-    }
-    throw error;
-}
-```
-
----
-
-### 問題: ProvisionedThroughputExceededException
-
-**症状:**
-```
-ProvisionedThroughputExceededException: The level of configured provisioned throughput for the table was exceeded
-```
-
-**原因:**
-- 読み書きキャパシティを超えるリクエスト
-- ホットパーティション
-
-**解決策:**
-
-1. **オンデマンドモードに変更**
-   ```typescript
-   const table = new dynamodb.Table(this, 'DisclosuresTable', {
-       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-   });
-   ```
-
-2. **バッチ書込を使用**
-   ```typescript
-   import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
-   
-   const chunks = chunkArray(disclosures, 25); // 最大25件
-   for (const chunk of chunks) {
-       await docClient.send(new BatchWriteCommand({
-           RequestItems: {
-               [tableName]: chunk.map(item => ({
-                   PutRequest: { Item: item }
-               }))
-           }
-       }));
+2. 必要な権限を付与:
+   ```json
+   {
+     "Effect": "Allow",
+     "Action": "secretsmanager:GetSecretValue",
+     "Resource": "arn:aws:secretsmanager:ap-northeast-1:*:secret:/tdnet/api-key-*"
    }
    ```
 
-3. **指数バックオフで再試行**
-   ```typescript
-   await retryWithBackoff(
-       () => docClient.send(command),
-       { maxRetries: 5, initialDelay: 1000 }
-   );
+3. または、環境変数を設定:
+   ```powershell
+   $env:TDNET_API_KEY = "your-api-key"
+   ```
+
+4. 永続的に環境変数を設定:
+   ```powershell
+   [System.Environment]::SetEnvironmentVariable("TDNET_API_KEY", "your-api-key", "User")
    ```
 
 ---
 
-## S3関連
+### エラー: NETWORK_ERROR
 
-### 問題: AccessDenied エラー
+**症状**: ネットワークエラー（最大リトライ回数に到達）
 
-**症状:**
-```
-AccessDenied: Access Denied
-```
+**原因**: ネットワーク接続の問題、AWS CLIの設定エラー
 
-**原因:**
-- IAMロールに適切な権限がない
-- バケットポリシーが制限的
-- リージョンが異なる
+**対処方法**:
 
-**解決策:**
-
-1. **IAM権限を確認**
-   ```typescript
-   pdfBucket.grantReadWrite(collectorFn);
+1. ネットワーク接続を確認:
+   ```powershell
+   Test-NetConnection aws.amazon.com -Port 443
    ```
 
-2. **リージョンを確認**
-   ```typescript
-   const s3Client = new S3Client({
-       region: 'ap-northeast-1', // バケットと同じリージョン
-   });
-   ```
-
----
-
-### 問題: NoSuchKey エラー
-
-**症状:**
-```
-NoSuchKey: The specified key does not exist
-```
-
-**原因:**
-- S3キーが存在しない
-- S3キーのパスが間違っている
-
-**解決策:**
-
-```typescript
-try {
-    await s3Client.send(new HeadObjectCommand({
-        Bucket: bucketName,
-        Key: s3Key,
-    }));
-} catch (error) {
-    if (error.name === 'NotFound') {
-        logger.error('S3 object not found', { s3Key });
-        throw new NotFoundError('PDF file not found', 'pdf', s3Key);
-    }
-    throw error;
-}
-```
-
----
-
-## スクレイピング関連
-
-### 問題: TDnetからのレスポンスが403 Forbidden
-
-**症状:**
-```
-AxiosError: Request failed with status code 403
-```
-
-**原因:**
-- User-Agentヘッダーが未設定
-- リクエスト頻度が高すぎる
-- IPアドレスがブロックされている
-
-**解決策:**
-
-1. **User-Agentを設定**
-   ```typescript
-   const response = await axios.get(url, {
-       headers: {
-           'User-Agent': 'TDnetDataCollector/1.0 (Personal Use; contact@example.com)',
-       },
-   });
-   ```
-
-2. **リクエスト間隔を増やす**
-   ```typescript
-   const DELAY_MS = 3000; // 2秒 → 3秒に増加
-   await sleep(DELAY_MS);
-   ```
-
----
-
-### 問題: HTMLパースエラー
-
-**症状:**
-```
-TypeError: Cannot read property 'text' of undefined
-```
-
-**原因:**
-- TDnetのHTML構造が変更された
-- セレクタが間違っている
-- レスポンスが空
-
-**解決策:**
-
-```typescript
-const title = $(row).find('.kjTitle a').text().trim();
-if (!title) {
-    logger.warn('Title not found', { row: $(row).html() });
-    continue; // スキップ
-}
-```
-
----
-
-## API Gateway関連
-
-### 問題: 429 Too Many Requests
-
-**症状:**
-```
-{
-  "message": "Too Many Requests"
-}
-```
-
-**原因:**
-- 使用量プランのレート制限を超えた
-- バーストリミットを超えた
-
-**解決策:**
-
-```typescript
-const plan = api.addUsagePlan('UsagePlan', {
-    throttle: {
-        rateLimit: 100, // 1秒あたり100リクエスト
-        burstLimit: 200, // バースト200リクエスト
-    },
-});
-```
-
----
-
-### 問題: 502 Bad Gateway
-
-**症状:**
-```
-{
-  "message": "Internal server error"
-}
-```
-
-**原因:**
-- Lambda関数がエラーを返している
-- Lambda関数がタイムアウトしている
-- レスポンス形式が不正
-
-**解決策:**
-
-1. **CloudWatch Logsを確認**
+2. AWS CLIの設定を確認:
    ```bash
-   aws logs tail /aws/lambda/QueryFunction --follow
+   aws configure list
+   aws sts get-caller-identity
    ```
 
-2. **レスポンス形式を確認**
-   ```typescript
-   return {
-       statusCode: 200,
-       headers: {
-           'Content-Type': 'application/json',
-       },
-       body: JSON.stringify({ data: result }),
-   };
+3. AWS CLIの認証情報を再設定:
+   ```bash
+   aws configure
    ```
 
----
-
-## CDK/デプロイ関連
-
-### 問題: cdk deploy が失敗する
-
-**症状:**
-```
-CREATE_FAILED | AWS::Lambda::Function | CollectorFunction
-Resource handler returned message: "The role defined for the function cannot be assumed by Lambda."
-```
-
-**原因:**
-- IAMロールの信頼関係が不正
-- 依存関係の順序が間違っている
-- リソース名の重複
-
-**解決策:**
-
-1. **IAMロールの信頼関係を確認**
-   ```typescript
-   const role = new iam.Role(this, 'LambdaRole', {
-       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-   });
+4. または、環境変数を設定:
+   ```powershell
+   $env:TDNET_API_KEY = "your-api-key"
    ```
 
-2. **依存関係を明示**
-   ```typescript
-   collectorFn.node.addDependency(table);
-   collectorFn.node.addDependency(pdfBucket);
+5. 永続的に環境変数を設定:
+   ```powershell
+   [System.Environment]::SetEnvironmentVariable("TDNET_API_KEY", "your-api-key", "User")
    ```
 
 ---
 
-## 監視・ログ関連
+### FAQ
 
-### 問題: CloudWatch Logsにログが表示されない
+**Q: 環境変数とSecrets Manager、どちらを使うべきですか？**
 
-**症状:**
-- Lambda関数は実行されているが、ログが見つからない
+A: 
+- **本番環境**: Secrets Manager（セキュリティ、監査ログ、自動ローテーション）
+- **開発環境**: 環境変数（利便性、迅速なテスト）
 
-**原因:**
-- IAMロールにCloudWatch Logs権限がない
-- ログ出力が正しく実装されていない
+**Q: 環境変数を永続的に設定するには？**
 
-**解決策:**
+A:
+```powershell
+[System.Environment]::SetEnvironmentVariable("TDNET_API_KEY", "your-api-key", "User")
+```
 
-1. **IAM権限を確認**
-   ```typescript
-   collectorFn.addToRolePolicy(new iam.PolicyStatement({
-       actions: [
-           'logs:CreateLogGroup',
-           'logs:CreateLogStream',
-           'logs:PutLogEvents',
-       ],
-       resources: ['*'],
-   }));
+設定後、PowerShellを再起動して反映を確認してください。
+
+**Q: リトライ回数を変更できますか？**
+
+A: 現在は固定（最大3回）。変更が必要な場合は、スクリプトの `$MaxRetries` パラメータを修正してください。
+
+**Q: 環境変数が設定されているか確認するには？**
+
+A:
+```powershell
+$env:TDNET_API_KEY
+```
+
+値が表示されれば設定されています。空の場合は未設定です。
+
+---
+
+## Lambda実行エラー
+
+### エラー: 環境変数未設定
+
+**症状**: Lambda関数が環境変数を読み込めない
+
+**原因**: Lambda関数の環境変数が設定されていない
+
+**対処方法**:
+
+1. Lambda関数の環境変数を確認:
+   ```bash
+   aws lambda get-function-configuration --function-name tdnet-collector
    ```
 
-2. **ログ出力を確認**
-   ```typescript
-   console.log(JSON.stringify({ level: 'info', message: 'Test log' }));
+2. 環境変数を設定:
+   ```bash
+   aws lambda update-function-configuration \
+     --function-name tdnet-collector \
+     --environment Variables={S3_BUCKET_NAME=tdnet-pdfs-prod,DYNAMODB_TABLE_NAME=tdnet-disclosures}
    ```
 
 ---
 
-## ネットワーク関連
+### エラー: タイムアウト
 
-### 問題: ECONNRESET エラー
+**症状**: Lambda関数がタイムアウトする
 
-**症状:**
-```
-Error: socket hang up
-code: 'ECONNRESET'
-```
+**原因**: 処理時間が設定されたタイムアウト値を超過
 
-**原因:**
-- ネットワーク接続が切断された
-- TDnetサーバーが応答を停止した
-- タイムアウト
+**対処方法**:
 
-**解決策:**
+1. Lambda関数のタイムアウトを延長:
+   ```bash
+   aws lambda update-function-configuration \
+     --function-name tdnet-collector \
+     --timeout 900
+   ```
 
-```typescript
-await retryWithBackoff(
-    () => axios.get(url),
-    { maxRetries: 3, initialDelay: 2000 }
-);
-```
+2. 処理を最適化（バッチサイズの削減、並列度の調整）
 
 ---
 
-## FAQ
+### エラー: メモリ不足
 
-### Q: Lambda関数のログレベルを変更するには?
+**症状**: Lambda関数がメモリ不足でクラッシュ
 
-**A:** 環境変数 `LOG_LEVEL` を設定してください。
+**原因**: 割り当てメモリが不足
 
-```typescript
-const collectorFn = new NodejsFunction(this, 'CollectorFunction', {
-    environment: {
-        LOG_LEVEL: 'DEBUG', // DEBUG, INFO, WARN, ERROR
-    },
-});
-```
+**対処方法**:
 
-### Q: DynamoDBのデータをバックアップするには?
+1. Lambda関数のメモリを増やす:
+   ```bash
+   aws lambda update-function-configuration \
+     --function-name tdnet-collector \
+     --memory-size 1024
+   ```
 
-**A:** オンデマンドバックアップまたはPITRを使用してください。
+---
+
+## DynamoDBエラー
+
+### エラー: スロットリング
+
+**症状**: `ProvisionedThroughputExceededException`
+
+**原因**: 書き込み/読み込みキャパシティを超過
+
+**対処方法**:
+
+1. オンデマンド課金モードに変更（推奨）
+2. または、プロビジョニング済みキャパシティを増やす
+
+---
+
+### エラー: アクセス拒否
+
+**症状**: `User is not authorized to perform: dynamodb:PutItem`
+
+**原因**: Lambda実行ロールにDynamoDB権限がない
+
+**対処方法**:
+
+1. Lambda実行ロールにDynamoDB権限を追加:
+   ```json
+   {
+     "Effect": "Allow",
+     "Action": [
+       "dynamodb:PutItem",
+       "dynamodb:GetItem",
+       "dynamodb:Query",
+       "dynamodb:Scan"
+     ],
+     "Resource": "arn:aws:dynamodb:REGION:ACCOUNT-ID:table/tdnet-disclosures"
+   }
+   ```
+
+---
+
+## S3エラー
+
+### エラー: バケット未作成
+
+**症状**: `The specified bucket does not exist`
+
+**原因**: S3バケットが作成されていない
+
+**対処方法**:
 
 ```bash
-aws dynamodb create-backup \
-    --table-name tdnet-disclosures-prod \
-    --backup-name tdnet-backup-20240115
+# S3バケットを作成
+aws s3 mb s3://tdnet-pdfs-prod --region ap-northeast-1
 ```
 
-### Q: S3のコストを削減するには?
+---
 
-**A:** ライフサイクルポリシーを設定してください。
+### エラー: アクセス拒否
 
-```typescript
-pdfBucket.addLifecycleRule({
-    transitions: [
-        {
-            storageClass: s3.StorageClass.STANDARD_IA,
-            transitionAfter: cdk.Duration.days(90),
-        },
-        {
-            storageClass: s3.StorageClass.GLACIER,
-            transitionAfter: cdk.Duration.days(365),
-        },
-    ],
-});
-```
+**症状**: `Access Denied`
+
+**原因**: Lambda実行ロールにS3権限がない
+
+**対処方法**:
+
+1. Lambda実行ロールにS3権限を追加:
+   ```json
+   {
+     "Effect": "Allow",
+     "Action": [
+       "s3:PutObject",
+       "s3:GetObject"
+     ],
+     "Resource": "arn:aws:s3:::tdnet-pdfs-prod/*"
+   }
+   ```
+
+---
+
+## スクレイピングエラー
+
+### エラー: TDnetサイト変更
+
+**症状**: `Failed to parse HTML: selector not found`
+
+**原因**: TDnetサイトのHTML構造が変更された
+
+**対処方法**:
+
+1. TDnetサイトのHTML構造を確認
+2. `src/scraper/html-parser.ts` のセレクタを更新
+3. テストを実行して動作確認
+
+---
+
+### エラー: ネットワークエラー
+
+**症状**: `ECONNRESET: Connection reset by peer`
+
+**原因**: ネットワーク接続の問題
+
+**対処方法**:
+
+- 再試行ロジックが自動的に実行されます（最大3回）
+- それでも失敗する場合は、TDnetサイトの状態を確認
+
+---
+
+### エラー: レート制限
+
+**症状**: `Too many requests`
+
+**原因**: TDnetサイトのレート制限を超過
+
+**対処方法**:
+
+- レート制限設定を確認（デフォルト: 1リクエスト/秒）
+- 必要に応じて `src/utils/rate-limiter.ts` の設定を調整
 
 ---
 
 ## 関連ドキュメント
 
-- **[エラーハンドリングパターン](../../.kiro/steering/core/error-handling-patterns.md)** - エラー処理の詳細
-- **[監視とアラート](../../.kiro/steering/infrastructure/monitoring-alerts.md)** - 監視設定
-- **[パフォーマンス最適化](../../.kiro/steering/infrastructure/performance-optimization.md)** - 最適化戦略
-- **[デプロイチェックリスト](../../.kiro/steering/infrastructure/deployment-checklist.md)** - デプロイ手順
-
----
-
-**最終更新:** 2026-02-15
+- [データ操作スクリプト](../../../../.kiro/steering/development/data-scripts.md)
+- [エラーハンドリングパターン](../../../../.kiro/steering/core/error-handling-patterns.md)
+- [README.md](../../../../README.md)
 

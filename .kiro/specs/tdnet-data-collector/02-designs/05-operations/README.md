@@ -67,9 +67,9 @@ AWS無料枠内での運用を維持するためのコスト監視ガイドで�
 ---
 
 ### 4. [troubleshooting.md](./troubleshooting.md)
-**トラブルシューティングガイド**
+**トラブルシューティングガイド（包括版）**
 
-開発・運用中に発生する可能性のある問題と解決策をまとめたガイドです。
+開発・運用中に発生する可能性のある問題と解決策をまとめた包括的なガイドです。
 
 - Lambda関連（タイムアウト、メモリ不足）
 - DynamoDB関連（ConditionalCheckFailedException、スロットリング）
@@ -79,10 +79,13 @@ AWS無料枠内での運用を維持するためのコスト監視ガイドで�
 - CDK/デプロイ関連（cdk deploy失敗）
 - 監視・ログ関連（CloudWatch Logsにログが表示されない）
 - ネットワーク関連（ECONNRESET）
+- APIキー関連（Secrets Manager、環境変数、ネットワーク）
 - FAQ（よくある質問と回答）
 
 **対象者**: 開発者、運用担当者、システム管理者  
 **推奨**: 問題発生時に参照
+
+**注**: 旧`03-operations/troubleshooting.md`（APIキー関連）を統合済み
 
 ---
 
