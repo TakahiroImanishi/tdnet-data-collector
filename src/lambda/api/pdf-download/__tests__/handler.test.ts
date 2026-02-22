@@ -70,6 +70,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -104,6 +115,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       dynamoMock.on(GetItemCommand).resolves({
@@ -133,6 +155,17 @@ describe('Lambda PDF Download Handler', () => {
           disclosure_id: '20240115_7203_001',
         },
         headers: {},
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       // Act
@@ -153,6 +186,17 @@ describe('Lambda PDF Download Handler', () => {
         },
         headers: {
           'x-api-key': 'invalid-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 
@@ -175,6 +219,17 @@ describe('Lambda PDF Download Handler', () => {
         headers: {
           'x-api-key': 'test-api-key',
         },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
+        },
       };
 
       // Act
@@ -195,6 +250,17 @@ describe('Lambda PDF Download Handler', () => {
         },
         headers: {
           'x-api-key': 'test-api-key',
+        },
+        requestContext: {
+          requestId: 'test-request-id',
+          accountId: 'test-account',
+          apiId: 'test-api-id',
+          stage: 'test',
+          requestTimeEpoch: Date.now(),
+          identity: {
+            sourceIp: '127.0.0.1',
+            userAgent: 'test-agent',
+          },
         },
       };
 
