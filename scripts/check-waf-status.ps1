@@ -30,6 +30,10 @@ try {
     Write-Host "1. Getting WAF WebACL list..." -ForegroundColor Yellow
     $webAcls = aws wafv2 list-web-acls --scope REGIONAL --region $Region | ConvertFrom-Json
     
+    if ($LASTEXITCODE -ne 0) {
+        throw "WAF list-web-acls command failed"
+    }
+    
     if ($webAcls.WebACLs.Count -eq 0) {
         Write-Host "   No WAF WebACL found" -ForegroundColor Green
     } else {
@@ -71,7 +75,13 @@ try {
             Write-Host "   Stage ARN: $stageArn" -ForegroundColor Gray
         }
     } else {
-        Write-Host "   Target API Gateway not found" -ForegroundColor Red
+        Write-Host "   ❌ Target API Gateway not found" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "   対処方法:" -ForegroundColor Yellow
+        Write-Host "   1. API Gateway名を確認: aws apigateway get-rest-apis --query 'items[].name'" -ForegroundColor White
+        Write-Host "   2. 環境（$Environment）が正しいか確認してください" -ForegroundColor White
+        Write-Host "   3. CDKスタックがデプロイされているか確認: aws cloudformation list-stacks --query 'StackSummaries[?contains(StackName, ``TdnetDataCollectorApiStack``)]'" -ForegroundColor White
+        Write-Host ""
     }
     
     Write-Host ""
@@ -80,6 +90,13 @@ try {
     Write-Host "========================================" -ForegroundColor Cyan
     
 } catch {
-    Write-Host "Error occurred: $_" -ForegroundColor Red
+    Write-Host "❌ Error occurred: $_" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
+    Write-Host "2. WAF権限を確認: wafv2:ListWebACLs, wafv2:ListResourcesForWebACL" -ForegroundColor White
+    Write-Host "3. API Gateway権限を確認: apigateway:GET" -ForegroundColor White
+    Write-Host "4. リージョンが正しいか確認: $Region" -ForegroundColor White
+    Write-Host ""
     exit 1
 }

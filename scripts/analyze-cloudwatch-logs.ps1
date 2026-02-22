@@ -129,8 +129,6 @@ if (-not $pdfErrorResult.queryId) {
             break
         }
     } while ($true)
-} else {
-    Write-Host "クエリの開始に失敗しました。" -ForegroundColor Red
 }
 
 Write-Host ""
@@ -197,12 +195,24 @@ if ($summaryResult.queryId) {
         
         if ($waitedSeconds -ge $maxWaitSeconds) {
             Write-Host ""
-            Write-Host "タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host "❌ タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "対処方法:" -ForegroundColor Yellow
+            Write-Host "1. クエリが複雑すぎる可能性があります。時間範囲（-Hours）を短縮してください" -ForegroundColor White
+            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認してください" -ForegroundColor White
+            Write-Host "3. 手動でクエリ結果を取得: aws logs get-query-results --query-id $($summaryResult.queryId)" -ForegroundColor White
+            Write-Host ""
             break
         }
     } while ($true)
 } else {
-    Write-Host "クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host "❌ クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
+    Write-Host "2. CloudWatch Logs権限を確認: logs:StartQuery, logs:GetQueryResults" -ForegroundColor White
+    Write-Host "3. ログループが存在することを確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host ""
 }
 
 Write-Host ""
@@ -266,12 +276,24 @@ if ($s3ErrorResult.queryId) {
         
         if ($waitedSeconds -ge $maxWaitSeconds) {
             Write-Host ""
-            Write-Host "タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host "❌ タイムアウト: クエリが完了しませんでした。" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "対処方法:" -ForegroundColor Yellow
+            Write-Host "1. クエリが複雑すぎる可能性があります。時間範囲（-Hours）を短縮してください" -ForegroundColor White
+            Write-Host "2. CloudWatch Logsコンソールでクエリ状態を確認してください" -ForegroundColor White
+            Write-Host "3. 手動でクエリ結果を取得: aws logs get-query-results --query-id $($s3ErrorResult.queryId)" -ForegroundColor White
+            Write-Host ""
             break
         }
     } while ($true)
 } else {
-    Write-Host "クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host "❌ クエリの開始に失敗しました。" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
+    Write-Host "2. CloudWatch Logs権限を確認: logs:StartQuery, logs:GetQueryResults" -ForegroundColor White
+    Write-Host "3. ログループが存在することを確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host ""
 }
 
 Write-Host ""

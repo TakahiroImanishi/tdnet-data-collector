@@ -37,34 +37,51 @@ Write-Host "Scanning (this may take a while)..."
 $dynamoCount = 0
 $lastEvaluatedKey = $null
 
-do {
-    if ($lastEvaluatedKey) {
-        $scanResult = aws dynamodb scan `
-            --table-name $TableName `
-            --select COUNT `
-            --exclusive-start-key $lastEvaluatedKey `
-            --profile $Profile `
-            --region $Region `
-            --output json | ConvertFrom-Json
-    } else {
-        $scanResult = aws dynamodb scan `
-            --table-name $TableName `
-            --select COUNT `
-            --profile $Profile `
-            --region $Region `
-            --output json | ConvertFrom-Json
-    }
+try {
+    do {
+        if ($lastEvaluatedKey) {
+            $scanResult = aws dynamodb scan `
+                --table-name $TableName `
+                --select COUNT `
+                --exclusive-start-key $lastEvaluatedKey `
+                --profile $Profile `
+                --region $Region `
+                --output json | ConvertFrom-Json
+        } else {
+            $scanResult = aws dynamodb scan `
+                --table-name $TableName `
+                --select COUNT `
+                --profile $Profile `
+                --region $Region `
+                --output json | ConvertFrom-Json
+        }
+        
+        if ($LASTEXITCODE -ne 0) {
+            throw "DynamoDB scan failed"
+        }
+        
+        $dynamoCount += $scanResult.Count
+        $lastEvaluatedKey = $scanResult.LastEvaluatedKey
+        
+        Write-Host "現在のカウント: $dynamoCount" -NoNewline
+        Write-Host "`r" -NoNewline
+    } while ($lastEvaluatedKey)
     
-    $dynamoCount += $scanResult.Count
-    $lastEvaluatedKey = $scanResult.LastEvaluatedKey
-    
-    Write-Host "現在のカウント: $dynamoCount" -NoNewline
-    Write-Host "`r" -NoNewline
-} while ($lastEvaluatedKey)
-
-Write-Host ""
-Write-Host "DynamoDB record count: $dynamoCount" -ForegroundColor Green
-Write-Host ""
+    Write-Host ""
+    Write-Host "DynamoDB record count: $dynamoCount" -ForegroundColor Green
+    Write-Host ""
+} catch {
+    Write-Host ""
+    Write-Host "❌ DynamoDBスキャンに失敗しました: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. テーブル名を確認: aws dynamodb list-tables --query 'TableNames[?contains(@, ``tdnet``)]'" -ForegroundColor White
+    Write-Host "2. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
+    Write-Host "3. DynamoDB権限を確認: dynamodb:Scan" -ForegroundColor White
+    Write-Host "4. テーブルが存在することを確認: aws dynamodb describe-table --table-name $TableName" -ForegroundColor White
+    Write-Host ""
+    exit 1
+}
 
 # 2. Count records with pdf_s3_key set
 Write-Host "=== 2. Count records with pdf_s3_key set ===" -ForegroundColor Yellow
@@ -131,33 +148,50 @@ Write-Host "Listing objects (this may take a while)..."
 $s3Count = 0
 $continuationToken = $null
 
-do {
-    if ($continuationToken) {
-        $listResult = aws s3api list-objects-v2 `
-            --bucket $BucketName `
-            --continuation-token $continuationToken `
-            --profile $Profile `
-            --output json | ConvertFrom-Json
-    } else {
-        $listResult = aws s3api list-objects-v2 `
-            --bucket $BucketName `
-            --profile $Profile `
-            --output json | ConvertFrom-Json
-    }
+try {
+    do {
+        if ($continuationToken) {
+            $listResult = aws s3api list-objects-v2 `
+                --bucket $BucketName `
+                --continuation-token $continuationToken `
+                --profile $Profile `
+                --output json | ConvertFrom-Json
+        } else {
+            $listResult = aws s3api list-objects-v2 `
+                --bucket $BucketName `
+                --profile $Profile `
+                --output json | ConvertFrom-Json
+        }
+        
+        if ($LASTEXITCODE -ne 0) {
+            throw "S3 list-objects-v2 failed"
+        }
+        
+        if ($listResult.Contents) {
+            $s3Count += $listResult.Contents.Count
+        }
+        
+        $continuationToken = $listResult.NextContinuationToken
+        
+        Write-Host "現在のカウント: $s3Count" -NoNewline
+        Write-Host "`r" -NoNewline
+    } while ($continuationToken)
     
-    if ($listResult.Contents) {
-        $s3Count += $listResult.Contents.Count
-    }
-    
-    $continuationToken = $listResult.NextContinuationToken
-    
-    Write-Host "現在のカウント: $s3Count" -NoNewline
-    Write-Host "`r" -NoNewline
-} while ($continuationToken)
-
-Write-Host ""
-Write-Host "S3 object count: $s3Count" -ForegroundColor Green
-Write-Host ""
+    Write-Host ""
+    Write-Host "S3 object count: $s3Count" -ForegroundColor Green
+    Write-Host ""
+} catch {
+    Write-Host ""
+    Write-Host "❌ S3オブジェクトリストの取得に失敗しました: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. バケット名を確認: aws s3 ls | grep tdnet" -ForegroundColor White
+    Write-Host "2. AWS認証情報を確認: aws sts get-caller-identity" -ForegroundColor White
+    Write-Host "3. S3権限を確認: s3:ListBucket" -ForegroundColor White
+    Write-Host "4. バケットが存在することを確認: aws s3 ls s3://$BucketName" -ForegroundColor White
+    Write-Host ""
+    exit 1
+}
 
 # 4. Consistency check results
 Write-Host "=== 4. Consistency check results ===" -ForegroundColor Cyan

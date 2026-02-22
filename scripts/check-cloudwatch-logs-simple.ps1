@@ -95,7 +95,14 @@ if ($streams.logStreams) {
         Write-Host ""
     }
 } else {
-    Write-Host "No log streams found" -ForegroundColor Yellow
+    Write-Host "❌ ログストリームが見つかりませんでした" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "対処方法:" -ForegroundColor Yellow
+    Write-Host "1. ログループ名を確認: aws logs describe-log-groups --log-group-name-prefix $LogGroupName" -ForegroundColor White
+    Write-Host "2. Lambda関数が実行されているか確認: aws lambda list-functions --query 'Functions[?contains(FunctionName, ``collector``)]'" -ForegroundColor White
+    Write-Host "3. 時間範囲（-Hours）を拡大してください" -ForegroundColor White
+    Write-Host "4. AWS認証情報とCloudWatch Logs権限を確認してください" -ForegroundColor White
+    Write-Host ""
 }
 
 Write-Host "=== Check complete ===" -ForegroundColor Cyan
