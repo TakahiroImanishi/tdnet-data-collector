@@ -54,26 +54,30 @@ AWS Step Functionsを使用してデータ収集処理をオーケストレー�
 - `.kiro/specs/tdnet-data-collector/designs/step-functions-cost-analysis.md`
 
 #### タスク1.2: ワークフロー詳細設計
-- [ ] ステートマシン定義（ASL: Amazon States Language）
+- [x] ステートマシン定義（ASL: Amazon States Language）
   - 初期化ステップ
   - データ取得ステップ（TDnet API呼び出し）
   - バッチ処理ステップ（Map状態）
   - 集約ステップ
   - 完了/エラー処理ステップ
-- [ ] 並列実行制御
+- [x] 並列実行制御
   - Map状態のMaxConcurrency設定
   - レート制限の実装方法
-- [ ] エラーハンドリング
+- [x] エラーハンドリング
   - Retry設定（指数バックオフ）
   - Catch設定（エラー種別ごと）
   - DLQ連携
-- [ ] タイムアウト設定
+- [x] タイムアウト設定
   - 各ステップのタイムアウト
   - 全体のタイムアウト
 
+**完了日時**: 2026-02-22 18:12:55
+
 **成果物**:
-- `.kiro/specs/tdnet-data-collector/designs/step-functions-state-machine.json`
-- `.kiro/specs/tdnet-data-collector/designs/step-functions-error-handling.md`
+- `.kiro/specs/tdnet-data-collector/designs/step-functions-state-machine.json` ✓
+- `.kiro/specs/tdnet-data-collector/designs/step-functions-error-handling.md` ✓
+
+**作業記録**: `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260222-181255-subagent2-workflow-design.md`
 
 ### フェーズ2: Lambda関数分割（優先度: 高）
 
