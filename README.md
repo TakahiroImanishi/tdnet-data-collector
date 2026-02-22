@@ -68,18 +68,27 @@ TDnet Data Collectorは、日本の上場企業が公開する適時開示情報
 ```
 tdnet-data-collector/
 ├── src/                          # アプリケーションコード
-│   ├── lambda/                   # Lambda関数
-│   │   └── collector/            # 開示情報収集Lambda
-│   │       ├── handler.ts        # メインハンドラー
-│   │       ├── scrape-tdnet-list.ts  # TDnetスクレイピング
-│   │       ├── download-pdf.ts   # PDFダウンロード
-│   │       ├── save-metadata.ts  # メタデータ保存
-│   │       └── update-execution-status.ts  # 実行状態管理
+│   ├── lambda/                   # Lambda関数（9個実装済み）
+│   │   ├── collector/            # 開示情報収集Lambda
+│   │   ├── query/                # 開示情報検索Lambda
+│   │   ├── export/               # データエクスポートLambda
+│   │   ├── collect/              # 収集処理トリガーLambda
+│   │   ├── collect-status/       # 収集状態取得Lambda
+│   │   ├── stats/                # 統計情報取得Lambda
+│   │   ├── health/               # ヘルスチェックLambda
+│   │   └── api/                  # API関連Lambda
+│   │       ├── pdf-download/     # PDF署名付きURL生成Lambda
+│   │       └── export-status/    # エクスポート状態取得Lambda
+│   ├── validators/               # バリデーション
+│   │   └── disclosure-schema.ts  # Zodスキーマ定義
+│   ├── models/                   # データモデル
+│   │   └── disclosure.ts         # Disclosureモデル
 │   ├── utils/                    # ユーティリティ
 │   │   ├── logger.ts             # 構造化ロガー
 │   │   ├── cloudwatch-metrics.ts # メトリクス送信
 │   │   ├── retry.ts              # 再試行ロジック
-│   │   └── disclosure-id.ts      # 開示ID生成
+│   │   ├── disclosure-id.ts      # 開示ID生成
+│   │   └── date-partition.ts     # date_partition生成
 │   ├── scraper/                  # スクレイピング
 │   │   └── html-parser.ts        # HTMLパーサー
 │   ├── types/                    # 型定義
@@ -89,11 +98,20 @@ tdnet-data-collector/
 ├── cdk/                          # CDKインフラコード（Phase 2以降）
 │   ├── bin/                      # CDKアプリエントリーポイント
 │   └── lib/                      # CDKスタック定義
+│       ├── stacks/               # 4スタック（Foundation, Compute, API, Monitoring）
+│       └── constructs/           # 再利用可能なConstruct
+├── dashboard/                    # React Webアプリ（Phase 3）
+│   ├── src/                      # ソースコード
+│   └── public/                   # 静的ファイル
+├── scripts/                      # 運用スクリプト
+│   ├── deploy-split-stacks.ps1  # 分割スタックデプロイ
+│   ├── localstack-setup.ps1     # LocalStack環境セットアップ
+│   └── delete-all-data.ps1      # データ全削除
 ├── .kiro/                        # Kiro設定とSpec
 │   ├── specs/                    # 仕様書とタスク
 │   │   └── tdnet-data-collector/
 │   │       ├── docs/             # 要件・設計書
-│   │       ├── tasks.md          # タスクリスト
+│   │       ├── tasks/            # タスクリスト
 │   │       ├── work-logs/        # 作業記録
 │   │       └── improvements/     # 改善記録
 │   └── steering/                 # 実装ガイドライン
