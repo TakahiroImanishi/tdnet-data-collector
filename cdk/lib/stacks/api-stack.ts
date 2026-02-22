@@ -32,6 +32,13 @@ export class TdnetApiStack extends cdk.Stack {
 
     const env = props.environment;
 
+    // タグ付け戦略: コスト管理と運用管理のためのタグ
+    cdk.Tags.of(this).add('Project', 'TDnetDataCollector');
+    cdk.Tags.of(this).add('Environment', env);
+    cdk.Tags.of(this).add('ManagedBy', 'CDK');
+    cdk.Tags.of(this).add('CostCenter', 'Engineering');
+    cdk.Tags.of(this).add('Owner', 'DataTeam');
+
     // ========================================
     // API Gateway
     // ========================================
@@ -60,6 +67,9 @@ export class TdnetApiStack extends cdk.Stack {
         allowCredentials: true,
       },
       cloudWatchRole: true,
+      // TLS 1.2以上を強制（カスタムドメイン使用時）
+      // 注: デフォルトのAPI Gateway URLはTLS 1.2がデフォルトで有効
+      // カスタムドメインを使用する場合は、DomainNameでsecurityPolicyを設定
     });
 
     // ========================================
@@ -198,5 +208,17 @@ export class TdnetApiStack extends cdk.Stack {
       value: this.apiKey.keyId,
       exportName: `TdnetApiKeyId-${env}`,
     });
+
+    // カスタムドメイン使用時のTLS 1.2設定例（コメントアウト）
+    // const domainName = new apigateway.DomainName(this, 'CustomDomain', {
+    //   domainName: 'api.example.com',
+    //   certificate: certificate, // ACM証明書
+    //   securityPolicy: apigateway.SecurityPolicy.TLS_1_2,
+    // });
+    // 
+    // new apigateway.BasePathMapping(this, 'BasePathMapping', {
+    //   domainName: domainName,
+    //   restApi: this.api,
+    // });
   }
 }

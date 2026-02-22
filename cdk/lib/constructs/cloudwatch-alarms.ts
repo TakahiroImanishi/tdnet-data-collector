@@ -5,6 +5,8 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Construct } from 'constructs';
 
 /**
@@ -52,6 +54,22 @@ export interface CloudWatchAlarmsProps {
    * 指定された場合、DLQメッセージ数のアラームを作成
    */
   dlqQueue?: sqs.IQueue;
+
+  /**
+   * DynamoDBテーブル（オプション）
+   * 指定された場合、DynamoDBアラームを作成
+   */
+  dynamodbTables?: {
+    disclosures?: dynamodb.ITable;
+    executions?: dynamodb.ITable;
+    exportStatus?: dynamodb.ITable;
+  };
+
+  /**
+   * API Gateway（オプション）
+   * 指定された場合、API Gatewayアラームを作成
+   */
+  apiGateway?: apigateway.IRestApi;
 }
 
 /**
@@ -113,10 +131,24 @@ export class CloudWatchAlarms extends Construct {
       // CDK IDには静的な値を使用（トークンを含めない）
       const alarmIdPrefix = `LambdaFunction${index}`;
 
-      // 1. Lambda Error Rate アラーム（Critical）
-      const errorRateAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ErrorRateAlarm`, {
-        alarmName: `${functionName}-error-rate-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} のエラー率が ${errorRateThreshold}% を超えました`,
+      // 1. Lambda Error Rate アラーム（Warning - 5%）
+      const errorRateWarningAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ErrorRateWarningAlarm`, {
+        alarmName: `${functionName}-error-rate-warning-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} のエラー率が 5% を超えました（警告）`,
+        metric: this.createErrorRateMetric(lambdaFunction),
+        threshold: 5,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      errorRateWarningAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(errorRateWarningAlarm);
+
+      // 1-2. Lambda Error Rate アラーム（Critical - 10%）
+      const errorRateCriticalAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ErrorRateCriticalAlarm`, {
+        alarmName: `${functionName}-error-rate-critical-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} のエラー率が ${errorRateThreshold}% を超えました（重大）`,
         metric: this.createErrorRateMetric(lambdaFunction),
         threshold: errorRateThreshold,
         evaluationPeriods: 1,
@@ -124,8 +156,8 @@ export class CloudWatchAlarms extends Construct {
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
       });
 
-      errorRateAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
-      this.alarms.push(errorRateAlarm);
+      errorRateCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(errorRateCriticalAlarm);
 
       // 2. Lambda Duration アラーム（Warning - 10分）
       const durationAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}DurationAlarm`, {
@@ -161,22 +193,39 @@ export class CloudWatchAlarms extends Construct {
       durationCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(durationCriticalAlarm);
 
-      // 3. Lambda Throttles アラーム（Critical）
-      const throttleAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleAlarm`, {
-        alarmName: `${functionName}-throttles-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} でスロットリングが発生しました`,
+      // 3. Lambda Throttles アラーム（Warning - > 0）
+      const throttleWarningAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleWarningAlarm`, {
+        alarmName: `${functionName}-throttles-warning-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} でスロットリングが発生しました（警告）`,
         metric: lambdaFunction.metricThrottles({
           statistic: 'Sum',
           period: cdk.Duration.minutes(5),
         }),
-        threshold: 1,
+        threshold: 0,
         evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
       });
 
-      throttleAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
-      this.alarms.push(throttleAlarm);
+      throttleWarningAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(throttleWarningAlarm);
+
+      // 3-2. Lambda Throttles アラーム（Critical - > 5）
+      const throttleCriticalAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleCriticalAlarm`, {
+        alarmName: `${functionName}-throttles-critical-${props.environment}`,
+        alarmDescription: `Lambda関数 ${functionName} でスロットリングが5回以上発生しました（重大）`,
+        metric: lambdaFunction.metricThrottles({
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 5,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      throttleCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(throttleCriticalAlarm);
     });
 
     // ========================================
@@ -267,6 +316,146 @@ export class CloudWatchAlarms extends Construct {
 
       dlqAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(dlqAlarm);
+    }
+
+    // ========================================
+    // DynamoDBアラーム（オプション）
+    // ========================================
+    if (props.dynamodbTables) {
+      const tables = [
+        { name: 'Disclosures', table: props.dynamodbTables.disclosures },
+        { name: 'Executions', table: props.dynamodbTables.executions },
+        { name: 'ExportStatus', table: props.dynamodbTables.exportStatus },
+      ];
+
+      tables.forEach(({ name, table }, index) => {
+        if (!table) return;
+
+        // DynamoDB UserErrors アラーム
+        const userErrorsAlarm = new cloudwatch.Alarm(this, `DynamoDB${name}UserErrorsAlarm`, {
+          alarmName: `tdnet-dynamodb-${name.toLowerCase()}-user-errors-${props.environment}`,
+          alarmDescription: `DynamoDB ${name}テーブルでUserErrorsが発生しました`,
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'UserErrors',
+            dimensionsMap: { TableName: table.tableName },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 5,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+
+        userErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+        this.alarms.push(userErrorsAlarm);
+
+        // DynamoDB SystemErrors アラーム
+        const systemErrorsAlarm = new cloudwatch.Alarm(this, `DynamoDB${name}SystemErrorsAlarm`, {
+          alarmName: `tdnet-dynamodb-${name.toLowerCase()}-system-errors-${props.environment}`,
+          alarmDescription: `DynamoDB ${name}テーブルでSystemErrorsが発生しました`,
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'SystemErrors',
+            dimensionsMap: { TableName: table.tableName },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 0,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+
+        systemErrorsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+        this.alarms.push(systemErrorsAlarm);
+
+        // DynamoDB ThrottledRequests アラーム
+        const throttledRequestsAlarm = new cloudwatch.Alarm(this, `DynamoDB${name}ThrottledRequestsAlarm`, {
+          alarmName: `tdnet-dynamodb-${name.toLowerCase()}-throttled-requests-${props.environment}`,
+          alarmDescription: `DynamoDB ${name}テーブルでThrottledRequestsが発生しました`,
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/DynamoDB',
+            metricName: 'ThrottledRequests',
+            dimensionsMap: { TableName: table.tableName },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 0,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+
+        throttledRequestsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+        this.alarms.push(throttledRequestsAlarm);
+      });
+    }
+
+    // ========================================
+    // API Gatewayアラーム（オプション）
+    // ========================================
+    if (props.apiGateway) {
+      // API Gateway 4XXError アラーム
+      const api4xxErrorAlarm = new cloudwatch.Alarm(this, 'ApiGateway4XXErrorAlarm', {
+        alarmName: `tdnet-api-gateway-4xx-error-${props.environment}`,
+        alarmDescription: 'API Gatewayで4XXエラーが多発しています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '4XXError',
+          dimensionsMap: { ApiName: props.apiGateway.restApiName },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 10,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      api4xxErrorAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(api4xxErrorAlarm);
+
+      // API Gateway 5XXError アラーム
+      const api5xxErrorAlarm = new cloudwatch.Alarm(this, 'ApiGateway5XXErrorAlarm', {
+        alarmName: `tdnet-api-gateway-5xx-error-${props.environment}`,
+        alarmDescription: 'API Gatewayで5XXエラーが発生しました',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: '5XXError',
+          dimensionsMap: { ApiName: props.apiGateway.restApiName },
+          statistic: 'Sum',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 0,
+        evaluationPeriods: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      api5xxErrorAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(api5xxErrorAlarm);
+
+      // API Gateway Latency アラーム
+      const apiLatencyAlarm = new cloudwatch.Alarm(this, 'ApiGatewayLatencyAlarm', {
+        alarmName: `tdnet-api-gateway-latency-${props.environment}`,
+        alarmDescription: 'API Gatewayのレイテンシが高くなっています',
+        metric: new cloudwatch.Metric({
+          namespace: 'AWS/ApiGateway',
+          metricName: 'Latency',
+          dimensionsMap: { ApiName: props.apiGateway.restApiName },
+          statistic: 'Average',
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 5000, // 5秒
+        evaluationPeriods: 2,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      });
+
+      apiLatencyAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
+      this.alarms.push(apiLatencyAlarm);
     }
 
     // ========================================

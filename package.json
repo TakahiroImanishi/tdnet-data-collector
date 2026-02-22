@@ -15,6 +15,9 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,json,md}\"",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "pretest": "npm run audit",
     "cdk": "cdk",
     "cdk:deploy": "cdk deploy",
     "cdk:diff": "cdk diff",
@@ -67,7 +70,8 @@
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",
     "iconv-lite": "^0.6.3",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -81,6 +81,8 @@ export class LambdaCollector extends Construct {
       deadLetterQueue: props.deadLetterQueue,
       deadLetterQueueEnabled: props.deadLetterQueue !== undefined,
       retryAttempts: 2, // Lambda非同期呼び出しの再試行回数
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     // Grant IAM permissions

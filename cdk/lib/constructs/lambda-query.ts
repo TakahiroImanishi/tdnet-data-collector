@@ -71,6 +71,8 @@ export class LambdaQuery extends Construct {
         ENVIRONMENT: props.environment,
         NODE_OPTIONS: '--enable-source-maps',
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     // Grant IAM permissions

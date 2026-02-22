@@ -23,10 +23,10 @@ import {
   Stack,
 } from '@mui/material';
 import {
-  PictureAsPdf as PdfIcon,
   Code as XbrlIcon,
 } from '@mui/icons-material';
 import { Disclosure, PaginationInfo } from '../types/disclosure';
+import PdfDownload from './PdfDownload';
 
 interface DisclosureListProps {
   disclosures: Disclosure[];
@@ -129,15 +129,10 @@ const DisclosureList: React.FC<DisclosureListProps> = ({
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   {disclosure.pdf_url && (
-                    <Link
-                      href={disclosure.pdf_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                    >
-                      <PdfIcon fontSize="small" />
-                      PDF
-                    </Link>
+                    <PdfDownload
+                      disclosureId={disclosure.disclosure_id}
+                      fileName={`${disclosure.company_code}_${disclosure.title.substring(0, 20)}.pdf`}
+                    />
                   )}
                   {disclosure.xbrl_url && (
                     <Link
@@ -235,16 +230,12 @@ const DisclosureList: React.FC<DisclosureListProps> = ({
                   />
                 </TableCell>
                 <TableCell align="center">
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
                     {disclosure.pdf_url && (
-                      <Link
-                        href={disclosure.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="PDFを開く"
-                      >
-                        <PdfIcon color="error" />
-                      </Link>
+                      <PdfDownload
+                        disclosureId={disclosure.disclosure_id}
+                        fileName={`${disclosure.company_code}_${disclosure.title.substring(0, 20)}.pdf`}
+                      />
                     )}
                     {disclosure.xbrl_url && (
                       <Link

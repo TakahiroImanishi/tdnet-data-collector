@@ -1,5 +1,5 @@
-# データ削除スクリプト
-# DynamoDBとS3のすべてのデータを削除します
+# Data deletion script
+# Deletes all data from DynamoDB and S3
 
 param(
     [Parameter(Mandatory=$false)]
@@ -32,29 +32,29 @@ function Write-Error-Custom {
 }
 
 if (-not $Force) {
-    Write-Warning-Custom "警告: このスクリプトは以下のデータをすべて削除します:"
-    Write-Warning-Custom "  - DynamoDBテーブル: tdnet_disclosures_$Environment"
-    Write-Warning-Custom "  - DynamoDBテーブル: tdnet_executions_$Environment"
-    Write-Warning-Custom "  - DynamoDBテーブル: tdnet_export_status_$Environment"
-    Write-Warning-Custom "  - S3バケット: tdnet-data-collector-pdfs-* (すべてのオブジェクト)"
-    Write-Warning-Custom "  - S3バケット: tdnet-data-collector-exports-* (すべてのオブジェクト)"
+    Write-Warning-Custom "WARNING: This script will delete all data from:"
+    Write-Warning-Custom "  - DynamoDB table: tdnet_disclosures_$Environment"
+    Write-Warning-Custom "  - DynamoDB table: tdnet_executions_$Environment"
+    Write-Warning-Custom "  - DynamoDB table: tdnet_export_status_$Environment"
+    Write-Warning-Custom "  - S3 bucket: tdnet-data-collector-pdfs-* (all objects)"
+    Write-Warning-Custom "  - S3 bucket: tdnet-data-collector-exports-* (all objects)"
     Write-Host ""
-    $confirmation = Read-Host "本当に削除しますか？ (yes/no)"
+    $confirmation = Read-Host "Are you sure you want to delete? (yes/no)"
     if ($confirmation -ne "yes") {
-        Write-Success "削除をキャンセルしました。"
+        Write-Success "Deletion cancelled."
         exit 0
     }
 }
 
-Write-Info "データ削除を開始します..."
+Write-Info "Starting data deletion..."
 
-Write-Info "AWSアカウントIDを取得中..."
+Write-Info "Getting AWS account ID..."
 $accountId = aws sts get-caller-identity --query Account --output text
 if ($LASTEXITCODE -ne 0) {
-    Write-Error-Custom "エラー: AWSアカウントIDの取得に失敗しました。"
+    Write-Error-Custom "Error: Failed to get AWS account ID."
     exit 1
 }
-Write-Success "AWSアカウントID: $accountId"
+Write-Success "AWS Account ID: $accountId"
 
 $disclosuresTable = "tdnet_disclosures_$Environment"
 $executionsTable = "tdnet_executions_$Environment"
@@ -64,7 +64,7 @@ $exportsBucket = "tdnet-data-collector-exports-$accountId"
 
 Write-Host ""
 Write-Info "========================================"
-Write-Info "DynamoDBテーブルのデータ削除"
+Write-Info "DynamoDB Table Data Deletion"
 Write-Info "========================================"
 
 function Remove-DynamoDBItems {
@@ -74,19 +74,19 @@ function Remove-DynamoDBItems {
     )
     
     Write-Host ""
-    Write-Info "テーブル: $TableName"
-    Write-Info "データをスキャン中..."
+    Write-Info "Table: $TableName"
+    Write-Info "Scanning data..."
     
     $tableCheck = aws dynamodb describe-table --table-name $TableName 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning-Custom "警告: テーブル $TableName が見つかりません。スキップします。"
+        Write-Warning-Custom "Warning: Table $TableName not found. Skipping."
         return
     }
     
     $scanOutput = aws dynamodb scan --table-name $TableName --projection-expression $KeyName --output json 2>&1
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "エラー: テーブル $TableName のスキャンに失敗しました。"
+        Write-Error-Custom "Error: Failed to scan table $TableName."
         return
     }
     
@@ -94,13 +94,13 @@ function Remove-DynamoDBItems {
     $items = $scanData.Items
     
     if (-not $items -or $items.Count -eq 0) {
-        Write-Success "削除対象のデータはありません。"
+        Write-Success "No data to delete."
         return
     }
     
     $itemCount = $items.Count
-    Write-Info "削除対象: $itemCount 件"
-    Write-Info "データを削除中..."
+    Write-Info "Items to delete: $itemCount"
+    Write-Info "Deleting data..."
     
     $deletedCount = 0
     $failedCount = 0
@@ -125,22 +125,27 @@ function Remove-DynamoDBItems {
         $requestItems = @{
             $TableName = $deleteRequests
         }
-        $requestJson = $requestItems | ConvertTo-Json -Depth 10 -Compress
         
-        $batchResult = aws dynamodb batch-write-item --request-items $requestJson 2>&1
+        # Save to temp JSON file (UTF-8 without BOM)
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        $requestJson = $requestItems | ConvertTo-Json -Depth 10 -Compress
+        [System.IO.File]::WriteAllText($tempFile, $requestJson, (New-Object System.Text.UTF8Encoding $false))
+        
+        $batchResult = aws dynamodb batch-write-item --request-items file://$tempFile 2>&1
+        Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
         
         if ($LASTEXITCODE -eq 0) {
             $deletedCount += $batchSize
-            Write-Host "  削除済み: $deletedCount / $itemCount 件"
+            Write-Host "  Deleted: $deletedCount / $itemCount items"
         } else {
             $failedCount += $batchSize
-            Write-Warning-Custom "  警告: バッチ削除に失敗しました ($batchSize 件)"
+            Write-Warning-Custom "  Warning: Batch deletion failed ($batchSize items)"
         }
         
         Start-Sleep -Milliseconds 100
     }
     
-    Write-Success "削除完了: $deletedCount 件成功, $failedCount 件失敗"
+    Write-Success "Deletion complete: $deletedCount succeeded, $failedCount failed"
 }
 
 Remove-DynamoDBItems -TableName $disclosuresTable -KeyName "disclosure_id"
@@ -149,7 +154,7 @@ Remove-DynamoDBItems -TableName $exportStatusTable -KeyName "export_id"
 
 Write-Host ""
 Write-Info "========================================"
-Write-Info "S3バケットのデータ削除"
+Write-Info "S3 Bucket Data Deletion"
 Write-Info "========================================"
 
 function Remove-S3Objects {
@@ -158,40 +163,40 @@ function Remove-S3Objects {
     )
     
     Write-Host ""
-    Write-Info "バケット: $BucketName"
+    Write-Info "Bucket: $BucketName"
     
     $bucketCheck = aws s3api head-bucket --bucket $BucketName 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning-Custom "警告: バケット $BucketName が見つかりません。スキップします。"
+        Write-Warning-Custom "Warning: Bucket $BucketName not found. Skipping."
         return
     }
     
-    Write-Info "オブジェクトをリスト中..."
+    Write-Info "Listing objects..."
     
     $listOutput = aws s3api list-objects-v2 --bucket $BucketName --query "Contents[].Key" --output json 2>&1
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "エラー: バケット $BucketName のリストに失敗しました。"
+        Write-Error-Custom "Error: Failed to list bucket $BucketName."
         return
     }
     
     $objects = $listOutput | ConvertFrom-Json
     
     if (-not $objects -or $objects.Count -eq 0) {
-        Write-Success "削除対象のオブジェクトはありません。"
+        Write-Success "No objects to delete."
         return
     }
     
     $objectCount = $objects.Count
-    Write-Info "削除対象: $objectCount 件"
-    Write-Info "オブジェクトを削除中..."
+    Write-Info "Objects to delete: $objectCount"
+    Write-Info "Deleting objects..."
     
     aws s3 rm "s3://$BucketName" --recursive 2>&1 | Out-Null
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Success "削除完了: $objectCount 件"
+        Write-Success "Deletion complete: $objectCount objects"
     } else {
-        Write-Warning-Custom "警告: 一部のオブジェクトの削除に失敗しました。"
+        Write-Warning-Custom "Warning: Some objects failed to delete."
     }
 }
 
@@ -200,13 +205,13 @@ Remove-S3Objects -BucketName $exportsBucket
 
 Write-Host ""
 Write-Info "========================================"
-Write-Success "データ削除が完了しました！"
+Write-Success "Data deletion completed!"
 Write-Info "========================================"
 Write-Host ""
-Write-Info "削除されたリソース:"
-Write-Host "  - DynamoDBテーブル: $disclosuresTable"
-Write-Host "  - DynamoDBテーブル: $executionsTable"
-Write-Host "  - DynamoDBテーブル: $exportStatusTable"
-Write-Host "  - S3バケット: $pdfsBucket"
-Write-Host "  - S3バケット: $exportsBucket"
+Write-Info "Deleted resources:"
+Write-Host "  - DynamoDB table: $disclosuresTable"
+Write-Host "  - DynamoDB table: $executionsTable"
+Write-Host "  - DynamoDB table: $exportStatusTable"
+Write-Host "  - S3 bucket: $pdfsBucket"
+Write-Host "  - S3 bucket: $exportsBucket"
 Write-Host ""

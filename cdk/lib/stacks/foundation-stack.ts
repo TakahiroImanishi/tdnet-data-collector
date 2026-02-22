@@ -32,6 +32,13 @@ export class TdnetFoundationStack extends cdk.Stack {
 
     const env = props.environment;
 
+    // タグ付け戦略: コスト管理と運用管理のためのタグ
+    cdk.Tags.of(this).add('Project', 'TDnetDataCollector');
+    cdk.Tags.of(this).add('Environment', env);
+    cdk.Tags.of(this).add('ManagedBy', 'CDK');
+    cdk.Tags.of(this).add('CostCenter', 'Engineering');
+    cdk.Tags.of(this).add('Owner', 'DataTeam');
+
     // Helper functions
     const getResourceName = (baseName: string): string => {
       return `${baseName}_${env}`;

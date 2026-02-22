@@ -23,6 +23,50 @@ Write-ColorOutput "Account ID: $accountId" "Green"
 $bucketName = "tdnet-dashboard-$Environment-$accountId"
 $dashboardDir = Join-Path $PSScriptRoot ".." "dashboard"
 $buildDir = Join-Path $dashboardDir "build"
+$envFile = Join-Path $dashboardDir ".env.production"
+
+# Secrets Managerから環境変数を取得して.env.productionを生成
+if ($Environment -eq "prod") {
+    Write-ColorOutput "`nSecrets Managerから環境変数を取得中..." "Cyan"
+    
+    try {
+        # API URLをCDK Outputsから取得
+        $apiUrl = aws cloudformation describe-stacks --stack-name "TdnetDataCollectorApiStack-$Environment" --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" --output text 2>$null
+        
+        # API KeyをSecrets Managerから取得
+        $secretName = "tdnet-api-key-$Environment"
+        $apiKeyJson = aws secretsmanager get-secret-value --secret-id $secretName --query SecretString --output text 2>$null
+        
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($apiKeyJson)) {
+            $apiKeyObj = $apiKeyJson | ConvertFrom-Json
+            $apiKey = $apiKeyObj.apiKey
+            
+            # .env.productionファイルを生成
+            $envContent = @"
+# API Gateway URL (本番環境)
+REACT_APP_API_URL=$apiUrl
+
+# API Key (本番環境用)
+REACT_APP_API_KEY=$apiKey
+
+# その他の設定
+REACT_APP_ENV=production
+"@
+            
+            # UTF-8 BOMなしで書き込み
+            [System.IO.File]::WriteAllText($envFile, $envContent, (New-Object System.Text.UTF8Encoding $false))
+            Write-ColorOutput "環境変数ファイルを生成しました: $envFile" "Green"
+        }
+        else {
+            Write-ColorOutput "警告: Secrets Managerからシークレットを取得できませんでした" "Yellow"
+            Write-ColorOutput "手動で.env.productionファイルを作成してください" "Yellow"
+        }
+    }
+    catch {
+        Write-ColorOutput "警告: 環境変数の取得に失敗しました: $_" "Yellow"
+        Write-ColorOutput "手動で.env.productionファイルを作成してください" "Yellow"
+    }
+}
 
 if (-not $SkipBuild) {
     Write-ColorOutput "`nダッシュボードをビルド中..." "Cyan"

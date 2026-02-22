@@ -1,0 +1,57 @@
+version: 2
+updates:
+  # Node.js依存関係の自動更新
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "your-github-username"  # レビュアーを設定してください
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "[deps]"
+      include: "scope"
+    # セキュリティアップデートを優先
+    versioning-strategy: increase
+    # 脆弱性のあるパッケージのみ自動マージ（オプション）
+    # auto-merge: true
+    
+  # Dashboard (React)の依存関係
+  - package-ecosystem: "npm"
+    directory: "/dashboard"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "your-github-username"  # レビュアーを設定してください
+    labels:
+      - "dependencies"
+      - "dashboard"
+    commit-message:
+      prefix: "[deps]"
+      include: "scope"
+    versioning-strategy: increase
+    
+  # GitHub Actionsの自動更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "[ci]"

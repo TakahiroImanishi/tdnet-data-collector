@@ -30,7 +30,11 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "lighthouse": "lighthouse http://localhost:3000 --view --output html --output-path ./lighthouse-report.html",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix"
   },
   "jest": {
     "testMatch": [
@@ -59,6 +63,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "playwright": "^1.58.2"
+    "lighthouse": "^12.2.1",
+    "playwright": "^1.58.2",
+    "source-map-explorer": "^2.5.3"
   }
 }

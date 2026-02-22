@@ -52,11 +52,16 @@ describe('PdfDownload', () => {
     const appendChildSpy = jest.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink as any);
     const removeChildSpy = jest.spyOn(document.body, 'removeChild').mockImplementation(() => mockLink as any);
 
-    render(<PdfDownload disclosureId={mockDisclosureId} fileName={mockFileName} />);
+    // act()でラップしてDOM更新を適切に処理
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} fileName={mockFileName} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
     
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       expect(mockGetPdfDownloadUrl).toHaveBeenCalledWith(mockDisclosureId);
@@ -99,11 +104,15 @@ describe('PdfDownload', () => {
     const appendChildSpy = jest.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink as any);
     const removeChildSpy = jest.spyOn(document.body, 'removeChild').mockImplementation(() => mockLink as any);
 
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button');
     
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     // ダウンロード中
     await waitFor(() => {
@@ -112,7 +121,7 @@ describe('PdfDownload', () => {
     });
     
     // プロミスを解決
-    act(() => {
+    await act(async () => {
       resolvePromise({ success: true, data: { url: 'http://test.com/file.pdf', expires_in: 3600 } });
     });
     
@@ -125,11 +134,15 @@ describe('PdfDownload', () => {
     const errorMessage = 'PDFの取得に失敗しました';
     jest.spyOn(api, 'getPdfDownloadUrl').mockRejectedValue(new Error(errorMessage));
 
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
     
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       // Snackbar内のエラーメッセージを確認
@@ -144,11 +157,15 @@ describe('PdfDownload', () => {
       data: { url: '', expires_in: 0 },
     });
 
-    render(<PdfDownload disclosureId={mockDisclosureId} />);
+    await act(async () => {
+      render(<PdfDownload disclosureId={mockDisclosureId} />);
+    });
     
     const button = screen.getByRole('button', { name: /PDFダウンロード/i });
     
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       // Snackbar内のエラーメッセージを確認

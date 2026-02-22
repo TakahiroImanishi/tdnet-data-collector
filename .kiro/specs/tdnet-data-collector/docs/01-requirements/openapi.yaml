@@ -6,7 +6,7 @@ info:
     API for collecting and querying TDnet disclosure information from Japanese stock exchanges.
     
     **バージョン:** 1.0.0  
-    **最終更新:** 2026-02-15
+    **最終更新:** 2026-02-22
     
     ## Features
     - Query disclosure information by company, date, type
@@ -71,6 +71,13 @@ paths:
             type: string
             format: date
             example: '2024-01-31'
+        - name: month
+          in: query
+          description: Month filter (YYYY-MM), takes precedence over start_date/end_date
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: '2024-01'
         - name: disclosure_type
           in: query
           description: Disclosure type
@@ -88,8 +95,8 @@ paths:
           schema:
             type: integer
             minimum: 1
-            maximum: 100
-            default: 20
+            maximum: 1000
+            default: 100
         - name: offset
           in: query
           description: Pagination offset
@@ -205,6 +212,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollectionResponse'
+              example:
+                status: success
+                data:
+                  execution_id: 'exec-20240115-abc123'
+                  status: pending
+                  message: 'Data collection started successfully'
+                  started_at: '2024-01-15T10:00:00Z'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -312,12 +326,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                timestamp: '2024-01-15T10:00:00Z'
+                services:
+                  dynamodb: healthy
+                  s3: healthy
         '503':
           description: Unhealthy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: unhealthy
+                timestamp: '2024-01-15T10:00:00Z'
+                services:
+                  dynamodb: unhealthy
+                  s3: healthy
+                details:
+                  dynamodb: 'Table status: UPDATING'
 
   /stats:
     get:
@@ -510,13 +538,17 @@ components:
           required:
             - execution_id
             - status
+            - message
             - started_at
           properties:
             execution_id:
               type: string
             status:
               type: string
-              enum: [running, pending]
+              enum: [pending]
+            message:
+              type: string
+              example: 'Data collection started successfully'
             started_at:
               type: string
               format: date-time
@@ -649,13 +681,20 @@ components:
           format: date-time
         services:
           type: object
+          required:
+            - dynamodb
+            - s3
           properties:
             dynamodb:
               type: string
-              enum: [healthy, unhealthy]
+              enum: [healthy, unhealthy, unknown]
             s3:
               type: string
-              enum: [healthy, unhealthy]
+              enum: [healthy, unhealthy, unknown]
+        details:
+          type: object
+          additionalProperties: true
+          description: Error details when services are unhealthy
 
     StatsResponse:
       type: object
@@ -668,16 +707,34 @@ components:
           enum: [success]
         data:
           type: object
+          required:
+            - total_disclosures
+            - last_30_days
+            - top_companies
           properties:
             total_disclosures:
               type: integer
-            total_companies:
+              description: Total number of disclosures (uses Scan, may impact performance)
+            last_30_days:
               type: integer
-            latest_disclosure_date:
-              type: string
-              format: date
-            storage_size_bytes:
-              type: integer
+              description: Number of disclosures in the last 30 days (uses GSI_DatePartition)
+            top_companies:
+              type: array
+              description: Top 10 companies by disclosure count (aggregated in memory)
+              items:
+                type: object
+                required:
+                  - company_code
+                  - company_name
+                  - count
+                properties:
+                  company_code:
+                    type: string
+                    pattern: '^\d{4}$'
+                  company_name:
+                    type: string
+                  count:
+                    type: integer
 
     ErrorResponse:
       type: object

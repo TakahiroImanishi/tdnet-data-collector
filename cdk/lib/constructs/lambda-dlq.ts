@@ -81,6 +81,8 @@ export class LambdaDLQ extends Construct {
         ENVIRONMENT: props.environment,
         NODE_OPTIONS: '--enable-source-maps',
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     // Add SQS event source to DLQ processor
@@ -92,12 +94,15 @@ export class LambdaDLQ extends Construct {
     this.queue.grantConsumeMessages(this.processor);
     props.alertTopic.grantPublish(this.processor);
 
-    // CloudWatch Logs permissions
+    // CloudWatch Logs権限（特定ロググループに限定）
     this.processor.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-        resources: ['*'],
+        resources: [
+          `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:/aws/lambda/${this.processor.functionName}`,
+          `arn:aws:logs:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:log-group:/aws/lambda/${this.processor.functionName}:*`,
+        ],
       })
     );
 

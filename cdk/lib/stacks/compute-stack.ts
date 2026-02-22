@@ -44,6 +44,13 @@ export class TdnetComputeStack extends cdk.Stack {
     const env = props.environment;
     const envConfig = getEnvironmentConfig(env);
 
+    // タグ付け戦略: コスト管理と運用管理のためのタグ
+    cdk.Tags.of(this).add('Project', 'TDnetDataCollector');
+    cdk.Tags.of(this).add('Environment', env);
+    cdk.Tags.of(this).add('ManagedBy', 'CDK');
+    cdk.Tags.of(this).add('CostCenter', 'Engineering');
+    cdk.Tags.of(this).add('Owner', 'DataTeam');
+
     // ========================================
     // DLQ
     // ========================================
@@ -84,6 +91,8 @@ export class TdnetComputeStack extends cdk.Stack {
       deadLetterQueue: this.dlq.queue,
       deadLetterQueueEnabled: true,
       retryAttempts: 2,
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.disclosuresTable.grantReadWriteData(this.collectorFunction);
@@ -125,6 +134,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.disclosuresTable.grantReadData(this.queryFunction);
@@ -165,6 +176,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.disclosuresTable.grantReadData(this.exportFunction);
@@ -205,6 +218,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     this.collectorFunction.grantInvoke(this.collectFunction);
@@ -242,6 +257,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.executionsTable.grantReadData(this.collectStatusFunction);
@@ -279,6 +296,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.exportStatusTable.grantReadData(this.exportStatusFunction);
@@ -317,6 +336,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.disclosuresTable.grantReadData(this.pdfDownloadFunction);
@@ -356,6 +377,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     // DynamoDBテーブルのDescribe権限を付与
@@ -409,6 +432,8 @@ export class TdnetComputeStack extends cdk.Stack {
         target: 'node20',
         externalModules: ['@aws-sdk/*'],
       },
+      // X-Rayトレーシング有効化
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     props.disclosuresTable.grantReadData(this.statsFunction);

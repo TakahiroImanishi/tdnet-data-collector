@@ -382,51 +382,86 @@ export class CloudWatchDashboard extends Construct {
   /**
    * API Gatewayメトリクスウィジェットを追加
    */
-  private addApiGatewayMetricsWidgets(_props: CloudWatchDashboardProps): void {
-    // Note: API Gateway metrics are currently commented out due to type errors
-    // TODO: Fix API Gateway metric types
-    // const { apiGateway } = _props;
+  private addApiGatewayMetricsWidgets(props: CloudWatchDashboardProps): void {
+    const { apiGateway } = props;
 
     // API Gateway Requests
     this.dashboard.addWidgets(
-      // API Gateway Requests - 型エラーのためコメントアウト
-      // new cloudwatch.GraphWidget({
-      //   title: 'API Gateway Requests',
-      //   left: [
-      //     apiGateway.metricCount({ label: 'Total Requests' }),
-      //   ],
-      //   width: 12,
-      //   period: cdk.Duration.minutes(5),
-      //   statistic: 'Sum',
-      // })
+      new cloudwatch.GraphWidget({
+        title: 'API Gateway Requests',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/ApiGateway',
+            metricName: 'Count',
+            dimensionsMap: {
+              ApiName: apiGateway.restApiName,
+            },
+            statistic: 'Sum',
+            label: 'Total Requests',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
     );
 
-    // API Gateway Errors - 型エラーのためコメントアウト
-    // this.dashboard.addWidgets(
-    //   new cloudwatch.GraphWidget({
-    //     title: 'API Gateway Errors',
-    //     left: [
-    //       apiGateway.metricClientError({ label: '4XX Errors' }),
-    //       apiGateway.metricServerError({ label: '5XX Errors' }),
-    //     ],
-    //     width: 12,
-    //     period: cdk.Duration.minutes(5),
-    //     statistic: 'Sum',
-    //   })
-    // );
+    // API Gateway Errors
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'API Gateway Errors',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/ApiGateway',
+            metricName: '4XXError',
+            dimensionsMap: {
+              ApiName: apiGateway.restApiName,
+            },
+            statistic: 'Sum',
+            label: '4XX Errors',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/ApiGateway',
+            metricName: '5XXError',
+            dimensionsMap: {
+              ApiName: apiGateway.restApiName,
+            },
+            statistic: 'Sum',
+            label: '5XX Errors',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
 
-    // API Gateway Latency - 型エラーのためコメントアウト
-    // this.dashboard.addWidgets(
-    //   new cloudwatch.GraphWidget({
-    //     title: 'API Gateway Latency (ms)',
-    //     left: [
-    //       apiGateway.metricLatency({ label: 'Latency', statistic: 'Average' }),
-    //       apiGateway.metricIntegrationLatency({ label: 'Integration Latency', statistic: 'Average' }),
-    //     ],
-    //     width: 12,
-    //     period: cdk.Duration.minutes(5),
-    //   })
-    // );
+    // API Gateway Latency
+    this.dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'API Gateway Latency (ms)',
+        left: [
+          new cloudwatch.Metric({
+            namespace: 'AWS/ApiGateway',
+            metricName: 'Latency',
+            dimensionsMap: {
+              ApiName: apiGateway.restApiName,
+            },
+            statistic: 'Average',
+            label: 'Latency',
+          }),
+          new cloudwatch.Metric({
+            namespace: 'AWS/ApiGateway',
+            metricName: 'IntegrationLatency',
+            dimensionsMap: {
+              ApiName: apiGateway.restApiName,
+            },
+            statistic: 'Average',
+            label: 'Integration Latency',
+          }),
+        ],
+        width: 12,
+        period: cdk.Duration.minutes(5),
+      })
+    );
   }
 
   /**
