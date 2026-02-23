@@ -20,9 +20,11 @@
 
 | カテゴリ | 完了 | 未完了 | 合計 |
 |---------|------|--------|------|
-| Lambda設定値 | 6 | 1 | 7 |
+| 調査・方針策定 | 2 | 0 | 2 |
+| Lambda設定値 | 4 | 1 | 5 |
 | 定数・制限値 | 5 | 0 | 5 |
-| **合計** | **11** | **1** | **12** |
+| 検証 | 0 | 1 | 1 |
+| **合計** | **11** | **2** | **13** |
 
 ---
 
@@ -356,6 +358,161 @@ E2Eテストを実行し、Lambda設定変更後の動作を確認する。
 #### 注意事項
 
 tasks-step-functions-migration.mdのタスク6.1.1によると、LocalStack環境でのLambda関数デプロイが未完了のため、E2Eテストは実行できない可能性があります。本番環境での動作確認（タスク6.2）を優先することを推奨します。
+
+---
+
+### タスク13: ハードコード改善の検証
+
+**ステータス**: [ ] 未着手
+**担当**: -
+**優先度**: 高
+**依存**: タスク3-12完了後
+
+#### 作業内容
+
+タスク1で特定したハードコード箇所（207箇所）とタスク2で策定した対応方針に基づき、実施した改善（タスク3-12）が実際に問題を解消しているかを検証する。
+
+#### 検証項目
+
+##### 1. Lambda設定値の検証（タスク3-6の成果）
+
+**検証対象**: タスク1で特定した高優先度11箇所
+
+- [ ] **Step Functions用Lambda 4関数の設定**
+  - [ ] `cdk/lib/stacks/compute-stack.ts`でハードコード値が削除されている
+  - [ ] `environment-config.ts`から設定を取得している
+  - [ ] CollectorInit: timeout 30秒, memorySize 256MB
+  - [ ] CollectorFetch: timeout 60秒, memorySize 256MB
+  - [ ] CollectorSave: timeout 120秒, memorySize 512MB
+  - [ ] CollectorAggregate: timeout 30秒, memorySize 256MB
+
+- [ ] **全Lambda関数のruntime設定**
+  - [ ] 13関数すべてで`lambda.Runtime.NODEJS_20_X`のハードコードが削除されている
+  - [ ] `envConfig.runtime`から取得している
+
+- [ ] **ユニットテスト検証**
+  - [ ] `cdk/lib/stacks/__tests__/compute-stack.test.ts`が成功する
+  - [ ] 設定値が正しく適用されていることをテストで確認
+
+##### 2. 定数ファイルの検証（タスク8-11の成果）
+
+**検証対象**: タスク1で特定した高優先度30箇所
+
+- [ ] **ファイルサイズ制限（6箇所）**
+  - [ ] `src/constants/file-limits.ts`が存在する
+  - [ ] `MIN_PDF_SIZE`, `MAX_PDF_SIZE`, `MAX_FILE_SIZE`が定義されている
+  - [ ] 以下のファイルでハードコード値が削除され、定数ファイルを参照している:
+    - [ ] `src/scraper/pdf-downloader.ts`
+    - [ ] `src/models/disclosure.ts`
+    - [ ] `src/validators/disclosure-schema.ts`
+
+- [ ] **レート制限設定（5箇所）**
+  - [ ] `src/constants/rate-limits.ts`が存在する
+  - [ ] `TDNET_MIN_DELAY_MS`が定義されている
+  - [ ] 以下のファイルでハードコード値が削除され、定数ファイルを参照している:
+    - [ ] `src/lambda/collector/scrape-tdnet-list.ts`
+    - [ ] `src/lambda/collector-fetch/handler.ts`
+    - [ ] `src/lambda/collector/download-pdf.ts`
+    - [ ] `src/lambda/collector/dependencies.ts`
+    - [ ] `src/utils/rate-limiter.ts`
+
+- [ ] **HTTP設定（3箇所）**
+  - [ ] `src/constants/http-config.ts`が存在する
+  - [ ] `HTTP_TIMEOUT_MS`, `USER_AGENT_FULL`, `USER_AGENT_SHORT`が定義されている
+  - [ ] 以下のファイルでハードコード値が削除され、定数ファイルを参照している:
+    - [ ] `src/lambda/collector/scrape-tdnet-list.ts`
+    - [ ] `src/lambda/collector-fetch/handler.ts`
+    - [ ] `src/scraper/pdf-downloader.ts`
+
+- [ ] **定数エクスポート**
+  - [ ] `src/constants/index.ts`が存在する
+  - [ ] すべての定数ファイルがエクスポートされている
+
+##### 3. ドキュメントの検証（タスク12の成果）
+
+- [ ] **README.md**
+  - [ ] 定数ファイルの説明が追加されている
+  - [ ] `src/constants/`ディレクトリの説明がある
+  - [ ] 使用方法のコード例がある
+
+- [ ] **.env.example**
+  - [ ] `TDNET_BASE_URL`のサンプルが追加されている
+  - [ ] 定数設定セクションが追加されている
+  - [ ] 環境変数で上書き可能な定数が明記されている
+
+- [ ] **steering files**
+  - [ ] `tdnet-implementation-rules.md`: 定数管理ガイドが追加されている
+  - [ ] `tdnet-scraping-patterns.md`: 定数ファイル参照方法が追加されている
+
+##### 4. 残存ハードコードの確認
+
+**検証対象**: タスク1で特定した中・低優先度箇所（145箇所）
+
+- [ ] **中優先度（19箇所）の確認**
+  - [ ] AWSプロファイル名（10箇所）: 運用スクリプトで環境変数対応済みか確認
+  - [ ] DLQ Processor設定（3箇所）: 現状維持でOKか確認
+  - [ ] API Key Rotation設定（3箇所）: 現状維持でOKか確認
+  - [ ] その他（3箇所）: 対応不要か確認
+
+- [ ] **低優先度（126箇所）の確認**
+  - [ ] テストコード内のハードコード: 現状維持でOKか確認
+  - [ ] ドキュメント内のハードコード: 現状維持でOKか確認
+
+#### 検証方法
+
+##### 自動検証（推奨）
+
+```powershell
+# 1. TypeScriptコンパイル確認
+npm run build
+
+# 2. ユニットテスト実行
+npm test
+
+# 3. ハードコード値の検索（残存確認）
+# Lambda設定値
+rg "lambda\.Runtime\.NODEJS_20_X" cdk/lib/stacks/compute-stack.ts
+rg "timeout.*:\s*\d+" cdk/lib/stacks/compute-stack.ts | rg -v "envConfig"
+rg "memorySize.*:\s*\d+" cdk/lib/stacks/compute-stack.ts | rg -v "envConfig"
+
+# 定数値
+rg "10240|10\s*\*\s*1024" src/ --type ts | rg -v "constants|test"
+rg "52428800|50\s*\*\s*1024\s*\*\s*1024" src/ --type ts | rg -v "constants|test"
+rg "2000" src/ --type ts | rg -v "constants|test|retry"
+rg "30000" src/ --type ts | rg -v "constants|test"
+```
+
+##### 手動検証
+
+1. **ファイル確認**
+   - 各定数ファイルが存在し、正しい値が定義されているか確認
+   - 本番コードで定数ファイルをインポートしているか確認
+
+2. **コード確認**
+   - ハードコード値が削除されているか目視確認
+   - インポート文が正しいか確認
+
+3. **ドキュメント確認**
+   - README.md、.env.example、steering filesの更新内容を確認
+
+#### 成果物
+
+- [ ] 検証結果レポート（作業記録に記載）
+- [ ] 残存ハードコード一覧（発見時）
+- [ ] 追加対応が必要な項目のリスト（発見時）
+
+#### 完了条件
+
+- [ ] すべての検証項目が確認されている
+- [ ] タスク1で特定した高優先度62箇所のうち、対応対象（Lambda設定値11箇所、定数14箇所）がすべて解消されている
+- [ ] ユニットテストがすべて成功している
+- [ ] TypeScriptコンパイルが成功している
+- [ ] 残存ハードコードが文書化されている（中・低優先度）
+- [ ] 追加対応が必要な項目が特定されている（発見時）
+
+#### 作業記録
+
+- 作業開始時に作成: `work-log-[YYYYMMDD-HHMMSS]-task13-hardcode-verification.md`
 
 ---
 
