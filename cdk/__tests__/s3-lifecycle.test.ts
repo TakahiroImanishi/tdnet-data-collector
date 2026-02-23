@@ -27,13 +27,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('90日後にStandard-IAに移行', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-pdfs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [
@@ -59,13 +53,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('365日後にGlacierに移行', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-pdfs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [
@@ -89,13 +77,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('バージョニングが有効', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-pdfs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         VersioningConfiguration: {
           Status: 'Enabled',
@@ -106,13 +88,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('暗号化が有効', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-pdfs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
@@ -131,13 +107,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('7日後に自動削除', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-exports-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [
@@ -154,13 +124,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('バージョニングが有効', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-exports-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
         },
         VersioningConfiguration: {
           Status: 'Enabled',
@@ -173,13 +137,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('90日後にGlacierに移行', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-cloudtrail-logs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [
@@ -202,13 +160,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('7年後に自動削除', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-cloudtrail-logs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [
@@ -227,13 +179,7 @@ describe('S3ライフサイクルポリシー', () => {
       const buckets = template.findResources('AWS::S3::Bucket', {
         Properties: {
           BucketName: {
-            'Fn::Join': [
-              '',
-              [
-                'tdnet-dashboard-dev-',
-                { Ref: 'AWS::AccountId' },
-              ],
-            ],
+            'Fn::Join': ['', ['tdnet-dashboard-dev-', { Ref: 'AWS::AccountId' }]],
           },
         },
       });
@@ -248,13 +194,7 @@ describe('S3ライフサイクルポリシー', () => {
     test('バージョニングが有効', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-dashboard-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-dashboard-dev-', { Ref: 'AWS::AccountId' }]],
         },
         VersioningConfiguration: {
           Status: 'Enabled',
@@ -286,9 +226,7 @@ describe('S3ライフサイクルポリシー', () => {
       bucketKeys.forEach((key) => {
         const bucket = buckets[key];
         expect(bucket.Properties.BucketEncryption).toBeDefined();
-        expect(
-          bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration
-        ).toBeDefined();
+        expect(bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration).toBeDefined();
       });
     });
   });
@@ -299,13 +237,7 @@ describe('S3ライフサイクルポリシー', () => {
       // 365日後にGlacier（約80%コスト削減）
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-pdfs-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [
@@ -330,13 +262,7 @@ describe('S3ライフサイクルポリシー', () => {
       // 7日後に自動削除（一時ファイルの長期保存を防止）
       template.hasResourceProperties('AWS::S3::Bucket', {
         BucketName: {
-          'Fn::Join': [
-            '',
-            [
-              'tdnet-data-collector-exports-dev-',
-              { Ref: 'AWS::AccountId' },
-            ],
-          ],
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
         },
         LifecycleConfiguration: {
           Rules: [

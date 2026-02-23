@@ -1,13 +1,13 @@
 /**
  * 負荷テスト
- * 
+ *
  * 大量データ収集と同時アクセスのテスト
- * 
+ *
  * 【重要】このテストは実際のAWS環境（Lambda + API Gateway + DynamoDB）が必要です
  * LocalStack環境では実行できません
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
- * 
+ *
  * 実行方法:
  * 1. AWS環境にデプロイ
  * 2. 環境変数を設定:
@@ -108,7 +108,7 @@ describeOrSkip('負荷テスト', () => {
       expect(payload.status).toBe('completed');
       expect(payload.total_count).toBeGreaterThanOrEqual(100);
       expect(payload.success_count).toBeGreaterThan(0);
-      
+
       // 成功率が95%以上であること
       const successRate = (payload.success_count / payload.total_count) * 100;
       console.log(`成功率: ${successRate.toFixed(2)}%`);
@@ -150,25 +150,28 @@ describeOrSkip('負荷テスト', () => {
 
       // 10並列でAPIを呼び出し
       const promises = Array.from({ length: 10 }, (_, i) =>
-        axios.get(`${API_BASE_URL}/disclosures`, {
-          headers: {
-            'x-api-key': API_KEY,
-          },
-          params: {
-            limit: 10,
-            offset: i * 10,
-          },
-        }).then(response => ({
-          index: i,
-          status: response.status,
-          count: response.data.disclosures?.length || 0,
-          duration: Date.now() - startTime,
-        })).catch(error => ({
-          index: i,
-          status: error.response?.status || 500,
-          error: error.message,
-          duration: Date.now() - startTime,
-        }))
+        axios
+          .get(`${API_BASE_URL}/disclosures`, {
+            headers: {
+              'x-api-key': API_KEY,
+            },
+            params: {
+              limit: 10,
+              offset: i * 10,
+            },
+          })
+          .then((response) => ({
+            index: i,
+            status: response.status,
+            count: response.data.disclosures?.length || 0,
+            duration: Date.now() - startTime,
+          }))
+          .catch((error) => ({
+            index: i,
+            status: error.response?.status || 500,
+            error: error.message,
+            duration: Date.now() - startTime,
+          }))
       );
 
       const results = await Promise.all(promises);
@@ -180,8 +183,8 @@ describeOrSkip('負荷テスト', () => {
       console.log(`総実行時間: ${totalDuration.toFixed(2)}秒`);
 
       // 結果集計
-      const successCount = results.filter(r => r.status === 200).length;
-      const failureCount = results.filter(r => r.status !== 200).length;
+      const successCount = results.filter((r) => r.status === 200).length;
+      const failureCount = results.filter((r) => r.status !== 200).length;
       const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length / 1000;
 
       console.log(`成功: ${successCount}件`);
@@ -189,9 +192,11 @@ describeOrSkip('負荷テスト', () => {
       console.log(`平均応答時間: ${avgDuration.toFixed(2)}秒`);
 
       // 詳細ログ
-      results.forEach(r => {
+      results.forEach((r) => {
         if (r.status === 200) {
-          console.log(`  [${r.index}] ✅ ${r.status} - ${r.count}件 - ${(r.duration / 1000).toFixed(2)}秒`);
+          console.log(
+            `  [${r.index}] ✅ ${r.status} - ${r.count}件 - ${(r.duration / 1000).toFixed(2)}秒`
+          );
         } else {
           console.log(`  [${r.index}] ❌ ${r.status} - ${r.error || 'Unknown error'}`);
         }
@@ -219,25 +224,32 @@ describeOrSkip('負荷テスト', () => {
 
       // 5並列でエクスポートを呼び出し
       const promises = Array.from({ length: 5 }, (_, i) =>
-        axios.post(`${API_BASE_URL}/exports`, {
-          start_date: startDateStr,
-          end_date: endDateStr,
-          format: i % 2 === 0 ? 'json' : 'csv',
-        }, {
-          headers: {
-            'x-api-key': API_KEY,
-          },
-        }).then(response => ({
-          index: i,
-          status: response.status,
-          export_id: response.data.export_id,
-          duration: Date.now() - startTime,
-        })).catch(error => ({
-          index: i,
-          status: error.response?.status || 500,
-          error: error.message,
-          duration: Date.now() - startTime,
-        }))
+        axios
+          .post(
+            `${API_BASE_URL}/exports`,
+            {
+              start_date: startDateStr,
+              end_date: endDateStr,
+              format: i % 2 === 0 ? 'json' : 'csv',
+            },
+            {
+              headers: {
+                'x-api-key': API_KEY,
+              },
+            }
+          )
+          .then((response) => ({
+            index: i,
+            status: response.status,
+            export_id: response.data.export_id,
+            duration: Date.now() - startTime,
+          }))
+          .catch((error) => ({
+            index: i,
+            status: error.response?.status || 500,
+            error: error.message,
+            duration: Date.now() - startTime,
+          }))
       );
 
       const results = await Promise.all(promises);
@@ -249,16 +261,18 @@ describeOrSkip('負荷テスト', () => {
       console.log(`総実行時間: ${totalDuration.toFixed(2)}秒`);
 
       // 結果集計
-      const successCount = results.filter(r => r.status === 202).length;
-      const failureCount = results.filter(r => r.status !== 202).length;
+      const successCount = results.filter((r) => r.status === 202).length;
+      const failureCount = results.filter((r) => r.status !== 202).length;
 
       console.log(`成功: ${successCount}件`);
       console.log(`失敗: ${failureCount}件`);
 
       // 詳細ログ
-      results.forEach(r => {
+      results.forEach((r) => {
         if (r.status === 202) {
-          console.log(`  [${r.index}] ✅ ${r.status} - Export ID: ${r.export_id} - ${(r.duration / 1000).toFixed(2)}秒`);
+          console.log(
+            `  [${r.index}] ✅ ${r.status} - Export ID: ${r.export_id} - ${(r.duration / 1000).toFixed(2)}秒`
+          );
         } else {
           console.log(`  [${r.index}] ❌ ${r.status} - ${r.error || 'Unknown error'}`);
         }
@@ -280,7 +294,7 @@ describeOrSkip('負荷テスト', () => {
       // 5回連続でAPIを呼び出し
       for (let i = 0; i < 5; i++) {
         const requestStart = Date.now();
-        
+
         try {
           await axios.get(`${API_BASE_URL}/disclosures`, {
             headers: {
@@ -290,10 +304,10 @@ describeOrSkip('負荷テスト', () => {
               limit: 1,
             },
           });
-          
+
           const requestDuration = Date.now() - requestStart;
           results.push(requestDuration);
-          
+
           console.log(`  リクエスト ${i + 1}: ${requestDuration}ms`);
         } catch (error: any) {
           console.log(`  リクエスト ${i + 1}: エラー - ${error.message}`);
@@ -327,10 +341,12 @@ describeOrSkip('負荷テスト', () => {
             end_date: '2024-01-01', // 開始日 > 終了日
           },
         });
-        
+
         fail('エラーが発生すべき');
       } catch (error: any) {
-        console.log(`  ✅ 期待通りエラー: ${error.response?.status} - ${error.response?.data?.error?.message}`);
+        console.log(
+          `  ✅ 期待通りエラー: ${error.response?.status} - ${error.response?.data?.error?.message}`
+        );
         expect(error.response?.status).toBe(400);
       }
 
@@ -341,10 +357,12 @@ describeOrSkip('負荷テスト', () => {
             limit: 1,
           },
         });
-        
+
         fail('エラーが発生すべき');
       } catch (error: any) {
-        console.log(`  ✅ 期待通りエラー: ${error.response?.status} - ${error.response?.data?.error?.message}`);
+        console.log(
+          `  ✅ 期待通りエラー: ${error.response?.status} - ${error.response?.data?.error?.message}`
+        );
         expect(error.response?.status).toBe(401);
       }
 

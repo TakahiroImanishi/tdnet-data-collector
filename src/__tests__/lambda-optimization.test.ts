@@ -1,11 +1,11 @@
 /**
  * Lambda最適化テスト
- * 
+ *
  * タスク24.3: Lambda実行時間の最適化
  * - 不要な依存関係の削除確認
  * - コールドスタート時間の短縮確認
  * - バンドルサイズの最適化確認
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
@@ -44,14 +44,12 @@ describe('Lambda最適化テスト', () => {
         fs.readFileSync(path.join(__dirname, '../../package.json'), 'utf-8')
       );
 
-      const awsSdkPackages = Object.keys(packageJson.dependencies).filter(
-        (pkg) => pkg.startsWith('@aws-sdk/')
+      const awsSdkPackages = Object.keys(packageJson.dependencies).filter((pkg) =>
+        pkg.startsWith('@aws-sdk/')
       );
 
       // すべてのAWS SDKパッケージのバージョンを取得
-      const versions = awsSdkPackages.map(
-        (pkg) => packageJson.dependencies[pkg]
-      );
+      const versions = awsSdkPackages.map((pkg) => packageJson.dependencies[pkg]);
 
       // バージョンが統一されているか確認（^3.515.0に統一）
       const expectedVersion = '^3.515.0';
@@ -121,7 +119,7 @@ describe('Lambda最適化テスト', () => {
       );
       // グローバルスコープでの初期化パターンを確認
       expect(queryDisclosures).toMatch(/const dynamoClient = new DynamoDBClient/);
-      
+
       // グローバルスコープでの環境変数キャッシュを確認
       expect(queryDisclosures).toMatch(/const TABLE_NAME = process\.env\.DYNAMODB_TABLE_NAME/);
     });
@@ -141,7 +139,7 @@ describe('Lambda最適化テスト', () => {
   describe('バンドルサイズの最適化', () => {
     test('Lambda関数のdistディレクトリが存在すること', () => {
       const distPath = path.join(__dirname, '../../dist/src/lambda');
-      
+
       // ビルドが実行されていない場合はスキップ
       if (!fs.existsSync(distPath)) {
         console.warn('⚠️  dist/src/lambda が存在しません。npm run build を実行してください。');
@@ -153,7 +151,7 @@ describe('Lambda最適化テスト', () => {
 
     test('各Lambda関数のバンドルサイズが適切であること', () => {
       const distPath = path.join(__dirname, '../../dist/src/lambda');
-      
+
       // ビルドが実行されていない場合はスキップ
       if (!fs.existsSync(distPath)) {
         console.warn('⚠️  dist/src/lambda が存在しません。npm run build を実行してください。');
@@ -164,7 +162,7 @@ describe('Lambda最適化テスト', () => {
 
       lambdaFunctions.forEach((funcName) => {
         const funcPath = path.join(distPath, funcName);
-        
+
         if (!fs.existsSync(funcPath)) {
           console.warn(`⚠️  ${funcName} のビルド出力が存在しません。`);
           return;

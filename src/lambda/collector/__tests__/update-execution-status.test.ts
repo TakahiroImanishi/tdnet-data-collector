@@ -30,17 +30,11 @@ describe('updateExecutionStatus', () => {
     it('新規実行状態を作成できる', async () => {
       // GetItemCommandは存在しないレコードを返す
       dynamoMock.on(GetItemCommand).resolves({});
-      
+
       // PutItemCommandは成功
       dynamoMock.on(PutItemCommand).resolves({});
 
-      const result = await updateExecutionStatus(
-        'exec_001',
-        'running',
-        50,
-        25,
-        0
-      );
+      const result = await updateExecutionStatus('exec_001', 'running', 50, 25, 0);
 
       expect(result).toMatchObject({
         execution_id: 'exec_001',
@@ -73,13 +67,7 @@ describe('updateExecutionStatus', () => {
       // PutItemCommandは成功
       dynamoMock.on(PutItemCommand).resolves({});
 
-      const result = await updateExecutionStatus(
-        'exec_001',
-        'running',
-        50,
-        25,
-        0
-      );
+      const result = await updateExecutionStatus('exec_001', 'running', 50, 25, 0);
 
       expect(result.started_at).toBe(existingStartedAt);
       expect(result.progress).toBe(50);
@@ -93,13 +81,7 @@ describe('updateExecutionStatus', () => {
       // PutItemCommandは成功
       dynamoMock.on(PutItemCommand).resolves({});
 
-      const result = await updateExecutionStatus(
-        'exec_001',
-        'running',
-        50,
-        25,
-        0
-      );
+      const result = await updateExecutionStatus('exec_001', 'running', 50, 25, 0);
 
       expect(result).toMatchObject({
         execution_id: 'exec_001',
@@ -130,13 +112,7 @@ describe('updateExecutionStatus', () => {
       dynamoMock.on(GetItemCommand).resolves({});
       dynamoMock.on(PutItemCommand).resolves({});
 
-      const result = await updateExecutionStatus(
-        'exec_001',
-        'completed',
-        100,
-        50,
-        0
-      );
+      const result = await updateExecutionStatus('exec_001', 'completed', 100, 50, 0);
 
       expect(result.status).toBe('completed');
       expect(result.completed_at).toBeDefined();
@@ -147,14 +123,7 @@ describe('updateExecutionStatus', () => {
       dynamoMock.on(GetItemCommand).resolves({});
       dynamoMock.on(PutItemCommand).resolves({});
 
-      const result = await updateExecutionStatus(
-        'exec_001',
-        'failed',
-        50,
-        25,
-        5,
-        'Network error'
-      );
+      const result = await updateExecutionStatus('exec_001', 'failed', 50, 25, 5, 'Network error');
 
       expect(result.status).toBe('failed');
       expect(result.completed_at).toBeDefined();
@@ -168,9 +137,9 @@ describe('updateExecutionStatus', () => {
       dynamoMock.on(GetItemCommand).resolves({});
       dynamoMock.on(PutItemCommand).rejects(new Error('DynamoDB PutItem failed'));
 
-      await expect(
-        updateExecutionStatus('exec_001', 'running', 50, 25, 0)
-      ).rejects.toThrow('DynamoDB PutItem failed');
+      await expect(updateExecutionStatus('exec_001', 'running', 50, 25, 0)).rejects.toThrow(
+        'DynamoDB PutItem failed'
+      );
     });
   });
 });
@@ -219,9 +188,7 @@ describe('getExecutionStatus', () => {
     it('DynamoDB GetItemが失敗した場合、エラーをスローする', async () => {
       dynamoMock.on(GetItemCommand).rejects(new Error('DynamoDB GetItem failed'));
 
-      await expect(
-        getExecutionStatus('exec_001')
-      ).rejects.toThrow('DynamoDB GetItem failed');
+      await expect(getExecutionStatus('exec_001')).rejects.toThrow('DynamoDB GetItem failed');
     });
   });
 });

@@ -571,14 +571,14 @@ describe('Lambda Query Handler', () => {
     it('エラーレスポンスにもCORSヘッダーが含まれる', async () => {
       // APIキー認証を有効化
       delete process.env.TEST_ENV;
-      
+
       mockEvent.headers = {}; // APIキーなし
 
       const result = await handler(mockEvent, mockContext);
 
       expect(result.statusCode).toBe(401);
       expect(result.headers!['Access-Control-Allow-Origin']).toBe('*');
-      
+
       // 元に戻す
       process.env.TEST_ENV = 'e2e';
     });

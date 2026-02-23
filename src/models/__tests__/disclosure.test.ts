@@ -442,15 +442,11 @@ describe('generateDisclosureId', () => {
     });
 
     it('不正なcompany_codeの場合はValidationErrorをスロー', () => {
-      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123', 1)).toThrow(
-        ValidationError
-      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123', 1)).toThrow(ValidationError);
       expect(() => generateDisclosureId('2024-01-15T10:30:00Z', '123456', 1)).toThrow(
         ValidationError
       );
-      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'ABC', 1)).toThrow(
-        ValidationError
-      );
+      expect(() => generateDisclosureId('2024-01-15T10:30:00Z', 'ABC', 1)).toThrow(ValidationError);
     });
 
     it('不正なsequenceの場合はValidationErrorをスロー', () => {

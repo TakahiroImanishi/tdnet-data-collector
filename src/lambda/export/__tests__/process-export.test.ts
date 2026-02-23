@@ -58,7 +58,9 @@ describe('processExport', () => {
 
     // デフォルトのモック実装
     mockQueryDisclosures.mockResolvedValue(mockDisclosures);
-    mockExportToS3.mockResolvedValue('exports/2024/01/15/export_1705305600000_abc123_12345678.json');
+    mockExportToS3.mockResolvedValue(
+      'exports/2024/01/15/export_1705305600000_abc123_12345678.json'
+    );
     mockUpdateExportStatus.mockResolvedValue();
     mockGenerateSignedUrl.mockResolvedValue('https://s3.amazonaws.com/signed-url?expires=...');
   });
@@ -118,7 +120,9 @@ describe('processExport', () => {
         },
       };
 
-      mockExportToS3.mockResolvedValue('exports/2024/01/15/export_1705305600000_def456_87654321.csv');
+      mockExportToS3.mockResolvedValue(
+        'exports/2024/01/15/export_1705305600000_def456_87654321.csv'
+      );
 
       // Act
       await processExport(export_id, requestBody);
@@ -168,7 +172,9 @@ describe('processExport', () => {
       };
 
       mockQueryDisclosures.mockResolvedValue([]);
-      mockExportToS3.mockResolvedValue('exports/2024/01/15/export_1705305600000_jkl012_22222222.json');
+      mockExportToS3.mockResolvedValue(
+        'exports/2024/01/15/export_1705305600000_jkl012_22222222.json'
+      );
 
       // Act
       await processExport(export_id, requestBody);
@@ -211,7 +217,9 @@ describe('processExport', () => {
       }));
 
       mockQueryDisclosures.mockResolvedValue(largeDataset);
-      mockExportToS3.mockResolvedValue('exports/2024/01/15/export_1705305600000_mno345_33333333.csv');
+      mockExportToS3.mockResolvedValue(
+        'exports/2024/01/15/export_1705305600000_mno345_33333333.csv'
+      );
 
       // Act
       await processExport(export_id, requestBody);

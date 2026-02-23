@@ -80,11 +80,7 @@ describe('date_partition validation', () => {
 
     describe('範囲外の日付', () => {
       it('should throw ValidationError for dates before 1970-01-01', () => {
-        const oldDates = [
-          '1969-12-31T23:59:59Z',
-          '1969-01-01T00:00:00Z',
-          '1900-01-01T00:00:00Z',
-        ];
+        const oldDates = ['1969-12-31T23:59:59Z', '1969-01-01T00:00:00Z', '1900-01-01T00:00:00Z'];
 
         oldDates.forEach((date) => {
           expect(() => validateDisclosedAt(date)).toThrow(ValidationError);

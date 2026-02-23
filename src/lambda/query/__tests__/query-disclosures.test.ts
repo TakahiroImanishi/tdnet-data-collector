@@ -85,9 +85,7 @@ describe('queryDisclosures', () => {
       };
 
       mockSend.mockResolvedValue({
-        Items: mockDisclosures
-          .filter((d) => d.company_code === '1234')
-          .map((d) => marshall(d)),
+        Items: mockDisclosures.filter((d) => d.company_code === '1234').map((d) => marshall(d)),
       });
 
       // Act
@@ -117,9 +115,7 @@ describe('queryDisclosures', () => {
       };
 
       mockSend.mockResolvedValue({
-        Items: mockDisclosures
-          .filter((d) => d.company_code === '1234')
-          .map((d) => marshall(d)),
+        Items: mockDisclosures.filter((d) => d.company_code === '1234').map((d) => marshall(d)),
       });
 
       // Act
@@ -143,9 +139,7 @@ describe('queryDisclosures', () => {
       };
 
       mockSend.mockResolvedValue({
-        Items: mockDisclosures
-          .filter((d) => d.company_code === '1234')
-          .map((d) => marshall(d)),
+        Items: mockDisclosures.filter((d) => d.company_code === '1234').map((d) => marshall(d)),
       });
 
       // Act
@@ -170,9 +164,7 @@ describe('queryDisclosures', () => {
       };
 
       mockSend.mockResolvedValue({
-        Items: mockDisclosures
-          .filter((d) => d.company_code === '1234')
-          .map((d) => marshall(d)),
+        Items: mockDisclosures.filter((d) => d.company_code === '1234').map((d) => marshall(d)),
       });
 
       // Act
@@ -323,9 +315,7 @@ describe('queryDisclosures', () => {
       };
 
       mockSend.mockResolvedValue({
-        Items: mockDisclosures
-          .filter((d) => d.company_code === '1234')
-          .map((d) => marshall(d)),
+        Items: mockDisclosures.filter((d) => d.company_code === '1234').map((d) => marshall(d)),
       });
 
       // Act
@@ -566,9 +556,7 @@ describe('queryDisclosures', () => {
       };
 
       mockSend.mockResolvedValue({
-        Items: mockDisclosures
-          .filter((d) => d.company_code === '1234')
-          .map((d) => marshall(d)),
+        Items: mockDisclosures.filter((d) => d.company_code === '1234').map((d) => marshall(d)),
       });
 
       // Act

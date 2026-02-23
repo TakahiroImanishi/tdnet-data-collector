@@ -1,9 +1,9 @@
 /**
  * CloudWatch Integration Tests
- * 
+ *
  * すべてのCloudWatchコンポーネント（メトリクス、アラーム、ダッシュボード）が
  * 正しく統合されていることを検証します。
- * 
+ *
  * Requirements: 要件14.1（テスト）
  */
 

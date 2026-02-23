@@ -49,7 +49,9 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         fc.array(
           fc.record({
             disclosure_id: fc.string({ minLength: 10, maxLength: 20 }),
-            company_code: fc.string({ minLength: 4, maxLength: 4 }).map(s => s.replace(/[^0-9]/g, '0')),
+            company_code: fc
+              .string({ minLength: 4, maxLength: 4 })
+              .map((s) => s.replace(/[^0-9]/g, '0')),
             company_name: fc.string({ minLength: 1, maxLength: 100 }),
             disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示'),
             title: fc.string({ minLength: 1, maxLength: 200 }),
@@ -82,7 +84,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           // Assert
           expect(s3Mock.calls()).toHaveLength(1);
           const call = s3Mock.call(0);
-          
+
           // PutObjectCommandのinputプロパティにアクセス
           expect(call.args[0].input).toBeDefined();
           expect((call.args[0].input as any).Tagging).toBe('auto-delete=true');
@@ -112,7 +114,9 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         fc.array(
           fc.record({
             disclosure_id: fc.string({ minLength: 10, maxLength: 20 }),
-            company_code: fc.string({ minLength: 4, maxLength: 4 }).map(s => s.replace(/[^0-9]/g, '0')),
+            company_code: fc
+              .string({ minLength: 4, maxLength: 4 })
+              .map((s) => s.replace(/[^0-9]/g, '0')),
             company_name: fc.string({ minLength: 1, maxLength: 100 }),
             disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示'),
             title: fc.string({ minLength: 1, maxLength: 200 }),
@@ -140,9 +144,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
 
           // Assert
           // Property: S3キーが正しいフォーマット（exports/YYYY/MM/DD/export_id.format）
-          const s3KeyRegex = new RegExp(
-            `^exports/\\d{4}/\\d{2}/\\d{2}/[^/]+\\.${format}$`
-          );
+          const s3KeyRegex = new RegExp(`^exports/\\d{4}/\\d{2}/\\d{2}/[^/]+\\.${format}$`);
           expect(s3_key).toMatch(s3KeyRegex);
         }
       ),
@@ -172,7 +174,9 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         fc.array(
           fc.record({
             disclosure_id: fc.string({ minLength: 10, maxLength: 20 }),
-            company_code: fc.string({ minLength: 4, maxLength: 4 }).map(s => s.replace(/[^0-9]/g, '0')),
+            company_code: fc
+              .string({ minLength: 4, maxLength: 4 })
+              .map((s) => s.replace(/[^0-9]/g, '0')),
             company_name: fc.string({ minLength: 1, maxLength: 100 }),
             disclosure_type: fc.constantFrom('決算短信', '有価証券報告書', '適時開示'),
             title: fc.string({ minLength: 1, maxLength: 200 }),
@@ -205,7 +209,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           // Assert
           expect(s3Mock.calls()).toHaveLength(1);
           const call = s3Mock.call(0);
-          
+
           // PutObjectCommandのinputプロパティにアクセス
           expect(call.args[0].input).toBeDefined();
           const contentType = (call.args[0].input as any).ContentType;
@@ -234,7 +238,10 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
         // Arbitrary: エクスポートID（英数字とハイフンのみ）
         fc.stringMatching(/^[a-zA-Z0-9_-]{10,50}$/),
         // Arbitrary: カンマを含むタイトル（ダブルクォートを除外）
-        fc.string({ minLength: 1, maxLength: 50 }).filter(s => !s.includes('"')).map((s) => `${s}, カンマ含む`),
+        fc
+          .string({ minLength: 1, maxLength: 50 })
+          .filter((s) => !s.includes('"'))
+          .map((s) => `${s}, カンマ含む`),
         async (export_id, titleWithComma) => {
           // Arrange
           const disclosures: Disclosure[] = [
@@ -262,7 +269,7 @@ describe('Property 10: エクスポートファイルの有効期限', () => {
           // Assert
           expect(s3Mock.calls()).toHaveLength(1);
           const call = s3Mock.call(0);
-          
+
           // PutObjectCommandのinputプロパティにアクセス
           expect(call.args[0].input).toBeDefined();
           const body = (call.args[0].input as any).Body;

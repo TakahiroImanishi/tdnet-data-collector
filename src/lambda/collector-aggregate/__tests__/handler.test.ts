@@ -43,7 +43,8 @@ describe('Lambda Collector Aggregate Handler', () => {
       awsRequestId: 'test-request-id',
       functionName: 'CollectorAggregateFunction',
       functionVersion: '1',
-      invokedFunctionArn: 'arn:aws:lambda:ap-northeast-1:123456789012:function:CollectorAggregateFunction',
+      invokedFunctionArn:
+        'arn:aws:lambda:ap-northeast-1:123456789012:function:CollectorAggregateFunction',
       memoryLimitInMB: '256',
       logGroupName: '/aws/lambda/CollectorAggregateFunction',
       logStreamName: '2024/01/15/[$LATEST]test',
@@ -107,10 +108,7 @@ describe('Lambda Collector Aggregate Handler', () => {
         250,
         mockContext.functionName
       );
-      expect(mockSendDisclosuresFailedMetric).toHaveBeenCalledWith(
-        0,
-        mockContext.functionName
-      );
+      expect(mockSendDisclosuresFailedMetric).toHaveBeenCalledWith(0, mockContext.functionName);
       expect(mockSendCollectionSuccessRateMetric).toHaveBeenCalledWith(
         100,
         mockContext.functionName
@@ -151,10 +149,7 @@ describe('Lambda Collector Aggregate Handler', () => {
         243,
         mockContext.functionName
       );
-      expect(mockSendDisclosuresFailedMetric).toHaveBeenCalledWith(
-        7,
-        mockContext.functionName
-      );
+      expect(mockSendDisclosuresFailedMetric).toHaveBeenCalledWith(7, mockContext.functionName);
       expect(mockSendCollectionSuccessRateMetric).toHaveBeenCalledWith(
         97.2,
         mockContext.functionName
@@ -191,18 +186,9 @@ describe('Lambda Collector Aggregate Handler', () => {
       );
 
       // メトリクス送信を確認
-      expect(mockSendDisclosuresCollectedMetric).toHaveBeenCalledWith(
-        0,
-        mockContext.functionName
-      );
-      expect(mockSendDisclosuresFailedMetric).toHaveBeenCalledWith(
-        250,
-        mockContext.functionName
-      );
-      expect(mockSendCollectionSuccessRateMetric).toHaveBeenCalledWith(
-        0,
-        mockContext.functionName
-      );
+      expect(mockSendDisclosuresCollectedMetric).toHaveBeenCalledWith(0, mockContext.functionName);
+      expect(mockSendDisclosuresFailedMetric).toHaveBeenCalledWith(250, mockContext.functionName);
+      expect(mockSendCollectionSuccessRateMetric).toHaveBeenCalledWith(0, mockContext.functionName);
     });
 
     test('結果が空の場合、success_rateが0になる', async () => {
@@ -235,9 +221,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('success_rateがNaNにならないことを確認', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_009',
-        results: [
-          { saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 0 } },
-        ],
+        results: [{ saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 0 } }],
       };
 
       const response: AggregateResponse = await handler(event, mockContext);
@@ -264,7 +248,7 @@ describe('Lambda Collector Aggregate Handler', () => {
         status: 'partial_success',
         total_collected: 150,
         total_failed: 5,
-        success_rate: 96.77419354838710,
+        success_rate: 96.7741935483871,
       });
     });
   });
@@ -273,9 +257,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('DynamoDB書き込みエラー時、エラーをスローする', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_005',
-        results: [
-          { date: '2024-01-15', success_count: 100, failed_count: 0 },
-        ],
+        results: [{ date: '2024-01-15', success_count: 100, failed_count: 0 }],
       };
 
       const dbError = new Error('DynamoDB write failed');
@@ -302,15 +284,11 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('メトリクス送信エラー時、処理は継続する', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_006',
-        results: [
-          { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
-        ],
+        results: [{ saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } }],
       };
 
       // メトリクス送信でエラー
-      mockSendDisclosuresCollectedMetric.mockRejectedValueOnce(
-        new Error('CloudWatch error')
-      );
+      mockSendDisclosuresCollectedMetric.mockRejectedValueOnce(new Error('CloudWatch error'));
 
       // エラーをスローせず、正常に完了する
       const response: AggregateResponse = await handler(event, mockContext);
@@ -365,9 +343,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('成功率の計算が正確である', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_008',
-        results: [
-          { saveResult: { page_number: '2024-01-15', saved_count: 97, failed_count: 3 } },
-        ],
+        results: [{ saveResult: { page_number: '2024-01-15', saved_count: 97, failed_count: 3 } }],
       };
 
       const response: AggregateResponse = await handler(event, mockContext);

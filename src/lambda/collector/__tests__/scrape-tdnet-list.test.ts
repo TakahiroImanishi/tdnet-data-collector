@@ -188,7 +188,9 @@ describe('scrapeTdnetList', () => {
     describe('Date Range Validation', () => {
       it('should reject dates before 1970-01-01', async () => {
         await expect(scrapeTdnetList('1969-12-31')).rejects.toThrow(ValidationError);
-        await expect(scrapeTdnetList('1969-12-31')).rejects.toThrow('Must be on or after 1970-01-01');
+        await expect(scrapeTdnetList('1969-12-31')).rejects.toThrow(
+          'Must be on or after 1970-01-01'
+        );
       });
 
       it('should accept 1970-01-01', async () => {
@@ -207,14 +209,16 @@ describe('scrapeTdnetList', () => {
       it('should reject dates more than 1 day in the future', async () => {
         const futureDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
         const futureDateStr = futureDate.toISOString().split('T')[0];
-        
+
         await expect(scrapeTdnetList(futureDateStr)).rejects.toThrow(ValidationError);
-        await expect(scrapeTdnetList(futureDateStr)).rejects.toThrow('Must be within 1 day of current date');
+        await expect(scrapeTdnetList(futureDateStr)).rejects.toThrow(
+          'Must be within 1 day of current date'
+        );
       });
 
-      it('should accept today\'s date', async () => {
+      it("should accept today's date", async () => {
         const today = new Date().toISOString().split('T')[0];
-        
+
         mockAxios.get.mockResolvedValue({
           data: '<html></html>',
           status: 200,
@@ -227,10 +231,10 @@ describe('scrapeTdnetList', () => {
         await expect(scrapeTdnetList(today)).resolves.not.toThrow();
       });
 
-      it('should accept tomorrow\'s date (within 1 day)', async () => {
+      it("should accept tomorrow's date (within 1 day)", async () => {
         const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        
+
         mockAxios.get.mockResolvedValue({
           data: '<html></html>',
           status: 200,
@@ -311,15 +315,13 @@ describe('scrapeTdnetList', () => {
       const timeoutError = new Error('timeout of 30000ms exceeded');
       (timeoutError as any).code = 'ECONNABORTED';
 
-      mockAxios.get
-        .mockRejectedValueOnce(timeoutError)
-        .mockResolvedValueOnce({
-          data: '<html></html>',
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config: {} as any,
-        });
+      mockAxios.get.mockRejectedValueOnce(timeoutError).mockResolvedValueOnce({
+        data: '<html></html>',
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as any,
+      });
 
       mockParseDisclosureList.mockReturnValue([]);
 
@@ -340,15 +342,13 @@ describe('scrapeTdnetList', () => {
         isAxiosError: true,
       };
 
-      mockAxios.get
-        .mockRejectedValueOnce(serverError)
-        .mockResolvedValueOnce({
-          data: '<html></html>',
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config: {} as any,
-        });
+      mockAxios.get.mockRejectedValueOnce(serverError).mockResolvedValueOnce({
+        data: '<html></html>',
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as any,
+      });
 
       mockParseDisclosureList.mockReturnValue([]);
 
@@ -369,15 +369,13 @@ describe('scrapeTdnetList', () => {
         isAxiosError: true,
       };
 
-      mockAxios.get
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValueOnce({
-          data: '<html></html>',
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config: {} as any,
-        });
+      mockAxios.get.mockRejectedValueOnce(rateLimitError).mockResolvedValueOnce({
+        data: '<html></html>',
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as any,
+      });
 
       mockParseDisclosureList.mockReturnValue([]);
 
@@ -502,7 +500,7 @@ describe('scrapeTdnetList', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Accept': expect.stringContaining('text/html'),
+            Accept: expect.stringContaining('text/html'),
             'Accept-Language': expect.stringContaining('ja'),
           }),
         })
@@ -524,11 +522,17 @@ describe('scrapeTdnetList', () => {
 
       // ページ1-9: 各100件の開示情報を返す
       mockAxios.get.mockImplementation((url: string) => {
-        if (url.includes('I_list_001_') || url.includes('I_list_002_') || 
-            url.includes('I_list_003_') || url.includes('I_list_004_') ||
-            url.includes('I_list_005_') || url.includes('I_list_006_') ||
-            url.includes('I_list_007_') || url.includes('I_list_008_') ||
-            url.includes('I_list_009_')) {
+        if (
+          url.includes('I_list_001_') ||
+          url.includes('I_list_002_') ||
+          url.includes('I_list_003_') ||
+          url.includes('I_list_004_') ||
+          url.includes('I_list_005_') ||
+          url.includes('I_list_006_') ||
+          url.includes('I_list_007_') ||
+          url.includes('I_list_008_') ||
+          url.includes('I_list_009_')
+        ) {
           return Promise.resolve({
             data: mockHtml,
             status: 200,
@@ -660,4 +664,3 @@ describe('scrapeTdnetList', () => {
     });
   });
 });
-

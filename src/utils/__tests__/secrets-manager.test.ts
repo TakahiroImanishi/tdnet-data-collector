@@ -2,10 +2,18 @@
  * Secrets Manager ユーティリティのテスト
  */
 
+// logger のモック（importの前に配置）
+jest.mock('../logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { mockClient } from 'aws-sdk-client-mock';
 import { getSecret, getApiKey, clearCache } from '../secrets-manager';
-import { RetryableError } from '../../errors';
 
 // モック
 const secretsManagerMock = mockClient(SecretsManagerClient);

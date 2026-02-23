@@ -2,7 +2,7 @@
  * Monitoring Stack テスト
  *
  * CloudWatch Logs、Alarms、Dashboard、CloudTrailの設定を検証します。
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
@@ -75,8 +75,8 @@ describe('TdnetMonitoringStack', () => {
       const logGroups = template.findResources('AWS::Logs::LogGroup');
       // 本番環境ではLambda LogGroupを作成せず、既存のものを参照する設計
       // CloudTrail用のLogGroupのみ作成される可能性がある
-      const lambdaLogGroups = Object.values(logGroups).filter(
-        (lg: any) => lg.Properties.LogGroupName?.includes('/aws/lambda/')
+      const lambdaLogGroups = Object.values(logGroups).filter((lg: any) =>
+        lg.Properties.LogGroupName?.includes('/aws/lambda/')
       );
       expect(lambdaLogGroups.length).toBe(0);
     });
@@ -85,7 +85,7 @@ describe('TdnetMonitoringStack', () => {
       // 本番環境では、Lambda関数作成時に自動生成されたLogGroupsをそのまま使用
       // これにより、CDKスタック削除時にログが保持され、監査要件を満たす
       const logGroups = template.findResources('AWS::Logs::LogGroup');
-      
+
       // CloudTrail用など、Lambda以外のLogGroupは作成される可能性がある
       // ここでは本番環境でLambda LogGroupを作成しないことを確認
       expect(logGroups).toBeDefined();
@@ -145,7 +145,11 @@ describe('TdnetMonitoringStack', () => {
         query: lambda.Function.fromFunctionName(stack, 'Query', 'test-query'),
         export: lambda.Function.fromFunctionName(stack, 'Export', 'test-export'),
         collect: lambda.Function.fromFunctionName(stack, 'Collect', 'test-collect'),
-        collectStatus: lambda.Function.fromFunctionName(stack, 'CollectStatus', 'test-collect-status'),
+        collectStatus: lambda.Function.fromFunctionName(
+          stack,
+          'CollectStatus',
+          'test-collect-status'
+        ),
         exportStatus: lambda.Function.fromFunctionName(stack, 'ExportStatus', 'test-export-status'),
         pdfDownload: lambda.Function.fromFunctionName(stack, 'PdfDownload', 'test-pdf-download'),
         health: lambda.Function.fromFunctionName(stack, 'Health', 'test-health'),
@@ -155,7 +159,11 @@ describe('TdnetMonitoringStack', () => {
       const mockDynamodbTables = {
         disclosures: dynamodb.Table.fromTableName(stack, 'Disclosures', 'test-disclosures'),
         executions: dynamodb.Table.fromTableName(stack, 'Executions', 'test-executions'),
-        exportStatus: dynamodb.Table.fromTableName(stack, 'ExportStatusTable', 'test-export-status'),
+        exportStatus: dynamodb.Table.fromTableName(
+          stack,
+          'ExportStatusTable',
+          'test-export-status'
+        ),
       };
 
       const mockS3Buckets = {

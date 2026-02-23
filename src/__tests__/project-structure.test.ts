@@ -8,7 +8,7 @@
  * - 必須ディレクトリの存在
  * - 必須ファイルの存在
  * - package.jsonの依存関係
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  * - 設定ファイルの妥当性
  *

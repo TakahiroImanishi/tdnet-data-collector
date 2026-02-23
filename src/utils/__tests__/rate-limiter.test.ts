@@ -185,7 +185,7 @@ describe('RateLimiter', () => {
 
       expect(rateLimiter1.getLastRequestTime()).not.toBeNull();
       expect(rateLimiter2.getLastRequestTime()).not.toBeNull();
-      
+
       // 2つのインスタンスが独立していることを確認（異なる設定値）
       expect(rateLimiter1.getMinDelayMs()).toBe(500);
       expect(rateLimiter2.getMinDelayMs()).toBe(1000);

@@ -7,7 +7,7 @@
  * - 1件あたりの収集時間: 5秒以内
  * - 50件の収集: 5分以内
  * - クエリ応答時間: 500ms以内
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
@@ -232,9 +232,7 @@ describe('パフォーマンスベンチマーク', () => {
         const batch = items.slice(i, i + concurrency);
         const promises = batch.map(async (item, index) => {
           // レート制限を考慮した遅延
-          await new Promise((resolve) =>
-            setTimeout(resolve, index * rateLimitDelay)
-          );
+          await new Promise((resolve) => setTimeout(resolve, index * rateLimitDelay));
           return item;
         });
 

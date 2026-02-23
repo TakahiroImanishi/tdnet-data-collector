@@ -129,13 +129,13 @@ describe('collector-init handler', () => {
     it('前日の日付を取得できる', () => {
       const yesterday = getYesterday();
       expect(yesterday).toBeInstanceOf(Date);
-      
+
       // 前日であることを確認（JST基準）
       const now = new Date();
       const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
       const expectedYesterday = new Date(jstNow);
       expectedYesterday.setUTCDate(expectedYesterday.getUTCDate() - 1);
-      
+
       expect(formatDate(yesterday)).toBe(formatDate(expectedYesterday));
     });
   });

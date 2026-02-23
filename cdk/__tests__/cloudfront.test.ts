@@ -46,7 +46,7 @@ describe('DashboardCloudFront Construct', () => {
     // Assert
     const template = Template.fromStack(stack);
     template.resourceCountIs('AWS::CloudFront::CloudFrontOriginAccessIdentity', 1);
-    
+
     template.hasResourceProperties('AWS::CloudFront::CloudFrontOriginAccessIdentity', {
       CloudFrontOriginAccessIdentityConfig: {
         Comment: 'OAI for TDnet Dashboard (test)',
@@ -268,20 +268,20 @@ describe('DashboardCloudFront Construct', () => {
 
     // Assert
     const template = Template.fromStack(stack);
-    
+
     // デフォルトCloudFront証明書を使用する場合、minimumProtocolVersionが設定されていることを確認
     // CDKはDistributionのプロパティとしてminimumProtocolVersionを保持
     expect(construct.distribution.node.tryFindChild('Resource')).toBeDefined();
-    
+
     // CloudFormationテンプレートでViewerCertificateが設定されていることを確認
     // デフォルト証明書の場合、MinimumProtocolVersionが設定される
     const distributions = template.findResources('AWS::CloudFront::Distribution');
     const distributionKeys = Object.keys(distributions);
     expect(distributionKeys.length).toBeGreaterThan(0);
-    
+
     const distribution = distributions[distributionKeys[0]];
     expect(distribution.Properties.DistributionConfig).toBeDefined();
-    
+
     // minimumProtocolVersionが設定されていることを確認
     // デフォルト証明書を使用する場合、ViewerCertificateは明示的に設定されない場合がある
     // その場合、CloudFrontはデフォルトでTLSv1を使用するため、
@@ -297,22 +297,28 @@ describe('DashboardCloudFront Construct', () => {
 
     // Assert
     const template = Template.fromStack(stack);
-    
+
     // CfnOutputの実際の名前を確認（デバッグ用）
     const outputs = template.toJSON().Outputs;
     console.log('Available outputs:', Object.keys(outputs || {}));
-    
+
     // 実際の出力名を使用してテスト
     // CDKは自動的にハッシュを追加するため、正確な名前を確認する必要がある
     const outputKeys = Object.keys(outputs || {});
-    const domainNameOutput = outputKeys.find(key => key.startsWith('TestCloudFrontDistributionDomainName'));
-    const distributionIdOutput = outputKeys.find(key => key.startsWith('TestCloudFrontDistributionId'));
-    const dashboardUrlOutput = outputKeys.find(key => key.startsWith('TestCloudFrontDashboardUrl'));
-    
+    const domainNameOutput = outputKeys.find((key) =>
+      key.startsWith('TestCloudFrontDistributionDomainName')
+    );
+    const distributionIdOutput = outputKeys.find((key) =>
+      key.startsWith('TestCloudFrontDistributionId')
+    );
+    const dashboardUrlOutput = outputKeys.find((key) =>
+      key.startsWith('TestCloudFrontDashboardUrl')
+    );
+
     expect(domainNameOutput).toBeDefined();
     expect(distributionIdOutput).toBeDefined();
     expect(dashboardUrlOutput).toBeDefined();
-    
+
     if (domainNameOutput) {
       expect(outputs[domainNameOutput]).toMatchObject({
         Description: 'CloudFront Distribution Domain Name',
@@ -321,7 +327,7 @@ describe('DashboardCloudFront Construct', () => {
         },
       });
     }
-    
+
     if (distributionIdOutput) {
       expect(outputs[distributionIdOutput]).toMatchObject({
         Description: 'CloudFront Distribution ID',
@@ -330,7 +336,7 @@ describe('DashboardCloudFront Construct', () => {
         },
       });
     }
-    
+
     if (dashboardUrlOutput) {
       expect(outputs[dashboardUrlOutput]).toMatchObject({
         Description: 'TDnet Dashboard URL',
@@ -350,7 +356,7 @@ describe('DashboardCloudFront Construct', () => {
 
     // Assert
     const template = Template.fromStack(stack);
-    
+
     // キャッシュポリシーでGzipとBrotliが有効化されていることを確認
     template.hasResourceProperties('AWS::CloudFront::CachePolicy', {
       CachePolicyConfig: {

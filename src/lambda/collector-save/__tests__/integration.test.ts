@@ -84,26 +84,28 @@ describe('Lambda Collector-Save Integration Test', () => {
         // テスト用のPDFバッファを作成してS3にアップロード
         const testPdfBuffer = Buffer.from('%PDF-1.4 test content');
         const s3Key = `2024/01/15/${disclosure_id}.pdf`;
-        
+
         // S3にアップロード
-        await s3Client.send(
-          new GetObjectCommand({
-            Bucket: S3_BUCKET,
-            Key: s3Key,
-          })
-        ).catch(async () => {
-          // オブジェクトが存在しない場合は作成
-          const { PutObjectCommand } = await import('@aws-sdk/client-s3');
-          await s3Client.send(
-            new PutObjectCommand({
+        await s3Client
+          .send(
+            new GetObjectCommand({
               Bucket: S3_BUCKET,
               Key: s3Key,
-              Body: testPdfBuffer,
-              ContentType: 'application/pdf',
             })
-          );
-        });
-        
+          )
+          .catch(async () => {
+            // オブジェクトが存在しない場合は作成
+            const { PutObjectCommand } = await import('@aws-sdk/client-s3');
+            await s3Client.send(
+              new PutObjectCommand({
+                Bucket: S3_BUCKET,
+                Key: s3Key,
+                Body: testPdfBuffer,
+                ContentType: 'application/pdf',
+              })
+            );
+          });
+
         return s3Key;
       }
     );
@@ -157,7 +159,7 @@ describe('Lambda Collector-Save Integration Test', () => {
       // S3から取得して確認
       const disclosure_id = '20240115_1234_0001';
       const s3Key = `2024/01/15/${disclosure_id}.pdf`;
-      
+
       const result = await s3Client.send(
         new GetObjectCommand({
           Bucket: S3_BUCKET,

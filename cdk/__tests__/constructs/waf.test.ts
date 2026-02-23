@@ -227,7 +227,7 @@ describe('WafConstruct', () => {
     // Assert
     const template = Template.fromStack(stack);
     template.resourceCountIs('AWS::WAFv2::WebACLAssociation', 1);
-    
+
     template.hasResourceProperties('AWS::WAFv2::WebACLAssociation', {
       ResourceArn: Match.anyValue(),
       WebACLArn: Match.anyValue(),
@@ -244,17 +244,13 @@ describe('WafConstruct', () => {
     // Assert
     const template = Template.fromStack(stack);
     const outputs = template.toJSON().Outputs;
-    
-    const webAclArnOutput = Object.keys(outputs || {}).find(key => 
-      key.includes('WebAclArn')
-    );
-    const webAclIdOutput = Object.keys(outputs || {}).find(key => 
-      key.includes('WebAclId')
-    );
-    
+
+    const webAclArnOutput = Object.keys(outputs || {}).find((key) => key.includes('WebAclArn'));
+    const webAclIdOutput = Object.keys(outputs || {}).find((key) => key.includes('WebAclId'));
+
     expect(webAclArnOutput).toBeDefined();
     expect(webAclIdOutput).toBeDefined();
-    
+
     if (webAclArnOutput) {
       expect(outputs[webAclArnOutput]).toMatchObject({
         Description: 'WAF Web ACL ARN',
@@ -263,7 +259,7 @@ describe('WafConstruct', () => {
         },
       });
     }
-    
+
     if (webAclIdOutput) {
       expect(outputs[webAclIdOutput]).toMatchObject({
         Description: 'WAF Web ACL ID',
@@ -283,10 +279,10 @@ describe('WafConstruct', () => {
     const webAcls = template.findResources('AWS::WAFv2::WebACL');
     const webAclKeys = Object.keys(webAcls);
     expect(webAclKeys.length).toBe(1);
-    
+
     const webAcl = webAcls[webAclKeys[0]];
     const rules = webAcl.Properties.Rules;
-    
+
     expect(rules).toHaveLength(3);
     expect(rules[0].Name).toBe('RateLimitRule');
     expect(rules[0].Priority).toBe(1);

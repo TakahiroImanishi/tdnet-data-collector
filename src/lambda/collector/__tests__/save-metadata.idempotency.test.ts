@@ -21,7 +21,7 @@ describe('Property 5: 重複収集の冪等性', () => {
     jest.clearAllMocks();
     dynamoMock.reset();
     process.env.DYNAMODB_TABLE = 'test-table';
-    
+
     // logger.warnのモック
     jest.spyOn(logger, 'warn').mockImplementation();
     jest.spyOn(logger, 'info').mockImplementation();
@@ -96,7 +96,7 @@ describe('Property 5: 重複収集の冪等性', () => {
         company_name: '株式会社サンプル',
         disclosed_at: '2024-01-15T10:30:00Z',
         s3_key: '2024/01/15/TD20240115001.pdf',
-        message: 'この開示情報は既にDynamoDBに保存されています'
+        message: 'この開示情報は既にDynamoDBに保存されています',
       });
     });
 

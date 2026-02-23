@@ -22,10 +22,7 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
-import {
-  CloudWatchClient,
-  PutMetricDataCommand,
-} from '@aws-sdk/client-cloudwatch';
+import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import { Disclosure } from '../../types';
 
 /**
@@ -142,11 +139,7 @@ export function setupAllDefaultMocks(): void {
  * mockDynamoGetItem('tdnet_disclosures', { disclosure_id: 'TD20240115001' }, disclosure);
  * ```
  */
-export function mockDynamoGetItem(
-  tableName: string,
-  key: Record<string, any>,
-  item: any
-): void {
+export function mockDynamoGetItem(tableName: string, key: Record<string, any>, item: any): void {
   dynamoMock
     .on(GetCommand, {
       TableName: tableName,
@@ -286,9 +279,7 @@ export function mockCloudWatchPutMetrics(success: boolean = true): void {
   if (success) {
     cloudWatchMock.on(PutMetricDataCommand).resolves({});
   } else {
-    cloudWatchMock
-      .on(PutMetricDataCommand)
-      .rejects(new Error('CloudWatch PutMetricData failed'));
+    cloudWatchMock.on(PutMetricDataCommand).rejects(new Error('CloudWatch PutMetricData failed'));
   }
 }
 

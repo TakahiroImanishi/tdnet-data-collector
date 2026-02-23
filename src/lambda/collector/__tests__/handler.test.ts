@@ -17,7 +17,9 @@ jest.mock('../update-execution-status');
 jest.mock('../download-pdf');
 jest.mock('../save-metadata');
 const mockScrapeTdnetList = scrapeTdnetList as jest.MockedFunction<typeof scrapeTdnetList>;
-const mockUpdateExecutionStatus = updateExecutionStatus as jest.MockedFunction<typeof updateExecutionStatus>;
+const mockUpdateExecutionStatus = updateExecutionStatus as jest.MockedFunction<
+  typeof updateExecutionStatus
+>;
 const mockDownloadPdf = downloadPdf as jest.MockedFunction<typeof downloadPdf>;
 const mockSaveMetadata = saveMetadata as jest.MockedFunction<typeof saveMetadata>;
 
@@ -45,16 +47,16 @@ describe('Lambda Collector Handler', () => {
 
     // Mock updateExecutionStatus to resolve successfully
     mockUpdateExecutionStatus.mockResolvedValue({} as any);
-    
+
     // Mock downloadPdf to resolve successfully
     mockDownloadPdf.mockResolvedValue(Buffer.from('fake-pdf-content') as any);
-    
+
     // Mock saveMetadata to resolve successfully
     mockSaveMetadata.mockResolvedValue(undefined);
   });
 
   describe('Batch Mode', () => {
-    it('should collect yesterday\'s data in batch mode', async () => {
+    it("should collect yesterday's data in batch mode", async () => {
       const event: CollectorEvent = {
         mode: 'batch',
       };
@@ -101,7 +103,7 @@ describe('Lambda Collector Handler', () => {
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       const event: CollectorEvent = {
         mode: 'on-demand',
         start_date: threeDaysAgo.toISOString().substring(0, 10),
@@ -132,7 +134,7 @@ describe('Lambda Collector Handler', () => {
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       const event: CollectorEvent = {
         mode: 'on-demand',
         start_date: threeDaysAgo.toISOString().substring(0, 10),

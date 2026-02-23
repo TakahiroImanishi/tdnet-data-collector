@@ -35,7 +35,8 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
   beforeEach(() => {
     sfnMock.reset();
     dynamoMock.reset();
-    process.env.STATE_MACHINE_ARN = 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow';
+    process.env.STATE_MACHINE_ARN =
+      'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow';
     process.env.EXECUTION_STATE_TABLE = 'test-execution-state-table';
     process.env.AWS_REGION = 'ap-northeast-1';
   });
@@ -49,10 +50,11 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
   describe('正常系', () => {
     it('実行中のStep Functions実行状態を取得できる', async () => {
       const execution_id = 'test-execution-id-123';
-      
+
       sfnMock.on(DescribeExecutionCommand).resolves({
         executionArn: `arn:aws:states:ap-northeast-1:123456789012:execution:tdnet-collector-workflow:${execution_id}`,
-        stateMachineArn: 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow',
+        stateMachineArn:
+          'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow',
         name: execution_id,
         status: 'RUNNING',
         startDate: new Date('2024-01-15T10:00:00Z'),
@@ -101,10 +103,11 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
 
     it('成功したStep Functions実行状態を取得できる', async () => {
       const execution_id = 'test-execution-id-456';
-      
+
       sfnMock.on(DescribeExecutionCommand).resolves({
         executionArn: `arn:aws:states:ap-northeast-1:123456789012:execution:tdnet-collector-workflow:${execution_id}`,
-        stateMachineArn: 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow',
+        stateMachineArn:
+          'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow',
         name: execution_id,
         status: 'SUCCEEDED',
         startDate: new Date('2024-01-15T10:00:00Z'),
@@ -140,10 +143,11 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
 
     it('失敗したStep Functions実行状態を取得できる', async () => {
       const execution_id = 'test-execution-id-789';
-      
+
       sfnMock.on(DescribeExecutionCommand).resolves({
         executionArn: `arn:aws:states:ap-northeast-1:123456789012:execution:tdnet-collector-workflow:${execution_id}`,
-        stateMachineArn: 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow',
+        stateMachineArn:
+          'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow',
         name: execution_id,
         status: 'FAILED',
         startDate: new Date('2024-01-15T10:00:00Z'),
@@ -182,7 +186,7 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
   describe('エラー処理', () => {
     it('存在しない実行IDの場合は404を返す', async () => {
       const execution_id = 'nonexistent-execution-id';
-      
+
       const error: any = new Error('Execution does not exist');
       error.name = 'ExecutionDoesNotExist';
       sfnMock.on(DescribeExecutionCommand).rejects(error);
@@ -214,7 +218,7 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
 
     it('Step Functions APIエラーの場合は500を返す', async () => {
       const execution_id = 'test-execution-id';
-      
+
       sfnMock.on(DescribeExecutionCommand).rejects(new Error('Step Functions API error'));
 
       const event: APIGatewayProxyEvent = {

@@ -40,7 +40,7 @@ const getTestDates = () => {
   startDate.setDate(startDate.getDate() - 7); // 7日前
   const endDate = new Date(today);
   endDate.setDate(endDate.getDate() - 2); // 2日前
-  
+
   return {
     start_date: startDate.toISOString().split('T')[0],
     end_date: endDate.toISOString().split('T')[0],
@@ -91,7 +91,7 @@ describe('POST /collect Handler', () => {
     process.env.COLLECTOR_FUNCTION_NAME = 'tdnet-collector';
     process.env.AWS_REGION = 'ap-northeast-1';
     delete process.env.STATE_MACHINE_ARN; // デフォルトはLambda直接呼び出し
-    
+
     lambdaMock.reset();
     sfnMock.reset();
   });
@@ -139,7 +139,9 @@ describe('POST /collect Handler', () => {
       const body = JSON.parse(result.body);
 
       // execution_idがUUID形式であることを確認
-      expect(body.data.execution_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(body.data.execution_id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+      );
     });
 
     it('Lambda呼び出しがEventモード（非同期）で実行される', async () => {
@@ -159,11 +161,15 @@ describe('POST /collect Handler', () => {
       expect(calls[0].args[0].input.InvocationType).toBe('Event'); // 非同期呼び出し
       // 環境変数がグローバルスコープで読み込まれるため、実際の値を確認
       expect(calls[0].args[0].input.FunctionName).toBeDefined();
-      
+
       // Payloadにexecution_idが含まれていることを確認
-      const payload = JSON.parse(Buffer.from(calls[0].args[0].input.Payload as Uint8Array).toString('utf-8'));
+      const payload = JSON.parse(
+        Buffer.from(calls[0].args[0].input.Payload as Uint8Array).toString('utf-8')
+      );
       expect(payload).toHaveProperty('execution_id');
-      expect(payload.execution_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(payload.execution_id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+      );
       expect(payload).toHaveProperty('mode', 'on-demand');
       expect(payload).toHaveProperty('start_date');
       expect(payload).toHaveProperty('end_date');
@@ -265,11 +271,11 @@ describe('POST /collect Handler', () => {
     it('start_dateが存在しない日付の場合は400を返す', async () => {
       const today = new Date();
       const year = today.getFullYear();
-      
+
       const event = createTestEvent({
-          start_date: `${year}-02-30`, // 2月30日は存在しない
-          end_date: `${year}-03-01`,
-        });
+        start_date: `${year}-02-30`, // 2月30日は存在しない
+        end_date: `${year}-03-01`,
+      });
 
       const result = await handler(event, mockContext);
 
@@ -394,7 +400,7 @@ describe('POST /collect Handler', () => {
     it('end_dateが存在しない日付の場合は400を返す', async () => {
       const today = new Date();
       const year = today.getFullYear();
-      
+
       const event = createTestEvent({
         start_date: `${year}-02-01`,
         end_date: `${year}-02-30`, // 2月30日は存在しない
@@ -429,11 +435,13 @@ describe('POST /collect Handler', () => {
   describe('Step Functions統合（STATE_MACHINE_ARN設定時）', () => {
     beforeEach(() => {
       // Step Functions ARNを設定
-      process.env.STATE_MACHINE_ARN = 'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow';
-      
+      process.env.STATE_MACHINE_ARN =
+        'arn:aws:states:ap-northeast-1:123456789012:stateMachine:tdnet-collector-workflow';
+
       // Step Functionsのモックを設定
       sfnMock.on(StartExecutionCommand).resolves({
-        executionArn: 'arn:aws:states:ap-northeast-1:123456789012:execution:tdnet-collector-workflow:test-execution-id',
+        executionArn:
+          'arn:aws:states:ap-northeast-1:123456789012:execution:tdnet-collector-workflow:test-execution-id',
         startDate: new Date(),
       });
     });
@@ -454,10 +462,10 @@ describe('POST /collect Handler', () => {
       const calls = sfnMock.commandCalls(StartExecutionCommand);
       expect(calls.length).toBe(1);
       expect(calls[0].args[0].input.stateMachineArn).toBe(process.env.STATE_MACHINE_ARN);
-      
+
       // 実行名がexecution_idと一致することを確認
       expect(calls[0].args[0].input.name).toBe(body.data.execution_id);
-      
+
       // 入力パラメータを確認
       const input = JSON.parse(calls[0].args[0].input.input as string);
       expect(input).toHaveProperty('start_date', testDates.start_date);

@@ -167,7 +167,7 @@ describe('createExportJob', () => {
 
       // Act
       const result1 = await createExportJob(mockRequestBody, requestId1);
-      
+
       // 2回目の呼び出しで異なるランダム値を返す
       jest.spyOn(Math, 'random').mockReturnValue(0.987654);
       const result2 = await createExportJob(mockRequestBody, requestId2);
@@ -411,7 +411,7 @@ describe('createExportJob', () => {
     it('EXPORT_STATUS_TABLE_NAMEが未設定の場合、デフォルト値が使用される', async () => {
       // Arrange
       delete process.env.EXPORT_STATUS_TABLE_NAME;
-      
+
       // モジュールを再読み込みしてデフォルト値を適用
       jest.resetModules();
       const { createExportJob: createExportJobReloaded } = require('../create-export-job');
@@ -427,7 +427,7 @@ describe('createExportJob', () => {
     it('AWS_ENDPOINT_URLが設定されている場合、エンドポイントが使用される', async () => {
       // Arrange
       process.env.AWS_ENDPOINT_URL = 'http://localhost:4566';
-      
+
       // モジュールを再読み込みしてエンドポイント設定を適用
       jest.resetModules();
       jest.mock('@aws-sdk/client-dynamodb', () => {
@@ -441,7 +441,7 @@ describe('createExportJob', () => {
           }),
         };
       });
-      
+
       const { createExportJob: createExportJobReloaded } = require('../create-export-job');
 
       // Act
@@ -454,7 +454,7 @@ describe('createExportJob', () => {
     it('AWS_REGIONが未設定の場合、デフォルトリージョンが使用される', async () => {
       // Arrange
       delete process.env.AWS_REGION;
-      
+
       // モジュールを再読み込みしてデフォルトリージョンを適用
       jest.resetModules();
       jest.mock('@aws-sdk/client-dynamodb', () => {
@@ -468,7 +468,7 @@ describe('createExportJob', () => {
           }),
         };
       });
-      
+
       const { createExportJob: createExportJobReloaded } = require('../create-export-job');
 
       // Act

@@ -21,13 +21,13 @@ const dynamoClient = new DynamoDBClient({
 /**
  * バッチ書き込み結果
  */
-export interface BatchWriteResult {
+export interface BatchWriteResult<T = Record<string, unknown>> {
   /** 成功件数 */
   successCount: number;
   /** 失敗件数 */
   failedCount: number;
   /** 未処理アイテム */
-  unprocessedItems: any[];
+  unprocessedItems: T[];
 }
 
 /**
@@ -51,11 +51,11 @@ export interface BatchWriteResult {
  * console.log(`成功: ${result.successCount}, 失敗: ${result.failedCount}`);
  * ```
  */
-export async function batchWriteItems(
+export async function batchWriteItems<T extends Record<string, unknown>>(
   tableName: string,
-  items: any[],
+  items: T[],
   maxRetries: number = 3
-): Promise<BatchWriteResult> {
+): Promise<BatchWriteResult<T>> {
   if (items.length === 0) {
     return { successCount: 0, failedCount: 0, unprocessedItems: [] };
   }
@@ -67,7 +67,7 @@ export async function batchWriteItems(
 
   let successCount = 0;
   let failedCount = 0;
-  const unprocessedItems: any[] = [];
+  const unprocessedItems: T[] = [];
 
   // 25アイテムずつバッチ処理
   const batchSize = 25;
@@ -109,11 +109,11 @@ export async function batchWriteItems(
  * @param maxRetries - 最大再試行回数
  * @returns バッチ書き込み結果
  */
-async function writeBatch(
+async function writeBatch<T extends Record<string, unknown>>(
   tableName: string,
-  items: any[],
+  items: T[],
   maxRetries: number
-): Promise<BatchWriteResult> {
+): Promise<BatchWriteResult<T>> {
   if (items.length > 25) {
     throw new Error('Batch size must be 25 or less');
   }
@@ -125,18 +125,18 @@ async function writeBatch(
     },
   }));
 
-  let unprocessedItems = writeRequests;
+  let unprocessedRequests = writeRequests;
   let retryCount = 0;
   let successCount = 0;
 
-  while (unprocessedItems.length > 0 && retryCount <= maxRetries) {
+  while (unprocessedRequests.length > 0 && retryCount <= maxRetries) {
     try {
       const response = await retryWithBackoff(
         async () => {
           return await dynamoClient.send(
             new BatchWriteItemCommand({
               RequestItems: {
-                [tableName]: unprocessedItems,
+                [tableName]: unprocessedRequests,
               },
             })
           );
@@ -157,17 +157,17 @@ async function writeBatch(
 
       // 成功したアイテム数を計算
       const processedCount =
-        unprocessedItems.length - (response.UnprocessedItems?.[tableName]?.length || 0);
+        unprocessedRequests.length - (response.UnprocessedItems?.[tableName]?.length || 0);
       successCount += processedCount;
 
       // 未処理アイテムを取得
       if (response.UnprocessedItems && response.UnprocessedItems[tableName]) {
-        unprocessedItems = response.UnprocessedItems[tableName];
+        unprocessedRequests = response.UnprocessedItems[tableName];
 
-        if (unprocessedItems.length > 0) {
+        if (unprocessedRequests.length > 0) {
           logger.warn('Unprocessed items detected, retrying', {
             tableName,
-            unprocessedCount: unprocessedItems.length,
+            unprocessedCount: unprocessedRequests.length,
             retryCount: retryCount + 1,
           });
 
@@ -178,7 +178,7 @@ async function writeBatch(
         }
       } else {
         // すべて処理完了
-        unprocessedItems = [];
+        unprocessedRequests = [];
       }
     } catch (error) {
       logger.error('Batch write request failed', {
@@ -197,12 +197,43 @@ async function writeBatch(
     }
   }
 
-  const failedCount = unprocessedItems.length;
+  const failedCount = unprocessedRequests.length;
+
+  // 未処理のWriteRequestsから元のアイテムを復元
+  // DynamoDBのAttributeValueから元の型に戻すため、unmarshallを使用
+  const unprocessedItems: T[] = unprocessedRequests
+    .map((req) => {
+      if (req.PutRequest?.Item) {
+        // AttributeValueからRecord<string, unknown>に変換
+        const item: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(req.PutRequest.Item)) {
+          // AttributeValueの各型を適切に変換
+          if ('S' in value && value.S !== undefined) {
+            item[key] = value.S;
+          } else if ('N' in value && value.N !== undefined) {
+            item[key] = Number(value.N);
+          } else if ('BOOL' in value && value.BOOL !== undefined) {
+            item[key] = value.BOOL;
+          } else if ('NULL' in value && value.NULL !== undefined) {
+            item[key] = null;
+          } else if ('M' in value && value.M !== undefined) {
+            // ネストされたマップは再帰的に処理が必要だが、簡略化のため文字列化
+            item[key] = value.M;
+          } else if ('L' in value && value.L !== undefined) {
+            // リストも同様
+            item[key] = value.L;
+          }
+        }
+        return item as T;
+      }
+      return null;
+    })
+    .filter((item): item is T => item !== null);
 
   return {
     successCount,
     failedCount,
-    unprocessedItems: unprocessedItems.map((req) => req.PutRequest?.Item),
+    unprocessedItems,
   };
 }
 

@@ -35,11 +35,11 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       await updateExecutionStatus(execution_id, 'completed', 100);
 
       // PutItemCommandの呼び出しのみをフィルタ
-      const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
+      const putCalls = dynamoMock.calls().filter((call) => call.firstArg instanceof PutItemCommand);
       expect(putCalls).toHaveLength(5);
 
       // 各呼び出しで進捗率が増加していることを確認
-      const progresses = putCalls.map(call => {
+      const progresses = putCalls.map((call) => {
         const input = call.args[0].input as any;
         return parseInt(input.Item.progress.N);
       });
@@ -59,7 +59,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       await updateExecutionStatus(execution_id, 'completed', 150); // 100を超える値
 
       // Assert
-      const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
+      const putCalls = dynamoMock.calls().filter((call) => call.firstArg instanceof PutItemCommand);
       const call = putCalls[0];
       const input = call.args[0].input as any;
       expect(parseInt(input.Item.progress.N)).toBe(100); // 100に制限される
@@ -74,7 +74,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       await updateExecutionStatus(execution_id, 'pending', -10); // 負の値
 
       // Assert
-      const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
+      const putCalls = dynamoMock.calls().filter((call) => call.firstArg instanceof PutItemCommand);
       const call = putCalls[0];
       const input = call.args[0].input as any;
       expect(parseInt(input.Item.progress.N)).toBe(0); // 0に制限される
@@ -91,8 +91,8 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       await updateExecutionStatus(execution_id, 'completed', 100);
 
       // Assert
-      const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
-      const statuses = putCalls.map(call => {
+      const putCalls = dynamoMock.calls().filter((call) => call.firstArg instanceof PutItemCommand);
+      const statuses = putCalls.map((call) => {
         const input = call.args[0].input as any;
         return input.Item.status.S;
       });
@@ -110,7 +110,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       await updateExecutionStatus(execution_id, 'failed', 50, 10, 5, error_message);
 
       // Assert
-      const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
+      const putCalls = dynamoMock.calls().filter((call) => call.firstArg instanceof PutItemCommand);
       const call = putCalls[0];
       const input = call.args[0].input as any;
       expect(input.Item.status.S).toBe('failed');
@@ -136,13 +136,16 @@ describe('Property 11: 実行状態の進捗単調性', () => {
 
             // Act
             for (const progress of sortedProgress) {
-              const status = progress === 0 ? 'pending' : progress === 100 ? 'completed' : 'running';
+              const status =
+                progress === 0 ? 'pending' : progress === 100 ? 'completed' : 'running';
               await updateExecutionStatus(execution_id, status, progress);
             }
 
             // Assert
-            const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
-            const progresses = putCalls.map(call => {
+            const putCalls = dynamoMock
+              .calls()
+              .filter((call) => call.firstArg instanceof PutItemCommand);
+            const progresses = putCalls.map((call) => {
               const input = call.args[0].input as any;
               return parseInt(input.Item.progress.N);
             });
@@ -171,7 +174,9 @@ describe('Property 11: 実行状態の進捗単調性', () => {
             await updateExecutionStatus(execution_id, 'running', progress);
 
             // Assert
-            const putCalls = dynamoMock.calls().filter(call => call.firstArg instanceof PutItemCommand);
+            const putCalls = dynamoMock
+              .calls()
+              .filter((call) => call.firstArg instanceof PutItemCommand);
             const call = putCalls[0];
             const input = call.args[0].input as any;
             const actualProgress = parseInt(input.Item.progress.N);

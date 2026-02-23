@@ -151,8 +151,7 @@ describe('retryWithBackoff - Property Tests', () => {
           // 期待される総遅延時間を計算
           // attempt 0: initialDelay * (backoffMultiplier ^ 0) = initialDelay
           // attempt 1: initialDelay * (backoffMultiplier ^ 1) = initialDelay * backoffMultiplier
-          const expectedTotalDelay =
-            initialDelay * (1 + backoffMultiplier);
+          const expectedTotalDelay = initialDelay * (1 + backoffMultiplier);
 
           // 実際の総時間は期待される遅延時間以上である
           // （処理時間を考慮して、±50msの誤差を許容）

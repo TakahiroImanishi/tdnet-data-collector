@@ -56,7 +56,8 @@ export function createDisclosure(options: DisclosureFactoryOptions = {}): Disclo
   const disclosedAt = options.disclosed_at || '2024-01-15T10:00:00+09:00';
   const companyCode = options.company_code || '1234';
   const datePartition = options.date_partition || '2024-01';
-  const disclosureId = options.disclosure_id || `TD${disclosedAt.slice(0, 10).replace(/-/g, '')}${companyCode}001`;
+  const disclosureId =
+    options.disclosure_id || `TD${disclosedAt.slice(0, 10).replace(/-/g, '')}${companyCode}001`;
 
   return {
     disclosure_id: disclosureId,
@@ -120,10 +121,7 @@ export function createDisclosures(
  * const disclosures = createDisclosuresByCompany('7203', 3);
  * ```
  */
-export function createDisclosuresByCompany(
-  companyCode: string,
-  count: number = 1
-): Disclosure[] {
+export function createDisclosuresByCompany(companyCode: string, count: number = 1): Disclosure[] {
   const companyNames: Record<string, string> = {
     '7203': 'トヨタ自動車株式会社',
     '9984': 'ソフトバンクグループ株式会社',

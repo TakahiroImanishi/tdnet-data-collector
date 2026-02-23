@@ -111,7 +111,8 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       awsRequestId: 'test-request-id-collect-status-e2e',
       functionName: 'tdnet-collect-status-e2e',
       functionVersion: '1',
-      invokedFunctionArn: 'arn:aws:lambda:ap-northeast-1:123456789012:function:tdnet-collect-status-e2e',
+      invokedFunctionArn:
+        'arn:aws:lambda:ap-northeast-1:123456789012:function:tdnet-collect-status-e2e',
       memoryLimitInMB: '256',
       logGroupName: '/aws/lambda/tdnet-collect-status-e2e',
       logStreamName: '2024/01/15/[$LATEST]e2e-test',
@@ -196,7 +197,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       // pending → running に変換される
       expect(body.data.status).toBe('running');
       expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
-      
+
       // running状態なのでprogressが含まれる
       expect(body.data).toHaveProperty('progress');
       expect(body.data.progress).toHaveProperty('collected_count');
@@ -221,7 +222,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.data.execution_id).toBe('exec_test_running_12345678');
       expect(body.data.status).toBe('running');
       expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
-      
+
       // running状態なのでprogressが含まれる
       expect(body.data).toHaveProperty('progress');
       expect(body.data.progress.collected_count).toBe(25);
@@ -247,7 +248,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
       expect(body.data).toHaveProperty('end_time');
       expect(body.data.end_time).toBe('2024-01-15T10:10:00Z');
-      
+
       // completed状態なのでprogressは含まれない
       expect(body.data.progress).toBeUndefined();
     });
@@ -272,7 +273,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.data.end_time).toBe('2024-01-15T10:03:00Z');
       expect(body.data).toHaveProperty('error_message');
       expect(body.data.error_message).toBe('Network error occurred');
-      
+
       // failed状態なのでprogressは含まれない
       expect(body.data.progress).toBeUndefined();
     });

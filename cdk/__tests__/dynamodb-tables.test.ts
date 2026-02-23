@@ -210,9 +210,7 @@ describe('DynamoDB Tables', () => {
     it('should have exactly 1 GSI', () => {
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'tdnet_executions_dev',
-        GlobalSecondaryIndexes: [
-          Match.objectLike({ IndexName: 'GSI_Status_StartedAt' }),
-        ],
+        GlobalSecondaryIndexes: [Match.objectLike({ IndexName: 'GSI_Status_StartedAt' })],
       });
     });
   });
@@ -263,13 +261,10 @@ describe('DynamoDB Tables', () => {
 
       tableKeys.forEach((key) => {
         const table = tables[key];
-        expect(
-          table.Properties.PointInTimeRecoverySpecification
-        ).toBeDefined();
-        expect(
-          table.Properties.PointInTimeRecoverySpecification
-            .PointInTimeRecoveryEnabled
-        ).toBe(true);
+        expect(table.Properties.PointInTimeRecoverySpecification).toBeDefined();
+        expect(table.Properties.PointInTimeRecoverySpecification.PointInTimeRecoveryEnabled).toBe(
+          true
+        );
       });
     });
 

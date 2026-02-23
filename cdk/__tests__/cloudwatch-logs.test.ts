@@ -61,7 +61,7 @@ describe('CloudWatchLogs Construct', () => {
 
       // Assert
       expect(logGroup).toBeDefined();
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Logs::LogGroup', {
         LogGroupName: Match.anyValue(), // トークンなので任意の値
@@ -83,14 +83,11 @@ describe('CloudWatchLogs Construct', () => {
       });
 
       // Act
-      const logGroup = cloudWatchLogs.configureForLambda(
-        testLambda,
-        '/custom/log/group'
-      );
+      const logGroup = cloudWatchLogs.configureForLambda(testLambda, '/custom/log/group');
 
       // Assert
       expect(logGroup).toBeDefined();
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Logs::LogGroup', {
         LogGroupName: '/custom/log/group',
@@ -284,7 +281,7 @@ describe('CloudWatchLogs Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      
+
       // ログ保持期間: 90日
       template.hasResourceProperties('AWS::Logs::LogGroup', {
         RetentionInDays: 90,
@@ -319,7 +316,7 @@ describe('CloudWatchLogs Construct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      
+
       // ログ保持期間: 7日
       template.hasResourceProperties('AWS::Logs::LogGroup', {
         RetentionInDays: 7,

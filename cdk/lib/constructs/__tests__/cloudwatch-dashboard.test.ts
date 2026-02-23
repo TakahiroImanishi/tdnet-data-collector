@@ -2,7 +2,7 @@
  * CloudWatch Dashboard Construct テスト
  *
  * CloudWatch Dashboardの設定を検証します。
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
@@ -31,7 +31,11 @@ describe('CloudWatchDashboard', () => {
       query: lambda.Function.fromFunctionName(stack, 'Query', 'test-query'),
       export: lambda.Function.fromFunctionName(stack, 'Export', 'test-export'),
       collect: lambda.Function.fromFunctionName(stack, 'Collect', 'test-collect'),
-      collectStatus: lambda.Function.fromFunctionName(stack, 'CollectStatus', 'test-collect-status'),
+      collectStatus: lambda.Function.fromFunctionName(
+        stack,
+        'CollectStatus',
+        'test-collect-status'
+      ),
       exportStatus: lambda.Function.fromFunctionName(stack, 'ExportStatus', 'test-export-status'),
       pdfDownload: lambda.Function.fromFunctionName(stack, 'PdfDownload', 'test-pdf-download'),
     };
@@ -87,10 +91,26 @@ describe('CloudWatchDashboard', () => {
       } as sfn.IStateMachine;
 
       const mockStepFunctionsLambdas = {
-        collectorInit: lambda.Function.fromFunctionName(stack, 'CollectorInit', 'test-collector-init'),
-        collectorFetch: lambda.Function.fromFunctionName(stack, 'CollectorFetch', 'test-collector-fetch'),
-        collectorSave: lambda.Function.fromFunctionName(stack, 'CollectorSave', 'test-collector-save'),
-        collectorAggregate: lambda.Function.fromFunctionName(stack, 'CollectorAggregate', 'test-collector-aggregate'),
+        collectorInit: lambda.Function.fromFunctionName(
+          stack,
+          'CollectorInit',
+          'test-collector-init'
+        ),
+        collectorFetch: lambda.Function.fromFunctionName(
+          stack,
+          'CollectorFetch',
+          'test-collector-fetch'
+        ),
+        collectorSave: lambda.Function.fromFunctionName(
+          stack,
+          'CollectorSave',
+          'test-collector-save'
+        ),
+        collectorAggregate: lambda.Function.fromFunctionName(
+          stack,
+          'CollectorAggregate',
+          'test-collector-aggregate'
+        ),
       };
 
       new CloudWatchDashboard(stack, 'TestDashboard', {
@@ -104,7 +124,7 @@ describe('CloudWatchDashboard', () => {
       });
 
       const template = Template.fromStack(stack);
-      
+
       // CloudWatch Dashboardリソースが作成されていることを確認
       template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     });
@@ -119,7 +139,7 @@ describe('CloudWatchDashboard', () => {
       });
 
       const template = Template.fromStack(stack);
-      
+
       // CloudWatch Dashboardリソースが作成されていることを確認
       template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     });
@@ -136,7 +156,7 @@ describe('CloudWatchDashboard', () => {
       });
 
       const template = Template.fromStack(stack);
-      
+
       // CloudWatch Dashboardリソースが作成されていることを確認
       template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     });
@@ -151,7 +171,7 @@ describe('CloudWatchDashboard', () => {
       });
 
       const template = Template.fromStack(stack);
-      
+
       // CloudWatch Dashboardリソースが作成されていることを確認
       template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     });
@@ -168,7 +188,7 @@ describe('CloudWatchDashboard', () => {
       });
 
       const template = Template.fromStack(stack);
-      
+
       // CloudWatch Dashboardリソースが作成されていることを確認
       template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     });
@@ -185,7 +205,7 @@ describe('CloudWatchDashboard', () => {
       });
 
       const template = Template.fromStack(stack);
-      
+
       // CloudWatch Dashboardリソースが作成されていることを確認
       template.resourceCountIs('AWS::CloudWatch::Dashboard', 1);
     });

@@ -2,9 +2,9 @@
  * Compute Stack テスト
  *
  * Lambda関数、DLQ、IAM権限の設定を検証します。
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
- * 
+ *
  * 注意: Dockerバンドリングを回避するため、Lambda関数コードをモック化しています
  */
 
@@ -35,7 +35,7 @@ jest.mock('aws-cdk-lib/aws-lambda-nodejs', () => {
         delete mockProps.bundling;
         delete mockProps.depsLockFilePath;
         delete mockProps.projectRoot;
-        
+
         super(scope, id, mockProps);
       }
     },
@@ -49,11 +49,19 @@ function createComputeStack(env: 'prod' | 'local', enableStepFunctions = false) 
   const mockResources = {
     disclosuresTable: dynamodb.Table.fromTableName(baseStack, 'Disclosures', 'test-disclosures'),
     executionsTable: dynamodb.Table.fromTableName(baseStack, 'Executions', 'test-executions'),
-    exportStatusTable: dynamodb.Table.fromTableName(baseStack, 'ExportStatus', 'test-export-status'),
+    exportStatusTable: dynamodb.Table.fromTableName(
+      baseStack,
+      'ExportStatus',
+      'test-export-status'
+    ),
     pdfsBucket: s3.Bucket.fromBucketName(baseStack, 'Pdfs', 'test-pdfs'),
     exportsBucket: s3.Bucket.fromBucketName(baseStack, 'Exports', 'test-exports'),
     apiKeySecret: secretsmanager.Secret.fromSecretNameV2(baseStack, 'ApiKey', 'test-api-key'),
-    alertTopic: sns.Topic.fromTopicArn(baseStack, 'Alert', 'arn:aws:sns:us-east-1:123456789012:test-alert'),
+    alertTopic: sns.Topic.fromTopicArn(
+      baseStack,
+      'Alert',
+      'arn:aws:sns:us-east-1:123456789012:test-alert'
+    ),
   };
 
   const computeStack = new TdnetComputeStack(app, `${env}ComputeStack`, {
@@ -198,9 +206,7 @@ describe('TdnetComputeStack', () => {
         PolicyDocument: Match.objectLike({
           Statement: Match.arrayWith([
             Match.objectLike({
-              Action: Match.arrayWith([
-                Match.stringLikeRegexp('dynamodb:.*'),
-              ]),
+              Action: Match.arrayWith([Match.stringLikeRegexp('dynamodb:.*')]),
             }),
           ]),
         }),
@@ -212,9 +218,7 @@ describe('TdnetComputeStack', () => {
         PolicyDocument: Match.objectLike({
           Statement: Match.arrayWith([
             Match.objectLike({
-              Action: Match.arrayWith([
-                Match.stringLikeRegexp('s3:.*'),
-              ]),
+              Action: Match.arrayWith([Match.stringLikeRegexp('s3:.*')]),
             }),
           ]),
         }),
@@ -450,13 +454,15 @@ describe('TdnetComputeStack', () => {
       const functions = noStepFunctionsStack.template.findResources('AWS::Lambda::Function');
       expect(Object.keys(functions).length).toBeGreaterThanOrEqual(9);
       expect(Object.keys(functions).length).toBeLessThan(13); // Step Functions用の4個は含まれない
-      
+
       // ExecutionStateTableは作成されない
       const tables = noStepFunctionsStack.template.findResources('AWS::DynamoDB::Table');
       expect(Object.keys(tables).length).toBe(0);
-      
+
       // StateMachineは作成されない
-      const stateMachines = noStepFunctionsStack.template.findResources('AWS::StepFunctions::StateMachine');
+      const stateMachines = noStepFunctionsStack.template.findResources(
+        'AWS::StepFunctions::StateMachine'
+      );
       expect(Object.keys(stateMachines).length).toBe(0);
     });
 

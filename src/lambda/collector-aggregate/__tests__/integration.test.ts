@@ -40,7 +40,8 @@ describe('Lambda Collector Aggregate Handler - 統合テスト', () => {
       awsRequestId: 'test-request-id',
       functionName: 'CollectorAggregateFunction',
       functionVersion: '1',
-      invokedFunctionArn: 'arn:aws:lambda:ap-northeast-1:123456789012:function:CollectorAggregateFunction',
+      invokedFunctionArn:
+        'arn:aws:lambda:ap-northeast-1:123456789012:function:CollectorAggregateFunction',
       memoryLimitInMB: '256',
       logGroupName: '/aws/lambda/CollectorAggregateFunction',
       logStreamName: '2024/01/15/[$LATEST]test',

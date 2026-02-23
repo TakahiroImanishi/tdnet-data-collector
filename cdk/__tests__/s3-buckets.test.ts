@@ -27,13 +27,17 @@ describe('S3 Buckets', () => {
   describe('PDFs Bucket', () => {
     it('should be created with correct name', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
+        },
       });
     });
 
     it('should have encryption enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -48,7 +52,9 @@ describe('S3 Buckets', () => {
 
     it('should have public access blocked', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -60,7 +66,9 @@ describe('S3 Buckets', () => {
 
     it('should have versioning enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         VersioningConfiguration: {
           Status: 'Enabled',
         },
@@ -69,7 +77,9 @@ describe('S3 Buckets', () => {
 
     it('should have lifecycle rules for cost optimization', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         LifecycleConfiguration: {
           Rules: [
             {
@@ -95,13 +105,17 @@ describe('S3 Buckets', () => {
   describe('Exports Bucket', () => {
     it('should be created with correct name', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
+        },
       });
     });
 
     it('should have encryption enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         BucketEncryption: {
           ServerSideEncryptionConfiguration: [
             {
@@ -116,7 +130,9 @@ describe('S3 Buckets', () => {
 
     it('should have public access blocked', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         PublicAccessBlockConfiguration: {
           BlockPublicAcls: true,
           BlockPublicPolicy: true,
@@ -128,7 +144,9 @@ describe('S3 Buckets', () => {
 
     it('should have versioning enabled', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         VersioningConfiguration: {
           Status: 'Enabled',
         },
@@ -137,7 +155,9 @@ describe('S3 Buckets', () => {
 
     it('should have lifecycle rule to delete after 7 days', () => {
       template.hasResourceProperties('AWS::S3::Bucket', {
-        BucketName: { 'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]] },
+        BucketName: {
+          'Fn::Join': ['', ['tdnet-data-collector-exports-dev-', { Ref: 'AWS::AccountId' }]],
+        },
         LifecycleConfiguration: {
           Rules: [
             {
@@ -198,8 +218,9 @@ describe('S3 Buckets', () => {
       // ダッシュボードバケットはライフサイクルルールを持たない
       const resources = template.toJSON().Resources;
       const dashboardBucket = Object.values(resources).find(
-        (r: any) => r.Type === 'AWS::S3::Bucket' && 
-        r.Properties?.BucketName?.['Fn::Join']?.[1]?.[0] === 'tdnet-dashboard-dev-'
+        (r: any) =>
+          r.Type === 'AWS::S3::Bucket' &&
+          r.Properties?.BucketName?.['Fn::Join']?.[1]?.[0] === 'tdnet-dashboard-dev-'
       ) as any;
 
       expect(dashboardBucket).toBeDefined();
@@ -329,13 +350,10 @@ describe('S3 Buckets', () => {
       bucketKeys.forEach((key) => {
         const bucket = buckets[key];
         expect(bucket.Properties.BucketEncryption).toBeDefined();
+        expect(bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration).toBeDefined();
         expect(
-          bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration
-        ).toBeDefined();
-        expect(
-          bucket.Properties.BucketEncryption
-            .ServerSideEncryptionConfiguration[0].ServerSideEncryptionByDefault
-            .SSEAlgorithm
+          bucket.Properties.BucketEncryption.ServerSideEncryptionConfiguration[0]
+            .ServerSideEncryptionByDefault.SSEAlgorithm
         ).toBe('AES256');
       });
     });
@@ -348,19 +366,10 @@ describe('S3 Buckets', () => {
       bucketKeys.forEach((key) => {
         const bucket = buckets[key];
         expect(bucket.Properties.PublicAccessBlockConfiguration).toBeDefined();
-        expect(
-          bucket.Properties.PublicAccessBlockConfiguration.BlockPublicAcls
-        ).toBe(true);
-        expect(
-          bucket.Properties.PublicAccessBlockConfiguration.BlockPublicPolicy
-        ).toBe(true);
-        expect(
-          bucket.Properties.PublicAccessBlockConfiguration.IgnorePublicAcls
-        ).toBe(true);
-        expect(
-          bucket.Properties.PublicAccessBlockConfiguration
-            .RestrictPublicBuckets
-        ).toBe(true);
+        expect(bucket.Properties.PublicAccessBlockConfiguration.BlockPublicAcls).toBe(true);
+        expect(bucket.Properties.PublicAccessBlockConfiguration.BlockPublicPolicy).toBe(true);
+        expect(bucket.Properties.PublicAccessBlockConfiguration.IgnorePublicAcls).toBe(true);
+        expect(bucket.Properties.PublicAccessBlockConfiguration.RestrictPublicBuckets).toBe(true);
       });
     });
 
@@ -372,9 +381,7 @@ describe('S3 Buckets', () => {
       bucketKeys.forEach((key) => {
         const bucket = buckets[key];
         expect(bucket.Properties.VersioningConfiguration).toBeDefined();
-        expect(bucket.Properties.VersioningConfiguration.Status).toBe(
-          'Enabled'
-        );
+        expect(bucket.Properties.VersioningConfiguration.Status).toBe('Enabled');
       });
     });
 
@@ -383,13 +390,7 @@ describe('S3 Buckets', () => {
       const pdfsBucket = template.findResources('AWS::S3::Bucket', {
         Properties: {
           BucketName: {
-            'Fn::Join': [
-              '',
-              [
-                'tdnet-data-collector-pdfs-dev-',
-                { Ref: 'AWS::AccountId' },
-              ],
-            ],
+            'Fn::Join': ['', ['tdnet-data-collector-pdfs-dev-', { Ref: 'AWS::AccountId' }]],
           },
         },
       });
@@ -397,13 +398,7 @@ describe('S3 Buckets', () => {
       const cloudtrailBucket = template.findResources('AWS::S3::Bucket', {
         Properties: {
           BucketName: {
-            'Fn::Join': [
-              '',
-              [
-                'tdnet-cloudtrail-logs-dev-',
-                { Ref: 'AWS::AccountId' },
-              ],
-            ],
+            'Fn::Join': ['', ['tdnet-cloudtrail-logs-dev-', { Ref: 'AWS::AccountId' }]],
           },
         },
       });
@@ -413,11 +408,9 @@ describe('S3 Buckets', () => {
 
       // バケットが見つかった場合のみライフサイクル設定を確認
       if (pdfsBucketKey && pdfsBucket[pdfsBucketKey]?.Properties) {
-        expect(
-          pdfsBucket[pdfsBucketKey].Properties.LifecycleConfiguration
-        ).toBeDefined();
+        expect(pdfsBucket[pdfsBucketKey].Properties.LifecycleConfiguration).toBeDefined();
       }
-      
+
       if (cloudtrailBucketKey && cloudtrailBucket[cloudtrailBucketKey]?.Properties) {
         expect(
           cloudtrailBucket[cloudtrailBucketKey].Properties.LifecycleConfiguration

@@ -20,7 +20,9 @@ jest.mock('../update-execution-status');
 const mockScrapeTdnetList = scrapeTdnetList as jest.MockedFunction<typeof scrapeTdnetList>;
 const mockDownloadPdf = downloadPdf as jest.MockedFunction<typeof downloadPdf>;
 const mockSaveMetadata = saveMetadata as jest.MockedFunction<typeof saveMetadata>;
-const mockUpdateExecutionStatus = updateExecutionStatus as jest.MockedFunction<typeof updateExecutionStatus>;
+const mockUpdateExecutionStatus = updateExecutionStatus as jest.MockedFunction<
+  typeof updateExecutionStatus
+>;
 
 describe('Lambda Collector Integration Tests', () => {
   let mockContext: Context;
@@ -63,14 +65,16 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-07',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1001',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-01T10:00:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1001',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-01T10:00:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       const response = await handler(event, mockContext);
 
@@ -93,22 +97,28 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-06',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1234',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-01T10:00:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1234',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-01T10:00:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       const response = await handler(event, mockContext);
 
       expect(mockScrapeTdnetList).toHaveBeenCalledTimes(6);
       const calledDates = mockScrapeTdnetList.mock.calls.map((call) => call[0]);
       expect(calledDates).toEqual([
-        '2026-02-01', '2026-02-02', '2026-02-03',
-        '2026-02-04', '2026-02-05', '2026-02-06',
+        '2026-02-01',
+        '2026-02-02',
+        '2026-02-03',
+        '2026-02-04',
+        '2026-02-05',
+        '2026-02-06',
       ]);
       expect(response.status).toBe('success');
     });
@@ -120,14 +130,16 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-05',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1234',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-05T10:00:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1234',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-05T10:00:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       const response = await handler(event, mockContext);
 
@@ -145,23 +157,33 @@ describe('Lambda Collector Integration Tests', () => {
       };
 
       mockScrapeTdnetList.mockImplementation(async (date: string) => {
-        if (date === '2026-02-01') return [{
-          company_code: '1001',
-          company_name: 'Test Company',
-          disclosure_type: '決算短信',
-          title: 'Test',
-          disclosed_at: '2026-02-01T10:00:00Z',
-          pdf_url: 'https://example.com/test.pdf',
-        }];
-        if (date === '2026-02-02') return [];
-        if (date === '2026-02-03') return [{
-          company_code: '1003',
-          company_name: 'Test Company',
-          disclosure_type: '決算短信',
-          title: 'Test',
-          disclosed_at: '2026-02-03T10:00:00Z',
-          pdf_url: 'https://example.com/test.pdf',
-        }];
+        if (date === '2026-02-01') {
+          return [
+            {
+              company_code: '1001',
+              company_name: 'Test Company',
+              disclosure_type: '決算短信',
+              title: 'Test',
+              disclosed_at: '2026-02-01T10:00:00Z',
+              pdf_url: 'https://example.com/test.pdf',
+            },
+          ];
+        }
+        if (date === '2026-02-02') {
+          return [];
+        }
+        if (date === '2026-02-03') {
+          return [
+            {
+              company_code: '1003',
+              company_name: 'Test Company',
+              disclosure_type: '決算短信',
+              title: 'Test',
+              disclosed_at: '2026-02-03T10:00:00Z',
+              pdf_url: 'https://example.com/test.pdf',
+            },
+          ];
+        }
         return [];
       });
 
@@ -181,14 +203,16 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-05',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1234',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-05T10:30:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1234',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-05T10:30:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       mockDownloadPdf.mockResolvedValue('2026/02/05/TD20260205001.pdf');
 
@@ -207,14 +231,16 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-05',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1234',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-05T10:30:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1234',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-05T10:30:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       let capturedDisclosureId: string | undefined;
 
@@ -241,14 +267,16 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-05',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1234',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-05T10:30:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1234',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-05T10:30:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       mockDownloadPdf.mockRejectedValue(new Error('PDF download failed'));
 
@@ -268,14 +296,16 @@ describe('Lambda Collector Integration Tests', () => {
         end_date: '2026-02-05',
       };
 
-      mockScrapeTdnetList.mockResolvedValue([{
-        company_code: '1234',
-        company_name: 'Test Company',
-        disclosure_type: '決算短信',
-        title: 'Test',
-        disclosed_at: '2026-02-05T10:30:00Z',
-        pdf_url: 'https://example.com/test.pdf',
-      }]);
+      mockScrapeTdnetList.mockResolvedValue([
+        {
+          company_code: '1234',
+          company_name: 'Test Company',
+          disclosure_type: '決算短信',
+          title: 'Test',
+          disclosed_at: '2026-02-05T10:30:00Z',
+          pdf_url: 'https://example.com/test.pdf',
+        },
+      ]);
 
       mockDownloadPdf.mockResolvedValue('2026/02/05/TD20260205001.pdf');
       mockSaveMetadata.mockRejectedValue(new Error('DynamoDB error'));

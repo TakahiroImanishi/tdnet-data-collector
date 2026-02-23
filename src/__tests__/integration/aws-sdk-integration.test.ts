@@ -4,7 +4,7 @@
  * DynamoDB、S3、CloudWatchとの統合を検証します。
  *
  * Requirements: テスト改善（タスク24）
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
@@ -16,15 +16,8 @@ import {
   QueryCommand,
   BatchWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import {
-  CloudWatchClient,
-  PutMetricDataCommand,
-} from '@aws-sdk/client-cloudwatch';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import {
   setupAllDefaultMocks,
   resetAllMocks,
@@ -206,9 +199,7 @@ describe('AWS SDK統合テスト', () => {
 
       // 検証
       expect(result.UnprocessedItems).toBeDefined();
-      expect(
-        result.UnprocessedItems![process.env.DYNAMODB_TABLE!]
-      ).toHaveLength(1);
+      expect(result.UnprocessedItems![process.env.DYNAMODB_TABLE!]).toHaveLength(1);
     });
   });
 

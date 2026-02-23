@@ -96,7 +96,9 @@ describe('updateExportStatus', () => {
       expect(command.input.ExpressionAttributeValues?.[':status']).toEqual({ S: 'completed' });
       expect(command.input.ExpressionAttributeValues?.[':progress']).toEqual({ N: '100' });
       expect(command.input.ExpressionAttributeValues?.[':s3_key']).toEqual({ S: s3_key });
-      expect(command.input.ExpressionAttributeValues?.[':download_url']).toEqual({ S: download_url });
+      expect(command.input.ExpressionAttributeValues?.[':download_url']).toEqual({
+        S: download_url,
+      });
       expect(command.input.ExpressionAttributeValues?.[':completed_at']).toBeDefined();
       expect(command.input.ExpressionAttributeValues?.[':completed_at'].S).toMatch(
         /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
@@ -234,7 +236,9 @@ describe('updateExportStatus', () => {
 
       // retryWithBackoffのモックを実際の再試行ロジックに置き換え
       const { retryWithBackoff } = jest.requireActual('../../../utils/retry');
-      jest.spyOn(require('../../../utils/retry'), 'retryWithBackoff').mockImplementation(retryWithBackoff);
+      jest
+        .spyOn(require('../../../utils/retry'), 'retryWithBackoff')
+        .mockImplementation(retryWithBackoff);
 
       const error = new Error('ProvisionedThroughputExceededException');
       error.name = 'ProvisionedThroughputExceededException';

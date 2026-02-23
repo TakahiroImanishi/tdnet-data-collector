@@ -14,9 +14,17 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": ["./tsconfig.json", "./tsconfig.test.json"]
   },
   "plugins": ["@typescript-eslint", "prettier"],
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*", "**/*.test.ts", "**/*.spec.ts"],
+      "parserOptions": {
+        "project": "./tsconfig.test.json"
+      }
+    }
+  ],
   "rules": {
     "prettier/prettier": "error",
     "@typescript-eslint/explicit-function-return-type": "warn",
@@ -34,5 +42,5 @@
     "eqeqeq": ["error", "always"],
     "curly": ["error", "all"]
   },
-  "ignorePatterns": ["dist", "node_modules", "cdk.out", "*.js"]
+  "ignorePatterns": ["dist", "node_modules", "cdk.out", "*.js", "scripts/**/*"]
 }

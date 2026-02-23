@@ -116,7 +116,7 @@ describe('DLQ Processor Handler E2E Tests', () => {
       // SNSトピックが存在することを確認
       const listCommand = new ListTopicsCommand({});
       const topics = await snsClient.send(listCommand);
-      const topicExists = topics.Topics?.some(topic => topic.TopicArn === testTopicArn);
+      const topicExists = topics.Topics?.some((topic) => topic.TopicArn === testTopicArn);
       expect(topicExists).toBe(true);
     });
 
@@ -217,10 +217,14 @@ describe('DLQ Processor Handler E2E Tests', () => {
  * モックSQSイベントを作成
  */
 function createMockSQSEvent(
-  messages: Array<{ messageId: string; body: string; attributes?: Partial<import('aws-lambda').SQSRecordAttributes> }>
+  messages: Array<{
+    messageId: string;
+    body: string;
+    attributes?: Partial<import('aws-lambda').SQSRecordAttributes>;
+  }>
 ): SQSEvent {
   return {
-    Records: messages.map(msg => ({
+    Records: messages.map((msg) => ({
       messageId: msg.messageId,
       receiptHandle: `receipt-${msg.messageId}`,
       body: msg.body,

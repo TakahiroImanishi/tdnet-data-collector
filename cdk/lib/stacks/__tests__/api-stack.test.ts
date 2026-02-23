@@ -2,7 +2,7 @@
  * API Stack テスト
  *
  * API Gateway、WAF、API Key、Usage Planの設定を検証します。
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  */
 
@@ -23,7 +23,11 @@ function createApiStack(env: 'prod' | 'local') {
     queryFunction: createMockLambdaFunction(baseStack, 'Query', 'test-query'),
     exportFunction: createMockLambdaFunction(baseStack, 'Export', 'test-export'),
     collectFunction: createMockLambdaFunction(baseStack, 'Collect', 'test-collect'),
-    collectStatusFunction: createMockLambdaFunction(baseStack, 'CollectStatus', 'test-collect-status'),
+    collectStatusFunction: createMockLambdaFunction(
+      baseStack,
+      'CollectStatus',
+      'test-collect-status'
+    ),
     exportStatusFunction: createMockLambdaFunction(baseStack, 'ExportStatus', 'test-export-status'),
     pdfDownloadFunction: createMockLambdaFunction(baseStack, 'PdfDownload', 'test-pdf-download'),
     healthFunction: createMockLambdaFunction(baseStack, 'Health', 'test-health'),
@@ -42,7 +46,7 @@ describe('TdnetApiStack', () => {
   describe('API Gateway', () => {
     it('REST APIが作成されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
         Name: 'tdnet-data-collector-api-prod',
         Description: 'TDnet Data Collector REST API',
@@ -51,7 +55,7 @@ describe('TdnetApiStack', () => {
 
     it('デプロイメント設定が正しい', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::Stage', {
         StageName: 'prod',
         ThrottlingRateLimit: 100,
@@ -68,7 +72,7 @@ describe('TdnetApiStack', () => {
 
     it('CORS設定が有効', () => {
       const { template } = createApiStack('prod');
-      
+
       // OPTIONSメソッドが存在することを確認
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'OPTIONS',
@@ -79,7 +83,7 @@ describe('TdnetApiStack', () => {
   describe('API Key & Usage Plan', () => {
     it('API Keyが作成されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::ApiKey', {
         Name: 'tdnet-api-key-prod',
         Description: 'API Key for TDnet Data Collector',
@@ -89,7 +93,7 @@ describe('TdnetApiStack', () => {
 
     it('Usage Planが作成されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::UsagePlan', {
         UsagePlanName: 'tdnet-usage-plan-prod',
         Description: 'Usage plan for TDnet Data Collector API',
@@ -106,7 +110,7 @@ describe('TdnetApiStack', () => {
 
     it('Usage PlanにAPI Keyが関連付けられている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::UsagePlanKey', {
         KeyType: 'API_KEY',
       });
@@ -116,7 +120,7 @@ describe('TdnetApiStack', () => {
   describe('API Endpoints', () => {
     it('GET /disclosuresエンドポイントが作成されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         ApiKeyRequired: true,
@@ -125,7 +129,7 @@ describe('TdnetApiStack', () => {
 
     it('POST /exportsエンドポイントが作成されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'POST',
         ApiKeyRequired: true,
@@ -134,20 +138,20 @@ describe('TdnetApiStack', () => {
 
     it('GET /healthエンドポイントはAPI Key不要', () => {
       const { template } = createApiStack('prod');
-      
+
       const methods = template.findResources('AWS::ApiGateway::Method', {
         Properties: {
           HttpMethod: 'GET',
           ApiKeyRequired: false,
         },
       });
-      
+
       expect(Object.keys(methods).length).toBeGreaterThan(0);
     });
 
     it('GET /statsエンドポイントはAPI Key必要', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::Method', {
         HttpMethod: 'GET',
         ApiKeyRequired: true,
@@ -158,7 +162,7 @@ describe('TdnetApiStack', () => {
   describe('WAF', () => {
     it('WAF Web ACLが作成されている', () => {
       const { apiStack } = createApiStack('prod');
-      
+
       expect(apiStack.wafConstruct).toBeDefined();
     });
   });
@@ -166,7 +170,7 @@ describe('TdnetApiStack', () => {
   describe('CloudFormation Outputs', () => {
     it('API Endpointが出力されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasOutput('ApiEndpoint', {
         Export: {
           Name: 'TdnetApiEndpoint-prod',
@@ -176,7 +180,7 @@ describe('TdnetApiStack', () => {
 
     it('API Key IDが出力されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasOutput('ApiKeyId', {
         Export: {
           Name: 'TdnetApiKeyId-prod',
@@ -186,7 +190,7 @@ describe('TdnetApiStack', () => {
 
     it('API Key Secret Nameが出力されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasOutput('ApiKeySecretName', {
         Export: {
           Name: 'TdnetApiKeySecretName-prod',
@@ -196,7 +200,7 @@ describe('TdnetApiStack', () => {
 
     it('Regionが出力されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasOutput('Region', {
         Export: {
           Name: 'TdnetRegion-prod',
@@ -206,7 +210,7 @@ describe('TdnetApiStack', () => {
 
     it('Environmentが出力されている', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasOutput('Environment', {
         Export: {
           Name: 'TdnetEnvironment-prod',
@@ -218,7 +222,7 @@ describe('TdnetApiStack', () => {
   describe('タグ付け', () => {
     it('必須タグが設定されている', () => {
       const { apiStack } = createApiStack('prod');
-      
+
       const tags = cdk.Tags.of(apiStack);
       expect(tags).toBeDefined();
     });
@@ -227,7 +231,7 @@ describe('TdnetApiStack', () => {
   describe('環境別設定', () => {
     it('本番環境の設定が正しい', () => {
       const { template } = createApiStack('prod');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
         Name: 'tdnet-data-collector-api-prod',
       });
@@ -235,7 +239,7 @@ describe('TdnetApiStack', () => {
 
     it('ローカル環境の設定が正しい', () => {
       const { template } = createApiStack('local');
-      
+
       template.hasResourceProperties('AWS::ApiGateway::RestApi', {
         Name: 'tdnet-data-collector-api-local',
       });

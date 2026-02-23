@@ -101,15 +101,17 @@ describe('Property 8: 日付範囲の順序性', () => {
   /**
    * 日付文字列生成（YYYY-MM-DD形式）
    */
-  const dateArbitrary = fc.date({
-    min: new Date('2020-01-01'),
-    max: new Date('2025-12-31'),
-  }).map((date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  });
+  const dateArbitrary = fc
+    .date({
+      min: new Date('2020-01-01'),
+      max: new Date('2025-12-31'),
+    })
+    .map((date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    });
 
   it('Property 8.1: 開始日が終了日より後の場合は必ずバリデーションエラー', async () => {
     await fc.assert(

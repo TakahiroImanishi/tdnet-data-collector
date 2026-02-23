@@ -217,9 +217,7 @@ describe('CloudWatch Alarms統合テスト', () => {
         Threshold: 10,
         ActionsEnabled: true,
         AlarmDescription: 'Lambda関数のエラー率が閾値を超えました',
-        AlarmActions: [
-          'arn:aws:sns:ap-northeast-1:123456789012:test-alarm-topic',
-        ],
+        AlarmActions: ['arn:aws:sns:ap-northeast-1:123456789012:test-alarm-topic'],
       });
 
       await expect(client.send(command)).resolves.not.toThrow();

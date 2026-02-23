@@ -43,6 +43,23 @@ interface CacheEntry {
 const cache = new Map<string, CacheEntry>();
 
 /**
+ * AWS SDKエラーの型ガード
+ *
+ * @param error エラーオブジェクト
+ * @returns AWS SDKエラーの場合true
+ */
+function isAwsError(error: unknown): error is { name: string; message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    typeof (error as { name: unknown }).name === 'string' &&
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string'
+  );
+}
+
+/**
  * デフォルトキャッシュTTL（5分）
  */
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -98,30 +115,33 @@ export async function getSecret(
         }
 
         return response.SecretString;
-      } catch (error: any) {
+      } catch (error: unknown) {
         // AWS SDKエラーを適切なエラーに変換
-        if (error.name === 'ResourceNotFoundException') {
+        const errorName = isAwsError(error) ? error.name : 'UnknownError';
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        if (errorName === 'ResourceNotFoundException') {
           throw new Error(`Secret not found: ${secretId}`);
         }
 
-        if (error.name === 'InvalidRequestException') {
+        if (errorName === 'InvalidRequestException') {
           throw new Error(`Invalid request for secret: ${secretId}`);
         }
 
         // ThrottlingException, InternalServiceErrorなどは再試行可能
         if (
-          error.name === 'ThrottlingException' ||
-          error.name === 'InternalServiceError' ||
-          error.name === 'ServiceUnavailableException'
+          errorName === 'ThrottlingException' ||
+          errorName === 'InternalServiceError' ||
+          errorName === 'ServiceUnavailableException'
         ) {
           throw new RetryableError(
-            `Secrets Manager error: ${error.name} - ${error.message}`,
-            error
+            `Secrets Manager error: ${errorName} - ${errorMessage}`,
+            error instanceof Error ? error : new Error(String(error))
           );
         }
 
         // その他のエラー
-        throw new Error(`Failed to get secret ${secretId}: ${error.message}`);
+        throw new Error(`Failed to get secret ${secretId}: ${errorMessage}`);
       }
     },
     {

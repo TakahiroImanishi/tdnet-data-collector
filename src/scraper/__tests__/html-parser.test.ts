@@ -39,7 +39,9 @@ describe('HTML Parser', () => {
       expect(disclosures[0].disclosure_type).toBe('決算短信');
       expect(disclosures[0].title).toBe('2024年3月期 第3四半期決算短信');
       expect(disclosures[0].disclosed_at).toBe('2026-02-13T06:00:00.000Z'); // JST 15:00 → UTC 06:00
-      expect(disclosures[0].pdf_url).toBe('https://www.release.tdnet.info/inbs/140120260213562187.pdf');
+      expect(disclosures[0].pdf_url).toBe(
+        'https://www.release.tdnet.info/inbs/140120260213562187.pdf'
+      );
     });
 
     it('should parse multiple disclosure rows', () => {

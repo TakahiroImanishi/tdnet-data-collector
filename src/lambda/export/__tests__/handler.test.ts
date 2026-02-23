@@ -546,9 +546,9 @@ describe('Lambda Export Handler', () => {
         },
       } as unknown as ExportEvent;
 
-      jest.spyOn(createExportJob, 'createExportJob').mockRejectedValue(
-        new Error('DynamoDB connection failed')
-      );
+      jest
+        .spyOn(createExportJob, 'createExportJob')
+        .mockRejectedValue(new Error('DynamoDB connection failed'));
 
       // Act
       const result = await handler(event, mockContext);

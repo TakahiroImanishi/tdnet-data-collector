@@ -275,6 +275,8 @@ export function validateDisclosureWithZod(data: unknown): DisclosureZod {
  * @param data - バリデーション対象のデータ
  * @returns バリデーション結果
  */
-export function safeValidateDisclosure(data: unknown) {
+export function safeValidateDisclosure(
+  data: unknown
+): z.SafeParseReturnType<unknown, DisclosureZod> {
   return disclosureSchema.safeParse(data);
 }

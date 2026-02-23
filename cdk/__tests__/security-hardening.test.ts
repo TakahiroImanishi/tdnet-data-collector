@@ -1,6 +1,6 @@
 /**
  * セキュリティ強化の検証テスト（タスク21.4）
- * 
+ *
  * このテストは以下を検証します：
  * - タスク21.1: IAMロールが最小権限であること
  * - タスク21.2: S3バケットがパブリックアクセスブロックされていること
@@ -35,7 +35,7 @@ describe('セキュリティ強化テスト', () => {
       // 各Lambda関数のロールを検証
       Object.keys(lambdaRoles).forEach((roleKey) => {
         const role = lambdaRoles[roleKey];
-        
+
         // ManagedPolicyArnsにCloudWatch権限が含まれていないことを確認
         // （カスタムポリシーで制限された権限のみを使用）
         if (role.Properties.ManagedPolicyArns) {
@@ -66,7 +66,8 @@ describe('セキュリティ強化テスト', () => {
           if (
             statement.Action &&
             (statement.Action === 'cloudwatch:PutMetricData' ||
-              (Array.isArray(statement.Action) && statement.Action.includes('cloudwatch:PutMetricData')))
+              (Array.isArray(statement.Action) &&
+                statement.Action.includes('cloudwatch:PutMetricData')))
           ) {
             // 条件が設定されている場合のみカウント
             if (statement.Condition && statement.Condition.StringEquals) {
@@ -104,7 +105,7 @@ describe('セキュリティ強化テスト', () => {
             if (dynamoActions.length > 0) {
               // 広範囲な権限（*）がないことを確認
               expect(dynamoActions).not.toContain('dynamodb:*');
-              
+
               // 特定のリソースに対してのみ権限が付与されていることを確認
               expect(statement.Resource).toBeDefined();
               expect(statement.Resource).not.toBe('*');
@@ -130,7 +131,7 @@ describe('セキュリティ強化テスト', () => {
             if (s3Actions.length > 0) {
               // 広範囲な権限（*）がないことを確認
               expect(s3Actions).not.toContain('s3:*');
-              
+
               // Resourceが定義されていることを確認（*でないことは別途チェック）
               if (statement.Resource) {
                 // リソースが配列の場合、すべての要素が特定のバケットを指していることを確認
@@ -232,11 +233,13 @@ describe('セキュリティ強化テスト', () => {
 
       Object.keys(lambdaFunctions).forEach((functionKey) => {
         const func = lambdaFunctions[functionKey];
-        
+
         // 関数名にrotationが含まれているか確認
-        if (func.Properties.FunctionName && 
-            typeof func.Properties.FunctionName === 'string' &&
-            func.Properties.FunctionName.includes('rotation')) {
+        if (
+          func.Properties.FunctionName &&
+          typeof func.Properties.FunctionName === 'string' &&
+          func.Properties.FunctionName.includes('rotation')
+        ) {
           foundRotationFunction = true;
 
           // タイムアウトが適切に設定されていることを確認
@@ -264,7 +267,7 @@ describe('セキュリティ強化テスト', () => {
         // ローテーション間隔が設定されていることを確認
         expect(schedule.Properties.RotationRules).toBeDefined();
         expect(schedule.Properties.RotationRules.ScheduleExpression).toBeDefined();
-        
+
         // ローテーション間隔が90日であることを確認
         expect(schedule.Properties.RotationRules.ScheduleExpression).toBe('rate(90 days)');
 

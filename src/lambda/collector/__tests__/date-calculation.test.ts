@@ -14,7 +14,7 @@ describe('Date Calculation Functions', () => {
 
       // getYesterday should return 2024-01-15 (JST yesterday)
       // Since we can't directly test the private function, we'll test the behavior through formatDate
-      
+
       // Restore Date
       jest.restoreAllMocks();
     });
@@ -26,7 +26,7 @@ describe('Date Calculation Functions', () => {
       jest.spyOn(global, 'Date').mockImplementation((() => mockNow) as any);
 
       // Test through handler behavior
-      
+
       jest.restoreAllMocks();
     });
   });
@@ -36,13 +36,13 @@ describe('Date Calculation Functions', () => {
       // Create a JST-converted Date (UTC + 9 hours)
       const utcDate = new Date('2024-01-15T01:30:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       // formatDate should extract YYYY-MM-DD from JST date
       const year = jstDate.getUTCFullYear();
       const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
       const day = String(jstDate.getUTCDate()).padStart(2, '0');
       const formatted = `${year}-${month}-${day}`;
-      
+
       expect(formatted).toBe('2024-01-15');
     });
 
@@ -50,12 +50,12 @@ describe('Date Calculation Functions', () => {
       // UTC: 2024-01-31 15:30 → JST: 2024-02-01 00:30
       const utcDate = new Date('2024-01-31T15:30:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       const year = jstDate.getUTCFullYear();
       const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
       const day = String(jstDate.getUTCDate()).padStart(2, '0');
       const formatted = `${year}-${month}-${day}`;
-      
+
       // Should be 2024-02-01 (JST date)
       expect(formatted).toBe('2024-02-01');
     });
@@ -64,12 +64,12 @@ describe('Date Calculation Functions', () => {
       // UTC: 2023-12-31 15:30 → JST: 2024-01-01 00:30
       const utcDate = new Date('2023-12-31T15:30:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       const year = jstDate.getUTCFullYear();
       const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
       const day = String(jstDate.getUTCDate()).padStart(2, '0');
       const formatted = `${year}-${month}-${day}`;
-      
+
       // Should be 2024-01-01 (JST date)
       expect(formatted).toBe('2024-01-01');
     });
@@ -79,7 +79,7 @@ describe('Date Calculation Functions', () => {
     it('should generate correct date range', () => {
       const startDate = '2024-01-15';
       const endDate = '2024-01-17';
-      
+
       const dates: string[] = [];
       const current = new Date(startDate + 'T00:00:00Z');
       const end = new Date(endDate + 'T00:00:00Z');
@@ -91,14 +91,14 @@ describe('Date Calculation Functions', () => {
         dates.push(`${year}-${month}-${day}`);
         current.setUTCDate(current.getUTCDate() + 1);
       }
-      
+
       expect(dates).toEqual(['2024-01-15', '2024-01-16', '2024-01-17']);
     });
 
     it('should handle month boundary correctly', () => {
       const startDate = '2024-01-30';
       const endDate = '2024-02-02';
-      
+
       const dates: string[] = [];
       const current = new Date(startDate + 'T00:00:00Z');
       const end = new Date(endDate + 'T00:00:00Z');
@@ -110,19 +110,14 @@ describe('Date Calculation Functions', () => {
         dates.push(`${year}-${month}-${day}`);
         current.setUTCDate(current.getUTCDate() + 1);
       }
-      
-      expect(dates).toEqual([
-        '2024-01-30',
-        '2024-01-31',
-        '2024-02-01',
-        '2024-02-02',
-      ]);
+
+      expect(dates).toEqual(['2024-01-30', '2024-01-31', '2024-02-01', '2024-02-02']);
     });
 
     it('should handle leap year February correctly', () => {
       const startDate = '2024-02-28';
       const endDate = '2024-03-01';
-      
+
       const dates: string[] = [];
       const current = new Date(startDate + 'T00:00:00Z');
       const end = new Date(endDate + 'T00:00:00Z');
@@ -134,7 +129,7 @@ describe('Date Calculation Functions', () => {
         dates.push(`${year}-${month}-${day}`);
         current.setUTCDate(current.getUTCDate() + 1);
       }
-      
+
       expect(dates).toEqual([
         '2024-02-28',
         '2024-02-29', // Leap year
@@ -145,7 +140,7 @@ describe('Date Calculation Functions', () => {
     it('should handle year boundary correctly', () => {
       const startDate = '2023-12-30';
       const endDate = '2024-01-02';
-      
+
       const dates: string[] = [];
       const current = new Date(startDate + 'T00:00:00Z');
       const end = new Date(endDate + 'T00:00:00Z');
@@ -157,19 +152,14 @@ describe('Date Calculation Functions', () => {
         dates.push(`${year}-${month}-${day}`);
         current.setUTCDate(current.getUTCDate() + 1);
       }
-      
-      expect(dates).toEqual([
-        '2023-12-30',
-        '2023-12-31',
-        '2024-01-01',
-        '2024-01-02',
-      ]);
+
+      expect(dates).toEqual(['2023-12-30', '2023-12-31', '2024-01-01', '2024-01-02']);
     });
 
     it('should handle single day range', () => {
       const startDate = '2024-01-15';
       const endDate = '2024-01-15';
-      
+
       const dates: string[] = [];
       const current = new Date(startDate + 'T00:00:00Z');
       const end = new Date(endDate + 'T00:00:00Z');
@@ -181,7 +171,7 @@ describe('Date Calculation Functions', () => {
         dates.push(`${year}-${month}-${day}`);
         current.setUTCDate(current.getUTCDate() + 1);
       }
-      
+
       expect(dates).toEqual(['2024-01-15']);
     });
   });
@@ -192,7 +182,7 @@ describe('Date Calculation Functions', () => {
       // JST: 2024-02-01 00:30:00+09:00
       const utcDate = new Date('2024-01-31T15:30:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       expect(jstDate.getUTCFullYear()).toBe(2024);
       expect(jstDate.getUTCMonth()).toBe(1); // February (0-indexed)
       expect(jstDate.getUTCDate()).toBe(1);
@@ -203,7 +193,7 @@ describe('Date Calculation Functions', () => {
       // JST: 2024-01-01 00:30:00+09:00
       const utcDate = new Date('2023-12-31T15:30:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       expect(jstDate.getUTCFullYear()).toBe(2024);
       expect(jstDate.getUTCMonth()).toBe(0); // January (0-indexed)
       expect(jstDate.getUTCDate()).toBe(1);
@@ -214,7 +204,7 @@ describe('Date Calculation Functions', () => {
       // JST: 2024-03-01 00:00:00+09:00
       const utcDate = new Date('2024-02-29T15:00:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       expect(jstDate.getUTCFullYear()).toBe(2024);
       expect(jstDate.getUTCMonth()).toBe(2); // March (0-indexed)
       expect(jstDate.getUTCDate()).toBe(1);
@@ -225,7 +215,7 @@ describe('Date Calculation Functions', () => {
       // JST: 2023-03-01 00:00:00+09:00
       const utcDate = new Date('2023-02-28T15:00:00Z');
       const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-      
+
       expect(jstDate.getUTCFullYear()).toBe(2023);
       expect(jstDate.getUTCMonth()).toBe(2); // March (0-indexed)
       expect(jstDate.getUTCDate()).toBe(1);

@@ -2,7 +2,7 @@
  * ExecutionStateTableConstruct テスト
  *
  * Step Functions実行状態管理テーブルの設定を検証します。
- * 
+ *
  * テスト戦略: .kiro/steering/development/testing-strategy.md
  * 関連設計: .kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md
  */
@@ -17,11 +17,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('DynamoDBテーブルが作成される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.resourceCountIs('AWS::DynamoDB::Table', 1);
     });
@@ -29,11 +29,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('テーブル名が正しく設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'ExecutionState_prod',
@@ -43,11 +43,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('環境名がdev時にテーブル名が正しく設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'dev',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TableName: 'ExecutionState_dev',
@@ -59,11 +59,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('execution_idがパーティションキーとして設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         KeySchema: [
@@ -86,11 +86,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('オンデマンド課金が設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         BillingMode: 'PAY_PER_REQUEST',
@@ -102,11 +102,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('AWS管理キーによる暗号化が有効化される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         SSESpecification: {
@@ -120,11 +120,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('TTL属性が設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         TimeToLiveSpecification: {
@@ -139,11 +139,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('ポイントインタイムリカバリが有効化される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::DynamoDB::Table', {
         PointInTimeRecoverySpecification: {
@@ -157,11 +157,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('デフォルトでRETAINポリシーが設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResource('AWS::DynamoDB::Table', {
         DeletionPolicy: 'Retain',
@@ -172,12 +172,12 @@ describe('ExecutionStateTableConstruct', () => {
     it('カスタム削除ポリシーが設定できる', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'dev',
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-      
+
       const template = Template.fromStack(stack);
       template.hasResource('AWS::DynamoDB::Table', {
         DeletionPolicy: 'Delete',
@@ -190,16 +190,16 @@ describe('ExecutionStateTableConstruct', () => {
     it('Purpose タグが設定される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableProps = Object.values(tables)[0] as any;
       const tags = tableProps.Properties.Tags;
-      
+
       expect(tags).toContainEqual({
         Key: 'Purpose',
         Value: 'StepFunctionsExecutionState',
@@ -215,17 +215,17 @@ describe('ExecutionStateTableConstruct', () => {
     it('テーブル名が出力される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       const outputs = template.findOutputs('*');
       const outputKeys = Object.keys(outputs);
-      
+
       // テーブル名の出力が存在することを確認
-      const tableNameOutput = outputKeys.find(key => key.includes('TableName'));
+      const tableNameOutput = outputKeys.find((key) => key.includes('TableName'));
       expect(tableNameOutput).toBeDefined();
       expect(outputs[tableNameOutput!].Export.Name).toBe('ExecutionStateTableName-prod');
     });
@@ -233,17 +233,17 @@ describe('ExecutionStateTableConstruct', () => {
     it('テーブルARNが出力される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       const outputs = template.findOutputs('*');
       const outputKeys = Object.keys(outputs);
-      
+
       // テーブルARNの出力が存在することを確認
-      const tableArnOutput = outputKeys.find(key => key.includes('TableArn'));
+      const tableArnOutput = outputKeys.find((key) => key.includes('TableArn'));
       expect(tableArnOutput).toBeDefined();
       expect(outputs[tableArnOutput!].Export.Name).toBe('ExecutionStateTableArn-prod');
     });
@@ -253,11 +253,11 @@ describe('ExecutionStateTableConstruct', () => {
     it('tableプロパティが公開される', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       const construct = new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       expect(construct.table).toBeDefined();
       expect(construct.table).toBeInstanceOf(dynamodb.Table);
     });
@@ -267,15 +267,15 @@ describe('ExecutionStateTableConstruct', () => {
     it('GSIが作成されない（execution_idで直接アクセス）', () => {
       const app = new cdk.App();
       const stack = new cdk.Stack(app, 'TestStack');
-      
+
       new ExecutionStateTableConstruct(stack, 'ExecutionStateTable', {
         environment: 'prod',
       });
-      
+
       const template = Template.fromStack(stack);
       const tables = template.findResources('AWS::DynamoDB::Table');
       const tableProps = Object.values(tables)[0] as any;
-      
+
       expect(tableProps.Properties.GlobalSecondaryIndexes).toBeUndefined();
     });
   });

@@ -4,12 +4,7 @@
 
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import { mockClient } from 'aws-sdk-client-mock';
-import {
-  sendMetric,
-  sendMetrics,
-  sendErrorMetric,
-  sendSuccessMetric,
-} from '../cloudwatch-metrics';
+import { sendMetric, sendMetrics, sendErrorMetric, sendSuccessMetric } from '../cloudwatch-metrics';
 
 const cloudwatchMock = mockClient(CloudWatchClient);
 
@@ -70,9 +65,7 @@ describe('CloudWatch Metrics', () => {
       cloudwatchMock.on(PutMetricDataCommand).rejects(new Error('CloudWatch error'));
 
       // メトリクス送信失敗でもエラーをスローしない
-      await expect(
-        sendMetric('TestMetric', 100, 'Count')
-      ).resolves.not.toThrow();
+      await expect(sendMetric('TestMetric', 100, 'Count')).resolves.not.toThrow();
     });
   });
 
@@ -126,12 +119,8 @@ describe('CloudWatch Metrics', () => {
       expect(cloudwatchMock.calls()).toHaveLength(1);
       const call = cloudwatchMock.call(0);
       const input = call.args[0].input as any;
-      expect(input.MetricData[0].Dimensions).toEqual([
-        { Name: 'Dimension1', Value: 'Value1' },
-      ]);
-      expect(input.MetricData[1].Dimensions).toEqual([
-        { Name: 'Dimension2', Value: 'Value2' },
-      ]);
+      expect(input.MetricData[0].Dimensions).toEqual([{ Name: 'Dimension1', Value: 'Value1' }]);
+      expect(input.MetricData[1].Dimensions).toEqual([{ Name: 'Dimension2', Value: 'Value2' }]);
     });
   });
 

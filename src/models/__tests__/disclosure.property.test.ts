@@ -118,7 +118,7 @@ describe('Disclosure Property Tests', () => {
           expect(item.disclosed_at.S).toBe(disclosure.disclosed_at);
           expect(item.downloaded_at.S).toBe(disclosure.downloaded_at);
           expect(item.date_partition.S).toBe(disclosure.date_partition);
-          
+
           // オプショナルフィールド
           if (disclosure.pdf_url) {
             expect(item.pdf_url?.S).toBe(disclosure.pdf_url);
@@ -157,7 +157,7 @@ describe('Disclosure Property Tests', () => {
           expect(restored.disclosed_at).toBe(disclosure.disclosed_at);
           expect(restored.downloaded_at).toBe(disclosure.downloaded_at);
           expect(restored.date_partition).toBe(disclosure.date_partition);
-          
+
           // オプショナルフィールド
           if (disclosure.pdf_url) {
             expect(restored.pdf_url).toBe(disclosure.pdf_url);
@@ -251,7 +251,7 @@ describe('Disclosure Property Tests', () => {
             expect(disclosure.disclosed_at).toBe(disclosedAt);
             expect(disclosure.downloaded_at).toBeDefined();
             expect(disclosure.date_partition).toBeDefined();
-            
+
             // オプショナルフィールド
             if (disclosure.pdf_url) {
               expect(disclosure.pdf_url).toBe(pdfUrl);

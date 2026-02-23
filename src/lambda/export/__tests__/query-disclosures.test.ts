@@ -217,7 +217,7 @@ describe('Export Lambda query-disclosures', () => {
 
     it('DynamoDBエラー時の再試行', async () => {
       dynamoMock.reset();
-      
+
       const filter: QueryFilter = {
         start_date: '2024-01-01',
         end_date: '2024-01-31',
@@ -417,7 +417,7 @@ describe('Export Lambda query-disclosures', () => {
 
     it('ページネーション（LastEvaluatedKey）', async () => {
       dynamoMock.reset();
-      
+
       const filter: QueryFilter = {
         start_date: '2024-01-01',
         end_date: '2024-01-31',
@@ -471,7 +471,7 @@ describe('Export Lambda query-disclosures', () => {
 
     it('ProvisionedThroughputExceededExceptionの再試行', async () => {
       dynamoMock.reset();
-      
+
       const filter: QueryFilter = {
         start_date: '2024-01-01',
         end_date: '2024-01-31',
@@ -857,18 +857,69 @@ describe('Export Lambda query-disclosures', () => {
 
     it('各フィールドが個別にnullの場合の変換', async () => {
       dynamoMock.reset();
-      
+
       // 各フィールドを個別にnullにしてテスト
       const testCases = [
-        { field: 'disclosure_id', item: { company_code: { S: '1234' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'company_code', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'company_name', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'disclosure_type', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'title', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'pdf_url', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'pdf_s3_key', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'downloaded_at', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
-        { field: 'date_partition', item: { disclosure_id: { S: 'TD001' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any },
+        {
+          field: 'disclosure_id',
+          item: { company_code: { S: '1234' }, disclosed_at: { S: '2024-01-15T10:00:00Z' } } as any,
+        },
+        {
+          field: 'company_code',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'company_name',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'disclosure_type',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'title',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'pdf_url',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'pdf_s3_key',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'downloaded_at',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
+        {
+          field: 'date_partition',
+          item: {
+            disclosure_id: { S: 'TD001' },
+            disclosed_at: { S: '2024-01-15T10:00:00Z' },
+          } as any,
+        },
       ];
 
       for (const testCase of testCases) {

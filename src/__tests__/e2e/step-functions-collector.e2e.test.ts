@@ -14,11 +14,7 @@ import {
   ExecutionStatus,
 } from '@aws-sdk/client-sfn';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-  GetCommand,
-  QueryCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
 // LocalStack環境設定
@@ -67,7 +63,8 @@ const s3Client = new S3Client({
 });
 
 describe('Step Functions Collector E2E Tests', () => {
-  const stateMachineArn = process.env.STATE_MACHINE_ARN || 
+  const stateMachineArn =
+    process.env.STATE_MACHINE_ARN ||
     'arn:aws:states:ap-northeast-1:000000000000:stateMachine:TDnetCollectorStateMachine';
   const executionsTableName = process.env.EXECUTION_STATE_TABLE || 'tdnet_executions';
   const disclosuresTableName = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
@@ -82,23 +79,23 @@ describe('Step Functions Collector E2E Tests', () => {
     pollInterval: number = 2000
   ): Promise<ExecutionStatus> => {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < maxWaitTime) {
-      const response = await sfnClient.send(
-        new DescribeExecutionCommand({ executionArn })
-      );
-      
+      const response = await sfnClient.send(new DescribeExecutionCommand({ executionArn }));
+
       const status = response.status;
-      if (status === ExecutionStatus.SUCCEEDED || 
-          status === ExecutionStatus.FAILED || 
-          status === ExecutionStatus.TIMED_OUT ||
-          status === ExecutionStatus.ABORTED) {
+      if (
+        status === ExecutionStatus.SUCCEEDED ||
+        status === ExecutionStatus.FAILED ||
+        status === ExecutionStatus.TIMED_OUT ||
+        status === ExecutionStatus.ABORTED
+      ) {
         return status;
       }
-      
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
-    
+
     throw new Error(`Execution did not complete within ${maxWaitTime}ms`);
   };
 
@@ -232,21 +229,23 @@ describe('Step Functions Collector E2E Tests', () => {
 
       // Act & Assert
       await expect(
-        sfnClient.send(
-          new StartExecutionCommand({
-            stateMachineArn,
-            input: JSON.stringify(input),
+        sfnClient
+          .send(
+            new StartExecutionCommand({
+              stateMachineArn,
+              input: JSON.stringify(input),
+            })
+          )
+          .then(async (response) => {
+            const executionArn = response.executionArn!;
+            const finalStatus = await waitForExecution(executionArn);
+
+            if (finalStatus !== ExecutionStatus.FAILED) {
+              throw new Error(`Expected FAILED status, got ${finalStatus}`);
+            }
+
+            return finalStatus;
           })
-        ).then(async (response) => {
-          const executionArn = response.executionArn!;
-          const finalStatus = await waitForExecution(executionArn);
-          
-          if (finalStatus !== ExecutionStatus.FAILED) {
-            throw new Error(`Expected FAILED status, got ${finalStatus}`);
-          }
-          
-          return finalStatus;
-        })
       ).resolves.toBe(ExecutionStatus.FAILED);
     }, 90000);
 
@@ -259,21 +258,23 @@ describe('Step Functions Collector E2E Tests', () => {
 
       // Act & Assert
       await expect(
-        sfnClient.send(
-          new StartExecutionCommand({
-            stateMachineArn,
-            input: JSON.stringify(input),
+        sfnClient
+          .send(
+            new StartExecutionCommand({
+              stateMachineArn,
+              input: JSON.stringify(input),
+            })
+          )
+          .then(async (response) => {
+            const executionArn = response.executionArn!;
+            const finalStatus = await waitForExecution(executionArn);
+
+            if (finalStatus !== ExecutionStatus.FAILED) {
+              throw new Error(`Expected FAILED status, got ${finalStatus}`);
+            }
+
+            return finalStatus;
           })
-        ).then(async (response) => {
-          const executionArn = response.executionArn!;
-          const finalStatus = await waitForExecution(executionArn);
-          
-          if (finalStatus !== ExecutionStatus.FAILED) {
-            throw new Error(`Expected FAILED status, got ${finalStatus}`);
-          }
-          
-          return finalStatus;
-        })
       ).resolves.toBe(ExecutionStatus.FAILED);
     }, 90000);
   });
@@ -336,7 +337,7 @@ describe('Step Functions Collector E2E Tests', () => {
       const executionId = executionArn.split(':').pop()!;
 
       // 少し待機してから実行状態を確認
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const executionState = await docClient.send(
         new GetCommand({

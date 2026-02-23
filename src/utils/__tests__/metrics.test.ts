@@ -22,7 +22,7 @@ import { ValidationError, RetryableError } from '../../errors';
 // AWS SDK v3のモック
 jest.mock('@aws-sdk/client-cloudwatch', () => {
   const mockSend = jest.fn().mockResolvedValue({});
-  
+
   return {
     CloudWatchClient: jest.fn(() => ({
       send: mockSend,
@@ -42,7 +42,7 @@ describe('CloudWatch Metrics', () => {
 
       const { CloudWatchClient, PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
       const mockClient = new CloudWatchClient();
-      
+
       expect(mockClient.send).toHaveBeenCalledTimes(1);
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -64,7 +64,7 @@ describe('CloudWatch Metrics', () => {
       });
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           Namespace: 'CustomNamespace',
@@ -81,7 +81,7 @@ describe('CloudWatch Metrics', () => {
       });
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -102,7 +102,7 @@ describe('CloudWatch Metrics', () => {
       });
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -128,20 +128,18 @@ describe('CloudWatch Metrics', () => {
   describe('sendErrorMetric', () => {
     it('should send error metric with error type', async () => {
       const error = new ValidationError('Invalid input');
-      
+
       await sendErrorMetric(error);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
               MetricName: 'LambdaError',
               Value: 1,
-              Dimensions: [
-                { Name: 'ErrorType', Value: 'ValidationError' },
-              ],
+              Dimensions: [{ Name: 'ErrorType', Value: 'ValidationError' }],
             }),
           ]),
         })
@@ -150,11 +148,11 @@ describe('CloudWatch Metrics', () => {
 
     it('should send error metric with function name', async () => {
       const error = new RetryableError('Network error');
-      
+
       await sendErrorMetric(error, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -171,18 +169,16 @@ describe('CloudWatch Metrics', () => {
 
     it('should handle standard Error objects', async () => {
       const error = new Error('Standard error');
-      
+
       await sendErrorMetric(error);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
-              Dimensions: [
-                { Name: 'ErrorType', Value: 'Error' },
-              ],
+              Dimensions: [{ Name: 'ErrorType', Value: 'Error' }],
             }),
           ]),
         })
@@ -195,7 +191,7 @@ describe('CloudWatch Metrics', () => {
       await sendSuccessMetric();
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -213,14 +209,12 @@ describe('CloudWatch Metrics', () => {
       await sendSuccessMetric('CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
-              Dimensions: [
-                { Name: 'FunctionName', Value: 'CollectorFunction' },
-              ],
+              Dimensions: [{ Name: 'FunctionName', Value: 'CollectorFunction' }],
             }),
           ]),
         })
@@ -233,7 +227,7 @@ describe('CloudWatch Metrics', () => {
       await sendExecutionTimeMetric(1234);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -251,14 +245,12 @@ describe('CloudWatch Metrics', () => {
       await sendExecutionTimeMetric(1234, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
-              Dimensions: [
-                { Name: 'FunctionName', Value: 'CollectorFunction' },
-              ],
+              Dimensions: [{ Name: 'FunctionName', Value: 'CollectorFunction' }],
             }),
           ]),
         })
@@ -272,7 +264,7 @@ describe('CloudWatch Metrics', () => {
 
       const { CloudWatchClient } = require('@aws-sdk/client-cloudwatch');
       const mockClient = new CloudWatchClient();
-      
+
       // 2回呼ばれる（success + failed）
       expect(mockClient.send).toHaveBeenCalledTimes(2);
     });
@@ -281,11 +273,11 @@ describe('CloudWatch Metrics', () => {
       await sendBatchResultMetrics(95, 5, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       // BatchSuccessとBatchFailedの両方が送信される
       const calls = PutMetricDataCommand.mock.calls;
       expect(calls.length).toBe(2);
-      
+
       // 各呼び出しにFunctionNameディメンションが含まれる
       calls.forEach((call: any) => {
         expect(call[0].MetricData[0].Dimensions).toContainEqual({
@@ -299,15 +291,15 @@ describe('CloudWatch Metrics', () => {
       await sendBatchResultMetrics(95, 5);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       const calls = PutMetricDataCommand.mock.calls;
-      
+
       // BatchSuccessメトリクス
       const successCall = calls.find(
         (call: any) => call[0].MetricData[0].MetricName === 'BatchSuccess'
       );
       expect(successCall[0].MetricData[0].Value).toBe(95);
-      
+
       // BatchFailedメトリクス
       const failedCall = calls.find(
         (call: any) => call[0].MetricData[0].MetricName === 'BatchFailed'
@@ -321,18 +313,18 @@ describe('CloudWatch Metrics', () => {
       // Lambda実装チェックリストに準拠した実装例
       const mockHandler = async (_event: any, context: any) => {
         const startTime = Date.now();
-        
+
         try {
           // メイン処理（成功）
           await Promise.resolve({ success: true });
-          
+
           // 成功メトリクス送信
           await sendSuccessMetric(context.functionName);
-          
+
           // 実行時間メトリクス送信
           const executionTime = Date.now() - startTime;
           await sendExecutionTimeMetric(executionTime, context.functionName);
-          
+
           return { statusCode: 200, body: JSON.stringify({ success: true }) };
         } catch (error) {
           // エラーメトリクス送信
@@ -350,7 +342,7 @@ describe('CloudWatch Metrics', () => {
 
       const { CloudWatchClient } = require('@aws-sdk/client-cloudwatch');
       const mockClient = new CloudWatchClient();
-      
+
       // 成功メトリクスと実行時間メトリクスが送信される
       expect(mockClient.send).toHaveBeenCalledTimes(2);
     });
@@ -377,7 +369,7 @@ describe('CloudWatch Metrics', () => {
 
       const { CloudWatchClient } = require('@aws-sdk/client-cloudwatch');
       const mockClient = new CloudWatchClient();
-      
+
       expect(mockClient.send).toHaveBeenCalledTimes(2);
     });
   });
@@ -387,7 +379,7 @@ describe('CloudWatch Metrics', () => {
       await sendDisclosuresCollectedMetric(150);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -405,16 +397,14 @@ describe('CloudWatch Metrics', () => {
       await sendDisclosuresCollectedMetric(150, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
               MetricName: 'DisclosuresCollected',
               Value: 150,
-              Dimensions: [
-                { Name: 'FunctionName', Value: 'CollectorFunction' },
-              ],
+              Dimensions: [{ Name: 'FunctionName', Value: 'CollectorFunction' }],
             }),
           ]),
         })
@@ -427,7 +417,7 @@ describe('CloudWatch Metrics', () => {
       await sendDisclosuresFailedMetric(5);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -445,16 +435,14 @@ describe('CloudWatch Metrics', () => {
       await sendDisclosuresFailedMetric(5, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
             expect.objectContaining({
               MetricName: 'DisclosuresFailed',
               Value: 5,
-              Dimensions: [
-                { Name: 'FunctionName', Value: 'CollectorFunction' },
-              ],
+              Dimensions: [{ Name: 'FunctionName', Value: 'CollectorFunction' }],
             }),
           ]),
         })
@@ -467,7 +455,7 @@ describe('CloudWatch Metrics', () => {
       await sendCollectionSuccessRateMetric(96.77);
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -486,7 +474,7 @@ describe('CloudWatch Metrics', () => {
       await sendCollectionSuccessRateMetric(96.77, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -494,9 +482,7 @@ describe('CloudWatch Metrics', () => {
               MetricName: 'CollectionSuccessRate',
               Value: 96.77,
               Unit: 'Count',
-              Dimensions: [
-                { Name: 'FunctionName', Value: 'CollectorFunction' },
-              ],
+              Dimensions: [{ Name: 'FunctionName', Value: 'CollectorFunction' }],
             }),
           ]),
         })
@@ -507,7 +493,7 @@ describe('CloudWatch Metrics', () => {
       await sendCollectionSuccessRateMetric(100, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -523,7 +509,7 @@ describe('CloudWatch Metrics', () => {
       await sendCollectionSuccessRateMetric(0, 'CollectorFunction');
 
       const { PutMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
-      
+
       expect(PutMetricDataCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           MetricData: expect.arrayContaining([
@@ -553,7 +539,7 @@ describe('CloudWatch Metrics', () => {
 
       const { CloudWatchClient } = require('@aws-sdk/client-cloudwatch');
       const mockClient = new CloudWatchClient();
-      
+
       // 3つのメトリクスが送信される
       expect(mockClient.send).toHaveBeenCalledTimes(3);
     });
@@ -562,15 +548,13 @@ describe('CloudWatch Metrics', () => {
       const testCases = [
         { collected: 100, failed: 0, expectedRate: 100 },
         { collected: 95, failed: 5, expectedRate: 95 },
-        { collected: 150, failed: 5, expectedRate: 96.77419354838710 },
+        { collected: 150, failed: 5, expectedRate: 96.7741935483871 },
         { collected: 0, failed: 10, expectedRate: 0 },
       ];
 
       for (const testCase of testCases) {
         const totalCount = testCase.collected + testCase.failed;
-        const successRate = totalCount > 0 
-          ? (testCase.collected / totalCount) * 100 
-          : 0;
+        const successRate = totalCount > 0 ? (testCase.collected / totalCount) * 100 : 0;
 
         expect(successRate).toBeCloseTo(testCase.expectedRate, 2);
       }

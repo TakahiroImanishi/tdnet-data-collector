@@ -1,6 +1,6 @@
 /**
  * Step Functions Collector Construct Unit Tests
- * 
+ *
  * Step Functions Collector Constructの単体テスト。
  * Constructの正常作成、ステートマシン定義、Lambda統合、IAMロール設定を検証。
  */
@@ -161,7 +161,7 @@ describe('StepFunctionsCollector', () => {
 
       // DefinitionStringはFn::Joinで構築されているため、配列として検証
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // タイムアウトが3600秒（1時間）に設定されていることを確認
@@ -191,7 +191,7 @@ describe('StepFunctionsCollector', () => {
 
       // DefinitionStringはFn::Joinで構築されているため、配列として検証
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // 各Lambda関数が定義に含まれていることを確認
@@ -218,7 +218,7 @@ describe('StepFunctionsCollector', () => {
       const definitionString = stateMachine[stateMachineKeys[0]].Properties.DefinitionString;
 
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // Lambda Invoke Taskの設定を確認（ARNは動的に生成されるため、states:::lambda:invokeの部分を確認）
@@ -405,7 +405,7 @@ describe('StepFunctionsCollector', () => {
       const definitionString = stateMachine[stateMachineKeys[0]].Properties.DefinitionString;
 
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // Retry設定が含まれていることを確認
@@ -430,7 +430,7 @@ describe('StepFunctionsCollector', () => {
       const definitionString = stateMachine[stateMachineKeys[0]].Properties.DefinitionString;
 
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // Catch設定が含まれていることを確認
@@ -457,7 +457,7 @@ describe('StepFunctionsCollector', () => {
       const definitionString = stateMachine[stateMachineKeys[0]].Properties.DefinitionString;
 
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // Map状態が含まれていることを確認
@@ -482,7 +482,7 @@ describe('StepFunctionsCollector', () => {
       const definitionString = stateMachine[stateMachineKeys[0]].Properties.DefinitionString;
 
       if (typeof definitionString === 'object' && 'Fn::Join' in definitionString) {
-        const joinParts = (definitionString as any)['Fn::Join'][1];
+        const joinParts = definitionString['Fn::Join'][1];
         const fullDefinition = joinParts.join('');
 
         // MaxConcurrency設定が含まれていることを確認

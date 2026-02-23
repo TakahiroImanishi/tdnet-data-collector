@@ -204,7 +204,7 @@ describe('Logger', () => {
 
     it('should log with context at different log levels', () => {
       const context = { test: 'value' };
-      
+
       logger.debug('Debug message', context);
       logger.info('Info message', context);
       logger.warn('Warn message', context);
@@ -212,7 +212,7 @@ describe('Logger', () => {
 
       const winston = require('winston');
       const mockLogger = winston.createLogger();
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith('Debug message', context);
       expect(mockLogger.info).toHaveBeenCalledWith('Info message', context);
       expect(mockLogger.warn).toHaveBeenCalledWith('Warn message', context);
@@ -227,7 +227,7 @@ describe('Logger', () => {
 
       const winston = require('winston');
       const mockLogger = winston.createLogger();
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith('Debug message', undefined);
       expect(mockLogger.info).toHaveBeenCalledWith('Info message', undefined);
       expect(mockLogger.warn).toHaveBeenCalledWith('Warn message', undefined);
@@ -354,7 +354,7 @@ describe('Structured Logging Format', () => {
     // createLoggerが引数付きで呼ばれていることを確認
     const calls = winston.createLogger.mock.calls;
     expect(calls.length).toBeGreaterThan(0);
-    
+
     // 最初の呼び出しに引数があれば、defaultMetaを確認
     if (calls[0] && calls[0][0]) {
       const createLoggerCall = calls[0][0];
@@ -375,7 +375,7 @@ describe('Structured Logging Format', () => {
     const winston = require('winston');
     const calls = winston.createLogger.mock.calls;
     const lastCall = calls[calls.length - 1];
-    
+
     if (lastCall && lastCall[0]) {
       expect(lastCall[0].level).toBe('debug');
     }
@@ -399,7 +399,7 @@ describe('Structured Logging Format', () => {
     const winston = require('winston');
     const calls = winston.createLogger.mock.calls;
     const lastCall = calls[calls.length - 1];
-    
+
     if (lastCall && lastCall[0]) {
       expect(lastCall[0].level).toBe('info');
     }
@@ -413,7 +413,7 @@ describe('Structured Logging Format', () => {
   it('should use NODE_ENV environment variable when set', () => {
     const originalNodeEnv = process.env.NODE_ENV;
     const originalLambdaFunctionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
-    
+
     // Lambda環境ではない場合のみWinstonが使用される
     delete process.env.AWS_LAMBDA_FUNCTION_NAME;
     process.env.NODE_ENV = 'production';
@@ -424,7 +424,7 @@ describe('Structured Logging Format', () => {
     const winston = require('winston');
     const calls = winston.createLogger.mock.calls;
     const lastCall = calls[calls.length - 1];
-    
+
     if (lastCall && lastCall[0]) {
       expect(lastCall[0].defaultMeta.environment).toBe('production');
     }
@@ -450,7 +450,7 @@ describe('Structured Logging Format', () => {
     const winston = require('winston');
     const calls = winston.createLogger.mock.calls;
     const lastCall = calls[calls.length - 1];
-    
+
     if (lastCall && lastCall[0]) {
       expect(lastCall[0].defaultMeta.environment).toBe('production');
     }
@@ -465,10 +465,10 @@ describe('Structured Logging Format', () => {
     // Winston formatのprintfが空のmetaを正しく処理することを確認
     const winston = require('winston');
     const calls = winston.createLogger.mock.calls;
-    
+
     // createLoggerが呼ばれていることを確認
     expect(calls.length).toBeGreaterThan(0);
-    
+
     // Console transportのformatにprintfが含まれていることを確認
     const lastCall = calls[calls.length - 1];
     if (lastCall && lastCall[0] && lastCall[0].transports) {
@@ -492,7 +492,7 @@ describe('Structured Logging Format', () => {
       disclosure_id: 'TD20240115001',
       company_code: '1234',
     });
-    
+
     expect(resultWithMeta).toContain('Test message');
     expect(resultWithMeta).toContain('disclosure_id');
     expect(resultWithMeta).toContain('TD20240115001');
@@ -503,7 +503,7 @@ describe('Structured Logging Format', () => {
       level: 'info',
       message: 'Test message',
     });
-    
+
     expect(resultWithoutMeta).toContain('Test message');
     expect(resultWithoutMeta).not.toContain('disclosure_id');
   });
@@ -522,7 +522,7 @@ describe('logLambdaError', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       'Lambda execution failed',
       expect.objectContaining({
@@ -553,7 +553,7 @@ describe('logLambdaError', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       'Lambda execution failed',
       expect.objectContaining({
@@ -578,7 +578,7 @@ describe('logLambdaError', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       'Lambda execution failed',
       expect.objectContaining({
@@ -594,7 +594,6 @@ describe('logLambdaError', () => {
   });
 });
 
-
 describe('Logger - エッジケース', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -606,7 +605,7 @@ describe('Logger - エッジケース', () => {
     // モジュールを再読み込みしてWinstonを使用する環境にする
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     logger.info('');
     logger.warn('');
     logger.error('');
@@ -614,7 +613,7 @@ describe('Logger - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith('', undefined);
     expect(mockLogger.warn).toHaveBeenCalledWith('', undefined);
     expect(mockLogger.error).toHaveBeenCalledWith('', undefined);
@@ -624,33 +623,33 @@ describe('Logger - エッジケース', () => {
   it('非常に長いメッセージでもログを記録', () => {
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     const longMessage = 'a'.repeat(10000);
     logger.info(longMessage);
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith(longMessage, undefined);
   });
 
   it('特殊文字を含むメッセージでもログを記録', () => {
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     const specialMessage = 'Test\n\r\t"\'\\message';
     logger.info(specialMessage);
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith(specialMessage, undefined);
   });
 
   it('非常に大きなコンテキストオブジェクトでもログを記録', () => {
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     const largeContext: any = {};
     for (let i = 0; i < 100; i++) {
       largeContext[`key${i}`] = `value${i}`;
@@ -660,14 +659,14 @@ describe('Logger - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith('Large context test', largeContext);
   });
 
   it('ネストされたコンテキストオブジェクトでもログを記録', () => {
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     const nestedContext = {
       level1: {
         level2: {
@@ -682,14 +681,14 @@ describe('Logger - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith('Nested context test', nestedContext);
   });
 
   it('配列を含むコンテキストでもログを記録', () => {
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     const contextWithArray = {
       items: ['item1', 'item2', 'item3'],
       numbers: [1, 2, 3],
@@ -699,14 +698,14 @@ describe('Logger - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith('Array context test', contextWithArray);
   });
 
   it('nullやundefinedを含むコンテキストでもログを記録', () => {
     jest.resetModules();
     const { logger } = require('../logger');
-    
+
     const contextWithNulls = {
       nullValue: null,
       undefinedValue: undefined,
@@ -719,7 +718,7 @@ describe('Logger - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.info).toHaveBeenCalledWith('Null context test', contextWithNulls);
   });
 });
@@ -804,7 +803,7 @@ describe('logLambdaError - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       'Lambda execution failed',
       expect.objectContaining({
@@ -826,7 +825,7 @@ describe('logLambdaError - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       'Lambda execution failed',
       expect.objectContaining({
@@ -852,7 +851,7 @@ describe('logLambdaError - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalled();
   });
 
@@ -864,7 +863,7 @@ describe('logLambdaError - エッジケース', () => {
 
     const winston = require('winston');
     const mockLogger = winston.createLogger();
-    
+
     expect(mockLogger.error).toHaveBeenCalledWith(
       '',
       expect.objectContaining({
@@ -884,7 +883,7 @@ describe('setLogLevel - エッジケース', () => {
   it('同じログレベルを複数回設定しても問題ない', () => {
     jest.resetModules();
     const { setLogLevel, LogLevel } = require('../logger');
-    
+
     setLogLevel(LogLevel.INFO);
     setLogLevel(LogLevel.INFO);
     setLogLevel(LogLevel.INFO);

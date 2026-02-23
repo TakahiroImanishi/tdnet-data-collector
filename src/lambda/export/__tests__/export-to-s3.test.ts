@@ -61,7 +61,7 @@ describe('exportToS3', () => {
       $metadata: { httpStatusCode: 200 },
       ETag: '"mock-etag"',
     });
-    
+
     process.env.EXPORT_BUCKET_NAME = 'test-exports-bucket';
     process.env.AWS_REGION = 'ap-northeast-1';
   });
@@ -76,10 +76,12 @@ describe('exportToS3', () => {
       const s3_key = await exportToS3(export_id, mockDisclosures, format);
 
       // Assert
-      expect(s3_key).toMatch(/^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.json$/);
-      
+      expect(s3_key).toMatch(
+        /^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.json$/
+      );
+
       expect(mockSend).toHaveBeenCalledTimes(1);
-      
+
       const command = mockSend.mock.calls[0][0] as PutObjectCommand;
       expect(command.input.Bucket).toBe('test-exports-bucket');
       expect(command.input.Key).toBe(s3_key);
@@ -118,7 +120,7 @@ describe('exportToS3', () => {
 
       // Assert
       expect(s3_key).toMatch(/^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.csv$/);
-      
+
       const command = mockSend.mock.calls[0][0] as PutObjectCommand;
       expect(command.input.Bucket).toBe('test-exports-bucket');
       expect(command.input.Key).toBe(s3_key);
@@ -243,7 +245,9 @@ describe('exportToS3', () => {
 
       // Assert
       // フォーマット: exports/YYYY/MM/DD/export_id.format
-      expect(s3_key).toMatch(/^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.json$/);
+      expect(s3_key).toMatch(
+        /^exports\/\d{4}\/\d{2}\/\d{2}\/export_\d+_[a-z0-9]+_[a-z0-9]+\.json$/
+      );
     });
   });
 

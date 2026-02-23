@@ -173,11 +173,7 @@ describe('generateMonthRange', () => {
     });
 
     it('連続する3ヶ月の範囲を生成', () => {
-      expect(generateMonthRange('2024-01', '2024-03')).toEqual([
-        '2024-01',
-        '2024-02',
-        '2024-03',
-      ]);
+      expect(generateMonthRange('2024-01', '2024-03')).toEqual(['2024-01', '2024-02', '2024-03']);
     });
 
     it('年をまたぐ範囲を生成', () => {

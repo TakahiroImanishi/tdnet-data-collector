@@ -163,9 +163,7 @@ describe('Lambda Collector-Save Handler', () => {
     });
 
     it('S3アップロードエラー', async () => {
-      (downloadPdfModule.downloadPdf as jest.Mock).mockRejectedValue(
-        new Error('S3 upload failed')
-      );
+      (downloadPdfModule.downloadPdf as jest.Mock).mockRejectedValue(new Error('S3 upload failed'));
 
       const event: SaveEvent = {
         execution_id: 'exec_test_123',
@@ -182,9 +180,7 @@ describe('Lambda Collector-Save Handler', () => {
     });
 
     it('全件失敗', async () => {
-      (downloadPdfModule.downloadPdf as jest.Mock).mockRejectedValue(
-        new Error('Network error')
-      );
+      (downloadPdfModule.downloadPdf as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const event: SaveEvent = {
         execution_id: 'exec_test_123',

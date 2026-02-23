@@ -147,7 +147,7 @@ describe('SecretsManagerConstruct', () => {
 
       // Assert
       const template = Template.fromStack(stack);
-      
+
       // ローテーション関数にシークレット読み取り権限が付与されていることを確認
       template.hasResourceProperties('AWS::IAM::Policy', {
         PolicyDocument: {

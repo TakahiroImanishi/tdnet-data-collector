@@ -75,7 +75,7 @@ describe('Lambda Collector Handler - Improved Tests', () => {
   });
 
   describe('Batch Mode', () => {
-    it('should collect yesterday\'s data in batch mode', async () => {
+    it("should collect yesterday's data in batch mode", async () => {
       const event: CollectorEvent = {
         mode: 'batch',
       };

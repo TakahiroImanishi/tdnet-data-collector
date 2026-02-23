@@ -29,7 +29,7 @@ describe('DLQ Processor Lambda', () => {
     mockSend.mockClear();
     mockSend.mockResolvedValue({});
     resetSNSClient();
-    
+
     process.env.ALERT_TOPIC_ARN = 'arn:aws:sns:ap-northeast-1:123456789012:test-topic';
     process.env.AWS_REGION = 'ap-northeast-1';
   });
@@ -273,7 +273,7 @@ describe('DLQ Processor Lambda', () => {
       // Arrange
       // beforeEachでresetSNSClient()が呼ばれるため、
       // このテストではresetせずにSNSクライアントの再利用をテストする
-      
+
       // 最初のhandler呼び出しでSNSクライアントを初期化
       const firstEvent: SQSEvent = {
         Records: [
@@ -611,7 +611,7 @@ describe('DLQ Processor Lambda - SNSクライアント再利用', () => {
     mockSend.mockClear();
     mockSend.mockResolvedValue({});
     // resetSNSClient()を呼ばない - これによりSNSクライアントが再利用される
-    
+
     process.env.ALERT_TOPIC_ARN = 'arn:aws:sns:ap-northeast-1:123456789012:test-topic';
     process.env.AWS_REGION = 'ap-northeast-1';
   });

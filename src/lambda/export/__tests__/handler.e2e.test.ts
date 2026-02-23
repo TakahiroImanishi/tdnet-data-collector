@@ -442,10 +442,7 @@ describe('Lambda Export Handler E2E Tests - Property 9: API Key Authentication',
 
     it('有効なAPIキーでもリクエストボディが空の場合は400エラーを返す', async () => {
       // Arrange
-      const event = createMockExportEvent(
-        { 'x-api-key': 'test-api-key-e2e-export' },
-        ''
-      );
+      const event = createMockExportEvent({ 'x-api-key': 'test-api-key-e2e-export' }, '');
 
       // Act
       const result = await handler(event, mockContext);
