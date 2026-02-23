@@ -16,14 +16,14 @@ describe('PDF File Validation', () => {
   describe('Property 6: PDFファイルの整合性 - サイズ範囲', () => {
     it('should accept valid PDF files within size range (10KB)', () => {
       // 有効なPDFファイル（最小サイズ）
-      const minValidPdf = Buffer.alloc(10 * 1024);
+      const minValidPdf = Buffer.alloc(MIN_PDF_SIZE);
       minValidPdf.write('%PDF-1.4');
       expect(() => validatePdfFile(minValidPdf)).not.toThrow();
     });
 
     it('should accept valid PDF files within size range (50MB)', () => {
       // 有効なPDFファイル（最大サイズ）
-      const maxValidPdf = Buffer.alloc(50 * 1024 * 1024);
+      const maxValidPdf = Buffer.alloc(MAX_PDF_SIZE);
       maxValidPdf.write('%PDF-1.4');
       expect(() => validatePdfFile(maxValidPdf)).not.toThrow();
     });
@@ -52,38 +52,38 @@ describe('PDF File Validation', () => {
 
   describe('Property 6: PDFヘッダー検証', () => {
     it('should accept PDF files with valid header (%PDF-1.4)', () => {
-      const validPdf = Buffer.alloc(10 * 1024);
+      const validPdf = Buffer.alloc(MIN_PDF_SIZE);
       validPdf.write('%PDF-1.4');
       expect(() => validatePdfFile(validPdf)).not.toThrow();
     });
 
     it('should accept PDF files with valid header (%PDF-1.5)', () => {
-      const validPdf = Buffer.alloc(10 * 1024);
+      const validPdf = Buffer.alloc(MIN_PDF_SIZE);
       validPdf.write('%PDF-1.5');
       expect(() => validatePdfFile(validPdf)).not.toThrow();
     });
 
     it('should accept PDF files with valid header (%PDF-1.7)', () => {
-      const validPdf = Buffer.alloc(10 * 1024);
+      const validPdf = Buffer.alloc(MIN_PDF_SIZE);
       validPdf.write('%PDF-1.7');
       expect(() => validatePdfFile(validPdf)).not.toThrow();
     });
 
     it('should reject files with invalid header', () => {
-      const invalidPdf = Buffer.alloc(10 * 1024);
+      const invalidPdf = Buffer.alloc(MIN_PDF_SIZE);
       invalidPdf.write('INVALID');
       expect(() => validatePdfFile(invalidPdf)).toThrow(ValidationError);
       expect(() => validatePdfFile(invalidPdf)).toThrow(/Invalid PDF header/);
     });
 
     it('should reject files with empty header', () => {
-      const emptyPdf = Buffer.alloc(10 * 1024);
+      const emptyPdf = Buffer.alloc(MIN_PDF_SIZE);
       expect(() => validatePdfFile(emptyPdf)).toThrow(ValidationError);
       expect(() => validatePdfFile(emptyPdf)).toThrow(/Invalid PDF header/);
     });
 
     it('should reject files with partial PDF header', () => {
-      const partialPdf = Buffer.alloc(10 * 1024);
+      const partialPdf = Buffer.alloc(MIN_PDF_SIZE);
       partialPdf.write('%PDF');
       expect(() => validatePdfFile(partialPdf)).toThrow(ValidationError);
       expect(() => validatePdfFile(partialPdf)).toThrow(/Invalid PDF header/);
@@ -92,21 +92,21 @@ describe('PDF File Validation', () => {
 
   describe('Edge Cases', () => {
     it('should reject files at exactly 10KB boundary without valid header', () => {
-      const boundaryPdf = Buffer.alloc(10 * 1024);
+      const boundaryPdf = Buffer.alloc(MIN_PDF_SIZE);
       boundaryPdf.write('NOTPDF');
       expect(() => validatePdfFile(boundaryPdf)).toThrow(ValidationError);
       expect(() => validatePdfFile(boundaryPdf)).toThrow(/Invalid PDF header/);
     });
 
     it('should reject files at exactly 50MB boundary without valid header', () => {
-      const boundaryPdf = Buffer.alloc(50 * 1024 * 1024);
+      const boundaryPdf = Buffer.alloc(MAX_PDF_SIZE);
       boundaryPdf.write('NOTPDF');
       expect(() => validatePdfFile(boundaryPdf)).toThrow(ValidationError);
       expect(() => validatePdfFile(boundaryPdf)).toThrow(/Invalid PDF header/);
     });
 
     it('should handle files with exactly 5 bytes (minimum for header check)', () => {
-      const minHeaderPdf = Buffer.alloc(10 * 1024);
+      const minHeaderPdf = Buffer.alloc(MIN_PDF_SIZE);
       minHeaderPdf.write('%PDF-');
       expect(() => validatePdfFile(minHeaderPdf)).not.toThrow();
     });

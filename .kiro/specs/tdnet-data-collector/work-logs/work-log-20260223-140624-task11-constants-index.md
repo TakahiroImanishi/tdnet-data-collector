@@ -123,3 +123,54 @@ npm test -- src/validators/__tests__/disclosure-schema.test.ts
 - タスク8-10（定数ファイル作成）は既に完了していました
 - 既存のテスト失敗（disclosure.test.ts）は定数ファイルとは無関係の既存問題です
 
+
+### 7. ファイルエンコーディング確認
+
+```powershell
+# 作成・編集したファイルのBOM確認
+$files = @(
+    "src/constants/index.ts",
+    "src/scraper/pdf-downloader.ts",
+    "src/models/disclosure.ts",
+    "src/validators/disclosure-schema.ts"
+)
+
+foreach ($file in $files) {
+    $bytes = [System.IO.File]::ReadAllBytes($file)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        Write-Host "BOM detected: $file"
+    } else {
+        Write-Host "No BOM (OK): $file"
+    }
+}
+```
+
+**結果**: ✅ すべてのファイルがUTF-8 BOMなし
+
+### 8. Git Commit
+
+```powershell
+git add -A
+git commit -m "[feat] タスク11完了: 定数エクスポートファイル作成とインポート文簡略化"
+```
+
+**結果**: ✅ コミット成功（00abcf9）
+
+---
+
+## 完了
+
+タスク11「定数エクスポートファイル作成」が正常に完了しました。
+
+### 実装サマリー
+
+1. **定数エクスポートファイル作成**: `src/constants/index.ts`
+2. **インポート文簡略化**: 3ファイル修正
+3. **テスト検証**: TypeScriptコンパイル成功、55ユニットテスト成功
+4. **エンコーディング確認**: すべてUTF-8 BOMなし
+5. **Git管理**: コミット完了
+
+### 次のステップ
+
+タスク12「ドキュメント更新（定数管理）」を実行してください。
+
