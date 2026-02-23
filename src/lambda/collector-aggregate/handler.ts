@@ -29,16 +29,17 @@ export interface AggregateEvent {
   /** 実行ID */
   execution_id: string;
 
-  /** 各日付の実行結果 */
+  /** Map状態の実行結果（Step Functionsから渡される） */
   results: Array<{
-    /** 日付（YYYY-MM-DD） */
-    date: string;
-
-    /** 成功件数 */
-    success_count: number;
-
-    /** 失敗件数 */
-    failed_count: number;
+    /** Save結果 */
+    saveResult?: {
+      /** ページ番号（日付文字列） */
+      page_number: string;
+      /** 保存成功件数 */
+      saved_count: number;
+      /** 保存失敗件数 */
+      failed_count: number;
+    };
   }>;
 }
 
@@ -102,6 +103,9 @@ export async function handler(
     const success_rate = totalCount > 0 
       ? (total_collected / totalCount) * 100 
       : 0;
+    
+    // NaN防止: success_rateが有効な数値であることを確認
+    const validSuccessRate = Number.isFinite(success_rate) ? success_rate : 0;
 
     // ステータスの決定
     let status: 'success' | 'partial_success' | 'failed';
@@ -118,7 +122,7 @@ export async function handler(
       status,
       total_collected,
       total_failed,
-      success_rate: success_rate.toFixed(2),
+      success_rate: validSuccessRate.toFixed(2),
     });
 
     // 実行状態の更新（completed/failed）
@@ -138,7 +142,7 @@ export async function handler(
       status,
       total_collected,
       total_failed,
-      success_rate: success_rate.toFixed(2),
+      success_rate: validSuccessRate.toFixed(2),
       duration_ms: duration,
     });
 
@@ -146,7 +150,7 @@ export async function handler(
     await sendCloudWatchMetrics(
       total_collected,
       total_failed,
-      success_rate,
+      validSuccessRate,
       duration,
       context.functionName
     );
@@ -156,7 +160,7 @@ export async function handler(
       status,
       total_collected,
       total_failed,
-      success_rate,
+      success_rate: validSuccessRate,
     };
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -202,30 +206,49 @@ export async function handler(
 /**
  * 実行結果の集約
  *
- * @param results 各日付の実行結果
+ * Step FunctionsのMap状態から渡される結果を集約します。
+ * Map状態の各要素は`saveResult`を含むオブジェクトです。
+ *
+ * @param results Map状態の実行結果
  * @returns 集約結果
  */
 function aggregateResults(
   results: Array<{
-    date: string;
-    success_count: number;
-    failed_count: number;
+    saveResult?: {
+      page_number: string;
+      saved_count: number;
+      failed_count: number;
+    };
   }>
 ): { total_collected: number; total_failed: number } {
   let total_collected = 0;
   let total_failed = 0;
 
   for (const result of results) {
-    total_collected += result.success_count;
-    total_failed += result.failed_count;
+    // saveResultが存在する場合のみ集約（失敗したページはsaveResultがない）
+    if (result.saveResult) {
+      const saved_count = Number.isFinite(result.saveResult.saved_count) 
+        ? result.saveResult.saved_count 
+        : 0;
+      const failed_count = Number.isFinite(result.saveResult.failed_count) 
+        ? result.saveResult.failed_count 
+        : 0;
 
-    logger.debug('Aggregating result', {
-      date: result.date,
-      success_count: result.success_count,
-      failed_count: result.failed_count,
-      running_total_collected: total_collected,
-      running_total_failed: total_failed,
-    });
+      total_collected += saved_count;
+      total_failed += failed_count;
+
+      logger.debug('Aggregating result', {
+        page_number: result.saveResult.page_number,
+        saved_count,
+        failed_count,
+        running_total_collected: total_collected,
+        running_total_failed: total_failed,
+      });
+    } else {
+      logger.warn('Result without saveResult (page failed)', {
+        result,
+      });
+    }
   }
 
   return { total_collected, total_failed };

@@ -77,8 +77,8 @@ describe('Lambda Collector Aggregate Handler', () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_001',
         results: [
-          { date: '2024-01-15', success_count: 100, failed_count: 0 },
-          { date: '2024-01-16', success_count: 150, failed_count: 0 },
+          { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
+          { saveResult: { page_number: '2024-01-16', saved_count: 150, failed_count: 0 } },
         ],
       };
 
@@ -121,8 +121,8 @@ describe('Lambda Collector Aggregate Handler', () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_002',
         results: [
-          { date: '2024-01-15', success_count: 95, failed_count: 5 },
-          { date: '2024-01-16', success_count: 148, failed_count: 2 },
+          { saveResult: { page_number: '2024-01-15', saved_count: 95, failed_count: 5 } },
+          { saveResult: { page_number: '2024-01-16', saved_count: 148, failed_count: 2 } },
         ],
       };
 
@@ -165,8 +165,8 @@ describe('Lambda Collector Aggregate Handler', () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_003',
         results: [
-          { date: '2024-01-15', success_count: 0, failed_count: 100 },
-          { date: '2024-01-16', success_count: 0, failed_count: 150 },
+          { saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 100 } },
+          { saveResult: { page_number: '2024-01-16', saved_count: 0, failed_count: 150 } },
         ],
       };
 
@@ -231,6 +231,42 @@ describe('Lambda Collector Aggregate Handler', () => {
         undefined
       );
     });
+
+    test('success_rateがNaNにならないことを確認', async () => {
+      const event: AggregateEvent = {
+        execution_id: 'exec_test_009',
+        results: [
+          { saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 0 } },
+        ],
+      };
+
+      const response: AggregateResponse = await handler(event, mockContext);
+
+      expect(response.success_rate).toBe(0);
+      expect(Number.isFinite(response.success_rate)).toBe(true);
+      expect(Number.isNaN(response.success_rate)).toBe(false);
+    });
+
+    test('saveResultがないページを無視する', async () => {
+      const event: AggregateEvent = {
+        execution_id: 'exec_test_010',
+        results: [
+          { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
+          {}, // saveResultなし（ページ失敗）
+          { saveResult: { page_number: '2024-01-17', saved_count: 50, failed_count: 5 } },
+        ],
+      };
+
+      const response: AggregateResponse = await handler(event, mockContext);
+
+      expect(response).toEqual({
+        execution_id: 'exec_test_010',
+        status: 'partial_success',
+        total_collected: 150,
+        total_failed: 5,
+        success_rate: 96.77419354838710,
+      });
+    });
   });
 
   describe('異常系', () => {
@@ -267,7 +303,7 @@ describe('Lambda Collector Aggregate Handler', () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_006',
         results: [
-          { date: '2024-01-15', success_count: 100, failed_count: 0 },
+          { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
         ],
       };
 
@@ -304,9 +340,11 @@ describe('Lambda Collector Aggregate Handler', () => {
       const results = [];
       for (let i = 0; i < 100; i++) {
         results.push({
-          date: `2024-01-${String(i + 1).padStart(2, '0')}`,
-          success_count: 100,
-          failed_count: 5,
+          saveResult: {
+            page_number: `2024-01-${String(i + 1).padStart(2, '0')}`,
+            saved_count: 100,
+            failed_count: 5,
+          },
         });
       }
 
@@ -328,7 +366,7 @@ describe('Lambda Collector Aggregate Handler', () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_008',
         results: [
-          { date: '2024-01-15', success_count: 97, failed_count: 3 },
+          { saveResult: { page_number: '2024-01-15', saved_count: 97, failed_count: 3 } },
         ],
       };
 
