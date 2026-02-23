@@ -103,6 +103,10 @@ tdnet-data-collector/
 │   │   └── api/                  # API関連Lambda
 │   │       ├── pdf-download/     # PDF署名付きURL生成Lambda
 │   │       └── export-status/    # エクスポート状態取得Lambda
+│   ├── constants/                # 定数定義（ハードコーディング回避）
+│   │   ├── file-limits.ts        # ファイルサイズ制限
+│   │   ├── http-config.ts        # HTTP設定（タイムアウト、User-Agent）
+│   │   └── rate-limits.ts        # レート制限設定
 │   ├── validators/               # バリデーション
 │   │   └── disclosure-schema.ts  # Zodスキーマ定義
 │   ├── models/                   # データモデル
@@ -201,6 +205,53 @@ cp .env.example .env.production
 | `LOG_LEVEL` | ログレベル | `info` / `debug` / `warn` / `error` |
 
 詳細は [環境変数ガイド](.kiro/steering/infrastructure/environment-variables.md) を参照してください。
+
+### 定数管理
+
+プロジェクトでは、ハードコーディングを避けるために定数を `src/constants/` ディレクトリで一元管理しています。
+
+**定数ファイル**:
+
+| ファイル | 説明 | 主な定数 |
+|---------|------|---------|
+| `file-limits.ts` | ファイルサイズ制限 | `MIN_PDF_SIZE` (10KB), `MAX_PDF_SIZE` (50MB), `MAX_FILE_SIZE` (100MB) |
+| `http-config.ts` | HTTP設定 | `HTTP_TIMEOUT_MS` (30秒), `USER_AGENT_FULL`, `USER_AGENT_SHORT` |
+| `rate-limits.ts` | レート制限設定 | `TDNET_MIN_DELAY_MS` (2秒) |
+
+**使用方法**:
+
+```typescript
+// 定数をインポート
+import { MIN_PDF_SIZE, MAX_PDF_SIZE } from '../constants/file-limits';
+import { HTTP_TIMEOUT_MS, USER_AGENT_FULL } from '../constants/http-config';
+import { TDNET_MIN_DELAY_MS } from '../constants/rate-limits';
+
+// PDFサイズバリデーション
+if (pdfSize < MIN_PDF_SIZE || pdfSize > MAX_PDF_SIZE) {
+  throw new Error('Invalid PDF size');
+}
+
+// HTTPリクエスト設定
+const response = await axios.get(url, {
+  timeout: HTTP_TIMEOUT_MS,
+  headers: { 'User-Agent': USER_AGENT_FULL }
+});
+
+// レート制限
+await rateLimiter.wait(TDNET_MIN_DELAY_MS);
+```
+
+**環境変数による上書き**:
+
+定数は通常変更不要ですが、特別な理由がある場合は環境変数で上書きできます：
+
+```bash
+# .env.local または .env.production
+HTTP_TIMEOUT_MS=60000  # タイムアウトを60秒に延長
+TDNET_MIN_DELAY_MS=5000  # レート制限を5秒に変更
+```
+
+詳細は [実装ルール](.kiro/steering/core/tdnet-implementation-rules.md) を参照してください。
 
 ### APIキーの設定
 

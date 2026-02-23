@@ -78,7 +78,16 @@ Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWat
 
 ## 必須実装ルール
 
-### 1. コスト最適化
+### 1. 定数管理
+- **定数ファイル**: `src/constants/` で一元管理
+  - `file-limits.ts`: ファイルサイズ制限（MIN_PDF_SIZE, MAX_PDF_SIZE, MAX_FILE_SIZE）
+  - `http-config.ts`: HTTP設定（HTTP_TIMEOUT_MS, USER_AGENT_FULL, USER_AGENT_SHORT）
+  - `rate-limits.ts`: レート制限設定（TDNET_MIN_DELAY_MS）
+- **ハードコーディング禁止**: マジックナンバーやハードコーディングされた文字列を使用しない
+- **環境変数による上書き**: 必要に応じて環境変数で定数を上書き可能
+- **ドキュメント化**: 各定数にJSDocコメントで根拠と使用箇所を記載
+
+### 2. コスト最適化
 - AWS無料枠内で運用（Lambda 100万リクエスト/月、DynamoDB 25GB、S3 5GB）
 - Lambda: メモリ128-512MB、タイムアウト最小化
 - DynamoDB: オンデマンド課金、GSI最小限
