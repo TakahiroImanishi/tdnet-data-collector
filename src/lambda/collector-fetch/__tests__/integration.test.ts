@@ -55,7 +55,7 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_integration_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -83,7 +83,7 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
 
       // Assert
       expect(response.execution_id).toBe('exec_integration_123');
-      expect(response.page_number).toBe(1);
+      expect(response.page_number).toBe('2024-01-15');
       expect(response.count).toBe(1);
       expect(Array.isArray(response.items)).toBe(true);
     });
@@ -92,16 +92,16 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       // Arrange
       const event1: FetchEvent = {
         execution_id: 'exec_integration_456',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
 
       const event2: FetchEvent = {
         execution_id: 'exec_integration_456',
-        page_number: 2,
+        page_number: '2024-01-16',
         start_date: '2024-01-15',
-        end_date: '2024-01-15',
+        end_date: '2024-01-16',
       };
 
       mockedAxios.get.mockResolvedValue({

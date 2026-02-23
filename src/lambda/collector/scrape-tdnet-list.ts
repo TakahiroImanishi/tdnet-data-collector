@@ -15,22 +15,14 @@ import { retryWithBackoff } from '../../utils/retry';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendSuccessMetric } from '../../utils/cloudwatch-metrics';
 import { RetryableError, ValidationError } from '../../errors';
+import { HTTP_TIMEOUT_MS, USER_AGENT_FULL } from '../../constants/http-config';
+import { TDNET_MIN_DELAY_MS } from '../../constants/rate-limits';
 
 /**
- * レート制限設定（2秒間隔）
+ * レート制限設定
  * TDnetサーバーへの過度な負荷を防ぐため
  */
-const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
-
-/**
- * HTTPタイムアウト設定（30秒）
- */
-const HTTP_TIMEOUT_MS = 30000;
-
-/**
- * User-Agent設定
- */
-const USER_AGENT = 'TDnet-Data-Collector/1.0 (https://github.com/your-org/tdnet-data-collector)';
+const rateLimiter = new RateLimiter({ minDelayMs: TDNET_MIN_DELAY_MS });
 
 /**
  * 指定日のTDnet開示情報リストを取得（全ページ）
@@ -219,7 +211,7 @@ async function fetchTdnetHtml(date: string, pageNumber: number = 1): Promise<str
         const response = await axios.get(url, {
           timeout: HTTP_TIMEOUT_MS,
           headers: {
-            'User-Agent': USER_AGENT,
+            'User-Agent': USER_AGENT_FULL,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
             'Accept-Encoding': 'gzip, deflate',

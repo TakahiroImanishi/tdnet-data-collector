@@ -88,7 +88,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 1. Collector Function
     this.collectorFunction = new NodejsFunction(this, 'CollectorFunction', {
       functionName: `tdnet-collector-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/collector/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collector.timeout),
@@ -136,7 +136,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 2. Query Function
     this.queryFunction = new NodejsFunction(this, 'QueryFunction', {
       functionName: `tdnet-query-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/query/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.query.timeout),
@@ -177,7 +177,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 3. Export Function
     this.exportFunction = new NodejsFunction(this, 'ExportFunction', {
       functionName: `tdnet-export-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/export/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.export.timeout),
@@ -221,7 +221,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 4. Collect Function
     this.collectFunction = new NodejsFunction(this, 'CollectFunction', {
       functionName: `tdnet-collect-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/collect/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collect.timeout),
@@ -260,7 +260,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 5. Collect Status Function
     this.collectStatusFunction = new NodejsFunction(this, 'CollectStatusFunction', {
       functionName: `tdnet-collect-status-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/collect-status/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.collectStatus.timeout),
@@ -299,7 +299,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 6. Export Status Function
     this.exportStatusFunction = new NodejsFunction(this, 'ExportStatusFunction', {
       functionName: `tdnet-export-status-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/api/export-status/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.exportStatus.timeout),
@@ -338,7 +338,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 7. PDF Download Function
     this.pdfDownloadFunction = new NodejsFunction(this, 'PdfDownloadFunction', {
       functionName: `tdnet-pdf-download-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/api/pdf-download/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.pdfDownload.timeout),
@@ -379,7 +379,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 8. Health Function
     this.healthFunction = new NodejsFunction(this, 'HealthFunction', {
       functionName: `tdnet-health-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/health/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.health.timeout),
@@ -435,7 +435,7 @@ export class TdnetComputeStack extends cdk.Stack {
     // 9. Stats Function
     this.statsFunction = new NodejsFunction(this, 'StatsFunction', {
       functionName: `tdnet-stats-${env}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: envConfig.runtime,
       entry: 'src/lambda/stats/handler.ts',
       handler: 'handler',
       timeout: cdk.Duration.seconds(envConfig.stats.timeout),
@@ -490,14 +490,14 @@ export class TdnetComputeStack extends cdk.Stack {
       // 1. Collector-Init Function
       this.collectorInitFunction = new NodejsFunction(this, 'CollectorInitFunction', {
         functionName: `tdnet-collector-init-${env}`,
-        runtime: lambda.Runtime.NODEJS_20_X,
+        runtime: envConfig.runtime,
         entry: 'src/lambda/collector-init/handler.ts',
         handler: 'handler',
-        timeout: cdk.Duration.seconds(30),
-        memorySize: 256,
+        timeout: cdk.Duration.seconds(envConfig.collectorInit.timeout),
+        memorySize: envConfig.collectorInit.memorySize,
         environment: {
           EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
-          LOG_LEVEL: envConfig.collector.logLevel,
+          LOG_LEVEL: envConfig.collectorInit.logLevel,
           ENVIRONMENT: env,
           NODE_OPTIONS: '--enable-source-maps',
         },
@@ -528,15 +528,15 @@ export class TdnetComputeStack extends cdk.Stack {
       // 2. Collector-Fetch Function
       this.collectorFetchFunction = new NodejsFunction(this, 'CollectorFetchFunction', {
         functionName: `tdnet-collector-fetch-${env}`,
-        runtime: lambda.Runtime.NODEJS_20_X,
+        runtime: envConfig.runtime,
         entry: 'src/lambda/collector-fetch/handler.ts',
         handler: 'handler',
-        timeout: cdk.Duration.seconds(60),
-        memorySize: 256,
+        timeout: cdk.Duration.seconds(envConfig.collectorFetch.timeout),
+        memorySize: envConfig.collectorFetch.memorySize,
         environment: {
           EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
           TDNET_BASE_URL: 'https://www.release.tdnet.info/inbs',
-          LOG_LEVEL: envConfig.collector.logLevel,
+          LOG_LEVEL: envConfig.collectorFetch.logLevel,
           ENVIRONMENT: env,
           NODE_OPTIONS: '--enable-source-maps',
         },
@@ -567,16 +567,16 @@ export class TdnetComputeStack extends cdk.Stack {
       // 3. Collector-Save Function
       this.collectorSaveFunction = new NodejsFunction(this, 'CollectorSaveFunction', {
         functionName: `tdnet-collector-save-${env}`,
-        runtime: lambda.Runtime.NODEJS_20_X,
+        runtime: envConfig.runtime,
         entry: 'src/lambda/collector-save/handler.ts',
         handler: 'handler',
-        timeout: cdk.Duration.seconds(120),
-        memorySize: 512,
+        timeout: cdk.Duration.seconds(envConfig.collectorSave.timeout),
+        memorySize: envConfig.collectorSave.memorySize,
         environment: {
           DYNAMODB_TABLE: props.disclosuresTable.tableName,
           S3_BUCKET: props.pdfsBucket.bucketName,
           EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
-          LOG_LEVEL: envConfig.collector.logLevel,
+          LOG_LEVEL: envConfig.collectorSave.logLevel,
           ENVIRONMENT: env,
           NODE_OPTIONS: '--enable-source-maps',
         },
@@ -610,14 +610,14 @@ export class TdnetComputeStack extends cdk.Stack {
       // 4. Collector-Aggregate Function
       this.collectorAggregateFunction = new NodejsFunction(this, 'CollectorAggregateFunction', {
         functionName: `tdnet-collector-aggregate-${env}`,
-        runtime: lambda.Runtime.NODEJS_20_X,
+        runtime: envConfig.runtime,
         entry: 'src/lambda/collector-aggregate/handler.ts',
         handler: 'handler',
-        timeout: cdk.Duration.seconds(30),
-        memorySize: 256,
+        timeout: cdk.Duration.seconds(envConfig.collectorAggregate.timeout),
+        memorySize: envConfig.collectorAggregate.memorySize,
         environment: {
           EXECUTION_STATE_TABLE: this.executionStateTable.tableName,
-          LOG_LEVEL: envConfig.collector.logLevel,
+          LOG_LEVEL: envConfig.collectorAggregate.logLevel,
           ENVIRONMENT: env,
           NODE_OPTIONS: '--enable-source-maps',
         },

@@ -229,7 +229,7 @@ describe('TdnetComputeStack', () => {
         Environment: {
           Variables: Match.objectLike({
             DYNAMODB_TABLE: Match.anyValue(),
-            EXECUTION_STATE_TABLE: Match.anyValue(),
+            DYNAMODB_EXECUTIONS_TABLE: Match.anyValue(),
             S3_BUCKET: Match.anyValue(),
             TDNET_BASE_URL: 'https://www.release.tdnet.info/inbs',
             ENVIRONMENT: 'prod',
@@ -322,6 +322,15 @@ describe('TdnetComputeStack', () => {
     });
   });
 
+  describe('Runtime設定検証', () => {
+    it('すべてのLambda関数がnodejs20.xを使用している', () => {
+      const functions = prodStack.template.findResources('AWS::Lambda::Function');
+      Object.values(functions).forEach((fn: any) => {
+        expect(fn.Properties.Runtime).toBe('nodejs20.x');
+      });
+    });
+  });
+
   describe('Step Functions統合（enableStepFunctions=true）', () => {
     // Step Functions有効スタックを一度だけ作成
     let stepFunctionsStack: ReturnType<typeof createComputeStack>;
@@ -338,39 +347,41 @@ describe('TdnetComputeStack', () => {
       expect(Object.keys(functions).length).toBeGreaterThanOrEqual(13);
     });
 
-    it('Collector-Init Functionが作成される', () => {
-      stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
-        FunctionName: 'tdnet-collector-init-prod',
-        Runtime: 'nodejs20.x',
-        Timeout: 30,
-        MemorySize: 256,
+    describe('Step Functions Lambda設定検証', () => {
+      it('Collector-Init Functionが正しく設定されている', () => {
+        stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
+          FunctionName: 'tdnet-collector-init-prod',
+          Runtime: 'nodejs20.x',
+          Timeout: 30,
+          MemorySize: 256,
+        });
       });
-    });
 
-    it('Collector-Fetch Functionが作成される', () => {
-      stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
-        FunctionName: 'tdnet-collector-fetch-prod',
-        Runtime: 'nodejs20.x',
-        Timeout: 60,
-        MemorySize: 256,
+      it('Collector-Fetch Functionが正しく設定されている', () => {
+        stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
+          FunctionName: 'tdnet-collector-fetch-prod',
+          Runtime: 'nodejs20.x',
+          Timeout: 60,
+          MemorySize: 256,
+        });
       });
-    });
 
-    it('Collector-Save Functionが作成される', () => {
-      stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
-        FunctionName: 'tdnet-collector-save-prod',
-        Runtime: 'nodejs20.x',
-        Timeout: 120,
-        MemorySize: 512,
+      it('Collector-Save Functionが正しく設定されている', () => {
+        stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
+          FunctionName: 'tdnet-collector-save-prod',
+          Runtime: 'nodejs20.x',
+          Timeout: 120,
+          MemorySize: 512,
+        });
       });
-    });
 
-    it('Collector-Aggregate Functionが作成される', () => {
-      stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
-        FunctionName: 'tdnet-collector-aggregate-prod',
-        Runtime: 'nodejs20.x',
-        Timeout: 30,
-        MemorySize: 256,
+      it('Collector-Aggregate Functionが正しく設定されている', () => {
+        stepFunctionsStack.template.hasResourceProperties('AWS::Lambda::Function', {
+          FunctionName: 'tdnet-collector-aggregate-prod',
+          Runtime: 'nodejs20.x',
+          Timeout: 30,
+          MemorySize: 256,
+        });
       });
     });
 

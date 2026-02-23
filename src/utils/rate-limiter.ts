@@ -10,7 +10,9 @@
  * 
  * @example
  * ```typescript
- * const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
+ * import { TDNET_MIN_DELAY_MS } from '../constants/rate-limits';
+ * 
+ * const rateLimiter = new RateLimiter({ minDelayMs: TDNET_MIN_DELAY_MS });
  * 
  * for (const url of urls) {
  *     await rateLimiter.waitIfNeeded();
@@ -20,6 +22,7 @@
  */
 
 import { logger } from './logger';
+import { TDNET_MIN_DELAY_MS } from '../constants/rate-limits';
 
 /**
  * RateLimiterのオプション
@@ -27,7 +30,7 @@ import { logger } from './logger';
 export interface RateLimiterOptions {
     /**
      * 最小遅延時間（ミリ秒）
-     * @default 2000
+     * @default TDNET_MIN_DELAY_MS (2000ms)
      */
     minDelayMs: number;
 }
@@ -47,7 +50,7 @@ export class RateLimiter {
      * 
      * @param options - レート制限のオプション
      */
-    constructor(options: RateLimiterOptions = { minDelayMs: 2000 }) {
+    constructor(options: RateLimiterOptions = { minDelayMs: TDNET_MIN_DELAY_MS }) {
         this.minDelayMs = options.minDelayMs;
     }
 
@@ -63,7 +66,9 @@ export class RateLimiter {
      * 
      * @example
      * ```typescript
-     * const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
+     * import { TDNET_MIN_DELAY_MS } from '../constants/rate-limits';
+     * 
+     * const rateLimiter = new RateLimiter({ minDelayMs: TDNET_MIN_DELAY_MS });
      * 
      * await rateLimiter.waitIfNeeded(); // 最初のリクエスト（即座に実行）
      * await rateLimiter.waitIfNeeded(); // 2回目のリクエスト（2000ms待機）
@@ -100,7 +105,9 @@ export class RateLimiter {
      * 
      * @example
      * ```typescript
-     * const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
+     * import { TDNET_MIN_DELAY_MS } from '../constants/rate-limits';
+     * 
+     * const rateLimiter = new RateLimiter({ minDelayMs: TDNET_MIN_DELAY_MS });
      * 
      * await rateLimiter.waitIfNeeded(); // 最初のリクエスト
      * rateLimiter.reset(); // リセット

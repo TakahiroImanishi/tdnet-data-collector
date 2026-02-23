@@ -20,6 +20,7 @@ import {
 } from '../disclosure';
 import { Disclosure, DynamoDBItem } from '../../types';
 import { ValidationError } from '../../errors';
+import { MAX_FILE_SIZE } from '../../constants/file-limits';
 
 describe('validateDisclosure', () => {
   const validDisclosure: Disclosure = {
@@ -111,7 +112,6 @@ describe('validateDisclosure', () => {
     });
 
     it('file_sizeが100MBを超える場合はValidationErrorをスロー', () => {
-      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
       const invalid = { ...validDisclosure, file_size: MAX_FILE_SIZE + 1 };
       expect(() => validateDisclosure(invalid)).toThrow(ValidationError);
       expect(() => validateDisclosure(invalid)).toThrow(/Invalid file_size range/);
@@ -130,7 +130,7 @@ describe('validateDisclosure', () => {
       const valid2 = { ...validDisclosure, file_size: 5 * 1024 * 1024 }; // 5MB
       expect(() => validateDisclosure(valid2)).not.toThrow();
 
-      const valid3 = { ...validDisclosure, file_size: 100 * 1024 * 1024 }; // 100MB（境界値）
+      const valid3 = { ...validDisclosure, file_size: MAX_FILE_SIZE }; // 100MB（境界値）
       expect(() => validateDisclosure(valid3)).not.toThrow();
     });
 

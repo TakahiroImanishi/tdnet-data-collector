@@ -1,0 +1,183 @@
+{
+    "events": [
+        {
+            "timestamp": "2026-02-23T13:58:07.157000+09:00",
+            "type": "ExecutionStarted",
+            "id": 1,
+            "previousEventId": 0,
+            "executionStartedEventDetails": {
+                "input": "{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}",
+                "inputDetails": {
+                    "truncated": false
+                },
+                "roleArn": "arn:aws:iam::803879841964:role/TdnetCompute-prod-StepFunctionsCollectorStateMachin-iJMDB6ovshzC"
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:07.194000+09:00",
+            "type": "TaskStateEntered",
+            "id": 2,
+            "previousEventId": 0,
+            "stateEnteredEventDetails": {
+                "name": "Initialize",
+                "input": "{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}",
+                "inputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:07.194000+09:00",
+            "type": "TaskScheduled",
+            "id": 3,
+            "previousEventId": 2,
+            "taskScheduledEventDetails": {
+                "resourceType": "lambda",
+                "resource": "invoke",
+                "region": "ap-northeast-1",
+                "parameters": "{\"FunctionName\":\"arn:aws:lambda:ap-northeast-1:803879841964:function:tdnet-collector-init-prod\",\"Payload\":{\"end_date\":\"2026-02-20\",\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"max_items\":10,\"start_date\":\"2026-02-20\"}}",
+                "timeoutInSeconds": 30
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:07.263000+09:00",
+            "type": "TaskStarted",
+            "id": 4,
+            "previousEventId": 3,
+            "taskStartedEventDetails": {
+                "resourceType": "lambda",
+                "resource": "invoke"
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.686000+09:00",
+            "type": "TaskSucceeded",
+            "id": 5,
+            "previousEventId": 4,
+            "taskSucceededEventDetails": {
+                "resourceType": "lambda",
+                "resource": "invoke",
+                "output": "{\"ExecutedVersion\":\"$LATEST\",\"Payload\":{\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"dates\":[\"2026-02-20\"],\"total_days\":1,\"total_count\":1,\"pages\":[\"2026-02-20\"],\"max_items\":10,\"estimated_total\":200,\"parameters\":{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}},\"SdkHttpMetadata\":{\"AllHttpHeaders\":{\"X-Amz-Executed-Version\":[\"$LATEST\"],\"x-amzn-Remapped-Content-Length\":[\"0\"],\"Connection\":[\"keep-alive\"],\"x-amzn-RequestId\":[\"f1527566-c275-419f-965f-15544294a9f1\"],\"Content-Length\":[\"249\"],\"Date\":[\"Mon, 23 Feb 2026 04:58:09 GMT\"],\"X-Amzn-Trace-Id\":[\"Root=1-699bde5e-593986531bf7858d6f0af2ef;Parent=24b105a5648c5a40;Sampled=1;Lineage=2:690e9069:0\"],\"Content-Type\":[\"application/json\"]},\"HttpHeaders\":{\"Connection\":\"keep-alive\",\"Content-Length\":\"249\",\"Content-Type\":\"application/json\",\"Date\":\"Mon, 23 Feb 2026 04:58:09 GMT\",\"X-Amz-Executed-Version\":\"$LATEST\",\"x-amzn-Remapped-Content-Length\":\"0\",\"x-amzn-RequestId\":\"f1527566-c275-419f-965f-15544294a9f1\",\"X-Amzn-Trace-Id\":\"Root=1-699bde5e-593986531bf7858d6f0af2ef;Parent=24b105a5648c5a40;Sampled=1;Lineage=2:690e9069:0\"},\"HttpStatusCode\":200},\"SdkResponseMetadata\":{\"RequestId\":\"f1527566-c275-419f-965f-15544294a9f1\"},\"StatusCode\":200}",
+                "outputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "TaskStateExited",
+            "id": 6,
+            "previousEventId": 5,
+            "stateExitedEventDetails": {
+                "name": "Initialize",
+                "output": "{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10,\"initResult\":{\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"pages\":[\"2026-02-20\"],\"total_count\":1,\"parameters\":{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}}}",
+                "outputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "ChoiceStateEntered",
+            "id": 7,
+            "previousEventId": 6,
+            "stateEnteredEventDetails": {
+                "name": "CheckTotalCount",
+                "input": "{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10,\"initResult\":{\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"pages\":[\"2026-02-20\"],\"total_count\":1,\"parameters\":{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}}}",
+                "inputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "ChoiceStateExited",
+            "id": 8,
+            "previousEventId": 7,
+            "stateExitedEventDetails": {
+                "name": "CheckTotalCount",
+                "output": "{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10,\"initResult\":{\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"pages\":[\"2026-02-20\"],\"total_count\":1,\"parameters\":{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}}}",
+                "outputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "MapStateEntered",
+            "id": 9,
+            "previousEventId": 8,
+            "stateEnteredEventDetails": {
+                "name": "ProcessPages",
+                "input": "{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10,\"initResult\":{\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"pages\":[\"2026-02-20\"],\"total_count\":1,\"parameters\":{\"start_date\":\"2026-02-20\",\"end_date\":\"2026-02-20\",\"max_items\":10}}}",
+                "inputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "MapStateStarted",
+            "id": 10,
+            "previousEventId": 9,
+            "mapStateStartedEventDetails": {
+                "length": 1
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "MapIterationStarted",
+            "id": 11,
+            "previousEventId": 10,
+            "mapIterationStartedEventDetails": {
+                "name": "ProcessPages",
+                "index": 0
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "TaskStateEntered",
+            "id": 12,
+            "previousEventId": 11,
+            "stateEnteredEventDetails": {
+                "name": "FetchPageData",
+                "input": "{\"end_date\":\"2026-02-20\",\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"page_number\":\"2026-02-20\",\"max_items\":10,\"start_date\":\"2026-02-20\"}",
+                "inputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.724000+09:00",
+            "type": "TaskScheduled",
+            "id": 13,
+            "previousEventId": 12,
+            "taskScheduledEventDetails": {
+                "resourceType": "lambda",
+                "resource": "invoke",
+                "region": "ap-northeast-1",
+                "parameters": "{\"FunctionName\":\"arn:aws:lambda:ap-northeast-1:803879841964:function:tdnet-collector-fetch-prod\",\"Payload\":{\"end_date\":\"2026-02-20\",\"execution_id\":\"0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4\",\"page_number\":\"2026-02-20\",\"max_items\":10,\"start_date\":\"2026-02-20\"}}",
+                "timeoutInSeconds": 60
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:09.792000+09:00",
+            "type": "TaskStarted",
+            "id": 14,
+            "previousEventId": 13,
+            "taskStartedEventDetails": {
+                "resourceType": "lambda",
+                "resource": "invoke"
+            }
+        },
+        {
+            "timestamp": "2026-02-23T13:58:12.722000+09:00",
+            "type": "TaskSucceeded",
+            "id": 15,
+            "previousEventId": 14,
+            "taskSucceededEventDetails": {
+                "resourceType": "lambda",
+                "resource": "invoke",
+
+'cp932' codec can't encode character '\ufffd' in position 197: illegal multibyte sequence
+                "output": 

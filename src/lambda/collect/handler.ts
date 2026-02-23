@@ -27,7 +27,8 @@ const sfnClient = new SFNClient({ region: process.env.AWS_REGION || 'ap-northeas
 
 // 環境変数
 const COLLECTOR_FUNCTION_NAME = process.env.COLLECTOR_FUNCTION_NAME || 'tdnet-collector';
-const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN; // Step Functions ARN（オプション）
+// Step Functions ARN（オプション）- 将来の拡張用に保持
+// const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN;
 
 /**
  * POST /collect リクエストボディ

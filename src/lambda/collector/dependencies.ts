@@ -11,6 +11,7 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { S3Client } from '@aws-sdk/client-s3';
 import { CloudWatchClient } from '@aws-sdk/client-cloudwatch';
 import { RateLimiter } from '../../utils/rate-limiter';
+import { TDNET_MIN_DELAY_MS } from '../../constants/rate-limits';
 
 /**
  * Lambda Collector依存関係
@@ -53,8 +54,8 @@ export function createDefaultDependencies(): CollectorDependencies {
   // CloudWatch Client
   const cloudWatchClient = new CloudWatchClient({ region: 'ap-northeast-1' });
 
-  // Rate Limiter（最小遅延2秒）
-  const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
+  // Rate Limiter
+  const rateLimiter = new RateLimiter({ minDelayMs: TDNET_MIN_DELAY_MS });
 
   return {
     dynamoClient: docClient,

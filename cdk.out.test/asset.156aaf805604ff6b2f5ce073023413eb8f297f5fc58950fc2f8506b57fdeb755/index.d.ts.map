@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../../src/lambda/dlq-processor/index.ts"],"names":[],"mappings":"AAUA,OAAO,EAAE,QAAQ,EAAa,MAAM,YAAY,CAAC;AAiBjD,eAAO,MAAM,OAAO,GAAU,OAAO,QAAQ,KAAG,OAAO,CAAC,IAAI,CAY3D,CAAC;AAmEF,wBAAgB,cAAc,IAAI,IAAI,CAErC"}

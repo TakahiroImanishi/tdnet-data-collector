@@ -10,6 +10,7 @@ import {
   executionStatusSchema,
   queryFilterSchema,
 } from '../disclosure-schema';
+import { MAX_FILE_SIZE } from '../../constants/file-limits';
 import { z } from 'zod';
 
 describe('disclosure-schema', () => {
@@ -139,7 +140,7 @@ describe('disclosure-schema', () => {
       });
 
       it('100MBを超える値を拒否する', () => {
-        const invalid = { ...validDisclosure, file_size: 101 * 1024 * 1024 };
+        const invalid = { ...validDisclosure, file_size: MAX_FILE_SIZE + 1 };
         expect(() => disclosureSchema.parse(invalid)).toThrow(z.ZodError);
       });
 

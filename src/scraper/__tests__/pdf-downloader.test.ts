@@ -7,6 +7,7 @@
 import axios from 'axios';
 import { downloadPdf, validatePdfFile } from '../pdf-downloader';
 import { RetryableError, ValidationError } from '../../errors';
+import { MIN_PDF_SIZE, MAX_PDF_SIZE } from '../../constants/file-limits';
 
 // モック設定
 jest.mock('axios');
@@ -159,7 +160,7 @@ describe('validatePdfFile', () => {
   describe('正常系', () => {
     it('有効なPDFファイルを検証できる（最小サイズ）', () => {
       // Arrange: 10KB（最小サイズ）
-      const buffer = Buffer.from('%PDF-1.4\n' + 'a'.repeat(10 * 1024 - 9));
+      const buffer = Buffer.from('%PDF-1.4\n' + 'a'.repeat(MIN_PDF_SIZE - 9));
 
       // Act & Assert
       expect(() => validatePdfFile(buffer)).not.toThrow();
@@ -167,7 +168,7 @@ describe('validatePdfFile', () => {
 
     it('有効なPDFファイルを検証できる（最大サイズ）', () => {
       // Arrange: 50MB（最大サイズ）
-      const buffer = Buffer.alloc(50 * 1024 * 1024);
+      const buffer = Buffer.alloc(MAX_PDF_SIZE);
       buffer.write('%PDF-1.4\n');
 
       // Act & Assert
@@ -211,7 +212,7 @@ describe('validatePdfFile', () => {
 
     it('ファイルサイズが大きすぎる場合、ValidationError をスローする', () => {
       // Arrange: 51MB（50MB超過）
-      const buffer = Buffer.alloc(51 * 1024 * 1024);
+      const buffer = Buffer.alloc(MAX_PDF_SIZE + 1024 * 1024);
       buffer.write('%PDF-1.4\n');
 
       // Act & Assert
@@ -270,7 +271,7 @@ describe('validatePdfFile', () => {
   describe('エッジケース', () => {
     it('ちょうど10KBのPDFファイルを検証できる', () => {
       // Arrange: 10KB（境界値）
-      const buffer = Buffer.from('%PDF-1.4\n' + 'a'.repeat(10 * 1024 - 9));
+      const buffer = Buffer.from('%PDF-1.4\n' + 'a'.repeat(MIN_PDF_SIZE - 9));
 
       // Act & Assert
       expect(() => validatePdfFile(buffer)).not.toThrow();
@@ -278,7 +279,7 @@ describe('validatePdfFile', () => {
 
     it('ちょうど50MBのPDFファイルを検証できる', () => {
       // Arrange: 50MB（境界値）
-      const buffer = Buffer.alloc(50 * 1024 * 1024);
+      const buffer = Buffer.alloc(MAX_PDF_SIZE);
       buffer.write('%PDF-1.4\n');
 
       // Act & Assert
@@ -287,7 +288,7 @@ describe('validatePdfFile', () => {
 
     it('10KB - 1バイトの場合、ValidationError をスローする', () => {
       // Arrange
-      const buffer = Buffer.from('%PDF-1.4\n' + 'a'.repeat(10 * 1024 - 10));
+      const buffer = Buffer.from('%PDF-1.4\n' + 'a'.repeat(MIN_PDF_SIZE - 10));
 
       // Act & Assert
       expect(() => validatePdfFile(buffer)).toThrow(ValidationError);
@@ -296,7 +297,7 @@ describe('validatePdfFile', () => {
 
     it('50MB + 1バイトの場合、ValidationError をスローする', () => {
       // Arrange
-      const buffer = Buffer.alloc(50 * 1024 * 1024 + 1);
+      const buffer = Buffer.alloc(MAX_PDF_SIZE + 1);
       buffer.write('%PDF-1.4\n');
 
       // Act & Assert

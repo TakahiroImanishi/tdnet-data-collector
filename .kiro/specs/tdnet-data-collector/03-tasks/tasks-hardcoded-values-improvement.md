@@ -363,11 +363,12 @@
 
 ### タスク4: ComputeStack修正（Step Functions Lambda）
 
-**ステータス**: [ ] 未着手
-**担当**: -
+**ステータス**: [x] 完了（2026-02-23）
+**担当**: Kiro AI Assistant
 **期限**: -
 **依存**: タスク3完了後
 **優先度**: 高
+**完了日**: 2026-02-23
 
 #### 作業内容
 
@@ -389,19 +390,24 @@
 
 #### 成果物
 
-- [ ] `cdk/lib/stacks/compute-stack.ts`（修正）
+- [x] `cdk/lib/stacks/compute-stack.ts`（修正）
+- [x] `cdk/lib/stacks/__tests__/compute-stack.test.ts`（テスト修正）
 
 #### テスト
 
-- [ ] ユニットテスト実行成功
-- [ ] CDK synth成功
+- [x] ユニットテスト実行成功（36/36テスト成功）
+- [x] CDK synth成功
 
 #### 完了条件
 
-- [ ] 4関数すべての設定が`envConfig`から取得されている
-- [ ] ハードコード値が削除されている
-- [ ] ユニットテストが成功する
-- [ ] CDK synthが成功する
+- [x] 4関数すべての設定が`envConfig`から取得されている
+- [x] ハードコード値が削除されている
+- [x] ユニットテストが成功する
+- [x] CDK synthが成功する
+
+#### 作業記録
+
+- `work-log-20260223-140603-task4-compute-stack-step-functions.md`
 
 ---
 

@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+import { MAX_FILE_SIZE } from '../constants';
 
 /**
  * ISO 8601形式の日時文字列スキーマ
@@ -119,7 +120,7 @@ const fileSizeSchema = z
   .number()
   .int('ファイルサイズは整数である必要があります')
   .min(0, 'ファイルサイズは0以上である必要があります')
-  .max(100 * 1024 * 1024, 'ファイルサイズは100MB以下である必要があります')
+  .max(MAX_FILE_SIZE, 'ファイルサイズは100MB以下である必要があります')
   .optional();
 
 /**

@@ -10,6 +10,8 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 import { RetryableError, ValidationError } from '../errors';
 import { retryWithBackoff } from '../utils/retry';
+import { HTTP_TIMEOUT_MS, USER_AGENT_SHORT } from '../constants/http-config';
+import { MIN_PDF_SIZE, MAX_PDF_SIZE } from '../constants';
 
 /**
  * PDFファイルをダウンロード
@@ -25,9 +27,9 @@ export async function downloadPdf(url: string): Promise<Buffer> {
       try {
         const response = await axios.get(url, {
           responseType: 'arraybuffer',
-          timeout: 30000, // 30秒タイムアウト
+          timeout: HTTP_TIMEOUT_MS,
           headers: {
-            'User-Agent': 'TDnet-Data-Collector/1.0',
+            'User-Agent': USER_AGENT_SHORT,
           },
         });
 
@@ -71,15 +73,12 @@ export async function downloadPdf(url: string): Promise<Buffer> {
  */
 export function validatePdfFile(buffer: Buffer): void {
   // ファイルサイズチェック（10KB〜50MB）
-  const minSize = 10 * 1024; // 10KB
-  const maxSize = 50 * 1024 * 1024; // 50MB
-
-  if (buffer.length < minSize) {
-    throw new ValidationError(`PDF file too small: ${buffer.length} bytes (min: ${minSize})`);
+  if (buffer.length < MIN_PDF_SIZE) {
+    throw new ValidationError(`PDF file too small: ${buffer.length} bytes (min: ${MIN_PDF_SIZE})`);
   }
 
-  if (buffer.length > maxSize) {
-    throw new ValidationError(`PDF file too large: ${buffer.length} bytes (max: ${maxSize})`);
+  if (buffer.length > MAX_PDF_SIZE) {
+    throw new ValidationError(`PDF file too large: ${buffer.length} bytes (max: ${MAX_PDF_SIZE})`);
   }
 
   // PDFヘッダーチェック（%PDF-で開始）

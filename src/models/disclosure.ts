@@ -10,6 +10,7 @@ import { Disclosure, DynamoDBItem } from '../types';
 import { ValidationError } from '../errors';
 import { generateDatePartition, validateDisclosedAt } from '../utils/date-partition';
 import { generateDisclosureId } from '../utils/disclosure-id';
+import { MAX_FILE_SIZE } from '../constants/file-limits';
 
 // Re-export for convenience
 export { generateDisclosureId };
@@ -85,11 +86,10 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
     }
 
     // 範囲チェック（0以上、100MB以下）
-    const maxFileSize = 100 * 1024 * 1024; // 100MB
-    if (disclosure.file_size < 0 || disclosure.file_size > maxFileSize) {
+    if (disclosure.file_size < 0 || disclosure.file_size > MAX_FILE_SIZE) {
       throw new ValidationError(
-        `Invalid file_size range: ${disclosure.file_size}. Expected 0 to ${maxFileSize} bytes (100MB).`,
-        { file_size: disclosure.file_size, max_file_size: maxFileSize }
+        `Invalid file_size range: ${disclosure.file_size}. Expected 0 to ${MAX_FILE_SIZE} bytes (100MB).`,
+        { file_size: disclosure.file_size, max_file_size: MAX_FILE_SIZE }
       );
     }
   }

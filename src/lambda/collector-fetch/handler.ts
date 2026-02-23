@@ -23,22 +23,14 @@ import { DisclosureMetadata } from '../../scraper/html-parser';
 import axios, { AxiosError } from 'axios';
 import * as iconv from 'iconv-lite';
 import { parseDisclosureList } from '../../scraper/html-parser';
+import { HTTP_TIMEOUT_MS, USER_AGENT_FULL } from '../../constants/http-config';
+import { TDNET_MIN_DELAY_MS } from '../../constants/rate-limits';
 
 /**
- * レート制限設定（2秒間隔）
+ * レート制限設定
  * TDnetサーバーへの過度な負荷を防ぐため
  */
-const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
-
-/**
- * HTTPタイムアウト設定（30秒）
- */
-const HTTP_TIMEOUT_MS = 30000;
-
-/**
- * User-Agent設定
- */
-const USER_AGENT = 'TDnet-Data-Collector/1.0 (https://github.com/your-org/tdnet-data-collector)';
+const rateLimiter = new RateLimiter({ minDelayMs: TDNET_MIN_DELAY_MS });
 
 /**
  * Lambda Collector-Fetchイベント
@@ -273,7 +265,7 @@ async function fetchTdnetPage(
         const response = await axios.get(url, {
           timeout: HTTP_TIMEOUT_MS,
           headers: {
-            'User-Agent': USER_AGENT,
+            'User-Agent': USER_AGENT_FULL,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
