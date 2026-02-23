@@ -10,6 +10,7 @@
 
 import { validatePdfFile } from '../pdf-downloader';
 import { ValidationError } from '../../errors';
+import { MIN_PDF_SIZE, MAX_PDF_SIZE } from '../../constants/file-limits';
 
 describe('PDF File Validation', () => {
   describe('Property 6: PDFファイルの整合性 - サイズ範囲', () => {
