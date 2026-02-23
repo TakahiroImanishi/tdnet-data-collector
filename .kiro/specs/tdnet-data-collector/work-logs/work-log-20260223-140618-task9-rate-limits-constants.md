@@ -95,3 +95,78 @@
 
 ### ユニットテスト実行
 
+
+関連するすべてのユニットテストが成功しました。
+
+```
+Test Suites: 6 passed, 6 total
+Tests:       93 passed, 93 total
+```
+
+テスト対象:
+- `src/utils/__tests__/rate-limiter.test.ts`
+- `src/utils/__tests__/rate-limiter.property.test.ts`
+- `src/lambda/collector/__tests__/scrape-tdnet-list.test.ts`
+- `src/lambda/collector/__tests__/download-pdf.test.ts`
+- `src/lambda/collector-fetch/__tests__/handler.test.ts`
+- `src/lambda/collector-fetch/__tests__/integration.test.ts`
+
+### 3. テスト修正
+
+**src/lambda/collector-fetch/__tests__/integration.test.ts**を修正:
+- `page_number`を数値から日付文字列（YYYY-MM-DD形式）に変更
+- すべてのテストケースで`page_number`を日付形式に統一
+
+## 成果物
+
+### 作成ファイル
+
+1. **src/constants/rate-limits.ts**
+   - `TDNET_MIN_DELAY_MS = 2000`を定義
+   - JSDocでTDnet API制約の根拠を説明
+   - UTF-8 BOMなしで作成
+
+### 修正ファイル
+
+1. **src/lambda/collector/scrape-tdnet-list.ts**
+   - 定数ファイルをインポート
+   - ハードコード値を削除
+
+2. **src/lambda/collector-fetch/handler.ts**
+   - 定数ファイルをインポート
+   - ハードコード値を削除
+
+3. **src/lambda/collector/download-pdf.ts**
+   - 定数ファイルをインポート
+   - ハードコード値を削除
+
+4. **src/lambda/collector/dependencies.ts**
+   - 定数ファイルをインポート
+   - ハードコード値を削除
+
+5. **src/utils/rate-limiter.ts**
+   - 定数ファイルをインポート
+   - デフォルト値を定数に変更
+   - JSDocの例を更新
+
+6. **src/lambda/collector-fetch/__tests__/integration.test.ts**
+   - `page_number`を日付文字列形式に修正
+
+## 完了条件の確認
+
+- [x] すべてのレート制限設定が定数ファイルから参照されている
+- [x] ユニットテストがすべて成功している（93 passed）
+- [x] ハードコード値が削除されている
+- [x] UTF-8 BOMなしで作成されている
+
+## 申し送り事項
+
+- レート制限設定は`src/constants/rate-limits.ts`で一元管理されています
+- 今後、レート制限値を変更する場合は、この定数ファイルを修正してください
+- `TDNET_MIN_DELAY_MS`は2000ms（2秒）に設定されており、TDnet APIへの過度な負荷を防ぎます
+- 再試行の`initialDelay`（2000ms）は別の用途であり、レート制限とは異なります
+
+## 関連タスク
+
+- タスク8: API URL定数ファイル作成（完了）
+- タスク10: タイムアウト設定定数ファイル作成（次のタスク）
