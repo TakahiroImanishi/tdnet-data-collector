@@ -94,7 +94,7 @@ export async function updateExecutionStatus(
   try {
     // 進捗率を0-100の範囲に制限
     const clampedProgress = Math.max(0, Math.min(100, progress));
-    
+
     // NaN検証: 数値パラメータが有効であることを確認
     if (!Number.isFinite(clampedProgress)) {
       throw new Error(`Invalid progress value: ${progress} (resulted in ${clampedProgress})`);
@@ -203,9 +203,7 @@ export async function updateExecutionStatus(
  * }
  * ```
  */
-export async function getExecutionStatus(
-  execution_id: string
-): Promise<ExecutionStatus | null> {
+export async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus | null> {
   try {
     const { GetItemCommand } = await import('@aws-sdk/client-dynamodb');
     const { unmarshall } = await import('@aws-sdk/util-dynamodb');

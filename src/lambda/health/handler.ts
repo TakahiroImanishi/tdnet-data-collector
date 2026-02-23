@@ -5,7 +5,7 @@
  * DynamoDBとS3の接続確認を行い、システムの健全性を返却します。
  *
  * Requirements: 要件4.1（検索API）
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -133,10 +133,7 @@ export async function handler(
     });
 
     // 並行してヘルスチェックを実行
-    const [dynamodbResult, s3Result] = await Promise.all([
-      checkDynamoDB(),
-      checkS3(),
-    ]);
+    const [dynamodbResult, s3Result] = await Promise.all([checkDynamoDB(), checkS3()]);
 
     // 全体のステータスを判定
     const overallStatus =

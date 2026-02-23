@@ -5,7 +5,7 @@
  * API Gateway統合により、RESTful APIとして公開されます。
  *
  * Requirements: 要件4.1, 4.3, 4.4, 5.2, 11.1（検索API、認証、PDFダウンロード、CSV形式）
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -76,10 +76,7 @@ export interface QueryResponse {
  * GET /disclosures?format=csv&start_date=2024-01-15&end_date=2024-01-20
  * ```
  */
-export async function handler(
-  event: QueryEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> {
+export async function handler(event: QueryEvent, context: Context): Promise<APIGatewayProxyResult> {
   const startTime = Date.now();
 
   try {
@@ -157,10 +154,7 @@ export async function handler(
     );
 
     // エラーメトリクス送信
-    await sendErrorMetric(
-      error instanceof Error ? error.constructor.name : 'Unknown',
-      'Query'
-    );
+    await sendErrorMetric(error instanceof Error ? error.constructor.name : 'Unknown', 'Query');
 
     return handleError(error as Error, event.requestContext.requestId);
   }
@@ -188,9 +182,7 @@ function parseQueryParameters(event: QueryEvent): {
   // フォーマットのバリデーション
   const format = (params.format || 'json') as 'json' | 'csv';
   if (!['json', 'csv'].includes(format)) {
-    throw new ValidationError(
-      `Invalid format: ${format}. Expected 'json' or 'csv'.`
-    );
+    throw new ValidationError(`Invalid format: ${format}. Expected 'json' or 'csv'.`);
   }
 
   // リミットのバリデーション（デフォルト: 100、最大: 1000）
@@ -282,17 +274,13 @@ function validateDateFormat(date: string, fieldName: string): void {
   // YYYY-MM-DD形式のチェック
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
-    throw new ValidationError(
-      `Invalid ${fieldName} format: ${date}. Expected YYYY-MM-DD format.`
-    );
+    throw new ValidationError(`Invalid ${fieldName} format: ${date}. Expected YYYY-MM-DD format.`);
   }
 
   // 有効な日付かチェック
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) {
-    throw new ValidationError(
-      `Invalid ${fieldName}: ${date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid ${fieldName}: ${date}. Date does not exist.`);
   }
 
   // 日付の整合性チェック（例: 2023-02-29は2023-03-01に変換されるため検出）
@@ -302,9 +290,7 @@ function validateDateFormat(date: string, fieldName: string): void {
     parsedDate.getMonth() + 1 !== month ||
     parsedDate.getDate() !== day
   ) {
-    throw new ValidationError(
-      `Invalid ${fieldName}: ${date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid ${fieldName}: ${date}. Date does not exist.`);
   }
 }
 
@@ -318,24 +304,18 @@ function validateMonthFormat(month: string): void {
   // YYYY-MM形式のチェック
   const monthRegex = /^\d{4}-\d{2}$/;
   if (!monthRegex.test(month)) {
-    throw new ValidationError(
-      `Invalid month format: ${month}. Expected YYYY-MM format.`
-    );
+    throw new ValidationError(`Invalid month format: ${month}. Expected YYYY-MM format.`);
   }
 
   // 有効な月かチェック
   const [year, monthNum] = month.split('-').map(Number);
   if (monthNum < 1 || monthNum > 12) {
-    throw new ValidationError(
-      `Invalid month: ${month}. Month must be between 01 and 12.`
-    );
+    throw new ValidationError(`Invalid month: ${month}. Month must be between 01 and 12.`);
   }
 
   // 年の妥当性チェック（1900-2100）
   if (year < 1900 || year > 2100) {
-    throw new ValidationError(
-      `Invalid month: ${month}. Year must be between 1900 and 2100.`
-    );
+    throw new ValidationError(`Invalid month: ${month}. Year must be between 1900 and 2100.`);
   }
 }
 

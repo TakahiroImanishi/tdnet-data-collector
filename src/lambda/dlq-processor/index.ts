@@ -1,8 +1,8 @@
 /**
  * DLQ Processor Lambda Function
- * 
+ *
  * DLQに送信された失敗メッセージを処理し、アラートを送信します。
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/development/lambda-implementation.md
  * - .kiro/steering/core/error-handling-patterns.md
@@ -45,13 +45,13 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 async function processDLQMessage(record: SQSRecord): Promise<void> {
   try {
     const failedMessage = JSON.parse(record.body);
-    
+
     logger.error('Processing DLQ message', {
       messageId: record.messageId,
       failedMessage,
       attributes: record.attributes,
     });
-    
+
     // アラート送信（環境変数を動的に読み込む）
     const alertTopicArn = process.env.ALERT_TOPIC_ARN;
     if (alertTopicArn) {
@@ -59,7 +59,7 @@ async function processDLQMessage(record: SQSRecord): Promise<void> {
     } else {
       logger.warn('ALERT_TOPIC_ARN not configured, skipping SNS notification');
     }
-    
+
     logger.info('DLQ message processed', { messageId: record.messageId });
   } catch (error) {
     logger.error('Failed to process DLQ message', {
@@ -76,21 +76,31 @@ async function processDLQMessage(record: SQSRecord): Promise<void> {
 /**
  * SNS通知を送信
  */
-async function sendAlert(record: SQSRecord, failedMessage: unknown, topicArn: string): Promise<void> {
+async function sendAlert(
+  record: SQSRecord,
+  failedMessage: unknown,
+  topicArn: string
+): Promise<void> {
   try {
     const client = getSNSClient();
-    await client.send(new PublishCommand({
-      TopicArn: topicArn,
-      Subject: 'Lambda execution failed - DLQ message',
-      Message: JSON.stringify({
-        messageId: record.messageId,
-        failedMessage,
-        sentTimestamp: record.attributes.SentTimestamp,
-        approximateReceiveCount: record.attributes.ApproximateReceiveCount,
-        timestamp: new Date().toISOString(),
-      }, null, 2),
-    }));
-    
+    await client.send(
+      new PublishCommand({
+        TopicArn: topicArn,
+        Subject: 'Lambda execution failed - DLQ message',
+        Message: JSON.stringify(
+          {
+            messageId: record.messageId,
+            failedMessage,
+            sentTimestamp: record.attributes.SentTimestamp,
+            approximateReceiveCount: record.attributes.ApproximateReceiveCount,
+            timestamp: new Date().toISOString(),
+          },
+          null,
+          2
+        ),
+      })
+    );
+
     logger.info('DLQ alert sent', { messageId: record.messageId });
   } catch (error) {
     logger.error('Failed to send DLQ alert', {

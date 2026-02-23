@@ -145,8 +145,7 @@ export async function retryWithBackoff<T>(
  */
 function calculateDelay(attempt: number, options: RetryOptions): number {
   // 指数バックオフ: initialDelay * (backoffMultiplier ^ attempt)
-  const exponentialDelay =
-    options.initialDelay * Math.pow(options.backoffMultiplier, attempt);
+  const exponentialDelay = options.initialDelay * Math.pow(options.backoffMultiplier, attempt);
 
   // ジッターを追加（0〜exponentialDelayのランダム値）
   if (options.jitter) {

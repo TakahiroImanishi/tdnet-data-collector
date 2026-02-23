@@ -52,8 +52,7 @@ const iso8601Schema = z
       return date >= minDate && date <= maxDate;
     },
     {
-      message:
-        '有効な日付である必要があります（1970-01-01以降、現在時刻+1日以内、存在する日付）',
+      message: '有効な日付である必要があります（1970-01-01以降、現在時刻+1日以内、存在する日付）',
     }
   );
 
@@ -248,7 +247,12 @@ export const queryFilterSchema = z.object({
   disclosure_type: z.string().optional(),
 
   /** 取得件数の上限 */
-  limit: z.number().int().min(1).max(1000, '取得件数は1から1000の範囲である必要があります').optional(),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(1000, '取得件数は1から1000の範囲である必要があります')
+    .optional(),
 
   /** オフセット（ページネーション用） */
   offset: z.number().int().min(0, 'オフセットは0以上である必要があります').optional(),
@@ -274,4 +278,3 @@ export function validateDisclosureWithZod(data: unknown): DisclosureZod {
 export function safeValidateDisclosure(data: unknown) {
   return disclosureSchema.safeParse(data);
 }
-

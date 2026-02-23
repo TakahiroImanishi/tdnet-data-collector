@@ -5,7 +5,7 @@
  * バッチモード（日次自動実行）とオンデマンドモード（手動実行）をサポート。
  *
  * Requirements: 要件1.1, 1.2, 5.1, 5.2
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -89,10 +89,7 @@ export interface CollectorResponse {
  * }, context);
  * ```
  */
-export async function handler(
-  event: CollectorEvent,
-  context: Context
-): Promise<CollectorResponse> {
+export async function handler(event: CollectorEvent, context: Context): Promise<CollectorResponse> {
   // Collect関数から渡されたexecution_idを使用、なければ生成
   const execution_id = event.execution_id || generateExecutionId(context);
   const startTime = Date.now();
@@ -133,9 +130,7 @@ export async function handler(
 
     // カスタムメトリクス送信（タスク16.2）
     const totalCount = response.collected_count + response.failed_count;
-    const successRate = totalCount > 0 
-      ? (response.collected_count / totalCount) * 100 
-      : 0;
+    const successRate = totalCount > 0 ? (response.collected_count / totalCount) * 100 : 0;
 
     await Promise.all([
       // 収集成功件数
@@ -194,17 +189,13 @@ export async function handler(
 function validateEvent(event: CollectorEvent): void {
   // モードのバリデーション
   if (!event.mode || !['batch', 'on-demand'].includes(event.mode)) {
-    throw new ValidationError(
-      `Invalid mode: ${event.mode}. Expected 'batch' or 'on-demand'.`
-    );
+    throw new ValidationError(`Invalid mode: ${event.mode}. Expected 'batch' or 'on-demand'.`);
   }
 
   // on-demandモードの場合、日付範囲が必須
   if (event.mode === 'on-demand') {
     if (!event.start_date || !event.end_date) {
-      throw new ValidationError(
-        'start_date and end_date are required for on-demand mode'
-      );
+      throw new ValidationError('start_date and end_date are required for on-demand mode');
     }
 
     // 日付フォーマットのバリデーション（YYYY-MM-DD）
@@ -225,14 +216,10 @@ function validateEvent(event: CollectorEvent): void {
     const endDate = new Date(event.end_date);
 
     if (isNaN(startDate.getTime())) {
-      throw new ValidationError(
-        `Invalid start_date: ${event.start_date}. Date does not exist.`
-      );
+      throw new ValidationError(`Invalid start_date: ${event.start_date}. Date does not exist.`);
     }
     if (isNaN(endDate.getTime())) {
-      throw new ValidationError(
-        `Invalid end_date: ${event.end_date}. Date does not exist.`
-      );
+      throw new ValidationError(`Invalid end_date: ${event.end_date}. Date does not exist.`);
     }
 
     // 日付順序チェック
@@ -255,9 +242,7 @@ function validateEvent(event: CollectorEvent): void {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     if (endDate > tomorrow) {
-      throw new ValidationError(
-        `end_date (${event.end_date}) cannot be in the future.`
-      );
+      throw new ValidationError(`end_date (${event.end_date}) cannot be in the future.`);
     }
   }
 }
@@ -269,10 +254,8 @@ function validateEvent(event: CollectorEvent): void {
  * @param execution_id 実行ID
  * @returns CollectorResponse
  */
-async function handleBatchMode(
-  execution_id: string
-): Promise<CollectorResponse> {
-  logger.info('Batch mode: collecting yesterday\'s data', { execution_id });
+async function handleBatchMode(execution_id: string): Promise<CollectorResponse> {
+  logger.info("Batch mode: collecting yesterday's data", { execution_id });
 
   // 前日の日付を取得（JST基準）
   const yesterday = getYesterday();
@@ -284,11 +267,7 @@ async function handleBatchMode(
   });
 
   // 前日のデータを収集
-  return await collectDisclosuresForDateRange(
-    execution_id,
-    dateStr,
-    dateStr
-  );
+  return await collectDisclosuresForDateRange(execution_id, dateStr, dateStr);
 }
 
 /**
@@ -314,12 +293,7 @@ async function handleOnDemandMode(
     max_items,
   });
 
-  return await collectDisclosuresForDateRange(
-    execution_id,
-    start_date,
-    end_date,
-    max_items
-  );
+  return await collectDisclosuresForDateRange(execution_id, start_date, end_date, max_items);
 }
 
 /**
@@ -417,12 +391,10 @@ async function collectDisclosuresForDateRange(
           // バッチ完了時に進捗を更新
           const currentCollected = collected_count + batchSuccess;
           const currentFailed = failed_count + batchFailed;
-          
+
           const processed = currentCollected + currentFailed;
-          const progress = total_count > 0 
-            ? Math.floor((processed / total_count) * 100) 
-            : 0;
-          
+          const progress = total_count > 0 ? Math.floor((processed / total_count) * 100) : 0;
+
           await updateExecutionStatus(
             execution_id,
             'running',
@@ -501,11 +473,11 @@ function getYesterday(): Date {
   const now = new Date();
   // JSTに変換（UTC+9時間）
   const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  
+
   // JST基準で前日を計算
   const jstYesterday = new Date(jstNow);
   jstYesterday.setUTCDate(jstYesterday.getUTCDate() - 1);
-  
+
   return jstYesterday;
 }
 
@@ -551,7 +523,7 @@ function generateDateRange(start_date: string, end_date: string): string[] {
     const month = String(current.getUTCMonth() + 1).padStart(2, '0');
     const day = String(current.getUTCDate()).padStart(2, '0');
     dates.push(`${year}-${month}-${day}`);
-    
+
     // 次の日に進む（UTC基準）
     current.setUTCDate(current.getUTCDate() + 1);
   }
@@ -584,7 +556,7 @@ async function processDisclosuresInParallel(
     const batch = disclosureMetadata.slice(i, i + concurrency);
     const batchNumber = Math.floor(i / concurrency) + 1;
     const totalBatches = Math.ceil(totalCount / concurrency);
-    
+
     // バッチ開始ログ
     logger.info('Processing batch', {
       execution_id,
@@ -593,7 +565,7 @@ async function processDisclosuresInParallel(
       batch_size: batch.length,
       processed_so_far: results.success + results.failed,
       total_count: totalCount,
-      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
+      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100),
     });
 
     const promises = batch.map((metadata, index) =>
@@ -602,8 +574,8 @@ async function processDisclosuresInParallel(
 
     const settled = await Promise.allSettled(promises);
 
-    const batchSuccess = settled.filter(r => r.status === 'fulfilled').length;
-    const batchFailed = settled.filter(r => r.status === 'rejected').length;
+    const batchSuccess = settled.filter((r) => r.status === 'fulfilled').length;
+    const batchFailed = settled.filter((r) => r.status === 'rejected').length;
 
     for (const result of settled) {
       if (result.status === 'fulfilled') {
@@ -616,7 +588,7 @@ async function processDisclosuresInParallel(
         });
       }
     }
-    
+
     // バッチ完了ログ
     logger.info('Batch completed', {
       execution_id,
@@ -625,7 +597,7 @@ async function processDisclosuresInParallel(
       batch_failed: batchFailed,
       total_success: results.success,
       total_failed: results.failed,
-      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100)
+      progress_percent: Math.floor(((results.success + results.failed) / totalCount) * 100),
     });
 
     // 進捗更新コールバックを呼び出し
@@ -640,7 +612,7 @@ async function processDisclosuresInParallel(
     total_success: results.success,
     total_failed: results.failed,
     total_count: totalCount,
-    success_rate: totalCount > 0 ? Math.floor((results.success / totalCount) * 100) : 0
+    success_rate: totalCount > 0 ? Math.floor((results.success / totalCount) * 100) : 0,
   });
 
   return results;
@@ -676,16 +648,12 @@ async function processDisclosure(
     sequence,
     company_code: metadata.company_code,
     company_name: metadata.company_name,
-    title: metadata.title
+    title: metadata.title,
   });
 
   try {
     // PDFをダウンロードしてS3に保存
-    const s3_key = await downloadPdf(
-      disclosure_id,
-      metadata.pdf_url,
-      metadata.disclosed_at
-    );
+    const s3_key = await downloadPdf(disclosure_id, metadata.pdf_url, metadata.disclosed_at);
 
     // DisclosureMetadataからDisclosureに変換
     const disclosure: Disclosure = {
@@ -709,7 +677,7 @@ async function processDisclosure(
       execution_id,
       disclosure_id,
       sequence,
-      s3_key
+      s3_key,
     });
   } catch (error) {
     // エラーログ（詳細）
@@ -721,10 +689,9 @@ async function processDisclosure(
         sequence,
         company_code: metadata.company_code,
         title: metadata.title,
-        pdf_url: metadata.pdf_url
+        pdf_url: metadata.pdf_url,
       })
     );
     throw error;
   }
 }
-

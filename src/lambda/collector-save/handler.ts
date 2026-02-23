@@ -5,7 +5,7 @@
  * 開示情報のPDFダウンロード、S3アップロード、DynamoDBメタデータ保存を実行します。
  *
  * Requirements: 要件1.3, 1.4, 3.3, 6.1
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md
  * - .kiro/steering/core/tdnet-implementation-rules.md
@@ -87,10 +87,7 @@ export interface SaveResponse {
  * }, context);
  * ```
  */
-export async function handler(
-  event: SaveEvent,
-  context: Context
-): Promise<SaveResponse> {
+export async function handler(event: SaveEvent, context: Context): Promise<SaveResponse> {
   const startTime = Date.now();
 
   try {
@@ -104,11 +101,7 @@ export async function handler(
     });
 
     // 並列処理（並列度5）
-    const results = await processDisclosuresInParallel(
-      event.items,
-      event.execution_id,
-      5
-    );
+    const results = await processDisclosuresInParallel(event.items, event.execution_id, 5);
 
     const duration = Date.now() - startTime;
 
@@ -171,7 +164,11 @@ async function processDisclosuresInParallel(
   failed: number;
   failedItems: Array<{ disclosure_id: string; error: string }>;
 }> {
-  const results = { success: 0, failed: 0, failedItems: [] as Array<{ disclosure_id: string; error: string }> };
+  const results = {
+    success: 0,
+    failed: 0,
+    failedItems: [] as Array<{ disclosure_id: string; error: string }>,
+  };
   const totalCount = disclosureMetadata.length;
 
   // 並列度を制限して処理
@@ -207,11 +204,11 @@ async function processDisclosuresInParallel(
         results.failed++;
         const error = result.reason;
         const errorMessage = error instanceof Error ? error.message : String(error);
-        
+
         // disclosure_idを抽出（エラーメッセージから）
         const disclosureIdMatch = errorMessage.match(/disclosure_id: ([^\s,]+)/);
         const disclosureId = disclosureIdMatch ? disclosureIdMatch[1] : 'unknown';
-        
+
         results.failedItems.push({
           disclosure_id: disclosureId,
           error: errorMessage,
@@ -285,11 +282,7 @@ async function processDisclosure(
 
   try {
     // PDFをダウンロードしてS3に保存
-    const s3_key = await downloadPdf(
-      disclosure_id,
-      metadata.pdf_url,
-      metadata.disclosed_at
-    );
+    const s3_key = await downloadPdf(disclosure_id, metadata.pdf_url, metadata.disclosed_at);
 
     // DisclosureMetadataからDisclosureに変換
     const disclosure: Disclosure = {

@@ -1,6 +1,6 @@
 /**
  * Lambda Query Construct
- * 
+ *
  * This construct creates the TDnet Query Lambda function with environment-specific configuration.
  */
 

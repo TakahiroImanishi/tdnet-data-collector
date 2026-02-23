@@ -5,7 +5,7 @@
  * DynamoDBから統計情報を集計して返却します。
  *
  * Requirements: 要件4.1, 4.3（検索API、認証）
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -119,7 +119,9 @@ async function getLast30DaysCount(): Promise<number> {
  * 企業別件数トップ10を取得
  * 注意: この実装は簡易版です。本番環境では集計テーブルを別途用意することを推奨します。
  */
-async function getTopCompanies(): Promise<Array<{ company_code: string; company_name: string; count: number }>> {
+async function getTopCompanies(): Promise<
+  Array<{ company_code: string; company_name: string; count: number }>
+> {
   const tableName = process.env.DYNAMODB_TABLE_NAME;
   if (!tableName) {
     throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
@@ -239,10 +241,7 @@ export async function handler(
     );
 
     // エラーメトリクス送信
-    await sendErrorMetric(
-      error instanceof Error ? error.constructor.name : 'Unknown',
-      'Stats'
-    );
+    await sendErrorMetric(error instanceof Error ? error.constructor.name : 'Unknown', 'Stats');
 
     return handleError(error as Error, context.awsRequestId);
   }
@@ -252,9 +251,9 @@ export async function handler(
  * エラーハンドリング
  */
 function handleError(error: Error, requestId: string): APIGatewayProxyResult {
-  let statusCode = 500;
-  let errorCode = 'INTERNAL_ERROR';
-  let details: Record<string, any> = {};
+  const statusCode = 500;
+  const errorCode = 'INTERNAL_ERROR';
+  const details: Record<string, any> = {};
 
   const errorResponse = {
     status: 'error',

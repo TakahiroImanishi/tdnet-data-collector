@@ -10,7 +10,7 @@ import { DashboardCloudFront } from '../constructs/cloudfront';
  * Foundation Stack - 基盤リソース（DynamoDB, S3, Secrets Manager）
  * 変更頻度: 低（月1回以下）
  * 依存: なし
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/infrastructure/cdk-implementation.md - CDK実装ガイド
  * - .kiro/steering/security/security-best-practices.md - セキュリティベストプラクティス

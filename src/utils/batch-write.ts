@@ -7,11 +7,7 @@
  * Requirements: 要件9.1（パフォーマンス最適化）
  */
 
-import {
-  DynamoDBClient,
-  BatchWriteItemCommand,
-  WriteRequest,
-} from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, BatchWriteItemCommand, WriteRequest } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { logger } from './logger';
 import { retryWithBackoff } from './retry';
@@ -161,8 +157,7 @@ async function writeBatch(
 
       // 成功したアイテム数を計算
       const processedCount =
-        unprocessedItems.length -
-        (response.UnprocessedItems?.[tableName]?.length || 0);
+        unprocessedItems.length - (response.UnprocessedItems?.[tableName]?.length || 0);
       successCount += processedCount;
 
       // 未処理アイテムを取得

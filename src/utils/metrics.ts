@@ -79,12 +79,7 @@ export async function sendMetric(
   value: number,
   options: MetricOptions = {}
 ): Promise<void> {
-  const {
-    namespace = 'TDnet',
-    dimensions = [],
-    unit = 'Count',
-    timestamp = new Date(),
-  } = options;
+  const { namespace = 'TDnet', dimensions = [], unit = 'Count', timestamp = new Date() } = options;
 
   try {
     const command = new PutMetricDataCommand({
@@ -140,13 +135,8 @@ export async function sendMetric(
  * }
  * ```
  */
-export async function sendErrorMetric(
-  error: Error,
-  functionName?: string
-): Promise<void> {
-  const dimensions: MetricDimension[] = [
-    { Name: 'ErrorType', Value: error.constructor.name },
-  ];
+export async function sendErrorMetric(error: Error, functionName?: string): Promise<void> {
+  const dimensions: MetricDimension[] = [{ Name: 'ErrorType', Value: error.constructor.name }];
 
   if (functionName) {
     dimensions.push({ Name: 'FunctionName', Value: functionName });

@@ -56,9 +56,9 @@ export async function downloadPdf(
 ): Promise<string> {
   try {
     // PDFダウンロード開始ログ
-    logger.info('Downloading PDF started', { 
-      disclosure_id, 
-      pdf_url 
+    logger.info('Downloading PDF started', {
+      disclosure_id,
+      pdf_url,
     });
 
     // レート制限を適用
@@ -115,7 +115,7 @@ export async function downloadPdf(
     logger.info('Uploading PDF to S3', {
       disclosure_id,
       s3_key: s3Key,
-      size_bytes: pdfBuffer.length
+      size_bytes: pdfBuffer.length,
     });
 
     // S3にアップロード
@@ -137,7 +137,7 @@ export async function downloadPdf(
     logger.info('PDF uploaded to S3 successfully', {
       disclosure_id,
       s3_key: s3Key,
-      size_bytes: pdfBuffer.length
+      size_bytes: pdfBuffer.length,
     });
 
     // 成功メトリクス送信
@@ -153,7 +153,7 @@ export async function downloadPdf(
       pdf_url,
       error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
-      stack_trace: error instanceof Error ? error.stack : undefined
+      stack_trace: error instanceof Error ? error.stack : undefined,
     });
 
     // エラーメトリクス送信

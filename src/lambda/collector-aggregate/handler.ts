@@ -5,7 +5,7 @@
  * 各日付の実行結果を集約し、統計情報を計算して実行状態を更新します。
  *
  * Requirements: 要件5.4（実行状態管理）
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md
  * - .kiro/steering/core/tdnet-implementation-rules.md
@@ -81,10 +81,7 @@ export interface AggregateResponse {
  * }, context);
  * ```
  */
-export async function handler(
-  event: AggregateEvent,
-  context: Context
-): Promise<AggregateResponse> {
+export async function handler(event: AggregateEvent, context: Context): Promise<AggregateResponse> {
   const startTime = Date.now();
 
   try {
@@ -100,10 +97,8 @@ export async function handler(
 
     // 統計情報の計算
     const totalCount = total_collected + total_failed;
-    const success_rate = totalCount > 0 
-      ? (total_collected / totalCount) * 100 
-      : 0;
-    
+    const success_rate = totalCount > 0 ? (total_collected / totalCount) * 100 : 0;
+
     // NaN防止: success_rateが有効な数値であることを確認
     const validSuccessRate = Number.isFinite(success_rate) ? success_rate : 0;
 
@@ -227,11 +222,11 @@ function aggregateResults(
   for (const result of results) {
     // saveResultが存在する場合のみ集約（失敗したページはsaveResultがない）
     if (result.saveResult) {
-      const saved_count = Number.isFinite(result.saveResult.saved_count) 
-        ? result.saveResult.saved_count 
+      const saved_count = Number.isFinite(result.saveResult.saved_count)
+        ? result.saveResult.saved_count
         : 0;
-      const failed_count = Number.isFinite(result.saveResult.failed_count) 
-        ? result.saveResult.failed_count 
+      const failed_count = Number.isFinite(result.saveResult.failed_count)
+        ? result.saveResult.failed_count
         : 0;
 
       total_collected += saved_count;

@@ -639,7 +639,64 @@ rg "30000" src/ --type ts | rg -v "constants|test"
 
 #### 作業内容
 
-タスク7のE2Eテスト実行で発見されたcollect-status Lambda関数の4テスト失敗を調査し、修正する。
+タスク7のE2Eテスト実行で発見されたcollect-status Lambda関数の4テスト失敗を調査し、修正しました。
+
+#### 問題の原因
+
+Lambda関数のグローバルスコープで環境変数を読み込んでいたため、E2Eテストで設定した環境変数が反映されていませんでした。
+
+#### 修正内容
+
+環境変数の読み込みを遅延評価（関数化）に変更し、実行時に最新の環境変数を取得するようにしました。
+
+**修正前**:
+```typescript
+const EXECUTIONS_TABLE_NAME = process.env.EXECUTION_STATE_TABLE || 'tdnet_executions';
+const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN;
+```
+
+**修正後**:
+```typescript
+function getExecutionsTableName(): string {
+  return process.env.EXECUTION_STATE_TABLE || process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
+}
+
+function getStateMachineArn(): string | undefined {
+  return process.env.STATE_MACHINE_ARN;
+}
+```
+
+#### テスト結果
+
+✅ **すべてのE2Eテスト（9テスト）が成功**
+
+- pending状態の実行状態を取得できる ✓
+- running状態の実行状態を取得できる ✓
+- completed状態の実行状態を取得できる ✓
+- failed状態の実行状態を取得できる ✓
+- 存在しないexecution_idの場合は404を返す ✓
+- pathParametersが未定義の場合は400を返す ✓
+- execution_idが空の場合は400を返す ✓
+- 正しいCORSヘッダーを返す ✓
+- Content-Typeヘッダーがapplication/jsonである ✓
+
+#### 成果物
+
+- ✅ 修正済みLambda関数コード（`src/lambda/collect-status/handler.ts`）
+- ✅ E2Eテスト成功（9/9テスト）
+- ✅ 作業記録
+
+#### 作業記録
+
+- `work-log-20260223-151540-task14-collect-status-e2e-fix.md`
+
+#### 技術的な学び
+
+Lambda関数のグローバルスコープは、関数がインポートされた時点で初期化されます。E2Eテストでは、テストファイルで環境変数を設定する前にLambda関数がインポートされるため、環境変数が反映されない問題が発生します。
+
+**解決策**: 環境変数の読み込みを遅延評価（関数化）することで、実行時に最新の環境変数を取得できます。
+
+---
 
 #### 問題の詳細
 

@@ -16,7 +16,7 @@ import { StepFunctionsCollector } from '../constructs/step-functions-collector';
  * Monitoring Stack - CloudWatch Alarms, Dashboard, CloudTrail
  * 変更頻度: 低（月1回以下）
  * 依存: Foundation Stack, Compute Stack, API Stack
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/infrastructure/cdk-implementation.md - CDK実装ガイド
  * - .kiro/steering/security/security-best-practices.md - セキュリティベストプラクティス

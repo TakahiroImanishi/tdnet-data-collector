@@ -5,7 +5,7 @@
  * PDFファイルの署名付きURLを生成して返却します。
  *
  * Requirements: タスク13.6
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -227,9 +227,7 @@ function validateExpiration(event: APIGatewayProxyEvent): number {
   const expiration = parseInt(expirationParam, 10);
 
   if (isNaN(expiration)) {
-    throw new ValidationError(
-      `Invalid expiration format: ${expirationParam}. Expected integer.`
-    );
+    throw new ValidationError(`Invalid expiration format: ${expirationParam}. Expected integer.`);
   }
 
   if (expiration < MIN_EXPIRATION || expiration > MAX_EXPIRATION) {

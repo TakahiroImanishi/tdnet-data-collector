@@ -5,7 +5,7 @@
  * Lambda Collectorを非同期で呼び出し、実行IDを返却します。
  *
  * Requirements: タスク13.1, タスク31.2.6.9
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -181,27 +181,19 @@ function validateRequest(request: CollectRequest): void {
   const endDate = new Date(request.end_date);
 
   if (isNaN(startDate.getTime())) {
-    throw new ValidationError(
-      `Invalid start_date: ${request.start_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid start_date: ${request.start_date}. Date does not exist.`);
   }
   if (isNaN(endDate.getTime())) {
-    throw new ValidationError(
-      `Invalid end_date: ${request.end_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid end_date: ${request.end_date}. Date does not exist.`);
   }
 
   // 日付の整合性チェック（パースした日付が入力と一致するか）
   // 例: '2024-02-30' は '2024-03-02' にパースされるため、不一致となる
   if (startDate.toISOString().split('T')[0] !== request.start_date) {
-    throw new ValidationError(
-      `Invalid start_date: ${request.start_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid start_date: ${request.start_date}. Date does not exist.`);
   }
   if (endDate.toISOString().split('T')[0] !== request.end_date) {
-    throw new ValidationError(
-      `Invalid end_date: ${request.end_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid end_date: ${request.end_date}. Date does not exist.`);
   }
 
   // 日付順序チェック
@@ -224,9 +216,7 @@ function validateRequest(request: CollectRequest): void {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   if (endDate > tomorrow) {
-    throw new ValidationError(
-      `end_date (${request.end_date}) cannot be in the future.`
-    );
+    throw new ValidationError(`end_date (${request.end_date}) cannot be in the future.`);
   }
 }
 
@@ -297,10 +287,7 @@ async function invokeStepFunctions(
  * @param context Lambda Context
  * @returns 実行ID
  */
-async function invokeCollector(
-  request: CollectRequest,
-  context: Context
-): Promise<string> {
+async function invokeCollector(request: CollectRequest, context: Context): Promise<string> {
   // 実行IDを事前に生成（API Gatewayタイムアウト回避のため）
   const execution_id = randomUUID();
 

@@ -10,9 +10,9 @@ import { Environment } from '../lib/config/environment-config';
 const app = new cdk.App();
 
 // Get environment from context or environment variable (default: 'local')
-const environment = (app.node.tryGetContext('environment') || 
-                     process.env.ENVIRONMENT || 
-                     'local') as Environment;
+const environment = (app.node.tryGetContext('environment') ||
+  process.env.ENVIRONMENT ||
+  'local') as Environment;
 
 // Validate environment value
 if (environment !== 'local' && environment !== 'prod') {

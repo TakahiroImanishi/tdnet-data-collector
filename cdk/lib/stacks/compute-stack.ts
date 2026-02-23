@@ -15,7 +15,7 @@ import { ExecutionStateTableConstruct } from '../constructs/execution-state-tabl
  * Compute Stack - Lambda関数とDLQ
  * 変更頻度: 高（週数回）
  * 依存: Foundation Stack
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/infrastructure/cdk-implementation.md - CDK実装ガイド
  * - .kiro/steering/security/security-best-practices.md - セキュリティベストプラクティス
@@ -49,7 +49,7 @@ export class TdnetComputeStack extends cdk.Stack {
   public readonly healthFunction: lambda.Function;
   public readonly statsFunction: lambda.Function;
   public readonly dlq: LambdaDLQ;
-  
+
   // Step Functions関連（段階的移行）
   public readonly collectorInitFunction?: lambda.Function;
   public readonly collectorFetchFunction?: lambda.Function;

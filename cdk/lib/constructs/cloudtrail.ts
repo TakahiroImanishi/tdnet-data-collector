@@ -32,13 +32,13 @@ export interface CloudTrailConstructProps {
 
 /**
  * CloudTrail Construct
- * 
+ *
  * AWS CloudTrailを設定し、以下を記録：
  * - すべてのAPI呼び出し（管理イベント）
  * - S3データイベント（PDFバケット）
  * - DynamoDBデータイベント
  * - CloudWatch Logsへの送信
- * 
+ *
  * Requirements: 要件13.2（監査ログ）
  */
 export class CloudTrailConstruct extends Construct {
@@ -90,10 +90,12 @@ export class CloudTrailConstruct extends Construct {
 
       // カスタムポリシーでDynamoDBデータイベントを記録
       const cfnTrail = this.trail.node.defaultChild as cloudtrail.CfnTrail;
-      
+
       // 既存のEventSelectorsを取得（配列として扱う）
-      const existingSelectors = cfnTrail.eventSelectors 
-        ? (Array.isArray(cfnTrail.eventSelectors) ? cfnTrail.eventSelectors : [cfnTrail.eventSelectors])
+      const existingSelectors = cfnTrail.eventSelectors
+        ? Array.isArray(cfnTrail.eventSelectors)
+          ? cfnTrail.eventSelectors
+          : [cfnTrail.eventSelectors]
         : [];
 
       cfnTrail.eventSelectors = [
@@ -112,9 +114,7 @@ export class CloudTrailConstruct extends Construct {
     }
 
     // CloudWatch Logsへの書き込み権限をCloudTrailに付与
-    this.logGroup.grantWrite(
-      new iam.ServicePrincipal('cloudtrail.amazonaws.com')
-    );
+    this.logGroup.grantWrite(new iam.ServicePrincipal('cloudtrail.amazonaws.com'));
 
     // CloudFormation Outputs
     new cdk.CfnOutput(this, 'TrailArn', {

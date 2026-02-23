@@ -5,7 +5,7 @@
  * TDnet APIから1ページ分のデータを取得し、レート制限を適用します。
  *
  * Requirements: 要件1.1, 1.2, 5.1, 5.2
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -89,10 +89,7 @@ export interface FetchResponse {
  * }, context);
  * ```
  */
-export async function handler(
-  event: FetchEvent,
-  context: Context
-): Promise<FetchResponse> {
+export async function handler(event: FetchEvent, context: Context): Promise<FetchResponse> {
   const startTime = Date.now();
 
   try {
@@ -208,9 +205,7 @@ function validateEvent(event: FetchEvent): void {
 
   // end_dateのバリデーション
   if (!event.end_date || typeof event.end_date !== 'string') {
-    throw new ValidationError(
-      `Invalid end_date: ${event.end_date}. Expected non-empty string.`
-    );
+    throw new ValidationError(`Invalid end_date: ${event.end_date}. Expected non-empty string.`);
   }
 
   if (!dateRegex.test(event.end_date)) {
@@ -224,14 +219,10 @@ function validateEvent(event: FetchEvent): void {
   const endDate = new Date(event.end_date);
 
   if (isNaN(startDate.getTime())) {
-    throw new ValidationError(
-      `Invalid start_date: ${event.start_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid start_date: ${event.start_date}. Date does not exist.`);
   }
   if (isNaN(endDate.getTime())) {
-    throw new ValidationError(
-      `Invalid end_date: ${event.end_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid end_date: ${event.end_date}. Date does not exist.`);
   }
 
   // 日付順序チェック
@@ -251,10 +242,7 @@ function validateEvent(event: FetchEvent): void {
  * @throws RetryableError ネットワークエラーまたはHTTPエラー
  * @throws ValidationError 日付フォーマットが不正な場合
  */
-async function fetchTdnetPage(
-  date: string,
-  pageNumber: number
-): Promise<DisclosureMetadata[]> {
+async function fetchTdnetPage(date: string, pageNumber: number): Promise<DisclosureMetadata[]> {
   const url = buildTdnetUrl(date, pageNumber);
 
   return await retryWithBackoff(
@@ -266,10 +254,10 @@ async function fetchTdnetPage(
           timeout: HTTP_TIMEOUT_MS,
           headers: {
             'User-Agent': USER_AGENT_FULL,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
           },
           // Shift_JISエンコーディング対応
           responseType: 'arraybuffer',
@@ -332,22 +320,22 @@ function decodeShiftJIS(buffer: ArrayBuffer | string): string {
     // ArrayBufferをBufferに変換
     const uint8Array = new Uint8Array(buffer);
     const nodeBuffer = Buffer.from(uint8Array);
-    
+
     // Shift_JISからUTF-8にデコード
     const decoded = iconv.decode(nodeBuffer, 'shift_jis');
-    
+
     logger.debug('Shift_JIS decoded successfully', {
       buffer_size: nodeBuffer.length,
       decoded_length: decoded.length,
     });
-    
+
     return decoded;
   } catch (error) {
     logger.error('Failed to decode Shift_JIS', {
       error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
-    
+
     // フォールバック: UTF-8として解釈
     try {
       const uint8Array = new Uint8Array(buffer);
@@ -356,7 +344,8 @@ function decodeShiftJIS(buffer: ArrayBuffer | string): string {
     } catch (fallbackError) {
       logger.error('Fallback UTF-8 decode also failed', {
         error_type: fallbackError instanceof Error ? fallbackError.constructor.name : 'Unknown',
-        error_message: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+        error_message:
+          fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
       });
       // 最終フォールバック: 空文字列を返す
       return '';
@@ -397,18 +386,12 @@ function buildTdnetUrl(date: string, pageNumber: number = 1): string {
 function convertAxiosError(error: AxiosError, url: string): Error {
   // ネットワークエラー
   if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
-    return new RetryableError(
-      `Network error: ${error.code} - ${error.message}`,
-      error
-    );
+    return new RetryableError(`Network error: ${error.code} - ${error.message}`, error);
   }
 
   // タイムアウトエラー
   if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-    return new RetryableError(
-      `Request timeout: ${error.message}`,
-      error
-    );
+    return new RetryableError(`Request timeout: ${error.message}`, error);
   }
 
   // HTTPエラー
@@ -417,10 +400,7 @@ function convertAxiosError(error: AxiosError, url: string): Error {
 
     // 5xxエラー（サーバーエラー）- 再試行可能
     if (status >= 500) {
-      return new RetryableError(
-        `Server error: ${status} ${error.response.statusText}`,
-        error
-      );
+      return new RetryableError(`Server error: ${status} ${error.response.statusText}`, error);
     }
 
     // 429エラー（レート制限）- 再試行可能
@@ -439,13 +419,9 @@ function convertAxiosError(error: AxiosError, url: string): Error {
     }
 
     // その他のHTTPエラー - 再試行不可
-    return new Error(
-      `HTTP error: ${status} ${error.response.statusText}`
-    );
+    return new Error(`HTTP error: ${status} ${error.response.statusText}`);
   }
 
   // その他のエラー
-  return new Error(
-    `Failed to fetch TDnet page: ${error.message}`
-  );
+  return new Error(`Failed to fetch TDnet page: ${error.message}`);
 }

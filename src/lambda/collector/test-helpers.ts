@@ -7,7 +7,13 @@
  */
 
 import { mockClient } from 'aws-sdk-client-mock';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  GetCommand,
+  UpdateCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import { RateLimiter } from '../../utils/rate-limiter';
@@ -93,10 +99,12 @@ export function cleanupTestDependencies(): void {
  * @param item 返却するアイテム
  */
 export function mockGetDisclosure(disclosureId: string, item: any): void {
-  dynamoMock.on(GetCommand, {
-    TableName: process.env.DYNAMODB_TABLE,
-    Key: { disclosure_id: disclosureId },
-  }).resolves({ Item: item });
+  dynamoMock
+    .on(GetCommand, {
+      TableName: process.env.DYNAMODB_TABLE,
+      Key: { disclosure_id: disclosureId },
+    })
+    .resolves({ Item: item });
 }
 
 /**

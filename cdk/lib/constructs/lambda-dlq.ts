@@ -1,6 +1,6 @@
 /**
  * Lambda DLQ Construct
- * 
+ *
  * This construct creates a Dead Letter Queue (DLQ) for Lambda functions
  * and a DLQ processor Lambda to handle failed messages.
  */
@@ -90,9 +90,11 @@ export class LambdaDLQ extends Construct {
     });
 
     // Add SQS event source to DLQ processor
-    this.processor.addEventSource(new lambdaEventSources.SqsEventSource(this.queue, {
-      batchSize: 10,
-    }));
+    this.processor.addEventSource(
+      new lambdaEventSources.SqsEventSource(this.queue, {
+        batchSize: 10,
+      })
+    );
 
     // Grant permissions
     this.queue.grantConsumeMessages(this.processor);

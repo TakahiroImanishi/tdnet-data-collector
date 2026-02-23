@@ -38,7 +38,8 @@ export const HTTP_TIMEOUT_MS = 30000;
  * - User-Agentにプロジェクト情報を含めることで、サーバー管理者が問題発生時に連絡可能
  * - RFC 7231に準拠した形式を使用
  */
-export const USER_AGENT_FULL = 'TDnet-Data-Collector/1.0 (https://github.com/your-org/tdnet-data-collector)';
+export const USER_AGENT_FULL =
+  'TDnet-Data-Collector/1.0 (https://github.com/your-org/tdnet-data-collector)';
 
 /**
  * User-Agent（簡易バージョン）

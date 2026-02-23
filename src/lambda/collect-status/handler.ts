@@ -5,7 +5,7 @@
  * 実行状態をDynamoDBから取得して返却します。
  *
  * Requirements: タスク13.2
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -43,9 +43,16 @@ const sfnClient = new SFNClient({
   }),
 });
 
-// 環境変数
-const EXECUTIONS_TABLE_NAME = process.env.EXECUTION_STATE_TABLE || process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
-const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN;
+// 環境変数を取得する関数（遅延評価）
+function getExecutionsTableName(): string {
+  return (
+    process.env.EXECUTION_STATE_TABLE || process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions'
+  );
+}
+
+function getStateMachineArn(): string | undefined {
+  return process.env.STATE_MACHINE_ARN;
+}
 
 /**
  * 実行状態（Step Functions対応）
@@ -113,7 +120,8 @@ export async function handler(
     }
 
     // 実行状態を取得（Step Functions優先）
-    const executionStatus = STATE_MACHINE_ARN
+    const stateMachineArn = getStateMachineArn();
+    const executionStatus = stateMachineArn
       ? await getStepFunctionsExecutionStatus(execution_id)
       : await getExecutionStatus(execution_id);
 
@@ -168,13 +176,14 @@ export async function handler(
  */
 async function getStepFunctionsExecutionStatus(execution_id: string): Promise<ExecutionStatus> {
   try {
+    const stateMachineArn = getStateMachineArn();
     logger.info('Getting Step Functions execution status', {
       execution_id,
-      stateMachineArn: STATE_MACHINE_ARN,
+      stateMachineArn,
     });
 
     // Step Functions実行ARNを構築
-    const executionArn = `${STATE_MACHINE_ARN?.replace(':stateMachine:', ':execution:')}:${execution_id}`;
+    const executionArn = `${stateMachineArn?.replace(':stateMachine:', ':execution:')}:${execution_id}`;
 
     // Step Functions実行状態を取得
     const command = new DescribeExecutionCommand({
@@ -198,8 +207,9 @@ async function getStepFunctionsExecutionStatus(execution_id: string): Promise<Ex
     let progress: ExecutionStatus['progress'] | undefined;
     if (status === 'running') {
       try {
+        const executionsTableName = getExecutionsTableName();
         const stateCommand = new GetItemCommand({
-          TableName: EXECUTIONS_TABLE_NAME,
+          TableName: executionsTableName,
           Key: {
             execution_id: { S: execution_id },
           },
@@ -245,7 +255,7 @@ async function getStepFunctionsExecutionStatus(execution_id: string): Promise<Ex
       'Failed to get Step Functions execution status',
       createErrorContext(error as Error, {
         execution_id,
-        stateMachineArn: STATE_MACHINE_ARN,
+        stateMachineArn: getStateMachineArn(),
       })
     );
 
@@ -262,15 +272,16 @@ async function getStepFunctionsExecutionStatus(execution_id: string): Promise<Ex
  */
 async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus> {
   try {
+    const executionsTableName = getExecutionsTableName();
     logger.info('Getting execution status from DynamoDB', {
       execution_id,
-      tableName: EXECUTIONS_TABLE_NAME,
+      tableName: executionsTableName,
       endpoint: process.env.AWS_ENDPOINT_URL,
       region: process.env.AWS_REGION,
     });
 
     const command = new GetItemCommand({
-      TableName: EXECUTIONS_TABLE_NAME,
+      TableName: executionsTableName,
       Key: {
         execution_id: { S: execution_id },
       },
@@ -291,18 +302,26 @@ async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus
     const item = unmarshall(result.Item) as any;
 
     // レガシー形式から新形式へ変換
-    const status = item.status === 'completed' ? 'succeeded' : item.status === 'pending' ? 'running' : item.status;
-    
+    const status =
+      item.status === 'completed'
+        ? 'succeeded'
+        : item.status === 'pending'
+          ? 'running'
+          : item.status;
+
     const executionStatus: ExecutionStatus = {
       execution_id,
       status,
       start_time: item.started_at,
       end_time: item.completed_at,
       // running状態（pendingから変換された場合も含む）の場合はprogressを含める
-      progress: (status === 'running') ? {
-        collected_count: item.collected_count || 0,
-        failed_count: item.failed_count || 0,
-      } : undefined,
+      progress:
+        status === 'running'
+          ? {
+              collected_count: item.collected_count || 0,
+              failed_count: item.failed_count || 0,
+            }
+          : undefined,
       error_message: item.error_message,
     };
 
@@ -321,7 +340,7 @@ async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus
       'Failed to get execution status from DynamoDB',
       createErrorContext(error as Error, {
         execution_id,
-        tableName: EXECUTIONS_TABLE_NAME,
+        tableName: getExecutionsTableName(),
       })
     );
 

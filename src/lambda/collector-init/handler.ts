@@ -5,7 +5,7 @@
  * 収集パラメータの検証、実行状態の初期化、TDnet APIからのメタデータ取得を担当。
  *
  * Requirements: 要件1.1, 1.2, 5.1, 5.2
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md
  * - .kiro/steering/core/tdnet-implementation-rules.md
@@ -86,10 +86,7 @@ export interface InitResponse {
  * }, context);
  * ```
  */
-export async function handler(
-  event: InitEvent,
-  context: Context
-): Promise<InitResponse> {
+export async function handler(event: InitEvent, context: Context): Promise<InitResponse> {
   const startTime = Date.now();
 
   try {
@@ -191,16 +188,12 @@ export async function handler(
 export function validateEvent(event: InitEvent): void {
   // execution_idのバリデーション
   if (!event.execution_id || typeof event.execution_id !== 'string') {
-    throw new ValidationError(
-      'execution_id is required and must be a string'
-    );
+    throw new ValidationError('execution_id is required and must be a string');
   }
 
   // 日付範囲が必須
   if (!event.start_date || !event.end_date) {
-    throw new ValidationError(
-      'start_date and end_date are required'
-    );
+    throw new ValidationError('start_date and end_date are required');
   }
 
   // 日付フォーマットのバリデーション（YYYY-MM-DD）
@@ -221,14 +214,10 @@ export function validateEvent(event: InitEvent): void {
   const endDate = new Date(event.end_date);
 
   if (isNaN(startDate.getTime())) {
-    throw new ValidationError(
-      `Invalid start_date: ${event.start_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid start_date: ${event.start_date}. Date does not exist.`);
   }
   if (isNaN(endDate.getTime())) {
-    throw new ValidationError(
-      `Invalid end_date: ${event.end_date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid end_date: ${event.end_date}. Date does not exist.`);
   }
 
   // 日付順序チェック
@@ -251,9 +240,7 @@ export function validateEvent(event: InitEvent): void {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   if (endDate > tomorrow) {
-    throw new ValidationError(
-      `end_date (${event.end_date}) cannot be in the future.`
-    );
+    throw new ValidationError(`end_date (${event.end_date}) cannot be in the future.`);
   }
 
   // max_itemsのバリデーション
@@ -278,11 +265,11 @@ export function getYesterday(): Date {
   const now = new Date();
   // JSTに変換（UTC+9時間）
   const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  
+
   // JST基準で前日を計算
   const jstYesterday = new Date(jstNow);
   jstYesterday.setUTCDate(jstYesterday.getUTCDate() - 1);
-  
+
   return jstYesterday;
 }
 
@@ -328,7 +315,7 @@ export function generateDateRange(start_date: string, end_date: string): string[
     const month = String(current.getUTCMonth() + 1).padStart(2, '0');
     const day = String(current.getUTCDate()).padStart(2, '0');
     dates.push(`${year}-${month}-${day}`);
-    
+
     // 次の日に進む（UTC基準）
     current.setUTCDate(current.getUTCDate() + 1);
   }

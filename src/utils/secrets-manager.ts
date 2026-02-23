@@ -228,6 +228,8 @@ export async function getApiKey(): Promise<string> {
       error_message: error instanceof Error ? error.message : String(error),
     });
 
-    throw new Error(`Failed to get API key: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to get API key: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }

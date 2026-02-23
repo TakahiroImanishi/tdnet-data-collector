@@ -1,9 +1,9 @@
 /**
  * Step Functions Collector Construct
- * 
+ *
  * TDnetデータ収集ワークフローをStep Functionsで実装するConstruct。
  * 長時間実行対応、処理の可視化、柔軟なエラーハンドリングを実現。
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md
  * - .kiro/specs/tdnet-data-collector/designs/step-functions-state-machine.json
@@ -51,7 +51,7 @@ export interface StepFunctionsCollectorProps {
 
 /**
  * Step Functions Collector Construct
- * 
+ *
  * TDnetデータ収集ワークフローをStep Functionsで実装。
  * Standard Workflowsを使用し、最大1年間の実行時間に対応。
  */
@@ -109,7 +109,7 @@ export class StepFunctionsCollector extends Construct {
 
   /**
    * ステートマシン定義を作成
-   * 
+   *
    * @param props Constructプロパティ
    * @returns ステートマシン定義
    */
@@ -377,26 +377,27 @@ export class StepFunctionsCollector extends Construct {
     });
 
     // ワークフロー定義
-    const definition = initTask
-      .next(checkTotalCount
+    const definition = initTask.next(
+      checkTotalCount
         .when(
           sfn.Condition.numberGreaterThan('$.initResult.total_count', 0),
           processPages
             .next(aggregateResults)
-            .next(checkAggregateStatus
-              .when(
-                sfn.Condition.stringEquals('$.aggregateResult.status', 'completed'),
-                collectionSuccess
-              )
-              .when(
-                sfn.Condition.stringEquals('$.aggregateResult.status', 'partial_success'),
-                partialSuccess
-              )
-              .otherwise(collectionFailed)
+            .next(
+              checkAggregateStatus
+                .when(
+                  sfn.Condition.stringEquals('$.aggregateResult.status', 'completed'),
+                  collectionSuccess
+                )
+                .when(
+                  sfn.Condition.stringEquals('$.aggregateResult.status', 'partial_success'),
+                  partialSuccess
+                )
+                .otherwise(collectionFailed)
             )
         )
         .otherwise(noDataToCollect)
-      );
+    );
 
     return definition;
   }

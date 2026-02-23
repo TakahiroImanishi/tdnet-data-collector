@@ -1,15 +1,15 @@
 /**
  * APIキーローテーション Lambda関数
- * 
+ *
  * Secrets Managerの自動ローテーション機能により90日ごとに呼び出され、
  * TDnet APIキーを新しい値に更新します。
- * 
+ *
  * ローテーションステップ:
  * 1. createSecret: 新しいシークレット値を生成
  * 2. setSecret: 新しいシークレット値を設定
  * 3. testSecret: 新しいシークレット値をテスト
  * 4. finishSecret: ローテーションを完了
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -98,7 +98,7 @@ async function createSecret(secretId: string, token: string): Promise<void> {
 
 /**
  * ステップ2: 新しいシークレット値を設定
- * 
+ *
  * 注: TDnet APIキーは外部サービスのため、実際のAPI更新は手動で行う必要があります。
  * このステップでは、新しい値が正しく保存されていることを確認するのみです。
  */
@@ -113,13 +113,13 @@ async function setSecret(secretId: string, token: string): Promise<void> {
   });
 
   const response = await secretsManager.send(getCommand);
-  
+
   if (!response.SecretString) {
     throw new Error('シークレット値が見つかりません');
   }
 
   const secretValue = JSON.parse(response.SecretString);
-  
+
   if (!secretValue.apiKey || secretValue.apiKey.length < 16) {
     throw new Error('無効なAPIキー形式');
   }
@@ -129,7 +129,7 @@ async function setSecret(secretId: string, token: string): Promise<void> {
 
 /**
  * ステップ3: 新しいシークレット値をテスト
- * 
+ *
  * 注: TDnet APIへの実際の接続テストは、手動でAPIキーを更新した後に行う必要があります。
  * このステップでは、シークレット値の形式が正しいことのみを確認します。
  */
@@ -144,13 +144,13 @@ async function testSecret(secretId: string, token: string): Promise<void> {
   });
 
   const response = await secretsManager.send(getCommand);
-  
+
   if (!response.SecretString) {
     throw new Error('シークレット値が見つかりません');
   }
 
   const secretValue = JSON.parse(response.SecretString);
-  
+
   // APIキー形式の検証
   if (!secretValue.apiKey || typeof secretValue.apiKey !== 'string') {
     throw new Error('無効なAPIキー形式');
@@ -161,7 +161,7 @@ async function testSecret(secretId: string, token: string): Promise<void> {
   }
 
   logger.info('シークレット値のテスト完了', { token });
-  
+
   // 注: 実際のTDnet API接続テストは手動で行う必要があります
   logger.warn('TDnet APIキーの手動更新が必要です', {
     message: '新しいAPIキーをTDnetポータルで更新してください',
@@ -180,7 +180,7 @@ async function finishSecret(secretId: string, token: string): Promise<void> {
   const describeResponse = await secretsManager.send(describeCommand);
 
   let currentVersion: string | undefined;
-  
+
   // CURRENTバージョンを見つける
   for (const [versionId, stages] of Object.entries(describeResponse.VersionIdsToStages || {})) {
     if (stages.includes('AWSCURRENT')) {
@@ -198,7 +198,10 @@ async function finishSecret(secretId: string, token: string): Promise<void> {
   });
 
   await secretsManager.send(updateCommand);
-  logger.info('ローテーション完了、PENDINGをCURRENTに昇格', { token, previousVersion: currentVersion });
+  logger.info('ローテーション完了、PENDINGをCURRENTに昇格', {
+    token,
+    previousVersion: currentVersion,
+  });
 }
 
 /**
@@ -207,13 +210,13 @@ async function finishSecret(secretId: string, token: string): Promise<void> {
 function generateRandomApiKey(length: number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
-  
+
   // crypto.randomBytesを使用してセキュアなランダム文字列を生成
   const randomBytes = crypto.getRandomValues(new Uint8Array(length));
-  
+
   for (let i = 0; i < length; i++) {
     result += chars[randomBytes[i] % chars.length];
   }
-  
+
   return result;
 }

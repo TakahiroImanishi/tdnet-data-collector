@@ -4,10 +4,10 @@ import { Construct } from 'constructs';
 
 /**
  * ExecutionStateTableConstruct - Step Functions実行状態管理テーブル
- * 
+ *
  * Step Functionsワークフローの実行状態を追跡・管理するDynamoDBテーブル。
  * 進捗率、収集件数、エラー情報などをリアルタイムで記録します。
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/specs/tdnet-data-collector/designs/step-functions-architecture.md
  * - .kiro/steering/infrastructure/cdk-implementation.md
@@ -17,7 +17,7 @@ export interface ExecutionStateTableProps {
    * 環境名（dev, prod等）
    */
   environment: string;
-  
+
   /**
    * テーブルの削除ポリシー
    * @default cdk.RemovalPolicy.RETAIN

@@ -5,7 +5,7 @@
  * エクスポート状態をDynamoDBから取得して返却します。
  *
  * Requirements: タスク13.5
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド

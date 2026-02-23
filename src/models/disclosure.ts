@@ -79,10 +79,9 @@ export function validateDisclosure(disclosure: Partial<Disclosure>): void {
   if (disclosure.file_size !== undefined && disclosure.file_size !== null) {
     // 整数チェック
     if (!Number.isInteger(disclosure.file_size)) {
-      throw new ValidationError(
-        `Invalid file_size: ${disclosure.file_size}. Expected integer.`,
-        { file_size: disclosure.file_size }
-      );
+      throw new ValidationError(`Invalid file_size: ${disclosure.file_size}. Expected integer.`, {
+        file_size: disclosure.file_size,
+      });
     }
 
     // 範囲チェック（0以上、100MB以下）

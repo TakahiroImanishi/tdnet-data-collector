@@ -1,6 +1,6 @@
 /**
  * Lambda Collector Construct
- * 
+ *
  * This construct creates the TDnet Collector Lambda function with environment-specific configuration.
  */
 

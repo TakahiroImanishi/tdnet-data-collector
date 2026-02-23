@@ -90,10 +90,7 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
         } catch (error: any) {
           // ProvisionedThroughputExceededExceptionは再試行可能
           if (error.name === 'ProvisionedThroughputExceededException') {
-            throw new RetryableError(
-              `DynamoDB throughput exceeded: ${error.message}`,
-              error
-            );
+            throw new RetryableError(`DynamoDB throughput exceeded: ${error.message}`, error);
           }
           // ConditionalCheckFailedExceptionは再試行不可（重複）
           if (error.name === 'ConditionalCheckFailedException') {
@@ -131,7 +128,7 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
         company_name: disclosure.company_name,
         disclosed_at: disclosure.disclosed_at,
         s3_key,
-        message: 'この開示情報は既にDynamoDBに保存されています'
+        message: 'この開示情報は既にDynamoDBに保存されています',
       });
       return; // 重複は無視
     }
@@ -141,15 +138,13 @@ export async function saveMetadata(disclosure: Disclosure, s3_key: string): Prom
       company_code: disclosure.company_code,
       error_type: error.constructor?.name || 'Unknown',
       error_message: error.message || String(error),
-      s3_key
+      s3_key,
     });
 
     // エラーメトリクス送信
-    await sendErrorMetric(
-      error.constructor?.name || 'Unknown',
-      'SaveMetadata',
-      { DisclosureId: disclosure.disclosure_id }
-    );
+    await sendErrorMetric(error.constructor?.name || 'Unknown', 'SaveMetadata', {
+      DisclosureId: disclosure.disclosure_id,
+    });
 
     throw error;
   }

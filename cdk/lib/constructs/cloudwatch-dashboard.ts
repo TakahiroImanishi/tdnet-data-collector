@@ -69,7 +69,7 @@ export interface CloudWatchDashboardProps {
 
 /**
  * CloudWatch Dashboard Construct
- * 
+ *
  * TDnet Data Collectorの監視ダッシュボードを作成します。
  * 以下のメトリクスを可視化：
  * - Lambda実行メトリクス（Invocations、Errors、Duration）
@@ -362,7 +362,10 @@ export class CloudWatchDashboard extends Construct {
         { name: 'Fetch', func: stepFunctionsLambdas.collectorFetch },
         { name: 'Save', func: stepFunctionsLambdas.collectorSave },
         { name: 'Aggregate', func: stepFunctionsLambdas.collectorAggregate },
-      ].filter((item) => item.func !== undefined) as Array<{ name: string; func: lambda.IFunction }>;
+      ].filter((item) => item.func !== undefined) as Array<{
+        name: string;
+        func: lambda.IFunction;
+      }>;
 
       if (sfnLambdas.length > 0) {
         // Step Functions Lambda Invocations
@@ -402,16 +405,17 @@ export class CloudWatchDashboard extends Construct {
         this.dashboard.addWidgets(
           new cloudwatch.GraphWidget({
             title: 'Step Functions Lambda - Concurrent Executions',
-            left: sfnLambdas.map((item) =>
-              new cloudwatch.Metric({
-                namespace: 'AWS/Lambda',
-                metricName: 'ConcurrentExecutions',
-                dimensionsMap: {
-                  FunctionName: item.func.functionName,
-                },
-                statistic: 'Maximum',
-                label: item.name,
-              })
+            left: sfnLambdas.map(
+              (item) =>
+                new cloudwatch.Metric({
+                  namespace: 'AWS/Lambda',
+                  metricName: 'ConcurrentExecutions',
+                  dimensionsMap: {
+                    FunctionName: item.func.functionName,
+                  },
+                  statistic: 'Maximum',
+                  label: item.name,
+                })
             ),
             width: 12,
             period: cdk.Duration.minutes(5),

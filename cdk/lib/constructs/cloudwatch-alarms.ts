@@ -81,9 +81,9 @@ export interface CloudWatchAlarmsProps {
 
 /**
  * CloudWatch Alarms Construct
- * 
+ *
  * Lambda関数とシステム全体の監視アラームを設定します。
- * 
+ *
  * 設定されるアラーム:
  * - Lambda Error Rate > 10% → Critical
  * - Lambda Duration > 14分 → Warning
@@ -125,9 +125,7 @@ export class CloudWatchAlarms extends Construct {
 
     // メール通知の追加（オプション）
     if (props.alertEmail) {
-      this.alertTopic.addSubscription(
-        new subscriptions.EmailSubscription(props.alertEmail)
-      );
+      this.alertTopic.addSubscription(new subscriptions.EmailSubscription(props.alertEmail));
     }
 
     // ========================================
@@ -139,29 +137,37 @@ export class CloudWatchAlarms extends Construct {
       const alarmIdPrefix = `LambdaFunction${index}`;
 
       // 1. Lambda Error Rate アラーム（Warning - 5%）
-      const errorRateWarningAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ErrorRateWarningAlarm`, {
-        alarmName: `${functionName}-error-rate-warning-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} のエラー率が 5% を超えました（警告）`,
-        metric: this.createErrorRateMetric(lambdaFunction),
-        threshold: 5,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const errorRateWarningAlarm = new cloudwatch.Alarm(
+        this,
+        `${alarmIdPrefix}ErrorRateWarningAlarm`,
+        {
+          alarmName: `${functionName}-error-rate-warning-${props.environment}`,
+          alarmDescription: `Lambda関数 ${functionName} のエラー率が 5% を超えました（警告）`,
+          metric: this.createErrorRateMetric(lambdaFunction),
+          threshold: 5,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       errorRateWarningAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(errorRateWarningAlarm);
 
       // 1-2. Lambda Error Rate アラーム（Critical - 10%）
-      const errorRateCriticalAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ErrorRateCriticalAlarm`, {
-        alarmName: `${functionName}-error-rate-critical-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} のエラー率が ${errorRateThreshold}% を超えました（重大）`,
-        metric: this.createErrorRateMetric(lambdaFunction),
-        threshold: errorRateThreshold,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const errorRateCriticalAlarm = new cloudwatch.Alarm(
+        this,
+        `${alarmIdPrefix}ErrorRateCriticalAlarm`,
+        {
+          alarmName: `${functionName}-error-rate-critical-${props.environment}`,
+          alarmDescription: `Lambda関数 ${functionName} のエラー率が ${errorRateThreshold}% を超えました（重大）`,
+          metric: this.createErrorRateMetric(lambdaFunction),
+          threshold: errorRateThreshold,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       errorRateCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(errorRateCriticalAlarm);
@@ -184,52 +190,64 @@ export class CloudWatchAlarms extends Construct {
       this.alarms.push(durationAlarm);
 
       // 2-2. Lambda Duration アラーム（Critical - 13分）
-      const durationCriticalAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}DurationCriticalAlarm`, {
-        alarmName: `${functionName}-duration-critical-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} の実行時間が 780 秒を超えました（重大）`,
-        metric: lambdaFunction.metricDuration({
-          statistic: 'Average',
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 780 * 1000, // 13分 = 780秒をミリ秒に変換
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const durationCriticalAlarm = new cloudwatch.Alarm(
+        this,
+        `${alarmIdPrefix}DurationCriticalAlarm`,
+        {
+          alarmName: `${functionName}-duration-critical-${props.environment}`,
+          alarmDescription: `Lambda関数 ${functionName} の実行時間が 780 秒を超えました（重大）`,
+          metric: lambdaFunction.metricDuration({
+            statistic: 'Average',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 780 * 1000, // 13分 = 780秒をミリ秒に変換
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       durationCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(durationCriticalAlarm);
 
       // 3. Lambda Throttles アラーム（Warning - > 0）
-      const throttleWarningAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleWarningAlarm`, {
-        alarmName: `${functionName}-throttles-warning-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} でスロットリングが発生しました（警告）`,
-        metric: lambdaFunction.metricThrottles({
-          statistic: 'Sum',
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 0,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const throttleWarningAlarm = new cloudwatch.Alarm(
+        this,
+        `${alarmIdPrefix}ThrottleWarningAlarm`,
+        {
+          alarmName: `${functionName}-throttles-warning-${props.environment}`,
+          alarmDescription: `Lambda関数 ${functionName} でスロットリングが発生しました（警告）`,
+          metric: lambdaFunction.metricThrottles({
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 0,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       throttleWarningAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(throttleWarningAlarm);
 
       // 3-2. Lambda Throttles アラーム（Critical - > 5）
-      const throttleCriticalAlarm = new cloudwatch.Alarm(this, `${alarmIdPrefix}ThrottleCriticalAlarm`, {
-        alarmName: `${functionName}-throttles-critical-${props.environment}`,
-        alarmDescription: `Lambda関数 ${functionName} でスロットリングが5回以上発生しました（重大）`,
-        metric: lambdaFunction.metricThrottles({
-          statistic: 'Sum',
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 5,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const throttleCriticalAlarm = new cloudwatch.Alarm(
+        this,
+        `${alarmIdPrefix}ThrottleCriticalAlarm`,
+        {
+          alarmName: `${functionName}-throttles-critical-${props.environment}`,
+          alarmDescription: `Lambda関数 ${functionName} でスロットリングが5回以上発生しました（重大）`,
+          metric: lambdaFunction.metricThrottles({
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 5,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       throttleCriticalAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(throttleCriticalAlarm);
@@ -240,23 +258,17 @@ export class CloudWatchAlarms extends Construct {
     // ========================================
 
     // 4. CollectionSuccessRate アラーム（Warning）
-    const collectionSuccessRateAlarm = new cloudwatch.Alarm(
-      this,
-      'CollectionSuccessRateAlarm',
-      {
-        alarmName: `tdnet-collection-success-rate-${props.environment}`,
-        alarmDescription: `収集成功率が ${collectionSuccessRateThreshold}% を下回りました`,
-        metric: this.createCollectionSuccessRateMetric(props.environment),
-        threshold: collectionSuccessRateThreshold,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      }
-    );
+    const collectionSuccessRateAlarm = new cloudwatch.Alarm(this, 'CollectionSuccessRateAlarm', {
+      alarmName: `tdnet-collection-success-rate-${props.environment}`,
+      alarmDescription: `収集成功率が ${collectionSuccessRateThreshold}% を下回りました`,
+      metric: this.createCollectionSuccessRateMetric(props.environment),
+      threshold: collectionSuccessRateThreshold,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
 
-    collectionSuccessRateAlarm.addAlarmAction(
-      new cloudwatch_actions.SnsAction(this.alertTopic)
-    );
+    collectionSuccessRateAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
     this.alarms.push(collectionSuccessRateAlarm);
 
     // 5. データ収集停止アラーム（Critical）
@@ -336,7 +348,9 @@ export class CloudWatchAlarms extends Construct {
       ];
 
       tables.forEach(({ name, table }) => {
-        if (!table) return;
+        if (!table) {
+          return;
+        }
 
         // DynamoDB UserErrors アラーム
         const userErrorsAlarm = new cloudwatch.Alarm(this, `DynamoDB${name}UserErrorsAlarm`, {
@@ -379,21 +393,25 @@ export class CloudWatchAlarms extends Construct {
         this.alarms.push(systemErrorsAlarm);
 
         // DynamoDB ThrottledRequests アラーム
-        const throttledRequestsAlarm = new cloudwatch.Alarm(this, `DynamoDB${name}ThrottledRequestsAlarm`, {
-          alarmName: `tdnet-dynamodb-${name.toLowerCase()}-throttled-requests-${props.environment}`,
-          alarmDescription: `DynamoDB ${name}テーブルでThrottledRequestsが発生しました`,
-          metric: new cloudwatch.Metric({
-            namespace: 'AWS/DynamoDB',
-            metricName: 'ThrottledRequests',
-            dimensionsMap: { TableName: table.tableName },
-            statistic: 'Sum',
-            period: cdk.Duration.minutes(5),
-          }),
-          threshold: 0,
-          evaluationPeriods: 1,
-          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-        });
+        const throttledRequestsAlarm = new cloudwatch.Alarm(
+          this,
+          `DynamoDB${name}ThrottledRequestsAlarm`,
+          {
+            alarmName: `tdnet-dynamodb-${name.toLowerCase()}-throttled-requests-${props.environment}`,
+            alarmDescription: `DynamoDB ${name}テーブルでThrottledRequestsが発生しました`,
+            metric: new cloudwatch.Metric({
+              namespace: 'AWS/DynamoDB',
+              metricName: 'ThrottledRequests',
+              dimensionsMap: { TableName: table.tableName },
+              statistic: 'Sum',
+              period: cdk.Duration.minutes(5),
+            }),
+            threshold: 0,
+            evaluationPeriods: 1,
+            comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+            treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+          }
+        );
 
         throttledRequestsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
         this.alarms.push(throttledRequestsAlarm);
@@ -473,67 +491,79 @@ export class CloudWatchAlarms extends Construct {
     // ========================================
     if (props.stateMachine) {
       // Step Functions実行失敗アラーム（Critical）
-      const sfnExecutionFailedAlarm = new cloudwatch.Alarm(this, 'StepFunctionsExecutionFailedAlarm', {
-        alarmName: `tdnet-step-functions-execution-failed-${props.environment}`,
-        alarmDescription: 'Step Functions実行が失敗しました（Critical）',
-        metric: new cloudwatch.Metric({
-          namespace: 'AWS/States',
-          metricName: 'ExecutionsFailed',
-          dimensionsMap: {
-            StateMachineArn: props.stateMachine.stateMachineArn,
-          },
-          statistic: 'Sum',
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 1,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const sfnExecutionFailedAlarm = new cloudwatch.Alarm(
+        this,
+        'StepFunctionsExecutionFailedAlarm',
+        {
+          alarmName: `tdnet-step-functions-execution-failed-${props.environment}`,
+          alarmDescription: 'Step Functions実行が失敗しました（Critical）',
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionsFailed',
+            dimensionsMap: {
+              StateMachineArn: props.stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 1,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       sfnExecutionFailedAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(sfnExecutionFailedAlarm);
 
       // Step Functions実行時間超過アラーム（Warning）
-      const sfnExecutionTimeoutAlarm = new cloudwatch.Alarm(this, 'StepFunctionsExecutionTimeoutAlarm', {
-        alarmName: `tdnet-step-functions-execution-timeout-${props.environment}`,
-        alarmDescription: 'Step Functions実行時間が15分を超えました（Warning）',
-        metric: new cloudwatch.Metric({
-          namespace: 'AWS/States',
-          metricName: 'ExecutionTime',
-          dimensionsMap: {
-            StateMachineArn: props.stateMachine.stateMachineArn,
-          },
-          statistic: 'Average',
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 900000, // 15分 = 900秒 = 900000ミリ秒
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const sfnExecutionTimeoutAlarm = new cloudwatch.Alarm(
+        this,
+        'StepFunctionsExecutionTimeoutAlarm',
+        {
+          alarmName: `tdnet-step-functions-execution-timeout-${props.environment}`,
+          alarmDescription: 'Step Functions実行時間が15分を超えました（Warning）',
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionTime',
+            dimensionsMap: {
+              StateMachineArn: props.stateMachine.stateMachineArn,
+            },
+            statistic: 'Average',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 900000, // 15分 = 900秒 = 900000ミリ秒
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       sfnExecutionTimeoutAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(sfnExecutionTimeoutAlarm);
 
       // Step Functionsスロットリングアラーム（Critical）
-      const sfnExecutionThrottledAlarm = new cloudwatch.Alarm(this, 'StepFunctionsExecutionThrottledAlarm', {
-        alarmName: `tdnet-step-functions-execution-throttled-${props.environment}`,
-        alarmDescription: 'Step Functions実行がスロットリングされました（Critical）',
-        metric: new cloudwatch.Metric({
-          namespace: 'AWS/States',
-          metricName: 'ExecutionThrottled',
-          dimensionsMap: {
-            StateMachineArn: props.stateMachine.stateMachineArn,
-          },
-          statistic: 'Sum',
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 1,
-        evaluationPeriods: 1,
-        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-      });
+      const sfnExecutionThrottledAlarm = new cloudwatch.Alarm(
+        this,
+        'StepFunctionsExecutionThrottledAlarm',
+        {
+          alarmName: `tdnet-step-functions-execution-throttled-${props.environment}`,
+          alarmDescription: 'Step Functions実行がスロットリングされました（Critical）',
+          metric: new cloudwatch.Metric({
+            namespace: 'AWS/States',
+            metricName: 'ExecutionThrottled',
+            dimensionsMap: {
+              StateMachineArn: props.stateMachine.stateMachineArn,
+            },
+            statistic: 'Sum',
+            period: cdk.Duration.minutes(5),
+          }),
+          threshold: 1,
+          evaluationPeriods: 1,
+          comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        }
+      );
 
       sfnExecutionThrottledAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.alertTopic));
       this.alarms.push(sfnExecutionThrottledAlarm);
@@ -559,7 +589,7 @@ export class CloudWatchAlarms extends Construct {
 
   /**
    * Lambda Error Rateメトリクスを作成
-   * 
+   *
    * Error Rate = (Errors / Invocations) * 100
    */
   private createErrorRateMetric(lambdaFunction: lambda.IFunction): cloudwatch.IMetric {
@@ -587,7 +617,7 @@ export class CloudWatchAlarms extends Construct {
 
   /**
    * CollectionSuccessRateメトリクスを作成
-   * 
+   *
    * Success Rate = (DisclosuresCollected / (DisclosuresCollected + DisclosuresFailed)) * 100
    */
   private createCollectionSuccessRateMetric(environment: string): cloudwatch.IMetric {

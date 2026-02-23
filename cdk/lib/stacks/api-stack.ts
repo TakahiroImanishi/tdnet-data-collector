@@ -9,7 +9,7 @@ import { WafConstruct } from '../constructs/waf';
  * API Stack - API Gateway, WAF
  * 変更頻度: 中（月数回）
  * 依存: Foundation Stack, Compute Stack
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/infrastructure/cdk-implementation.md - CDK実装ガイド
  * - .kiro/steering/security/security-best-practices.md - セキュリティベストプラクティス
@@ -241,7 +241,7 @@ export class TdnetApiStack extends cdk.Stack {
     //   certificate: certificate, // ACM証明書
     //   securityPolicy: apigateway.SecurityPolicy.TLS_1_2,
     // });
-    // 
+    //
     // new apigateway.BasePathMapping(this, 'BasePathMapping', {
     //   domainName: domainName,
     //   restApi: this.api,

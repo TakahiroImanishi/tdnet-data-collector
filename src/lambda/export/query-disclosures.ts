@@ -110,10 +110,7 @@ async function queryByDateRange(filter: QueryFilter): Promise<Disclosure[]> {
  * @param filter クエリフィルター
  * @returns 開示情報のリスト
  */
-async function queryByPartition(
-  partition: string,
-  filter: QueryFilter
-): Promise<Disclosure[]> {
+async function queryByPartition(partition: string, filter: QueryFilter): Promise<Disclosure[]> {
   const items: Disclosure[] = [];
   let lastEvaluatedKey: Record<string, any> | undefined;
 

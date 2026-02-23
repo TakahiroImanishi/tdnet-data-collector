@@ -22,7 +22,7 @@ export interface DashboardCloudFrontProps {
 
 /**
  * TDnet Dashboard用CloudFront Distribution Construct
- * 
+ *
  * 機能:
  * - S3バケットへのOAI（Origin Access Identity）アクセス
  * - HTTPS強制
@@ -87,7 +87,7 @@ export class DashboardCloudFront extends Construct {
     this.distribution = new cloudfront.Distribution(this, 'Distribution', {
       comment: `TDnet Dashboard Distribution (${props.environment})`,
       defaultRootObject: 'index.html',
-      
+
       // S3オリジン設定
       defaultBehavior: {
         origin: new origins.S3Origin(props.dashboardBucket, {

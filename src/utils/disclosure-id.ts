@@ -14,7 +14,7 @@ import { ValidationError } from '../errors';
  *
  * TDnetは日本の開示情報サービスであり、開示日時はJST（日本標準時）基準で管理されます。
  * UTC時刻をそのまま使用すると、月またぎのエッジケースで誤った日付になる可能性があります。
- * 
+ *
  * 例: UTC 2024-01-31T15:30:00Z → JST 2024-02-01T00:30:00+09:00
  *     UTCのまま使用すると "20240131" になるが、正しくは "20240201" であるべき
  *
@@ -46,7 +46,7 @@ export function generateDisclosureId(
   // これにより、月またぎのエッジケースを正しく処理できる
   const utcDate = new Date(disclosedAt);
   const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
-  
+
   // YYYYMMDD形式で日付を抽出
   const year = jstDate.getUTCFullYear();
   const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');

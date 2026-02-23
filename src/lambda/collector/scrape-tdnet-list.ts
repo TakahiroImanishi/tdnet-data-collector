@@ -87,7 +87,7 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
           if (pageNumber === 1) {
             throw error;
           }
-          
+
           // 2ページ目以降で404エラーが発生した場合は、これ以上ページがないと判断
           logger.info('TDnet page not found, stopping pagination', {
             date,
@@ -115,10 +115,7 @@ export async function scrapeTdnetList(date: string): Promise<DisclosureMetadata[
 
     return allDisclosures;
   } catch (error) {
-    logger.error(
-      'Failed to scrape TDnet list',
-      createErrorContext(error as Error, { date })
-    );
+    logger.error('Failed to scrape TDnet list', createErrorContext(error as Error, { date }));
 
     // エラーメトリクス送信
     await sendErrorMetric(
@@ -147,48 +144,38 @@ function validateDateFormat(date: string): void {
   // 1. フォーマット検証
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
-    throw new ValidationError(
-      `Invalid date format: ${date}. Expected YYYY-MM-DD format.`
-    );
+    throw new ValidationError(`Invalid date format: ${date}. Expected YYYY-MM-DD format.`);
   }
 
   // 2. 存在する日付の検証
   const dateObj = new Date(date);
   if (isNaN(dateObj.getTime())) {
-    throw new ValidationError(
-      `Invalid date: ${date}. Date does not exist.`
-    );
+    throw new ValidationError(`Invalid date: ${date}. Date does not exist.`);
   }
 
   // 日付の各部分を抽出して検証
   const [year, month, day] = date.split('-').map(Number);
   const reconstructedDate = new Date(year, month - 1, day);
-  
+
   // 日付が正規化されていないか確認（例: 2024-02-30 → 2024-03-02）
   if (
     reconstructedDate.getFullYear() !== year ||
     reconstructedDate.getMonth() !== month - 1 ||
     reconstructedDate.getDate() !== day
   ) {
-    throw new ValidationError(
-      `Invalid date: ${date}. Date does not exist (e.g., February 30th).`
-    );
+    throw new ValidationError(`Invalid date: ${date}. Date does not exist (e.g., February 30th).`);
   }
 
   // 3. 範囲検証（1970-01-01以降、現在+1日以内）
   const minDate = new Date('1970-01-01T00:00:00Z');
   const maxDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // 現在時刻+1日
-  
+
   if (dateObj < minDate) {
-    throw new ValidationError(
-      `Date out of range: ${date}. Must be on or after 1970-01-01.`
-    );
+    throw new ValidationError(`Date out of range: ${date}. Must be on or after 1970-01-01.`);
   }
-  
+
   if (dateObj > maxDate) {
-    throw new ValidationError(
-      `Date out of range: ${date}. Must be within 1 day of current date.`
-    );
+    throw new ValidationError(`Date out of range: ${date}. Must be within 1 day of current date.`);
   }
 }
 
@@ -212,10 +199,10 @@ async function fetchTdnetHtml(date: string, pageNumber: number = 1): Promise<str
           timeout: HTTP_TIMEOUT_MS,
           headers: {
             'User-Agent': USER_AGENT_FULL,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
             'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
+            Connection: 'keep-alive',
           },
           // Shift_JISエンコーディング対応
           responseType: 'arraybuffer',
@@ -268,22 +255,22 @@ function decodeShiftJIS(buffer: ArrayBuffer | string): string {
     // ArrayBufferをBufferに変換
     const uint8Array = new Uint8Array(buffer);
     const nodeBuffer = Buffer.from(uint8Array);
-    
+
     // Shift_JISからUTF-8にデコード
     const decoded = iconv.decode(nodeBuffer, 'shift_jis');
-    
+
     logger.debug('Shift_JIS decoded successfully', {
       buffer_size: nodeBuffer.length,
       decoded_length: decoded.length,
     });
-    
+
     return decoded;
   } catch (error) {
     logger.error('Failed to decode Shift_JIS', {
       error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
-    
+
     // フォールバック: UTF-8として解釈
     try {
       const uint8Array = new Uint8Array(buffer);
@@ -292,7 +279,8 @@ function decodeShiftJIS(buffer: ArrayBuffer | string): string {
     } catch (fallbackError) {
       logger.error('Fallback UTF-8 decode also failed', {
         error_type: fallbackError instanceof Error ? fallbackError.constructor.name : 'Unknown',
-        error_message: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+        error_message:
+          fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
       });
       // 最終フォールバック: 空文字列を返す
       return '';
@@ -333,18 +321,12 @@ function buildTdnetUrl(date: string, pageNumber: number = 1): string {
 function convertAxiosError(error: AxiosError, url: string): Error {
   // ネットワークエラー
   if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
-    return new RetryableError(
-      `Network error: ${error.code} - ${error.message}`,
-      error
-    );
+    return new RetryableError(`Network error: ${error.code} - ${error.message}`, error);
   }
 
   // タイムアウトエラー
   if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-    return new RetryableError(
-      `Request timeout: ${error.message}`,
-      error
-    );
+    return new RetryableError(`Request timeout: ${error.message}`, error);
   }
 
   // HTTPエラー
@@ -353,10 +335,7 @@ function convertAxiosError(error: AxiosError, url: string): Error {
 
     // 5xxエラー（サーバーエラー）- 再試行可能
     if (status >= 500) {
-      return new RetryableError(
-        `Server error: ${status} ${error.response.statusText}`,
-        error
-      );
+      return new RetryableError(`Server error: ${status} ${error.response.statusText}`, error);
     }
 
     // 429エラー（レート制限）- 再試行可能
@@ -375,13 +354,9 @@ function convertAxiosError(error: AxiosError, url: string): Error {
     }
 
     // その他のHTTPエラー - 再試行不可
-    return new Error(
-      `HTTP error: ${status} ${error.response.statusText}`
-    );
+    return new Error(`HTTP error: ${status} ${error.response.statusText}`);
   }
 
   // その他のエラー
-  return new Error(
-    `Failed to fetch TDnet HTML: ${error.message}`
-  );
+  return new Error(`Failed to fetch TDnet HTML: ${error.message}`);
 }

@@ -4,16 +4,16 @@
  * TDnet開示情報リストページのHTMLをパースし、メタデータを抽出します。
  *
  * Requirements: 要件1.1, 1.2（データ収集、メタデータ抽出）
- * 
+ *
  * @example
  * ```typescript
  * import { RateLimiter } from '../utils/rate-limiter';
  * import { parseDisclosureList } from './html-parser';
  * import axios from 'axios';
- * 
+ *
  * // RateLimiterを使用してTDnetからHTMLを取得
  * const rateLimiter = new RateLimiter({ minDelayMs: 2000 });
- * 
+ *
  * async function fetchAndParseDisclosures(date: string) {
  *   await rateLimiter.waitIfNeeded();
  *   const response = await axios.get(`https://www.release.tdnet.info/inbs/I_list_001_${date}.html`);
@@ -63,11 +63,12 @@ export function parseDisclosureList(html: string, requestDate: string): Disclosu
       // HTMLプレビューをBase64エンコードしてログ出力（エンコーディングエラー回避）
       const htmlPreview = html.substring(0, 200);
       const htmlPreviewBase64 = Buffer.from(htmlPreview, 'utf-8').toString('base64');
-      
+
       logger.warn('No disclosure table found in HTML', {
         html_length: html.length,
         html_preview_base64: htmlPreviewBase64,
-        decode_instruction: 'Use Buffer.from(html_preview_base64, "base64").toString("utf-8") to decode',
+        decode_instruction:
+          'Use Buffer.from(html_preview_base64, "base64").toString("utf-8") to decode',
       });
       // HTML構造が変更された可能性を検知
       detectHtmlStructureChange($);
@@ -86,9 +87,9 @@ export function parseDisclosureList(html: string, requestDate: string): Disclosu
       // 7セル未満の行はスキップ（ヘッダーまたは不正な行）
       if (cells.length < 7) {
         if (cells.length > 0) {
-          logger.debug('Skipping row with insufficient cells', { 
-            index, 
-            cellCount: cells.length 
+          logger.debug('Skipping row with insufficient cells', {
+            index,
+            cellCount: cells.length,
           });
         }
         return;
@@ -97,18 +98,18 @@ export function parseDisclosureList(html: string, requestDate: string): Disclosu
       try {
         // Cell 0: kjTime - 時刻（HH:MM形式）
         const time = $(cells[0]).text().trim();
-        
+
         // Cell 1: kjCode - 企業コード（5桁）
         const companyCode = $(cells[1]).text().trim();
-        
+
         // Cell 2: kjName - 企業名
         const companyName = $(cells[2]).text().trim();
-        
+
         // Cell 3: kjTitle - タイトル（PDFリンク付き）
         const $titleCell = $(cells[3]);
         const title = $titleCell.text().trim();
         const pdfUrl = $titleCell.find('a').attr('href') || '';
-        
+
         // Cell 4: kjXbrl - XBRL（オプション、スキップ）
         // Cell 5: kjPlace - 取引所（オプション、スキップ）
         // Cell 6: kjHistroy - 履歴（オプション、スキップ）
@@ -217,15 +218,15 @@ function buildAbsolutePdfUrl(relativePath: string): string {
   if (!relativePath) {
     return '';
   }
-  
+
   // 既に絶対URLの場合はそのまま返す
   if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
     return relativePath;
   }
-  
+
   // TDnetのベースURL
   const baseUrl = 'https://www.release.tdnet.info/inbs';
-  
+
   // 相対パスを絶対URLに変換
   return `${baseUrl}/${relativePath}`;
 }
@@ -241,11 +242,11 @@ function parseDisclosedAt(date: string, time: string): string {
   // 日付と時刻を結合してJST日時を作成
   // 例: "2026-02-13" + "22:00" → "2026-02-13T22:00:00+09:00"
   const jstDate = new Date(`${date}T${time}:00+09:00`);
-  
+
   if (isNaN(jstDate.getTime())) {
     throw new ValidationError(`Invalid date/time: ${date} ${time}`);
   }
-  
+
   return jstDate.toISOString();
 }
 

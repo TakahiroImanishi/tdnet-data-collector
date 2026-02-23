@@ -1,6 +1,6 @@
 /**
  * Lambda Export Construct
- * 
+ *
  * This construct creates the TDnet Export Lambda function with environment-specific configuration.
  */
 

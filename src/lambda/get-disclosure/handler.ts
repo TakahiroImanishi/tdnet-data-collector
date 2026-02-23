@@ -5,7 +5,7 @@
  * API Gateway統合により、RESTful APIとして公開されます。
  *
  * Requirements: 要件4.1, 4.3, 4.4（検索API、認証、PDFダウンロード）
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -110,7 +110,7 @@ export async function handler(
     if (disclosure.pdf_s3_key) {
       const expirationParam = event.queryStringParameters?.expiration;
       const expiration = expirationParam ? parseInt(expirationParam, 10) : 3600;
-      
+
       // 有効期限のバリデーション（1秒〜7日）
       if (expiration < 1 || expiration > 604800) {
         throw new Error('Expiration must be between 1 and 604800 seconds');
@@ -179,7 +179,7 @@ export async function handler(
 function handleError(error: Error, requestId: string): APIGatewayProxyResult {
   let statusCode = 500;
   let errorCode = 'INTERNAL_ERROR';
-  let details: Record<string, any> = {};
+  const details: Record<string, any> = {};
 
   if (error instanceof NotFoundError) {
     statusCode = 404;

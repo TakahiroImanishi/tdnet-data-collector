@@ -36,10 +36,10 @@ export interface SecretsManagerConstructProps {
 
 /**
  * Secrets Manager Construct
- * 
+ *
  * TDnet Data CollectorプロジェクトのAPIキーを安全に管理するための
  * AWS Secrets Managerリソースを定義します。
- * 
+ *
  * 機能:
  * - /tdnet/api-key シークレットの作成または既存シークレットの参照
  * - Lambda関数へのシークレット読み取り権限付与
@@ -48,7 +48,7 @@ export interface SecretsManagerConstructProps {
 export class SecretsManagerConstruct extends Construct {
   /**
    * APIキーシークレット
-   * 
+   *
    * シークレット名: /tdnet/api-key
    * フォーマット: { "apiKey": "your-api-key-here" }
    */
@@ -62,7 +62,13 @@ export class SecretsManagerConstruct extends Construct {
   constructor(scope: Construct, id: string, props: SecretsManagerConstructProps) {
     super(scope, id);
 
-    const { environment, enableRotation = true, rotationDays = 90, useExistingSecret = false, rotationFunctionCode } = props;
+    const {
+      environment,
+      enableRotation = true,
+      rotationDays = 90,
+      useExistingSecret = false,
+      rotationFunctionCode,
+    } = props;
 
     // 既存シークレットを使用するか、新規作成するか
     if (useExistingSecret) {
@@ -97,7 +103,8 @@ export class SecretsManagerConstruct extends Construct {
           functionName: `tdnet-api-key-rotation-${environment}`,
           runtime: lambda.Runtime.NODEJS_20_X,
           handler: 'index.handler',
-          code: rotationFunctionCode || lambda.Code.fromAsset('../dist/src/lambda/api-key-rotation'),
+          code:
+            rotationFunctionCode || lambda.Code.fromAsset('../dist/src/lambda/api-key-rotation'),
           timeout: cdk.Duration.seconds(30),
           memorySize: 128,
           environment: {
@@ -122,9 +129,9 @@ export class SecretsManagerConstruct extends Construct {
 
   /**
    * Lambda関数にシークレット読み取り権限を付与
-   * 
+   *
    * @param lambdaFunction - シークレットにアクセスするLambda関数
-   * 
+   *
    * 使用例:
    * ```typescript
    * const secretsManager = new SecretsManagerConstruct(this, 'SecretsManager');
@@ -138,9 +145,9 @@ export class SecretsManagerConstruct extends Construct {
 
   /**
    * シークレットARNを取得
-   * 
+   *
    * Lambda関数の環境変数に設定する際に使用します。
-   * 
+   *
    * @returns シークレットARN
    */
   public getSecretArn(): string {
@@ -149,10 +156,10 @@ export class SecretsManagerConstruct extends Construct {
 
   /**
    * シークレット値を取得（CDK内部でのみ使用）
-   * 
+   *
    * 注意: この値は環境変数に直接設定しないでください。
    * Lambda関数内でAWS SDKを使用してシークレット値を取得してください。
-   * 
+   *
    * @returns シークレット値（SecretValue型）
    */
   public getSecretValue(): any {

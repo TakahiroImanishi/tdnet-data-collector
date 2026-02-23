@@ -90,9 +90,7 @@ export async function queryDisclosures(params: QueryParams): Promise<QueryResult
 
   // 開示種類でフィルタリング
   if (params.disclosure_type) {
-    disclosures = disclosures.filter(
-      (d) => d.disclosure_type === params.disclosure_type
-    );
+    disclosures = disclosures.filter((d) => d.disclosure_type === params.disclosure_type);
   }
 
   // 開示日時で降順ソート
@@ -102,10 +100,7 @@ export async function queryDisclosures(params: QueryParams): Promise<QueryResult
 
   // ページネーション
   const total = disclosures.length;
-  const paginatedDisclosures = disclosures.slice(
-    params.offset,
-    params.offset + params.limit
-  );
+  const paginatedDisclosures = disclosures.slice(params.offset, params.offset + params.limit);
 
   logger.info('Query completed', {
     total,
@@ -223,10 +218,7 @@ async function queryByDateRange(params: QueryParams): Promise<Disclosure[]> {
  * @param params クエリパラメータ
  * @returns 開示情報リスト
  */
-async function queryByPartition(
-  partition: string,
-  _params: QueryParams
-): Promise<Disclosure[]> {
+async function queryByPartition(partition: string, _params: QueryParams): Promise<Disclosure[]> {
   const queryInput: QueryCommandInput = {
     TableName: TABLE_NAME,
     IndexName: 'GSI_DatePartition',
@@ -272,21 +264,18 @@ async function executeQuery(input: QueryCommandInput): Promise<Disclosure[]> {
       ExclusiveStartKey: lastEvaluatedKey,
     });
 
-    const response = await retryWithBackoff(
-      async () => await dynamoClient.send(command),
-      {
-        maxRetries: 3,
-        initialDelay: 1000,
-        backoffMultiplier: 2,
-        jitter: true,
-        shouldRetry: (error) => {
-          return (
-            error.name === 'ProvisionedThroughputExceededException' ||
-            error.name === 'ThrottlingException'
-          );
-        },
-      }
-    );
+    const response = await retryWithBackoff(async () => await dynamoClient.send(command), {
+      maxRetries: 3,
+      initialDelay: 1000,
+      backoffMultiplier: 2,
+      jitter: true,
+      shouldRetry: (error) => {
+        return (
+          error.name === 'ProvisionedThroughputExceededException' ||
+          error.name === 'ThrottlingException'
+        );
+      },
+    });
 
     if (response.Items) {
       for (const item of response.Items) {
@@ -316,21 +305,18 @@ async function executeScan(input: ScanCommandInput): Promise<Disclosure[]> {
       ExclusiveStartKey: lastEvaluatedKey,
     });
 
-    const response = await retryWithBackoff(
-      async () => await dynamoClient.send(command),
-      {
-        maxRetries: 3,
-        initialDelay: 1000,
-        backoffMultiplier: 2,
-        jitter: true,
-        shouldRetry: (error) => {
-          return (
-            error.name === 'ProvisionedThroughputExceededException' ||
-            error.name === 'ThrottlingException'
-          );
-        },
-      }
-    );
+    const response = await retryWithBackoff(async () => await dynamoClient.send(command), {
+      maxRetries: 3,
+      initialDelay: 1000,
+      backoffMultiplier: 2,
+      jitter: true,
+      shouldRetry: (error) => {
+        return (
+          error.name === 'ProvisionedThroughputExceededException' ||
+          error.name === 'ThrottlingException'
+        );
+      },
+    });
 
     if (response.Items) {
       for (const item of response.Items) {

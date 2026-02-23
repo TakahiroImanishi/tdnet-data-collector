@@ -1,9 +1,9 @@
 /**
  * CloudWatch Logs Construct
- * 
+ *
  * This construct configures CloudWatch Logs for Lambda functions with environment-specific
  * retention periods to optimize costs and comply with logging requirements.
- * 
+ *
  * Retention Periods:
  * - Production: 90 days (3 months) - 要件6.3準拠
  * - Development: 7 days (1 week) - コスト最適化
@@ -27,7 +27,7 @@ export interface CloudWatchLogsProps {
 
 /**
  * CloudWatch Logs Construct
- * 
+ *
  * Provides centralized log configuration for all Lambda functions
  */
 export class CloudWatchLogs extends Construct {
@@ -60,15 +60,12 @@ export class CloudWatchLogs extends Construct {
 
   /**
    * Configure CloudWatch Logs for a Lambda function
-   * 
+   *
    * @param lambdaFunction - Lambda function to configure
    * @param logGroupName - Optional custom log group name (defaults to /aws/lambda/{functionName})
    * @returns Created log group
    */
-  public configureForLambda(
-    lambdaFunction: lambda.Function,
-    logGroupName?: string
-  ): logs.LogGroup {
+  public configureForLambda(lambdaFunction: lambda.Function, logGroupName?: string): logs.LogGroup {
     const logGroup = new logs.LogGroup(this, `${lambdaFunction.node.id}LogGroup`, {
       logGroupName: logGroupName || `/aws/lambda/${lambdaFunction.functionName}`,
       retention: this.retentionDays,
@@ -87,7 +84,7 @@ export class CloudWatchLogs extends Construct {
 
   /**
    * Configure CloudWatch Logs for multiple Lambda functions
-   * 
+   *
    * @param lambdaFunctions - Array of Lambda functions to configure
    * @returns Array of created log groups
    */
@@ -97,7 +94,7 @@ export class CloudWatchLogs extends Construct {
 
   /**
    * Get retention days as number (for testing/validation)
-   * 
+   *
    * @returns Number of days
    */
   public getRetentionDaysAsNumber(): number {

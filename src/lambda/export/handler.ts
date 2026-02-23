@@ -5,7 +5,7 @@
  * APIキー認証を実装し、非同期でエクスポート処理を実行します。
  *
  * Requirements: 要件5.1, 5.2, 5.4, 11.1（エクスポート、認証）
- * 
+ *
  * 関連ドキュメント:
  * - .kiro/steering/core/tdnet-implementation-rules.md - 実装ルール
  * - .kiro/steering/development/lambda-implementation.md - Lambda実装ガイド
@@ -81,15 +81,14 @@ export async function handler(
     const exportJob = await createExportJob(requestBody, context.awsRequestId);
 
     // 非同期でエクスポート処理を開始（await しない）
-    processExport(exportJob.export_id, requestBody)
-      .catch((error) => {
-        logger.error(
-          'Export processing failed',
-          createErrorContext(error as Error, {
-            export_id: exportJob.export_id,
-          })
-        );
-      });
+    processExport(exportJob.export_id, requestBody).catch((error) => {
+      logger.error(
+        'Export processing failed',
+        createErrorContext(error as Error, {
+          export_id: exportJob.export_id,
+        })
+      );
+    });
 
     const duration = Date.now() - startTime;
 
@@ -144,10 +143,7 @@ export async function handler(
     );
 
     // エラーメトリクス送信
-    await sendErrorMetric(
-      error instanceof Error ? error.constructor.name : 'Unknown',
-      'Export'
-    );
+    await sendErrorMetric(error instanceof Error ? error.constructor.name : 'Unknown', 'Export');
 
     // エラーレスポンス
     return handleError(error as Error, event.requestContext.requestId);
@@ -211,9 +207,7 @@ function validateApiKey(event: ExportEvent): void {
 function validateRequestBody(requestBody: ExportRequestBody): void {
   // フォーマットのバリデーション
   if (!requestBody.format || !['json', 'csv'].includes(requestBody.format)) {
-    throw new ValidationError(
-      `Invalid format: ${requestBody.format}. Expected 'json' or 'csv'.`
-    );
+    throw new ValidationError(`Invalid format: ${requestBody.format}. Expected 'json' or 'csv'.`);
   }
 
   // フィルターのバリデーション
@@ -242,18 +236,14 @@ function validateRequestBody(requestBody: ExportRequestBody): void {
   if (filter.start_date) {
     const startDate = new Date(filter.start_date);
     if (isNaN(startDate.getTime())) {
-      throw new ValidationError(
-        `Invalid start_date: ${filter.start_date}. Date does not exist.`
-      );
+      throw new ValidationError(`Invalid start_date: ${filter.start_date}. Date does not exist.`);
     }
   }
 
   if (filter.end_date) {
     const endDate = new Date(filter.end_date);
     if (isNaN(endDate.getTime())) {
-      throw new ValidationError(
-        `Invalid end_date: ${filter.end_date}. Date does not exist.`
-      );
+      throw new ValidationError(`Invalid end_date: ${filter.end_date}. Date does not exist.`);
     }
   }
 
