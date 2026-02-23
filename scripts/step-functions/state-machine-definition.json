@@ -9,7 +9,8 @@
         "FunctionName": "tdnet-collector-init",
         "Payload": {
           "start_date.$": "$.start_date",
-          "end_date.$": "$.end_date"
+          "end_date.$": "$.end_date",
+          "execution_id.$": "$$.Execution.Name"
         }
       },
       "ResultPath": "$.initResult",

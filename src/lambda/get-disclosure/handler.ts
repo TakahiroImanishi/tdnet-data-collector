@@ -22,9 +22,10 @@ import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
 import { NotFoundError } from '../../errors';
 import { Disclosure } from '../../types';
+import { getEnv, getEnvOptional } from '../../types/env';
 
 // AWS クライアント（グローバルスコープで初期化）
-const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const dynamoClient = new DynamoDBClient({ region: getEnv('AWS_REGION', 'ap-northeast-1') });
 const docClient = DynamoDBDocumentClient.from(dynamoClient, {
   marshallOptions: {
     removeUndefinedValues: true,
@@ -32,16 +33,13 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient, {
   },
 });
 
-const s3Client = new S3Client({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const s3Client = new S3Client({ region: getEnv('AWS_REGION', 'ap-northeast-1') });
 
 /**
  * DynamoDBから開示情報を取得
  */
 async function getDisclosureFromDB(disclosureId: string): Promise<Disclosure> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
-  }
+  const tableName = getEnv('DYNAMODB_TABLE_NAME');
 
   const command = new GetCommand({
     TableName: tableName,
@@ -63,10 +61,7 @@ async function getDisclosureFromDB(disclosureId: string): Promise<Disclosure> {
  * S3署名付きURLを生成
  */
 async function generateSignedUrl(s3Key: string, expirationSeconds: number = 3600): Promise<string> {
-  const bucketName = process.env.S3_BUCKET_NAME;
-  if (!bucketName) {
-    throw new Error('S3_BUCKET_NAME environment variable is not set');
-  }
+  const bucketName = getEnv('S3_BUCKET_NAME');
 
   const command = new GetObjectCommand({
     Bucket: bucketName,
@@ -199,7 +194,7 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
     request_id: requestId,
   };
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (getEnvOptional('NODE_ENV') !== 'production') {
     (errorResponse.error as any).stack = error.stack;
   }
 

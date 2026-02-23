@@ -1,13 +1,16 @@
 /**
- * 讒矩蛹悶Ο繧ｬ繝ｼ
+ * 構造化ロガー
  *
- * Winston繧剃ｽｿ逕ｨ縺励◆讒矩蛹悶Ο繧ｮ繝ｳ繧ｰ繧呈署萓帙＠縺ｾ縺吶・ * CloudWatch Logs蠖｢蠑上・JSON蜃ｺ蜉帙ｒ繧ｵ繝昴・繝医＠縲√Ο繧ｰ繝ｬ繝吶Ν縺ｫ蠢懊§縺滄←蛻・↑繝ｭ繧ｰ險倬鹸繧定｡後＞縺ｾ縺吶・ *
- * Requirements: 隕∽ｻｶ6.3・域ｧ矩蛹悶Ο繧ｰ・・ */
+ * Winstonを使用した構造化ロギングを提供します。
+ * CloudWatch Logs形式のJSON出力をサポートし、ログレベルに応じて異なるログ記録を行います。
+ *
+ * Requirements: 要件6.3（構造化ログ）
+ */
 
 import winston from 'winston';
 
 /**
- * 繝ｭ繧ｰ繝ｬ繝吶Ν
+ * ログレベル
  */
 export enum LogLevel {
   DEBUG = 'debug',
@@ -17,13 +20,14 @@ export enum LogLevel {
 }
 
 /**
- * 繝ｭ繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝・ */
+ * ログコンテキスト
+ */
 export interface LogContext {
   [key: string]: unknown;
 }
 
 /**
- * 繝ｭ繧ｬ繝ｼ繧､繝ｳ繧ｿ繝ｼ繝輔ぉ繝ｼ繧ｹ
+ * ロガーインターフェース
  */
 export interface Logger {
   debug(message: string, context?: LogContext): void;
@@ -33,11 +37,12 @@ export interface Logger {
 }
 
 /**
- * Winston 繝ｭ繧ｬ繝ｼ縺ｮ險ｭ螳・ */
+ * Winston ロガーの設定
+ */
 const isLambdaEnvironment = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-// Lambda迺ｰ蠅・〒縺ｯ縲仝inston縺ｮ莉｣繧上ｊ縺ｫconsole.log繧剃ｽｿ逕ｨ
-// 縺薙ｌ縺ｫ繧医ｊ縲，loudWatch Logs縺ｫ遒ｺ螳溘↓繝ｭ繧ｰ縺悟・蜉帙＆繧後ｋ
+// Lambda環境では、Winstonの代わりにconsole.logを使用
+// これにより、CloudWatch Logsに確実にログが出力される
 const winstonLogger = isLambdaEnvironment
   ? null
   : winston.createLogger({
@@ -51,13 +56,19 @@ const winstonLogger = isLambdaEnvironment
       ),
       defaultMeta: {
         service: 'tdnet-data-collector',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV || 'production',
       },
       transports: [
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize(),
-            winston.format.printf(({ timestamp, level, message, ...meta }) => {
+            winston.format.printf((info) => {
+              const { timestamp, level, message, ...meta } = info as {
+                timestamp: string;
+                level: string;
+                message: string;
+                [key: string]: unknown;
+              };
               const metaStr = Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : '';
               return `${timestamp} [${level}]: ${message} ${metaStr}`;
             })
@@ -67,13 +78,15 @@ const winstonLogger = isLambdaEnvironment
     });
 
 /**
- * 讒矩蛹悶Ο繧ｬ繝ｼ螳溯｣・ */
+ * 構造化ロガー実装
+ */
 class StructuredLogger implements Logger {
   /**
-   * DEBUG繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧定ｨ倬鹸
+   * DEBUGレベルのログを記録
    *
-   * @param message 繝ｭ繧ｰ繝｡繝・そ繝ｼ繧ｸ
-   * @param context 繝ｭ繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・   *
+   * @param message ログメッセージ
+   * @param context ログコンテキスト（オプション）
+   *
    * @example
    * ```typescript
    * logger.debug('Processing disclosure', {
@@ -84,6 +97,7 @@ class StructuredLogger implements Logger {
    */
   debug(message: string, context?: LogContext): void {
     if (isLambdaEnvironment) {
+      // eslint-disable-next-line no-console
       console.log(JSON.stringify({ level: 'debug', message, ...context }));
     } else {
       winstonLogger!.debug(message, context);
@@ -91,10 +105,11 @@ class StructuredLogger implements Logger {
   }
 
   /**
-   * INFO繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧定ｨ倬鹸
+   * INFOレベルのログを記録
    *
-   * @param message 繝ｭ繧ｰ繝｡繝・そ繝ｼ繧ｸ
-   * @param context 繝ｭ繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・   *
+   * @param message ログメッセージ
+   * @param context ログコンテキスト（オプション）
+   *
    * @example
    * ```typescript
    * logger.info('Disclosure saved successfully', {
@@ -105,6 +120,7 @@ class StructuredLogger implements Logger {
    */
   info(message: string, context?: LogContext): void {
     if (isLambdaEnvironment) {
+      // eslint-disable-next-line no-console
       console.log(JSON.stringify({ level: 'info', message, ...context }));
     } else {
       winstonLogger!.info(message, context);
@@ -112,10 +128,11 @@ class StructuredLogger implements Logger {
   }
 
   /**
-   * WARN繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧定ｨ倬鹸
+   * WARNレベルのログを記録
    *
-   * @param message 繝ｭ繧ｰ繝｡繝・そ繝ｼ繧ｸ
-   * @param context 繝ｭ繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・   *
+   * @param message ログメッセージ
+   * @param context ログコンテキスト（オプション）
+   *
    * @example
    * ```typescript
    * logger.warn('Duplicate item detected', {
@@ -125,6 +142,7 @@ class StructuredLogger implements Logger {
    */
   warn(message: string, context?: LogContext): void {
     if (isLambdaEnvironment) {
+      // eslint-disable-next-line no-console
       console.warn(JSON.stringify({ level: 'warn', message, ...context }));
     } else {
       winstonLogger!.warn(message, context);
@@ -132,10 +150,11 @@ class StructuredLogger implements Logger {
   }
 
   /**
-   * ERROR繝ｬ繝吶Ν縺ｮ繝ｭ繧ｰ繧定ｨ倬鹸
+   * ERRORレベルのログを記録
    *
-   * @param message 繝ｭ繧ｰ繝｡繝・そ繝ｼ繧ｸ
-   * @param context 繝ｭ繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・   *
+   * @param message ログメッセージ
+   * @param context ログコンテキスト（オプション）
+   *
    * @example
    * ```typescript
    * logger.error('Failed to save disclosure', {
@@ -150,6 +169,7 @@ class StructuredLogger implements Logger {
    */
   error(message: string, context?: LogContext): void {
     if (isLambdaEnvironment) {
+      // eslint-disable-next-line no-console
       console.error(JSON.stringify({ level: 'error', message, ...context }));
     } else {
       winstonLogger!.error(message, context);
@@ -158,9 +178,10 @@ class StructuredLogger implements Logger {
 }
 
 /**
- * 繧ｰ繝ｭ繝ｼ繝舌Ν繝ｭ繧ｬ繝ｼ繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ
+ * グローバルロガーインスタンス
  *
- * 繝励Ο繧ｸ繧ｧ繧ｯ繝亥・菴薙〒蜈ｱ譛峨＆繧後ｋ繝ｭ繧ｬ繝ｼ繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ縺ｧ縺吶・ *
+ * プロジェクト全体で共有されるロガーインスタンスです。
+ *
  * @example
  * ```typescript
  * import { logger } from './utils/logger';
@@ -175,8 +196,9 @@ class StructuredLogger implements Logger {
 export const logger: Logger = new StructuredLogger();
 
 /**
- * 繝ｭ繧ｰ繝ｬ繝吶Ν繧定ｨｭ螳・ *
- * @param level 繝ｭ繧ｰ繝ｬ繝吶Ν
+ * ログレベルを設定
+ *
+ * @param level ログレベル
  *
  * @example
  * ```typescript
@@ -189,14 +211,18 @@ export function setLogLevel(level: LogLevel): void {
   if (winstonLogger) {
     winstonLogger.level = level;
   }
-  // Lambda迺ｰ蠅・〒縺ｯ縲´OG_LEVEL迺ｰ蠅・､画焚縺ｧ蛻ｶ蠕｡縺輔ｌ繧九◆繧√∽ｽ輔ｂ縺励↑縺・}
+  // Lambda環境では、LOG_LEVEL環境変数で制御されるため、何もしない
+}
 
 /**
- * 繧ｨ繝ｩ繝ｼ繧ｪ繝悶ず繧ｧ繧ｯ繝医°繧画ｧ矩蛹悶Ο繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝医ｒ逕滓・
+ * エラーオブジェクトから構造化ログコンテキストを生成
  *
- * Steering貅匁侠縺ｮ讓呎ｺ悶ヵ繧ｩ繝ｼ繝槭ャ繝・ { error_type, error_message, context, stack_trace }
+ * Steering要件の標準フォーマット: { error_type, error_message, context, stack_trace }
  *
- * @param error 繧ｨ繝ｩ繝ｼ繧ｪ繝悶ず繧ｧ繧ｯ繝・ * @param additionalContext 霑ｽ蜉縺ｮ繧ｳ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・ * @returns 繝ｭ繧ｰ繧ｳ繝ｳ繝・く繧ｹ繝・ *
+ * @param error エラーオブジェクト
+ * @param additionalContext 追加のコンテキスト（オプション）
+ * @returns ログコンテキスト
+ *
  * @example
  * ```typescript
  * try {
@@ -208,10 +234,7 @@ export function setLogLevel(level: LogLevel): void {
  * }
  * ```
  */
-export function createErrorContext(
-  error: Error,
-  additionalContext?: LogContext
-): LogContext {
+export function createErrorContext(error: Error, additionalContext?: LogContext): LogContext {
   return {
     error_type: error.constructor.name,
     error_message: error.message,
@@ -221,11 +244,16 @@ export function createErrorContext(
 }
 
 /**
- * Lambda螳溯｡後さ繝ｳ繝・く繧ｹ繝医ｒ蜷ｫ繧繧ｨ繝ｩ繝ｼ繝ｭ繧ｰ繧定ｨ倬鹸
+ * Lambda実行コンテキストを含むエラーログを記録
  *
- * Lambda螳溯｣・メ繧ｧ繝・け繝ｪ繧ｹ繝医↓貅匁侠縺励◆讓呎ｺ悶お繝ｩ繝ｼ繝ｭ繧ｰ繝輔か繝ｼ繝槭ャ繝医・ * CloudWatch Logs縺ｫ讒矩蛹悶Ο繧ｰ縺ｨ縺励※險倬鹸縺輔ｌ縺ｾ縺吶・ *
- * @param message 繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ
- * @param error 繧ｨ繝ｩ繝ｼ繧ｪ繝悶ず繧ｧ繧ｯ繝・ * @param lambdaContext Lambda螳溯｡後さ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・ * @param additionalContext 霑ｽ蜉縺ｮ繧ｳ繝ｳ繝・く繧ｹ繝茨ｼ医が繝励す繝ｧ繝ｳ・・ *
+ * Lambdaチェックリストに準拠した標準エラーログフォーマット。
+ * CloudWatch Logsに構造化ログとして記録されます。
+ *
+ * @param message エラーメッセージ
+ * @param error エラーオブジェクト
+ * @param lambdaContext Lambda実行コンテキスト（オプション）
+ * @param additionalContext 追加のコンテキスト（オプション）
+ *
  * @example
  * ```typescript
  * export async function handler(event: any, context: any) {

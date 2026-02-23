@@ -10,13 +10,14 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logger } from '../../utils/logger';
+import { getEnv } from '../../types/env';
 
 // S3クライアント（グローバルスコープで初期化）
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'ap-northeast-1',
+  region: getEnv('AWS_REGION', 'ap-northeast-1'),
 });
 
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'tdnet-data-collector-pdfs';
+const BUCKET_NAME = getEnv('S3_BUCKET_NAME', 'tdnet-data-collector-pdfs');
 const URL_EXPIRATION_SECONDS = 3600; // 1時間
 
 /**

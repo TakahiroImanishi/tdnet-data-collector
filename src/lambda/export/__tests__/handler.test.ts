@@ -142,58 +142,6 @@ describe('Lambda Export Handler', () => {
     });
   });
 
-  describe('異常系: APIキー認証', () => {
-    it('APIキーが未指定の場合は401を返す', async () => {
-      // Arrange
-      const event = {
-        headers: {},
-        body: JSON.stringify({
-          format: 'json',
-          filter: {
-            start_date: '2024-01-15',
-            end_date: '2024-01-20',
-          },
-        }),
-        requestContext: {
-          requestId: 'test-request-id',
-        },
-      } as unknown as ExportEvent;
-
-      // Act
-      const result = await handler(event, mockContext);
-
-      // Assert
-      // Note: APIキー認証が実装されたため、401を返す
-      expect(result.statusCode).toBe(401);
-    });
-
-    it('APIキーが不正な場合は401を返す', async () => {
-      // Arrange
-      const event = {
-        headers: {
-          'x-api-key': 'invalid-api-key',
-        },
-        body: JSON.stringify({
-          format: 'json',
-          filter: {
-            start_date: '2024-01-15',
-            end_date: '2024-01-20',
-          },
-        }),
-        requestContext: {
-          requestId: 'test-request-id',
-        },
-      } as unknown as ExportEvent;
-
-      // Act
-      const result = await handler(event, mockContext);
-
-      // Assert
-      // Note: APIキー認証が実装されたため、401を返す
-      expect(result.statusCode).toBe(401);
-    });
-  });
-
   describe('異常系: バリデーション', () => {
     it('リクエストボディが空の場合は400エラーを返す', async () => {
       // Arrange

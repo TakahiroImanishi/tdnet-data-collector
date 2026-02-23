@@ -18,10 +18,11 @@ import { DynamoDBClient, DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendMetrics } from '../../utils/cloudwatch-metrics';
+import { getEnv, getEnvOptional } from '../../types/env';
 
 // AWS クライアント（グローバルスコープで初期化）
-const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
-const s3Client = new S3Client({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const dynamoClient = new DynamoDBClient({ region: getEnv('AWS_REGION', 'ap-northeast-1') });
+const s3Client = new S3Client({ region: getEnv('AWS_REGION', 'ap-northeast-1') });
 
 /**
  * サービスの健全性ステータス
@@ -48,7 +49,7 @@ interface HealthCheckResponse {
  * DynamoDBの接続確認
  */
 async function checkDynamoDB(): Promise<{ status: ServiceStatus; message?: string }> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
+  const tableName = getEnvOptional('DYNAMODB_TABLE_NAME');
   if (!tableName) {
     return {
       status: 'unknown',
@@ -88,7 +89,7 @@ async function checkDynamoDB(): Promise<{ status: ServiceStatus; message?: strin
  * S3の接続確認
  */
 async function checkS3(): Promise<{ status: ServiceStatus; message?: string }> {
-  const bucketName = process.env.S3_BUCKET_NAME;
+  const bucketName = getEnvOptional('S3_BUCKET_NAME');
   if (!bucketName) {
     return {
       status: 'unknown',

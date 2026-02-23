@@ -135,7 +135,7 @@ describe('Step Functions Collector E2E Tests', () => {
 
       expect(executionState.Item).toBeDefined();
       expect(executionState.Item?.status).toBe('completed');
-      expect(executionState.Item?.collected_count).toBeGreaterThan(0);
+      expect(executionState.Item?.success_count).toBeGreaterThan(0);
       expect(executionState.Item?.progress).toBe(100);
     }, 90000); // 90秒タイムアウト
 
@@ -312,7 +312,7 @@ describe('Step Functions Collector E2E Tests', () => {
 
       expect(executionState.Item).toBeDefined();
       expect(executionState.Item?.status).toBe('completed');
-      expect(executionState.Item?.collected_count).toBeGreaterThan(0);
+      expect(executionState.Item?.success_count).toBeGreaterThan(0);
       expect(executionState.Item?.progress).toBe(100);
     }, 200000); // 200秒タイムアウト
   });

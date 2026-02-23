@@ -63,7 +63,7 @@ export interface CollectorResponse {
   message: string;
 
   /** 収集成功件数 */
-  collected_count: number;
+  success_count: number;
 
   /** 収集失敗件数 */
   failed_count: number;
@@ -123,18 +123,18 @@ export async function handler(event: CollectorEvent, context: Context): Promise<
     logger.info('Lambda Collector completed', {
       execution_id,
       status: response.status,
-      collected_count: response.collected_count,
+      collected_count: response.success_count,
       failed_count: response.failed_count,
       duration_ms: duration,
     });
 
     // カスタムメトリクス送信（タスク16.2）
-    const totalCount = response.collected_count + response.failed_count;
-    const successRate = totalCount > 0 ? (response.collected_count / totalCount) * 100 : 0;
+    const totalCount = response.success_count + response.failed_count;
+    const successRate = totalCount > 0 ? (response.success_count / totalCount) * 100 : 0;
 
     await Promise.all([
       // 収集成功件数
-      sendDisclosuresCollectedMetric(response.collected_count, context.functionName),
+      sendDisclosuresCollectedMetric(response.success_count, context.functionName),
       // 収集失敗件数
       sendDisclosuresFailedMetric(response.failed_count, context.functionName),
       // 収集成功率
@@ -174,7 +174,7 @@ export async function handler(event: CollectorEvent, context: Context): Promise<
       execution_id,
       status: 'failed',
       message: error instanceof Error ? error.message : String(error),
-      collected_count: 0,
+      success_count: 0,
       failed_count: 0,
     };
   }
@@ -444,7 +444,7 @@ async function collectDisclosuresForDateRange(
     execution_id,
     status,
     message: `Collected ${collected_count} disclosures, ${failed_count} failed`,
-    collected_count,
+    success_count: collected_count,
     failed_count,
   };
 }

@@ -115,7 +115,7 @@ describe('Property 11: 実行状態の進捗単調性', () => {
       const input = call.args[0].input as any;
       expect(input.Item.status.S).toBe('failed');
       expect(input.Item.error_message.S).toBe(error_message);
-      expect(parseInt(input.Item.collected_count.N)).toBe(10);
+      expect(parseInt(input.Item.success_count.N)).toBe(10);
       expect(parseInt(input.Item.failed_count.N)).toBe(5);
     });
   });

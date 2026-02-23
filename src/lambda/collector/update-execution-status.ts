@@ -10,6 +10,7 @@
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 import { logger } from '../../utils/logger';
+import type { ExecutionStatus } from '../../types';
 
 // DynamoDBクライアントはグローバルスコープで初期化（再利用される）
 const dynamoClient = new DynamoDBClient({});
@@ -17,41 +18,6 @@ const dynamoClient = new DynamoDBClient({});
 // 環境変数は関数内で取得（テスト時の柔軟性のため）
 function getDynamoExecutionsTable(): string {
   return process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod';
-}
-
-/**
- * 実行状態
- */
-export interface ExecutionStatus {
-  /** 実行ID */
-  execution_id: string;
-
-  /** ステータス */
-  status: 'pending' | 'running' | 'completed' | 'failed';
-
-  /** 進捗率（0-100） */
-  progress: number;
-
-  /** 収集成功件数 */
-  collected_count: number;
-
-  /** 収集失敗件数 */
-  failed_count: number;
-
-  /** 開始日時（ISO 8601形式） */
-  started_at: string;
-
-  /** 更新日時（ISO 8601形式） */
-  updated_at: string;
-
-  /** 完了日時（ISO 8601形式、completed/failedの場合のみ） */
-  completed_at?: string;
-
-  /** エラーメッセージ（failedの場合のみ） */
-  error_message?: string;
-
-  /** TTL（30日後に自動削除） */
-  ttl?: number;
 }
 
 /**
@@ -63,7 +29,7 @@ export interface ExecutionStatus {
  * @param execution_id - 実行ID
  * @param status - ステータス
  * @param progress - 進捗率（0-100）
- * @param collected_count - 収集成功件数（デフォルト: 0）
+ * @param success_count - 収集成功件数（デフォルト: 0）
  * @param failed_count - 収集失敗件数（デフォルト: 0）
  * @param error_message - エラーメッセージ（failedの場合のみ）
  * @returns 更新後の実行状態
@@ -87,7 +53,7 @@ export async function updateExecutionStatus(
   execution_id: string,
   status: ExecutionStatus['status'],
   progress: number,
-  collected_count: number = 0,
+  success_count: number = 0,
   failed_count: number = 0,
   error_message?: string
 ): Promise<ExecutionStatus> {
@@ -99,8 +65,8 @@ export async function updateExecutionStatus(
     if (!Number.isFinite(clampedProgress)) {
       throw new Error(`Invalid progress value: ${progress} (resulted in ${clampedProgress})`);
     }
-    if (!Number.isFinite(collected_count)) {
-      throw new Error(`Invalid collected_count value: ${collected_count}`);
+    if (!Number.isFinite(success_count)) {
+      throw new Error(`Invalid success_count value: ${success_count}`);
     }
     if (!Number.isFinite(failed_count)) {
       throw new Error(`Invalid failed_count value: ${failed_count}`);
@@ -137,13 +103,12 @@ export async function updateExecutionStatus(
       execution_id,
       status,
       progress: clampedProgress,
-      collected_count,
+      success_count,
       failed_count,
       started_at,
-      updated_at: now,
-      ...(isCompleted ? { completed_at: now } : {}),
-      ...(error_message ? { error_message } : {}),
-      ...(ttl ? { ttl } : {}),
+      completed_at: isCompleted ? now : undefined,
+      error_message: error_message || undefined,
+      ttl: ttl || 0,
     };
 
     // DynamoDB書き込み前に環境情報をログに出力
@@ -151,7 +116,7 @@ export async function updateExecutionStatus(
       execution_id,
       status,
       progress: clampedProgress,
-      collected_count,
+      success_count,
       failed_count,
       table_name: getDynamoExecutionsTable(),
       region: process.env.AWS_REGION || 'not-set',

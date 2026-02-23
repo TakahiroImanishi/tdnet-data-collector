@@ -51,8 +51,14 @@ export interface InitResponse {
   /** 総件数（Step Functions用、total_daysと同じ値） */
   total_count: number;
 
-  /** ページリスト（Step Functions Map用、datesと同じ値） */
-  pages: string[];
+  /** ページリスト（Step Functions Map用、各要素に必要なコンテキストを含む） */
+  pages: Array<{
+    page_number: string;
+    start_date: string;
+    end_date: string;
+    max_items: number;
+    execution_id: string;
+  }>;
 
   /** 最大収集件数（オプション） */
   max_items?: number;
@@ -125,7 +131,13 @@ export async function handler(event: InitEvent, context: Context): Promise<InitR
       dates,
       total_days: dates.length,
       total_count: dates.length, // Step Functions用
-      pages: dates, // Step Functions Map用
+      pages: dates.map((date) => ({
+        page_number: date,
+        start_date: event.start_date,
+        end_date: event.end_date,
+        max_items: maxItems,
+        execution_id: event.execution_id,
+      })), // Step Functions Map用（オブジェクト配列に変更）
       max_items: maxItems,
       estimated_total: estimatedTotal,
       parameters: {

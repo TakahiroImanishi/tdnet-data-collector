@@ -77,7 +77,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('全件成功の場合、statusがsuccessになる', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_001',
-        results: [
+        map_results: [
           { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
           { saveResult: { page_number: '2024-01-16', saved_count: 150, failed_count: 0 } },
         ],
@@ -118,7 +118,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('部分的成功の場合、statusがpartial_successになる', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_002',
-        results: [
+        map_results: [
           { saveResult: { page_number: '2024-01-15', saved_count: 95, failed_count: 5 } },
           { saveResult: { page_number: '2024-01-16', saved_count: 148, failed_count: 2 } },
         ],
@@ -159,7 +159,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('全件失敗の場合、statusがfailedになる', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_003',
-        results: [
+        map_results: [
           { saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 100 } },
           { saveResult: { page_number: '2024-01-16', saved_count: 0, failed_count: 150 } },
         ],
@@ -194,7 +194,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('結果が空の場合、success_rateが0になる', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_004',
-        results: [],
+        map_results: [],
       };
 
       const response: AggregateResponse = await handler(event, mockContext);
@@ -221,7 +221,9 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('success_rateがNaNにならないことを確認', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_009',
-        results: [{ saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 0 } }],
+        map_results: [
+          { saveResult: { page_number: '2024-01-15', saved_count: 0, failed_count: 0 } },
+        ],
       };
 
       const response: AggregateResponse = await handler(event, mockContext);
@@ -234,7 +236,7 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('saveResultがないページを無視する', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_010',
-        results: [
+        map_results: [
           { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
           {}, // saveResultなし（ページ失敗）
           { saveResult: { page_number: '2024-01-17', saved_count: 50, failed_count: 5 } },
@@ -257,7 +259,9 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('DynamoDB書き込みエラー時、エラーをスローする', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_005',
-        results: [{ date: '2024-01-15', success_count: 100, failed_count: 0 }],
+        map_results: [
+          { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
+        ],
       };
 
       const dbError = new Error('DynamoDB write failed');
@@ -284,7 +288,9 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('メトリクス送信エラー時、処理は継続する', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_006',
-        results: [{ saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } }],
+        map_results: [
+          { saveResult: { page_number: '2024-01-15', saved_count: 100, failed_count: 0 } },
+        ],
       };
 
       // メトリクス送信でエラー
@@ -328,7 +334,7 @@ describe('Lambda Collector Aggregate Handler', () => {
 
       const event: AggregateEvent = {
         execution_id: 'exec_test_007',
-        results,
+        map_results: results,
       };
 
       const response: AggregateResponse = await handler(event, mockContext);
@@ -343,7 +349,9 @@ describe('Lambda Collector Aggregate Handler', () => {
     test('成功率の計算が正確である', async () => {
       const event: AggregateEvent = {
         execution_id: 'exec_test_008',
-        results: [{ saveResult: { page_number: '2024-01-15', saved_count: 97, failed_count: 3 } }],
+        map_results: [
+          { saveResult: { page_number: '2024-01-15', saved_count: 97, failed_count: 3 } },
+        ],
       };
 
       const response: AggregateResponse = await handler(event, mockContext);

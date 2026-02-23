@@ -78,7 +78,10 @@ Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWat
 
 ## 必須実装ルール
 
-### 1. 定数管理
+### 1. 型安全性
+- **any型使用禁止**: 型推論が困難な場合は`unknown`を使用し、型ガードで絞り込む
+
+### 2. 定数管理
 - **定数ファイル**: `src/constants/` で一元管理
   - `file-limits.ts`: ファイルサイズ制限（MIN_PDF_SIZE, MAX_PDF_SIZE, MAX_FILE_SIZE）
   - `http-config.ts`: HTTP設定（HTTP_TIMEOUT_MS, USER_AGENT_FULL, USER_AGENT_SHORT）
@@ -87,26 +90,26 @@ Lambda (Node.js 20.x, TypeScript) | DynamoDB | S3 | API Gateway | CDK | CloudWat
 - **環境変数による上書き**: 必要に応じて環境変数で定数を上書き可能
 - **ドキュメント化**: 各定数にJSDocコメントで根拠と使用箇所を記載
 
-### 2. コスト最適化
+### 3. コスト最適化
 - AWS無料枠内で運用（Lambda 100万リクエスト/月、DynamoDB 25GB、S3 5GB）
 - Lambda: メモリ128-512MB、タイムアウト最小化
 - DynamoDB: オンデマンド課金、GSI最小限
 
-### 2. エラーハンドリング
+### 4. エラーハンドリング
 - 外部API: 指数バックオフ再試行（`retryWithBackoff`）
 - バッチ処理: 部分的失敗を許容、失敗分をDLQへ
 - 構造化ログ: error_type, error_message, context, stack_trace
 
-### 3. レート制限
+### 5. レート制限
 - TDnet: 1リクエスト/秒（`RateLimiter`使用）
 - 並列実行: 最大5並列
 
-### 4. データ整合性
+### 6. データ整合性
 - disclosure_id: 一意性保証（`generateDisclosureId`）
 - date_partition: YYYY-MM形式、JST基準（`generateDatePartition`）
 - バリデーション: Zod使用、必須フィールド検証
 
-### 5. DynamoDB設計
+### 7. DynamoDB設計
 - PK: `disclosure_id`
 - GSI: `date_partition` + `disclosed_at`（月単位クエリ高速化）
 - TTL: 不要データ自動削除

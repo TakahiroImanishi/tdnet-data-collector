@@ -97,82 +97,6 @@ describe('Lambda Query Handler', () => {
     jest.clearAllMocks();
   });
 
-  describe('APIキー認証', () => {
-    beforeEach(() => {
-      // APIキー認証テストでは認証を有効化
-      delete process.env.TEST_ENV;
-    });
-
-    afterEach(() => {
-      // 他のテストのために元に戻す
-      process.env.TEST_ENV = 'e2e';
-    });
-
-    it('有効なAPIキーで認証成功', async () => {
-      const mockDisclosures: Disclosure[] = [
-        {
-          disclosure_id: 'TD20240115001',
-          company_code: '7203',
-          company_name: 'トヨタ自動車',
-          disclosure_type: '決算短信',
-          title: '2024年3月期 第3四半期決算短信',
-          disclosed_at: '2024-01-15T10:30:00Z',
-          pdf_url: 'https://www.release.tdnet.info/...',
-          pdf_s3_key: '2024/01/15/TD20240115001_7203.pdf',
-          downloaded_at: '2024-01-15T10:35:00Z',
-          date_partition: '2024-01',
-        },
-      ];
-
-      (queryDisclosures.queryDisclosures as jest.Mock).mockResolvedValue({
-        disclosures: mockDisclosures,
-        total: 1,
-        count: 1,
-        offset: 0,
-        limit: 100,
-      });
-
-      const result = await handler(mockEvent, mockContext);
-
-      expect(result.statusCode).toBe(200);
-      expect(JSON.parse(result.body)).toEqual({
-        disclosures: mockDisclosures,
-        total: 1,
-        count: 1,
-        offset: 0,
-        limit: 100,
-      });
-    });
-
-    it('APIキーが未設定の場合は401エラー', async () => {
-      mockEvent.headers = {};
-
-      const result = await handler(mockEvent, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('API key is required');
-      expect(body.request_id).toBe('test-request-id');
-    });
-
-    it('無効なAPIキーの場合は401エラー', async () => {
-      mockEvent.headers = {
-        'x-api-key': 'invalid-api-key',
-      };
-
-      const result = await handler(mockEvent, mockContext);
-
-      expect(result.statusCode).toBe(401);
-      const body = JSON.parse(result.body);
-      expect(body.status).toBe('error');
-      expect(body.error.code).toBe('UNAUTHORIZED');
-      expect(body.error.message).toContain('Invalid API key');
-      expect(body.request_id).toBe('test-request-id');
-    });
-  });
-
   describe('クエリパラメータのバリデーション', () => {
     it('企業コードでフィルタリング', async () => {
       mockEvent.queryStringParameters = {
@@ -569,18 +493,14 @@ describe('Lambda Query Handler', () => {
     });
 
     it('エラーレスポンスにもCORSヘッダーが含まれる', async () => {
-      // APIキー認証を有効化
-      delete process.env.TEST_ENV;
-
-      mockEvent.headers = {}; // APIキーなし
+      mockEvent.queryStringParameters = {
+        company_code: '123', // 不正な企業コード
+      };
 
       const result = await handler(mockEvent, mockContext);
 
-      expect(result.statusCode).toBe(401);
+      expect(result.statusCode).toBe(400);
       expect(result.headers!['Access-Control-Allow-Origin']).toBe('*');
-
-      // 元に戻す
-      process.env.TEST_ENV = 'e2e';
     });
   });
 

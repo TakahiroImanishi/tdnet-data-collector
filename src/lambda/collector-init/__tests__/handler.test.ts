@@ -16,6 +16,64 @@ describe('collector-init handler', () => {
     functionName: 'collector-init',
   } as Context;
 
+  // updateExecutionStatusのモック
+  jest.mock('../../collector/update-execution-status', () => ({
+    updateExecutionStatus: jest.fn().mockResolvedValue(undefined),
+  }));
+
+  describe('handler', () => {
+    it('正常なイベントで初期化レスポンスを返す', async () => {
+      const today = new Date();
+      const threeDaysAgo = new Date(today);
+      threeDaysAgo.setDate(today.getDate() - 3);
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      const event = {
+        execution_id: 'exec_123',
+        start_date: threeDaysAgo.toISOString().split('T')[0],
+        end_date: yesterday.toISOString().split('T')[0],
+        max_items: 1000,
+      };
+
+      const response = await handler(event, mockContext);
+
+      expect(response.execution_id).toBe('exec_123');
+      expect(response.dates.length).toBe(3);
+      expect(response.total_days).toBe(3);
+      expect(response.total_count).toBe(3);
+      expect(response.pages.length).toBe(3);
+      expect(response.max_items).toBe(1000);
+      expect(response.estimated_total).toBe(600); // 3日 × 200件/日
+
+      // pagesの各要素がオブジェクトであることを確認
+      expect(response.pages[0]).toHaveProperty('page_number');
+      expect(response.pages[0]).toHaveProperty('start_date');
+      expect(response.pages[0]).toHaveProperty('end_date');
+      expect(response.pages[0]).toHaveProperty('max_items');
+      expect(response.pages[0]).toHaveProperty('execution_id');
+      expect(response.pages[0].execution_id).toBe('exec_123');
+      expect(response.pages[0].max_items).toBe(1000);
+    });
+
+    it('max_items未指定時はデフォルト値9999を使用', async () => {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      const event = {
+        execution_id: 'exec_123',
+        start_date: yesterday.toISOString().split('T')[0],
+        end_date: yesterday.toISOString().split('T')[0],
+      };
+
+      const response = await handler(event, mockContext);
+
+      expect(response.max_items).toBe(9999);
+      expect(response.pages[0].max_items).toBe(9999);
+    });
+  });
+
   describe('validateEvent', () => {
     it('正常なイベントを検証できる', () => {
       // 現在日付から7日前を使用（1年以内を保証）

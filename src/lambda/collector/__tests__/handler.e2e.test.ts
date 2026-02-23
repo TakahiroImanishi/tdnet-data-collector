@@ -87,7 +87,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       // Assert
       expect(result.status).toBe('failed');
       expect(result.message).toContain('Invalid mode');
-      expect(result.collected_count).toBe(0);
+      expect(result.success_count).toBe(0);
       expect(result.failed_count).toBe(0);
     });
 
@@ -193,7 +193,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       expect(result).toHaveProperty('execution_id');
       expect(result).toHaveProperty('status');
       expect(result).toHaveProperty('message');
-      expect(result).toHaveProperty('collected_count');
+      expect(result).toHaveProperty('success_count');
       expect(result).toHaveProperty('failed_count');
       expect(['success', 'partial_success', 'failed']).toContain(result.status);
 
@@ -246,7 +246,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       // Assert
       expect(result).toHaveProperty('execution_id');
       expect(['success', 'partial_success', 'failed']).toContain(result.status);
-      expect(result.collected_count).toBeGreaterThanOrEqual(0);
+      expect(result.success_count).toBeGreaterThanOrEqual(0);
       expect(result.failed_count).toBeGreaterThanOrEqual(0);
     }, 60000);
 
@@ -309,7 +309,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       const result = await handler(event, mockContext);
 
       // Assert
-      if (result.collected_count > 0) {
+      if (result.success_count > 0) {
         // date_partitionを生成（YYYY-MM形式）
         const [year, month] = dateStr.split('-');
         const datePartition = `${year}-${month}`;
@@ -357,7 +357,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       const result = await handler(event, mockContext);
 
       // Assert
-      if (result.collected_count > 0) {
+      if (result.success_count > 0) {
         // DynamoDBから1件取得してS3キーを確認
         const [year, month] = dateStr.split('-');
         const datePartition = `${year}-${month}`;
@@ -420,7 +420,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       // Assert
       // 部分的失敗の場合
       if (result.status === 'partial_success') {
-        expect(result.collected_count).toBeGreaterThan(0);
+        expect(result.success_count).toBeGreaterThan(0);
         expect(result.failed_count).toBeGreaterThan(0);
       }
     }, 60000);
@@ -441,7 +441,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
       // データが存在しない場合はsuccessまたはfailed
       expect(['success', 'failed']).toContain(result.status);
       if (result.status === 'failed') {
-        expect(result.collected_count).toBe(0);
+        expect(result.success_count).toBe(0);
       }
     }, 60000);
   });
@@ -473,7 +473,7 @@ describe('Lambda Collector Handler E2E Tests', () => {
 
       expect(getResult.Item).toBeDefined();
       expect(getResult.Item?.progress).toBe(100);
-      expect(getResult.Item?.collected_count).toBe(result.collected_count);
+      expect(getResult.Item?.success_count).toBe(result.success_count);
       expect(getResult.Item?.failed_count).toBe(result.failed_count);
     }, 60000);
   });
@@ -492,13 +492,13 @@ describe('Lambda Collector Handler E2E Tests', () => {
       expect(result).toHaveProperty('execution_id');
       expect(result).toHaveProperty('status');
       expect(result).toHaveProperty('message');
-      expect(result).toHaveProperty('collected_count');
+      expect(result).toHaveProperty('success_count');
       expect(result).toHaveProperty('failed_count');
 
       expect(typeof result.execution_id).toBe('string');
       expect(['success', 'partial_success', 'failed']).toContain(result.status);
       expect(typeof result.message).toBe('string');
-      expect(typeof result.collected_count).toBe('number');
+      expect(typeof result.success_count).toBe('number');
       expect(typeof result.failed_count).toBe('number');
     }, 60000);
   });

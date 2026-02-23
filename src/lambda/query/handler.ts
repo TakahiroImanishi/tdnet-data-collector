@@ -16,10 +16,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
-import { ValidationError, NotFoundError, AuthenticationError } from '../../errors';
+import { ValidationError, NotFoundError } from '../../errors';
 import { queryDisclosures } from './query-disclosures';
 import { formatAsCsv } from './format-csv';
 import { Disclosure } from '../../types';
+import { getEnvOptional } from '../../types/env';
 
 /**
  * Lambda Queryイベント（API Gateway統合）
@@ -85,9 +86,6 @@ export async function handler(event: QueryEvent, context: Context): Promise<APIG
       request_id: context.awsRequestId,
       function_name: context.functionName,
     });
-
-    // APIキー認証
-    validateApiKey(event);
 
     // クエリパラメータのパース
     const params = parseQueryParameters(event);
@@ -320,29 +318,6 @@ function validateMonthFormat(month: string): void {
 }
 
 /**
- * APIキー認証
- *
- * @param event APIGatewayProxyEvent
- * @throws AuthenticationError APIキーが無効な場合
- */
-function validateApiKey(event: APIGatewayProxyEvent): void {
-  const apiKey = event.headers?.['x-api-key'] || event.headers?.['X-Api-Key'];
-  const expectedApiKey = process.env.API_KEY;
-
-  if (!apiKey) {
-    throw new AuthenticationError('API key is required');
-  }
-
-  if (!expectedApiKey) {
-    throw new AuthenticationError('API key configuration is missing');
-  }
-
-  if (apiKey !== expectedApiKey) {
-    throw new AuthenticationError('Invalid API key');
-  }
-}
-
-/**
  * エラーハンドリング
  *
  * カスタムエラーを適切なHTTPステータスコードとエラーコードに変換します。
@@ -368,9 +343,6 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
   } else if (error instanceof NotFoundError) {
     statusCode = 404;
     errorCode = 'NOT_FOUND';
-  } else if (error instanceof AuthenticationError) {
-    statusCode = 401;
-    errorCode = 'UNAUTHORIZED';
   }
 
   // API設計ガイドラインに準拠したエラーレスポンス形式
@@ -385,7 +357,7 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
   };
 
   // 本番環境ではスタックトレースを含めない
-  if (process.env.NODE_ENV !== 'production') {
+  if (getEnvOptional('NODE_ENV') !== 'production') {
     (errorResponse.error as any).stack = error.stack;
   }
 

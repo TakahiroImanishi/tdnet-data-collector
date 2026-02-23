@@ -1,4 +1,10 @@
-# ESLint/TypeScript設定修正タスク
+# ESLint/TypeScript設定修正タスク（アーカイブ）
+
+**アーカイブ日時**: 2026-02-23 16:00:00  
+**理由**: 主要タスク完了、残タスクは`tasks-eslint-typescript-remaining.md`に統合  
+**完了タスク**: Task 1, 2, 5, 6（部分的にTask 3, 4, 7）
+
+---
 
 ## 概要
 

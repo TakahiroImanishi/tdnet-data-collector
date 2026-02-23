@@ -19,17 +19,18 @@ import { logger } from '../../utils/logger';
 import { retryWithBackoff } from '../../utils/retry';
 import { Disclosure } from '../../types';
 import { generateDatePartition } from '../../utils/date-partition';
+import { getEnv, getEnvOptional } from '../../types/env';
 
 // DynamoDBクライアント（グローバルスコープで初期化）
 const dynamoClient = new DynamoDBClient({
-  region: process.env.AWS_REGION || 'ap-northeast-1',
+  region: getEnv('AWS_REGION', 'ap-northeast-1'),
   maxAttempts: 3,
-  ...(process.env.AWS_ENDPOINT_URL && {
-    endpoint: process.env.AWS_ENDPOINT_URL,
+  ...(getEnvOptional('AWS_ENDPOINT_URL') && {
+    endpoint: getEnvOptional('AWS_ENDPOINT_URL'),
   }),
 });
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
+const TABLE_NAME = getEnv('DYNAMODB_TABLE_NAME', 'tdnet_disclosures');
 
 /**
  * クエリパラメータ

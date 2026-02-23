@@ -30,7 +30,7 @@ export interface AggregateEvent {
   execution_id: string;
 
   /** Map状態の実行結果（Step Functionsから渡される） */
-  results: Array<{
+  map_results: Array<{
     /** Save結果 */
     saveResult?: {
       /** ページ番号（日付文字列） */
@@ -93,7 +93,7 @@ export async function handler(event: AggregateEvent, context: Context): Promise<
     });
 
     // 実行結果の集約
-    const { total_collected, total_failed } = aggregateResults(event.results);
+    const { total_collected, total_failed } = aggregateResults(event.map_results);
 
     // 統計情報の計算
     const totalCount = total_collected + total_failed;

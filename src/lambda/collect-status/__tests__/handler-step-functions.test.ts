@@ -65,7 +65,7 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
       dynamoMock.on(GetItemCommand).resolves({
         Item: marshall({
           execution_id,
-          collected_count: 25,
+          success_count: 25,
           failed_count: 2,
         }),
       });
@@ -96,7 +96,7 @@ describe('GET /collect/{execution_id} Handler (Step Functions)', () => {
       expect(body.data.status).toBe('running');
       expect(body.data.start_time).toBe('2024-01-15T10:00:00.000Z');
       expect(body.data.progress).toEqual({
-        collected_count: 25,
+        success_count: 25,
         failed_count: 2,
       });
     });

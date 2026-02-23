@@ -96,7 +96,7 @@ describe('Lambda Collector Aggregate Handler - 統合テスト', () => {
     expect(item.execution_id).toBe(execution_id);
     expect(item.status).toBe('completed');
     expect(item.progress).toBe(100);
-    expect(item.collected_count).toBe(250);
+    expect(item.success_count).toBe(250);
     expect(item.failed_count).toBe(8);
     expect(item.completed_at).toBeDefined();
     expect(item.ttl).toBeDefined();
@@ -174,7 +174,7 @@ describe('Lambda Collector Aggregate Handler - 統合テスト', () => {
 
     // 実行状態の検証
     expect(item.status).toBe('completed');
-    expect(item.collected_count).toBe(250);
+    expect(item.success_count).toBe(250);
     expect(item.failed_count).toBe(0);
     expect(item.error_message).toBeUndefined();
   });

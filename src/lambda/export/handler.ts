@@ -16,7 +16,7 @@
 import { APIGatewayProxyResult, Context } from 'aws-lambda';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
-import { ValidationError, AuthenticationError } from '../../errors';
+import { ValidationError } from '../../errors';
 import { ExportEvent, ExportRequestBody, ExportResponse } from './types';
 import { createExportJob } from './create-export-job';
 import { processExport } from './process-export';
@@ -67,9 +67,6 @@ export async function handler(
       request_id: context.awsRequestId,
       function_name: context.functionName,
     });
-
-    // APIキー認証
-    validateApiKey(event);
 
     // リクエストボディのパース
     const requestBody = parseRequestBody(event.body);
@@ -173,32 +170,6 @@ function parseRequestBody(body: string): ExportRequestBody {
 }
 
 /**
- * APIキー認証
- *
- * リクエストヘッダーからAPIキーを取得し、環境変数と照合します。
- * 大文字小文字を区別しないヘッダー名に対応しています。
- *
- * @param event ExportEvent
- * @throws AuthenticationError APIキーが無効な場合
- */
-function validateApiKey(event: ExportEvent): void {
-  const apiKey = event.headers?.['x-api-key'] || event.headers?.['X-Api-Key'];
-  const expectedApiKey = process.env.API_KEY;
-
-  if (!apiKey) {
-    throw new AuthenticationError('API key is required');
-  }
-
-  if (!expectedApiKey) {
-    throw new AuthenticationError('API key configuration is missing');
-  }
-
-  if (apiKey !== expectedApiKey) {
-    throw new AuthenticationError('Invalid API key');
-  }
-}
-
-/**
  * リクエストボディのバリデーション
  *
  * @param requestBody ExportRequestBody
@@ -282,9 +253,6 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
   if (error instanceof ValidationError) {
     statusCode = 400;
     errorCode = 'VALIDATION_ERROR';
-  } else if (error instanceof AuthenticationError) {
-    statusCode = 401;
-    errorCode = 'UNAUTHORIZED';
   }
 
   return {

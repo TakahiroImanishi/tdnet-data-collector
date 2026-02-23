@@ -18,9 +18,10 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { logger, createErrorContext } from '../../utils/logger';
 import { sendErrorMetric, sendMetrics } from '../../utils/cloudwatch-metrics';
+import { getEnv, getEnvOptional } from '../../types/env';
 
 // AWS クライアント（グローバルスコープで初期化）
-const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const dynamoClient = new DynamoDBClient({ region: getEnv('AWS_REGION', 'ap-northeast-1') });
 const docClient = DynamoDBDocumentClient.from(dynamoClient, {
   marshallOptions: {
     removeUndefinedValues: true,
@@ -46,10 +47,7 @@ interface StatsResponse {
  * 注意: 大量データの場合はパフォーマンスに影響する可能性があります
  */
 async function getTotalDisclosures(): Promise<number> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
-  }
+  const tableName = getEnv('DYNAMODB_TABLE_NAME');
 
   try {
     const command = new ScanCommand({
@@ -71,10 +69,7 @@ async function getTotalDisclosures(): Promise<number> {
  * 直近30日の収集件数を取得（GSI_DatePartitionを使用）
  */
 async function getLast30DaysCount(): Promise<number> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
-  }
+  const tableName = getEnv('DYNAMODB_TABLE_NAME');
 
   // 30日前の日付を計算
   const thirtyDaysAgo = new Date();
@@ -122,10 +117,7 @@ async function getLast30DaysCount(): Promise<number> {
 async function getTopCompanies(): Promise<
   Array<{ company_code: string; company_name: string; count: number }>
 > {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
-  }
+  const tableName = getEnv('DYNAMODB_TABLE_NAME');
 
   try {
     // Scanで全データを取得し、メモリ上で集計
@@ -265,7 +257,7 @@ function handleError(error: Error, requestId: string): APIGatewayProxyResult {
     request_id: requestId,
   };
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (getEnvOptional('NODE_ENV') !== 'production') {
     (errorResponse.error as any).stack = error.stack;
   }
 

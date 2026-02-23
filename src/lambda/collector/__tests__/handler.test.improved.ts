@@ -100,7 +100,7 @@ describe('Lambda Collector Handler - Improved Tests', () => {
 
       // レスポンス検証
       expect(response.status).toBe('success');
-      expect(response.collected_count).toBeGreaterThan(0);
+      expect(response.success_count).toBeGreaterThan(0);
       expect(response.failed_count).toBe(0);
       expect(response.execution_id).toMatch(/^exec_\d+_[a-z0-9]+_test-req/);
 
@@ -127,7 +127,7 @@ describe('Lambda Collector Handler - Improved Tests', () => {
 
       // エラーハンドリングの検証
       expect(response.status).toBe('failed');
-      expect(response.collected_count).toBe(0);
+      expect(response.success_count).toBe(0);
       expect(response.failed_count).toBe(1);
 
       // 実行状態が更新されたことを確認
@@ -169,7 +169,7 @@ describe('Lambda Collector Handler - Improved Tests', () => {
 
       // レスポンス検証
       expect(response.status).toBe('success');
-      expect(response.collected_count).toBeGreaterThan(0);
+      expect(response.success_count).toBeGreaterThan(0);
 
       // 3日分のスクレイピングが実行されたことを確認
       expect(mockScrapeTdnetList).toHaveBeenCalledTimes(3);
@@ -219,7 +219,7 @@ describe('Lambda Collector Handler - Improved Tests', () => {
 
       // 部分的成功の検証
       expect(response.status).toBe('partial_success');
-      expect(response.collected_count).toBeGreaterThan(0);
+      expect(response.success_count).toBeGreaterThan(0);
       expect(response.failed_count).toBe(1);
     });
   });

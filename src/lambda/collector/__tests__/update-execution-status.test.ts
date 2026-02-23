@@ -40,7 +40,7 @@ describe('updateExecutionStatus', () => {
         execution_id: 'exec_001',
         status: 'running',
         progress: 50,
-        collected_count: 25,
+        success_count: 25,
         failed_count: 0,
       });
 
@@ -53,15 +53,20 @@ describe('updateExecutionStatus', () => {
 
       // GetItemCommandは既存のレコードを返す
       dynamoMock.on(GetItemCommand).resolves({
-        Item: marshall({
-          execution_id: 'exec_001',
-          status: 'running',
-          progress: 25,
-          collected_count: 10,
-          failed_count: 0,
-          started_at: existingStartedAt,
-          updated_at: '2024-01-15T10:05:00.000Z',
-        }),
+        Item: marshall(
+          {
+            execution_id: 'exec_001',
+            status: 'running',
+            progress: 25,
+            success_count: 10,
+            failed_count: 0,
+            started_at: existingStartedAt,
+            completed_at: undefined,
+            error_message: undefined,
+            ttl: 0,
+          },
+          { removeUndefinedValues: true }
+        ),
       });
 
       // PutItemCommandは成功
@@ -71,7 +76,8 @@ describe('updateExecutionStatus', () => {
 
       expect(result.started_at).toBe(existingStartedAt);
       expect(result.progress).toBe(50);
-      expect(result.collected_count).toBe(25);
+      expect(result.success_count).toBe(25);
+      expect(result.failed_count).toBe(0);
     });
 
     it('getExecutionStatusが失敗しても実行状態を作成できる', async () => {
@@ -87,7 +93,7 @@ describe('updateExecutionStatus', () => {
         execution_id: 'exec_001',
         status: 'running',
         progress: 50,
-        collected_count: 25,
+        success_count: 25,
         failed_count: 0,
       });
 
@@ -160,14 +166,14 @@ describe('getExecutionStatus', () => {
         execution_id: 'exec_001',
         status: 'running',
         progress: 50,
-        collected_count: 25,
+        success_count: 25,
         failed_count: 0,
         started_at: '2024-01-15T10:00:00.000Z',
-        updated_at: '2024-01-15T10:05:00.000Z',
+        ttl: 0,
       };
 
       dynamoMock.on(GetItemCommand).resolves({
-        Item: marshall(mockItem),
+        Item: marshall(mockItem, { removeUndefinedValues: true }),
       });
 
       const result = await getExecutionStatus('exec_001');

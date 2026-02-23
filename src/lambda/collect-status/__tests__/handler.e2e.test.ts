@@ -52,7 +52,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
         execution_id: 'exec_test_pending_12345678',
         status: 'pending',
         progress: 0,
-        collected_count: 0,
+        success_count: 0,
         failed_count: 0,
         started_at: '2024-01-15T10:00:00Z',
         updated_at: '2024-01-15T10:00:00Z',
@@ -61,7 +61,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
         execution_id: 'exec_test_running_12345678',
         status: 'running',
         progress: 50,
-        collected_count: 25,
+        success_count: 25,
         failed_count: 2,
         started_at: '2024-01-15T10:00:00Z',
         updated_at: '2024-01-15T10:05:00Z',
@@ -70,7 +70,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
         execution_id: 'exec_test_completed_12345678',
         status: 'completed',
         progress: 100,
-        collected_count: 50,
+        success_count: 50,
         failed_count: 0,
         started_at: '2024-01-15T10:00:00Z',
         updated_at: '2024-01-15T10:10:00Z',
@@ -80,7 +80,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
         execution_id: 'exec_test_failed_12345678',
         status: 'failed',
         progress: 30,
-        collected_count: 10,
+        success_count: 10,
         failed_count: 20,
         started_at: '2024-01-15T10:00:00Z',
         updated_at: '2024-01-15T10:03:00Z',
@@ -200,9 +200,9 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
 
       // running状態なのでprogressが含まれる
       expect(body.data).toHaveProperty('progress');
-      expect(body.data.progress).toHaveProperty('collected_count');
+      expect(body.data.progress).toHaveProperty('success_count');
       expect(body.data.progress).toHaveProperty('failed_count');
-      expect(body.data.progress.collected_count).toBe(0);
+      expect(body.data.progress.success_count).toBe(0);
       expect(body.data.progress.failed_count).toBe(0);
     });
 
@@ -225,7 +225,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
 
       // running状態なのでprogressが含まれる
       expect(body.data).toHaveProperty('progress');
-      expect(body.data.progress.collected_count).toBe(25);
+      expect(body.data.progress.success_count).toBe(25);
       expect(body.data.progress.failed_count).toBe(2);
     });
 
