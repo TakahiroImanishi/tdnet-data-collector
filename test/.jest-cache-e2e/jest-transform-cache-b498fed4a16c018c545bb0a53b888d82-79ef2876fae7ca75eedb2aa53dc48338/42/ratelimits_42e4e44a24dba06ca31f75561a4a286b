@@ -1,0 +1,38 @@
+4d7e7a488b4fb75aa32495afa0993447
+"use strict";
+/**
+ * レート制限設定定数
+ *
+ * TDnet APIへのアクセスレート制限を定義します。
+ * これらの定数は、TDnetサーバーへの過度な負荷を防ぐために使用されます。
+ *
+ * Requirements: 要件9.1 - レート制限
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TDNET_MIN_DELAY_MS = void 0;
+/**
+ * TDnet APIの最小リクエスト間隔（ミリ秒）
+ *
+ * TDnet APIへのリクエスト間隔を2秒（2000ms）に制限します。
+ * この制限は、TDnetサーバーへの過度な負荷を防ぎ、
+ * 安定したデータ収集を実現するために設定されています。
+ *
+ * @remarks
+ * 根拠:
+ * - TDnet APIは公開されているが、過度なアクセスは推奨されていない
+ * - 1リクエスト/秒以下のレートで安定した運用が可能
+ * - 2秒間隔（0.5リクエスト/秒）は十分に保守的な設定
+ *
+ * 使用箇所:
+ * - src/lambda/collector/scrape-tdnet-list.ts
+ * - src/lambda/collector-fetch/handler.ts
+ * - src/lambda/collector/download-pdf.ts
+ * - src/lambda/collector/dependencies.ts
+ * - src/utils/rate-limiter.ts
+ *
+ * @constant
+ * @type {number}
+ * @default 2000
+ */
+exports.TDNET_MIN_DELAY_MS = 2000;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxjb25zdGFudHNcXHJhdGUtbGltaXRzLnRzIiwibWFwcGluZ3MiOiI7QUFBQTs7Ozs7OztHQU9HOzs7QUFFSDs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7R0F1Qkc7QUFDVSxRQUFBLGtCQUFrQixHQUFHLElBQUksQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJDOlxcVXNlcnNcXHRpMTk4XFxpbnZlc3RtZW50X2FuYWx5c2lzX29wb3BvXFxzcmNcXGNvbnN0YW50c1xccmF0ZS1saW1pdHMudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIOODrOODvOODiOWItumZkOioreWumuWumuaVsFxyXG4gKlxyXG4gKiBURG5ldCBBUEnjgbjjga7jgqLjgq/jgrvjgrnjg6zjg7zjg4jliLbpmZDjgpLlrprnvqnjgZfjgb7jgZnjgIJcclxuICog44GT44KM44KJ44Gu5a6a5pWw44Gv44CBVERuZXTjgrXjg7zjg5Djg7zjgbjjga7pgY7luqbjgarosqDojbfjgpLpmLLjgZDjgZ/jgoHjgavkvb/nlKjjgZXjgozjgb7jgZnjgIJcclxuICpcclxuICogUmVxdWlyZW1lbnRzOiDopoHku7Y5LjEgLSDjg6zjg7zjg4jliLbpmZBcclxuICovXHJcblxyXG4vKipcclxuICogVERuZXQgQVBJ44Gu5pyA5bCP44Oq44Kv44Ko44K544OI6ZaT6ZqU77yI44Of44Oq56eS77yJXHJcbiAqXHJcbiAqIFREbmV0IEFQSeOBuOOBruODquOCr+OCqOOCueODiOmWk+malOOCkjLnp5LvvIgyMDAwbXPvvInjgavliLbpmZDjgZfjgb7jgZnjgIJcclxuICog44GT44Gu5Yi26ZmQ44Gv44CBVERuZXTjgrXjg7zjg5Djg7zjgbjjga7pgY7luqbjgarosqDojbfjgpLpmLLjgY7jgIFcclxuICog5a6J5a6a44GX44Gf44OH44O844K/5Y+O6ZuG44KS5a6f54++44GZ44KL44Gf44KB44Gr6Kit5a6a44GV44KM44Gm44GE44G+44GZ44CCXHJcbiAqXHJcbiAqIEByZW1hcmtzXHJcbiAqIOagueaLoDpcclxuICogLSBURG5ldCBBUEnjga/lhazplovjgZXjgozjgabjgYTjgovjgYzjgIHpgY7luqbjgarjgqLjgq/jgrvjgrnjga/mjqjlpajjgZXjgozjgabjgYTjgarjgYRcclxuICogLSAx44Oq44Kv44Ko44K544OIL+enkuS7peS4i+OBruODrOODvOODiOOBp+WuieWumuOBl+OBn+mBi+eUqOOBjOWPr+iDvVxyXG4gKiAtIDLnp5LplpPpmpTvvIgwLjXjg6rjgq/jgqjjgrnjg4gv56eS77yJ44Gv5Y2B5YiG44Gr5L+d5a6I55qE44Gq6Kit5a6aXHJcbiAqXHJcbiAqIOS9v+eUqOeuh+aJgDpcclxuICogLSBzcmMvbGFtYmRhL2NvbGxlY3Rvci9zY3JhcGUtdGRuZXQtbGlzdC50c1xyXG4gKiAtIHNyYy9sYW1iZGEvY29sbGVjdG9yLWZldGNoL2hhbmRsZXIudHNcclxuICogLSBzcmMvbGFtYmRhL2NvbGxlY3Rvci9kb3dubG9hZC1wZGYudHNcclxuICogLSBzcmMvbGFtYmRhL2NvbGxlY3Rvci9kZXBlbmRlbmNpZXMudHNcclxuICogLSBzcmMvdXRpbHMvcmF0ZS1saW1pdGVyLnRzXHJcbiAqXHJcbiAqIEBjb25zdGFudFxyXG4gKiBAdHlwZSB7bnVtYmVyfVxyXG4gKiBAZGVmYXVsdCAyMDAwXHJcbiAqL1xyXG5leHBvcnQgY29uc3QgVERORVRfTUlOX0RFTEFZX01TID0gMjAwMDtcclxuIl0sInZlcnNpb24iOjN9

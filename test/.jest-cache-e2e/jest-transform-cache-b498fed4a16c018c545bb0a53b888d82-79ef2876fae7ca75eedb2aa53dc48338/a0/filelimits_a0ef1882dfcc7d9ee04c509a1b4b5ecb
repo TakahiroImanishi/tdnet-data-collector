@@ -1,0 +1,48 @@
+6ceb3307a1d956d6adb75f6195f46e10
+"use strict";
+/**
+ * ファイルサイズ制限定数
+ *
+ * PDFファイルおよび開示情報ファイルのサイズ制限を定義します。
+ * これらの定数は、バリデーション、ダウンロード、保存処理で使用されます。
+ *
+ * Requirements: 要件1.3, 2.3（PDFダウンロード、整合性検証）
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MAX_FILE_SIZE = exports.MAX_PDF_SIZE = exports.MIN_PDF_SIZE = void 0;
+/**
+ * PDFファイルの最小サイズ（バイト単位）
+ *
+ * 値: 10KB (10,240バイト)
+ *
+ * 根拠:
+ * - 有効なPDFファイルは最低でもヘッダー、カタログ、ページオブジェクトを含む必要がある
+ * - 10KB未満のPDFは不完全またはダミーファイルの可能性が高い
+ * - TDnetの開示情報PDFは通常数百KB以上のサイズを持つ
+ */
+exports.MIN_PDF_SIZE = 10 * 1024; // 10KB
+/**
+ * PDFファイルの最大サイズ（バイト単位）
+ *
+ * 値: 50MB (52,428,800バイト)
+ *
+ * 根拠:
+ * - Lambda関数のメモリ制約（最大512MB）を考慮
+ * - TDnetの開示情報PDFは通常数MB程度
+ * - 50MBを超えるPDFは異常または不正なファイルの可能性が高い
+ * - S3への保存とDynamoDBへのメタデータ保存のバランスを考慮
+ */
+exports.MAX_PDF_SIZE = 50 * 1024 * 1024; // 50MB
+/**
+ * 開示情報ファイルの最大サイズ（バイト単位）
+ *
+ * 値: 100MB (104,857,600バイト)
+ *
+ * 根拠:
+ * - PDFファイル以外の添付ファイル（Excel、Zipなど）を考慮
+ * - Lambda関数のメモリ制約（最大512MB）を考慮
+ * - DynamoDBのアイテムサイズ制限（400KB）を超えるファイルはS3に保存
+ * - 100MBを超えるファイルは異常または不正なファイルの可能性が高い
+ */
+exports.MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxjb25zdGFudHNcXGZpbGUtbGltaXRzLnRzIiwibWFwcGluZ3MiOiI7QUFBQTs7Ozs7OztHQU9HOzs7QUFFSDs7Ozs7Ozs7O0dBU0c7QUFDVSxRQUFBLFlBQVksR0FBRyxFQUFFLEdBQUcsSUFBSSxDQUFDLENBQUMsT0FBTztBQUU5Qzs7Ozs7Ozs7OztHQVVHO0FBQ1UsUUFBQSxZQUFZLEdBQUcsRUFBRSxHQUFHLElBQUksR0FBRyxJQUFJLENBQUMsQ0FBQyxPQUFPO0FBRXJEOzs7Ozs7Ozs7O0dBVUc7QUFDVSxRQUFBLGFBQWEsR0FBRyxHQUFHLEdBQUcsSUFBSSxHQUFHLElBQUksQ0FBQyxDQUFDLFFBQVEiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxjb25zdGFudHNcXGZpbGUtbGltaXRzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiDjg5XjgqHjgqTjg6vjgrXjgqTjgrrliLbpmZDlrprmlbBcclxuICpcclxuICogUERG44OV44Kh44Kk44Or44GK44KI44Gz6ZaL56S65oOF5aCx44OV44Kh44Kk44Or44Gu44K144Kk44K65Yi26ZmQ44KS5a6a576p44GX44G+44GZ44CCXHJcbiAqIOOBk+OCjOOCieOBruWumuaVsOOBr+OAgeODkOODquODh+ODvOOCt+ODp+ODs+OAgeODgOOCpuODs+ODreODvOODieOAgeS/neWtmOWHpueQhuOBp+S9v+eUqOOBleOCjOOBvuOBmeOAglxyXG4gKlxyXG4gKiBSZXF1aXJlbWVudHM6IOimgeS7tjEuMywgMi4z77yIUERG44OA44Km44Oz44Ot44O844OJ44CB5pW05ZCI5oCn5qSc6Ki877yJXHJcbiAqL1xyXG5cclxuLyoqXHJcbiAqIFBERuODleOCoeOCpOODq+OBruacgOWwj+OCteOCpOOCuu+8iOODkOOCpOODiOWNmOS9je+8iVxyXG4gKlxyXG4gKiDlgKQ6IDEwS0IgKDEwLDI0MOODkOOCpOODiClcclxuICpcclxuICog5qC55ougOlxyXG4gKiAtIOacieWKueOBqlBERuODleOCoeOCpOODq+OBr+acgOS9juOBp+OCguODmOODg+ODgOODvOOAgeOCq+OCv+ODreOCsOOAgeODmuODvOOCuOOCquODluOCuOOCp+OCr+ODiOOCkuWQq+OCgOW/heimgeOBjOOBguOCi1xyXG4gKiAtIDEwS0LmnKrmuoDjga5QREbjga/kuI3lrozlhajjgb7jgZ/jga/jg4Djg5/jg7zjg5XjgqHjgqTjg6vjga7lj6/og73mgKfjgYzpq5jjgYRcclxuICogLSBURG5ldOOBrumWi+ekuuaDheWgsVBERuOBr+mAmuW4uOaVsOeZvktC5Lul5LiK44Gu44K144Kk44K644KS5oyB44GkXHJcbiAqL1xyXG5leHBvcnQgY29uc3QgTUlOX1BERl9TSVpFID0gMTAgKiAxMDI0OyAvLyAxMEtCXHJcblxyXG4vKipcclxuICogUERG44OV44Kh44Kk44Or44Gu5pyA5aSn44K144Kk44K677yI44OQ44Kk44OI5Y2Y5L2N77yJXHJcbiAqXHJcbiAqIOWApDogNTBNQiAoNTIsNDI4LDgwMOODkOOCpOODiClcclxuICpcclxuICog5qC55ougOlxyXG4gKiAtIExhbWJkYemWouaVsOOBruODoeODouODquWItue0hO+8iOacgOWkpzUxMk1C77yJ44KS6ICD5oWuXHJcbiAqIC0gVERuZXTjga7plovnpLrmg4XloLFQREbjga/pgJrluLjmlbBNQueoi+W6plxyXG4gKiAtIDUwTULjgpLotoXjgYjjgotQREbjga/nlbDluLjjgb7jgZ/jga/kuI3mraPjgarjg5XjgqHjgqTjg6vjga7lj6/og73mgKfjgYzpq5jjgYRcclxuICogLSBTM+OBuOOBruS/neWtmOOBqER5bmFtb0RC44G444Gu44Oh44K/44OH44O844K/5L+d5a2Y44Gu44OQ44Op44Oz44K544KS6ICD5oWuXHJcbiAqL1xyXG5leHBvcnQgY29uc3QgTUFYX1BERl9TSVpFID0gNTAgKiAxMDI0ICogMTAyNDsgLy8gNTBNQlxyXG5cclxuLyoqXHJcbiAqIOmWi+ekuuaDheWgseODleOCoeOCpOODq+OBruacgOWkp+OCteOCpOOCuu+8iOODkOOCpOODiOWNmOS9je+8iVxyXG4gKlxyXG4gKiDlgKQ6IDEwME1CICgxMDQsODU3LDYwMOODkOOCpOODiClcclxuICpcclxuICog5qC55ougOlxyXG4gKiAtIFBERuODleOCoeOCpOODq+S7peWkluOBrua3u+S7mOODleOCoeOCpOODq++8iEV4Y2Vs44CBWmlw44Gq44Gp77yJ44KS6ICD5oWuXHJcbiAqIC0gTGFtYmRh6Zai5pWw44Gu44Oh44Oi44Oq5Yi257SE77yI5pyA5aSnNTEyTULvvInjgpLogIPmha5cclxuICogLSBEeW5hbW9EQuOBruOCouOCpOODhuODoOOCteOCpOOCuuWItumZkO+8iDQwMEtC77yJ44KS6LaF44GI44KL44OV44Kh44Kk44Or44GvUzPjgavkv53lrZhcclxuICogLSAxMDBNQuOCkui2heOBiOOCi+ODleOCoeOCpOODq+OBr+eVsOW4uOOBvuOBn+OBr+S4jeato+OBquODleOCoeOCpOODq+OBruWPr+iDveaAp+OBjOmrmOOBhFxyXG4gKi9cclxuZXhwb3J0IGNvbnN0IE1BWF9GSUxFX1NJWkUgPSAxMDAgKiAxMDI0ICogMTAyNDsgLy8gMTAwTUJcclxuIl0sInZlcnNpb24iOjN9

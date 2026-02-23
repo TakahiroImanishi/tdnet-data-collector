@@ -76,3 +76,107 @@ https://ap-northeast-1.console.aws.amazon.com/states/home?region=ap-northeast-1#
 - エラーメッセージの内容
 - 各Lambda関数の実行ログ
 
+
+
+### 4. CloudWatch Logs確認結果
+
+#### collector-init（正常）
+- 実行時刻: 13:58:07 - 13:58:09
+- ステータス: 成功 ✓
+- 処理内容:
+  - 実行ID: `0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4`
+  - 日付範囲: 2026-02-20（1日間）
+  - 推定総件数: 200件
+  - ExecutionStateテーブルへの書き込み成功
+- 実行時間: 1,698ms
+
+#### collector-fetch
+- ログストリームが空（出力なし）
+- 原因不明
+
+#### collector-save
+- JSONパースエラーが発生
+- CloudWatch Logsの取得に失敗
+
+#### collector-aggregate
+- ログストリームは存在するが、内容が空
+
+### 5. 問題の特定
+
+**根本原因**: CloudWatch LogsのJSONレスポンスに不正な文字が含まれており、PowerShellでのパースに失敗しています。
+
+**影響**:
+- AWS CLIでのログ取得が正常に動作しない
+- Step Functions実行履歴の取得も同様にJSONパースエラー
+
+**対処方法**:
+AWS Consoleで直接確認する必要があります。
+
+### 6. AWS Console確認手順
+
+以下のURLで各Lambda関数のCloudWatch Logsを確認してください:
+
+1. **Step Functions実行詳細**:
+   ```
+   https://ap-northeast-1.console.aws.amazon.com/states/home?region=ap-northeast-1#/v2/executions/details/arn:aws:states:ap-northeast-1:803879841964:execution:tdnet-collector-workflow:0a2c34c7-86a8-43ab-ba1a-8fc22712cdd4
+   ```
+
+2. **collector-fetch ログ**:
+   ```
+   https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252Ftdnet-collector-fetch-prod
+   ```
+
+3. **collector-save ログ**:
+   ```
+   https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252Ftdnet-collector-save-prod
+   ```
+
+4. **collector-aggregate ログ**:
+   ```
+   https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#logsV2:log-groups/log-group/$252Faws$252Flambda$252Ftdnet-collector-aggregate-prod
+   ```
+
+### 7. 確認項目
+
+Step Functions実行詳細で以下を確認してください:
+
+1. **実行グラフ**: どのステップで失敗しているか
+2. **エラーメッセージ**: 失敗したステップのエラー内容
+3. **入力/出力**: 各ステップの入力データと出力データ
+4. **実行時間**: 各ステップの実行時間
+
+CloudWatch Logsで以下を確認してください:
+
+1. **collector-fetch**: TDnet APIからのデータ取得が成功しているか
+2. **collector-save**: DynamoDB/S3への保存が成功しているか
+3. **collector-aggregate**: 集約処理でNaNエラーが発生していないか
+
+## 次のステップ
+
+1. AWS Consoleで上記URLを開いて、実行詳細とログを確認
+2. エラーメッセージと失敗したステップを特定
+3. 根本原因を分析
+4. 必要な修正を実施
+
+## 申し送り事項
+
+1. **AWS CLIでのログ取得に問題**: JSONパースエラーが発生するため、AWS Consoleでの確認が必要
+2. **collector-initは正常**: ExecutionStateテーブルへの書き込みも成功
+3. **collector-fetch以降のログが不明**: AWS Consoleで確認が必要
+4. **NaN問題は修正済み**: 前回の作業で修正したが、本番環境での動作確認が未完了
+
+
+
+## 成果物
+
+- `.kiro/specs/tdnet-data-collector/work-logs/work-log-20260223-140206-task621-log-investigation.md`: 調査記録 ✓
+- AWS Console確認手順とURL一覧 ✓
+
+## 結論
+
+タスク6.2.1でStep Functions実行時に情報収集できていない問題は、AWS CLIでのログ取得にJSONパースエラーが発生しているため、コマンドラインからの調査が困難です。
+
+AWS Consoleで直接確認する必要があります。上記のURLを使用して、Step Functions実行詳細と各Lambda関数のCloudWatch Logsを確認してください。
+
+collector-initは正常に動作しているため、問題はcollector-fetch、collector-save、またはcollector-aggregateのいずれかで発生していると推測されます。
+

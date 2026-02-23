@@ -26,8 +26,7 @@ const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-
 const sfnClient = new SFNClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
 
 // 環境変数
-const EXECUTIONS_TABLE_NAME = process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
-const EXECUTION_STATE_TABLE_NAME = process.env.EXECUTION_STATE_TABLE;
+const EXECUTIONS_TABLE_NAME = process.env.EXECUTION_STATE_TABLE || process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
 const STATE_MACHINE_ARN = process.env.STATE_MACHINE_ARN;
 
 /**
@@ -179,10 +178,10 @@ async function getStepFunctionsExecutionStatus(execution_id: string): Promise<Ex
 
     // 実行状態テーブルから詳細情報を取得（進捗情報）
     let progress: ExecutionStatus['progress'] | undefined;
-    if (EXECUTION_STATE_TABLE_NAME && status === 'running') {
+    if (status === 'running') {
       try {
         const stateCommand = new GetItemCommand({
-          TableName: EXECUTION_STATE_TABLE_NAME,
+          TableName: EXECUTIONS_TABLE_NAME,
           Key: {
             execution_id: { S: execution_id },
           },

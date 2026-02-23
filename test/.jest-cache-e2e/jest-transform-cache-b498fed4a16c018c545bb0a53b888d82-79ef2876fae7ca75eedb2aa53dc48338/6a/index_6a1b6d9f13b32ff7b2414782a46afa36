@@ -1,0 +1,35 @@
+020538782fabe3c2c53983f35be83054
+"use strict";
+/**
+ * 定数エクスポートファイル
+ *
+ * すべての定数ファイルを一元的にエクスポートします。
+ * これにより、インポート文を簡略化し、コードの可読性を向上させます。
+ *
+ * 使用例:
+ * ```typescript
+ * // 修正前
+ * import { MIN_PDF_SIZE, MAX_PDF_SIZE } from '../constants/file-limits';
+ * import { TDNET_MIN_DELAY_MS } from '../constants/rate-limits';
+ * import { HTTP_TIMEOUT_MS } from '../constants/http-config';
+ *
+ * // 修正後
+ * import { MIN_PDF_SIZE, MAX_PDF_SIZE, TDNET_MIN_DELAY_MS, HTTP_TIMEOUT_MS } from '../constants';
+ * ```
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.USER_AGENT_SHORT = exports.USER_AGENT_FULL = exports.HTTP_TIMEOUT_MS = exports.TDNET_MIN_DELAY_MS = exports.MAX_FILE_SIZE = exports.MAX_PDF_SIZE = exports.MIN_PDF_SIZE = void 0;
+// ファイルサイズ制限定数
+var file_limits_1 = require("./file-limits");
+Object.defineProperty(exports, "MIN_PDF_SIZE", { enumerable: true, get: function () { return file_limits_1.MIN_PDF_SIZE; } });
+Object.defineProperty(exports, "MAX_PDF_SIZE", { enumerable: true, get: function () { return file_limits_1.MAX_PDF_SIZE; } });
+Object.defineProperty(exports, "MAX_FILE_SIZE", { enumerable: true, get: function () { return file_limits_1.MAX_FILE_SIZE; } });
+// レート制限設定定数
+var rate_limits_1 = require("./rate-limits");
+Object.defineProperty(exports, "TDNET_MIN_DELAY_MS", { enumerable: true, get: function () { return rate_limits_1.TDNET_MIN_DELAY_MS; } });
+// HTTP設定定数
+var http_config_1 = require("./http-config");
+Object.defineProperty(exports, "HTTP_TIMEOUT_MS", { enumerable: true, get: function () { return http_config_1.HTTP_TIMEOUT_MS; } });
+Object.defineProperty(exports, "USER_AGENT_FULL", { enumerable: true, get: function () { return http_config_1.USER_AGENT_FULL; } });
+Object.defineProperty(exports, "USER_AGENT_SHORT", { enumerable: true, get: function () { return http_config_1.USER_AGENT_SHORT; } });
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0aTE5OFxcaW52ZXN0bWVudF9hbmFseXNpc19vcG9wb1xcc3JjXFxjb25zdGFudHNcXGluZGV4LnRzIiwibWFwcGluZ3MiOiI7QUFBQTs7Ozs7Ozs7Ozs7Ozs7OztHQWdCRzs7O0FBRUgsY0FBYztBQUNkLDZDQUEwRTtBQUFqRSwyR0FBQSxZQUFZLE9BQUE7QUFBRSwyR0FBQSxZQUFZLE9BQUE7QUFBRSw0R0FBQSxhQUFhLE9BQUE7QUFFbEQsWUFBWTtBQUNaLDZDQUFtRDtBQUExQyxpSEFBQSxrQkFBa0IsT0FBQTtBQUUzQixXQUFXO0FBQ1gsNkNBQW1GO0FBQTFFLDhHQUFBLGVBQWUsT0FBQTtBQUFFLDhHQUFBLGVBQWUsT0FBQTtBQUFFLCtHQUFBLGdCQUFnQixPQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGkxOThcXGludmVzdG1lbnRfYW5hbHlzaXNfb3BvcG9cXHNyY1xcY29uc3RhbnRzXFxpbmRleC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICog5a6a5pWw44Ko44Kv44K544Od44O844OI44OV44Kh44Kk44OrXHJcbiAqXHJcbiAqIOOBmeOBueOBpuOBruWumuaVsOODleOCoeOCpOODq+OCkuS4gOWFg+eahOOBq+OCqOOCr+OCueODneODvOODiOOBl+OBvuOBmeOAglxyXG4gKiDjgZPjgozjgavjgojjgorjgIHjgqTjg7Pjg53jg7zjg4jmlofjgpLnsKHnlaXljJbjgZfjgIHjgrPjg7zjg4njga7lj6/oqq3mgKfjgpLlkJHkuIrjgZXjgZvjgb7jgZnjgIJcclxuICpcclxuICog5L2/55So5L6LOlxyXG4gKiBgYGB0eXBlc2NyaXB0XHJcbiAqIC8vIOS/ruato+WJjVxyXG4gKiBpbXBvcnQgeyBNSU5fUERGX1NJWkUsIE1BWF9QREZfU0laRSB9IGZyb20gJy4uL2NvbnN0YW50cy9maWxlLWxpbWl0cyc7XHJcbiAqIGltcG9ydCB7IFRETkVUX01JTl9ERUxBWV9NUyB9IGZyb20gJy4uL2NvbnN0YW50cy9yYXRlLWxpbWl0cyc7XHJcbiAqIGltcG9ydCB7IEhUVFBfVElNRU9VVF9NUyB9IGZyb20gJy4uL2NvbnN0YW50cy9odHRwLWNvbmZpZyc7XHJcbiAqXHJcbiAqIC8vIOS/ruato+W+jFxyXG4gKiBpbXBvcnQgeyBNSU5fUERGX1NJWkUsIE1BWF9QREZfU0laRSwgVERORVRfTUlOX0RFTEFZX01TLCBIVFRQX1RJTUVPVVRfTVMgfSBmcm9tICcuLi9jb25zdGFudHMnO1xyXG4gKiBgYGBcclxuICovXHJcblxyXG4vLyDjg5XjgqHjgqTjg6vjgrXjgqTjgrrliLbpmZDlrprmlbBcclxuZXhwb3J0IHsgTUlOX1BERl9TSVpFLCBNQVhfUERGX1NJWkUsIE1BWF9GSUxFX1NJWkUgfSBmcm9tICcuL2ZpbGUtbGltaXRzJztcclxuXHJcbi8vIOODrOODvOODiOWItumZkOioreWumuWumuaVsFxyXG5leHBvcnQgeyBURE5FVF9NSU5fREVMQVlfTVMgfSBmcm9tICcuL3JhdGUtbGltaXRzJztcclxuXHJcbi8vIEhUVFDoqK3lrprlrprmlbBcclxuZXhwb3J0IHsgSFRUUF9USU1FT1VUX01TLCBVU0VSX0FHRU5UX0ZVTEwsIFVTRVJfQUdFTlRfU0hPUlQgfSBmcm9tICcuL2h0dHAtY29uZmlnJztcclxuIl0sInZlcnNpb24iOjN9

@@ -139,7 +139,7 @@ export class StepFunctionsCollector extends Construct {
       errors: ['States.TaskFailed'],
       interval: cdk.Duration.seconds(2),
       maxAttempts: 3,
-      backoffRate: 2.0,
+      backoffRate: 2,
     });
 
     const handleInitError = new sfn.Pass(this, 'HandleInitializationError', {
@@ -201,14 +201,14 @@ export class StepFunctionsCollector extends Construct {
       errors: ['RateLimitError'],
       interval: cdk.Duration.seconds(1),
       maxAttempts: 5,
-      backoffRate: 1.0,
+      backoffRate: 1,
     });
 
     fetchPageData.addRetry({
       errors: ['States.TaskFailed'],
       interval: cdk.Duration.seconds(2),
       maxAttempts: 3,
-      backoffRate: 2.0,
+      backoffRate: 2,
     });
 
     const fetchFailed = new sfn.Pass(this, 'FetchFailed', {
@@ -260,14 +260,14 @@ export class StepFunctionsCollector extends Construct {
       errors: ['DynamoDB.ProvisionedThroughputExceededException', 'DynamoDB.ThrottlingException'],
       interval: cdk.Duration.seconds(1),
       maxAttempts: 3,
-      backoffRate: 2.0,
+      backoffRate: 2,
     });
 
     savePageData.addRetry({
       errors: ['States.TaskFailed'],
       interval: cdk.Duration.seconds(2),
       maxAttempts: 3,
-      backoffRate: 2.0,
+      backoffRate: 2,
     });
 
     const saveFailed = new sfn.Pass(this, 'SaveFailed', {
@@ -338,7 +338,7 @@ export class StepFunctionsCollector extends Construct {
       errors: ['States.TaskFailed'],
       interval: cdk.Duration.seconds(2),
       maxAttempts: 3,
-      backoffRate: 2.0,
+      backoffRate: 2,
     });
 
     const handleAggregationError = new sfn.Pass(this, 'HandleAggregationError', {

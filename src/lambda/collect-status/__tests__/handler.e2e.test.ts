@@ -35,7 +35,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient, {
 describe('Lambda Collect Status Handler E2E Tests', () => {
   let mockContext: Context;
   let mockEvent: APIGatewayProxyEvent;
-  const executionsTableName = process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod';
+  const executionsTableName = process.env.DYNAMODB_TABLE_EXECUTIONS || 'tdnet_executions';
 
   beforeAll(async () => {
     // テストデータをDynamoDBに挿入
@@ -164,6 +164,7 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
 
     // 環境変数設定
     process.env.EXECUTION_STATE_TABLE = executionsTableName;
+    delete process.env.STATE_MACHINE_ARN; // Step Functions経由ではなくDynamoDB直接取得を使用
   });
 
   describe('実行状態取得', () => {

@@ -69,7 +69,7 @@ const s3Client = new S3Client({
 describe('Step Functions Collector E2E Tests', () => {
   const stateMachineArn = process.env.STATE_MACHINE_ARN || 
     'arn:aws:states:ap-northeast-1:000000000000:stateMachine:TDnetCollectorStateMachine';
-  const executionsTableName = process.env.EXECUTION_STATE_TABLE || 'ExecutionState_prod';
+  const executionsTableName = process.env.EXECUTION_STATE_TABLE || 'tdnet_executions';
   const disclosuresTableName = process.env.DYNAMODB_TABLE_NAME || 'tdnet_disclosures';
   const s3BucketName = process.env.S3_BUCKET_NAME || 'tdnet-data-collector-pdfs-local';
 
@@ -164,7 +164,7 @@ describe('Step Functions Collector E2E Tests', () => {
       const queryResponse = await docClient.send(
         new QueryCommand({
           TableName: disclosuresTableName,
-          IndexName: 'DatePartitionIndex',
+          IndexName: 'GSI_DatePartition',
           KeyConditionExpression: 'date_partition = :partition',
           ExpressionAttributeValues: {
             ':partition': '2024-01',
