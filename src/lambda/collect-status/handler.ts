@@ -22,8 +22,26 @@ import { sendErrorMetric } from '../../utils/cloudwatch-metrics';
 import { ValidationError, NotFoundError } from '../../errors';
 
 // クライアントはグローバルスコープで初期化（再利用される）
-const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
-const sfnClient = new SFNClient({ region: process.env.AWS_REGION || 'ap-northeast-1' });
+const dynamoClient = new DynamoDBClient({
+  region: process.env.AWS_REGION || 'ap-northeast-1',
+  ...(process.env.AWS_ENDPOINT_URL && {
+    endpoint: process.env.AWS_ENDPOINT_URL,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test',
+    },
+  }),
+});
+const sfnClient = new SFNClient({
+  region: process.env.AWS_REGION || 'ap-northeast-1',
+  ...(process.env.AWS_ENDPOINT_URL && {
+    endpoint: process.env.AWS_ENDPOINT_URL,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test',
+    },
+  }),
+});
 
 // 環境変数
 const EXECUTIONS_TABLE_NAME = process.env.EXECUTION_STATE_TABLE || process.env.DYNAMODB_EXECUTIONS_TABLE || 'tdnet_executions';
@@ -247,6 +265,8 @@ async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus
     logger.info('Getting execution status from DynamoDB', {
       execution_id,
       tableName: EXECUTIONS_TABLE_NAME,
+      endpoint: process.env.AWS_ENDPOINT_URL,
+      region: process.env.AWS_REGION,
     });
 
     const command = new GetItemCommand({
@@ -258,6 +278,12 @@ async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus
 
     const result = await dynamoClient.send(command);
 
+    logger.info('DynamoDB GetItem result', {
+      execution_id,
+      hasItem: !!result.Item,
+      itemKeys: result.Item ? Object.keys(result.Item) : [],
+    });
+
     if (!result.Item) {
       throw new NotFoundError(`Execution not found: ${execution_id}`);
     }
@@ -265,12 +291,15 @@ async function getExecutionStatus(execution_id: string): Promise<ExecutionStatus
     const item = unmarshall(result.Item) as any;
 
     // レガシー形式から新形式へ変換
+    const status = item.status === 'completed' ? 'succeeded' : item.status === 'pending' ? 'running' : item.status;
+    
     const executionStatus: ExecutionStatus = {
       execution_id,
-      status: item.status === 'completed' ? 'succeeded' : item.status === 'pending' ? 'running' : item.status,
+      status,
       start_time: item.started_at,
       end_time: item.completed_at,
-      progress: item.status === 'running' ? {
+      // running状態（pendingから変換された場合も含む）の場合はprogressを含める
+      progress: (status === 'running') ? {
         collected_count: item.collected_count || 0,
         failed_count: item.failed_count || 0,
       } : undefined,

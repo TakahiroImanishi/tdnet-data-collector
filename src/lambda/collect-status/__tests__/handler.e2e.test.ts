@@ -7,6 +7,10 @@
  * Requirements: タスク35
  */
 
+// 環境変数を先に設定（Lambda関数のグローバルスコープ初期化前）
+process.env.EXECUTION_STATE_TABLE = process.env.EXECUTION_STATE_TABLE || 'tdnet_executions';
+delete process.env.STATE_MACHINE_ARN; // Step Functions経由ではなくDynamoDB直接取得を使用
+
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { handler } from '../handler';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -35,9 +39,13 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient, {
 describe('Lambda Collect Status Handler E2E Tests', () => {
   let mockContext: Context;
   let mockEvent: APIGatewayProxyEvent;
-  const executionsTableName = process.env.DYNAMODB_TABLE_EXECUTIONS || 'tdnet_executions';
+  const executionsTableName = process.env.EXECUTION_STATE_TABLE || 'tdnet_executions';
 
   beforeAll(async () => {
+    // 環境変数を先に設定（Lambda関数のグローバルスコープ初期化前）
+    process.env.EXECUTION_STATE_TABLE = executionsTableName;
+    delete process.env.STATE_MACHINE_ARN; // Step Functions経由ではなくDynamoDB直接取得を使用
+
     // テストデータをDynamoDBに挿入
     const testExecutions = [
       {
@@ -161,10 +169,6 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       },
       resource: '/collect/{execution_id}',
     };
-
-    // 環境変数設定
-    process.env.EXECUTION_STATE_TABLE = executionsTableName;
-    delete process.env.STATE_MACHINE_ARN; // Step Functions経由ではなくDynamoDB直接取得を使用
   });
 
   describe('実行状態取得', () => {
@@ -186,17 +190,19 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.status).toBe('success');
       expect(body.data).toHaveProperty('execution_id');
       expect(body.data).toHaveProperty('status');
-      expect(body.data).toHaveProperty('progress');
-      expect(body.data).toHaveProperty('collected_count');
-      expect(body.data).toHaveProperty('failed_count');
-      expect(body.data).toHaveProperty('started_at');
-      expect(body.data).toHaveProperty('updated_at');
+      expect(body.data).toHaveProperty('start_time');
 
       expect(body.data.execution_id).toBe('exec_test_pending_12345678');
-      expect(body.data.status).toBe('pending');
-      expect(body.data.progress).toBe(0);
-      expect(body.data.collected_count).toBe(0);
-      expect(body.data.failed_count).toBe(0);
+      // pending → running に変換される
+      expect(body.data.status).toBe('running');
+      expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
+      
+      // running状態なのでprogressが含まれる
+      expect(body.data).toHaveProperty('progress');
+      expect(body.data.progress).toHaveProperty('collected_count');
+      expect(body.data.progress).toHaveProperty('failed_count');
+      expect(body.data.progress.collected_count).toBe(0);
+      expect(body.data.progress.failed_count).toBe(0);
     });
 
     it('running状態の実行状態を取得できる', async () => {
@@ -214,9 +220,12 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.status).toBe('success');
       expect(body.data.execution_id).toBe('exec_test_running_12345678');
       expect(body.data.status).toBe('running');
-      expect(body.data.progress).toBe(50);
-      expect(body.data.collected_count).toBe(25);
-      expect(body.data.failed_count).toBe(2);
+      expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
+      
+      // running状態なのでprogressが含まれる
+      expect(body.data).toHaveProperty('progress');
+      expect(body.data.progress.collected_count).toBe(25);
+      expect(body.data.progress.failed_count).toBe(2);
     });
 
     it('completed状態の実行状態を取得できる', async () => {
@@ -233,12 +242,14 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       const body = JSON.parse(result.body);
       expect(body.status).toBe('success');
       expect(body.data.execution_id).toBe('exec_test_completed_12345678');
-      expect(body.data.status).toBe('completed');
-      expect(body.data.progress).toBe(100);
-      expect(body.data.collected_count).toBe(50);
-      expect(body.data.failed_count).toBe(0);
-      expect(body.data).toHaveProperty('completed_at');
-      expect(body.data.completed_at).toBe('2024-01-15T10:10:00Z');
+      // completed → succeeded に変換される
+      expect(body.data.status).toBe('succeeded');
+      expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
+      expect(body.data).toHaveProperty('end_time');
+      expect(body.data.end_time).toBe('2024-01-15T10:10:00Z');
+      
+      // completed状態なのでprogressは含まれない
+      expect(body.data.progress).toBeUndefined();
     });
 
     it('failed状態の実行状態を取得できる', async () => {
@@ -256,12 +267,14 @@ describe('Lambda Collect Status Handler E2E Tests', () => {
       expect(body.status).toBe('success');
       expect(body.data.execution_id).toBe('exec_test_failed_12345678');
       expect(body.data.status).toBe('failed');
-      expect(body.data.progress).toBe(30);
-      expect(body.data.collected_count).toBe(10);
-      expect(body.data.failed_count).toBe(20);
-      expect(body.data).toHaveProperty('completed_at');
+      expect(body.data.start_time).toBe('2024-01-15T10:00:00Z');
+      expect(body.data).toHaveProperty('end_time');
+      expect(body.data.end_time).toBe('2024-01-15T10:03:00Z');
       expect(body.data).toHaveProperty('error_message');
       expect(body.data.error_message).toBe('Network error occurred');
+      
+      // failed状態なのでprogressは含まれない
+      expect(body.data.progress).toBeUndefined();
     });
   });
 
