@@ -28,8 +28,8 @@ export interface SaveEvent {
   /** 実行ID */
   execution_id: string;
 
-  /** ページ番号 */
-  page_number: number;
+  /** ページ番号（日付文字列、YYYY-MM-DD形式） */
+  page_number: string;
 
   /** 開示情報メタデータリスト */
   items: DisclosureMetadata[];
@@ -42,8 +42,8 @@ export interface SaveResponse {
   /** 実行ID */
   execution_id: string;
 
-  /** ページ番号 */
-  page_number: number;
+  /** ページ番号（日付文字列） */
+  page_number: string;
 
   /** 保存成功件数 */
   saved_count: number;

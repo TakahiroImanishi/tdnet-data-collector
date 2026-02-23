@@ -1,0 +1,48 @@
+{
+    "events": [
+        {
+            "timestamp": "2026-02-23T12:59:15.445000+09:00",
+            "type": "ExecutionFailed",
+            "id": 44,
+            "previousEventId": 43,
+            "executionFailedEventDetails": {
+                "error": "CollectionFailed",
+                "cause": "�f�[�^���W���������s���܂����B�ڍׂ�CloudWatch Logs���m�F���Ă��������B"
+            }
+        },
+        {
+            "timestamp": "2026-02-23T12:59:15.401000+09:00",
+            "type": "FailStateEntered",
+            "id": 43,
+            "previousEventId": 42,
+            "stateEnteredEventDetails": {
+                "name": "CollectionFailed",
+
+'cp932' codec can't encode character '\ufffd' in position 597: illegal multibyte sequence
+                "input": "{\"status\":\"aggregation_failed\",\"execution_id\":\"6cd98575-a2bc-457b-a419-8d2c6b6ef6b4\",\"error\":{\"Error\":\"Error\",\"Cause\":\"{\\\"errorType\\\":\\\"Error\\\",\\\"errorMessage\\\":\\\"Special numeric value NaN is not allowed\\\",\\\"trace\\\":[\\\"Error: Special numeric value NaN is not allowed\\\",\\\"    at convertToNumberAttr (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:213:11)\\\",\\\"    at convertToAttr (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:121:12)\\\",\\\"    at /var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:198:20\\\",\\\"    at convertToMapAttrFromEnumerableProps (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:202:5)\\\",\\\"    at convertToAttr (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:112:12)\\\",\\\"    at marshall (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:313:26)\\\",\\\"    at Ri (/var/asset-input/src/lambda/collector/update-execution-status.ts:154:15)\\\",\\\"    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\\",\\\"    at async Runtime.Yg (/var/asset-input/src/lambda/collector-aggregate/handler.ts:125:5)\\\"]}\"}}",
+                "inputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T12:59:15.401000+09:00",
+            "type": "PassStateExited",
+            "id": 42,
+            "previousEventId": 41,
+            "stateExitedEventDetails": {
+                "name": "HandleAggregationError",
+                "output": "{\"status\":\"aggregation_failed\",\"execution_id\":\"6cd98575-a2bc-457b-a419-8d2c6b6ef6b4\",\"error\":{\"Error\":\"Error\",\"Cause\":\"{\\\"errorType\\\":\\\"Error\\\",\\\"errorMessage\\\":\\\"Special numeric value NaN is not allowed\\\",\\\"trace\\\":[\\\"Error: Special numeric value NaN is not allowed\\\",\\\"    at convertToNumberAttr (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:213:11)\\\",\\\"    at convertToAttr (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:121:12)\\\",\\\"    at /var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:198:20\\\",\\\"    at convertToMapAttrFromEnumerableProps (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:202:5)\\\",\\\"    at convertToAttr (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:112:12)\\\",\\\"    at marshall (/var/runtime/node_modules/@aws-sdk/util-dynamodb/dist-cjs/index.js:313:26)\\\",\\\"    at Ri (/var/asset-input/src/lambda/collector/update-execution-status.ts:154:15)\\\",\\\"    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\\",\\\"    at async Runtime.Yg (/var/asset-input/src/lambda/collector-aggregate/handler.ts:125:5)\\\"]}\"}}",
+                "outputDetails": {
+                    "truncated": false
+                }
+            }
+        },
+        {
+            "timestamp": "2026-02-23T12:59:15.401000+09:00",
+            "type": "PassStateEntered",
+            "id": 41,
+            "previousEventId": 40,
+            "stateEnteredEventDetails": {
+                "name": "HandleAggregationError",
+                "input": 

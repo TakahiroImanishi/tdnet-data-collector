@@ -118,6 +118,7 @@ export class StepFunctionsCollector extends Construct {
     const initTask = new tasks.LambdaInvoke(this, 'Initialize', {
       lambdaFunction: props.collectorInitFunction,
       payload: sfn.TaskInput.fromObject({
+        'execution_id.$': '$$.Execution.Name', // Step Functions実行名をexecution_idとして使用
         'start_date.$': '$.start_date',
         'end_date.$': '$.end_date',
         'max_items.$': '$.max_items',

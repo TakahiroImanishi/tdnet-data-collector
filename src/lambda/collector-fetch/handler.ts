@@ -47,8 +47,8 @@ export interface FetchEvent {
   /** 実行ID（Step Functionsから渡される） */
   execution_id: string;
 
-  /** ページ番号（1から開始） */
-  page_number: number;
+  /** ページ番号（日付文字列、YYYY-MM-DD形式） */
+  page_number: string;
 
   /** 開始日（ISO 8601形式、YYYY-MM-DD） */
   start_date: string;
@@ -67,8 +67,8 @@ export interface FetchResponse {
   /** 実行ID */
   execution_id: string;
 
-  /** ページ番号 */
-  page_number: number;
+  /** ページ番号（日付文字列） */
+  page_number: string;
 
   /** 開示情報メタデータリスト */
   items: DisclosureMetadata[];
@@ -117,10 +117,10 @@ export async function handler(
     // レート制限を適用
     await rateLimiter.waitIfNeeded();
 
-    // TDnetから1ページ分のデータを取得
+    // TDnetから1ページ分のデータを取得（page_numberは日付文字列）
     const items = await fetchTdnetPage(
-      event.start_date,
-      event.page_number
+      event.page_number,
+      1 // 常に1ページ目を取得
     );
 
     const duration = Date.now() - startTime;
@@ -178,6 +178,9 @@ export async function handler(
  * @throws ValidationError バリデーションエラー
  */
 function validateEvent(event: FetchEvent): void {
+  // 日付フォーマットのバリデーション用正規表現（YYYY-MM-DD）
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
   // execution_idのバリデーション
   if (!event.execution_id || typeof event.execution_id !== 'string') {
     throw new ValidationError(
@@ -185,10 +188,16 @@ function validateEvent(event: FetchEvent): void {
     );
   }
 
-  // page_numberのバリデーション
-  if (!event.page_number || typeof event.page_number !== 'number' || event.page_number < 1) {
+  // page_numberのバリデーション（日付文字列、YYYY-MM-DD形式）
+  if (!event.page_number || typeof event.page_number !== 'string') {
     throw new ValidationError(
-      `Invalid page_number: ${event.page_number}. Expected positive integer.`
+      `Invalid page_number: ${event.page_number}. Expected non-empty string (YYYY-MM-DD format).`
+    );
+  }
+
+  if (!dateRegex.test(event.page_number)) {
+    throw new ValidationError(
+      `Invalid page_number format: ${event.page_number}. Expected YYYY-MM-DD format.`
     );
   }
 
@@ -199,8 +208,6 @@ function validateEvent(event: FetchEvent): void {
     );
   }
 
-  // 日付フォーマットのバリデーション（YYYY-MM-DD）
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(event.start_date)) {
     throw new ValidationError(
       `Invalid start_date format: ${event.start_date}. Expected YYYY-MM-DD format.`

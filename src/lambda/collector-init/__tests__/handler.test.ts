@@ -17,16 +17,7 @@ describe('collector-init handler', () => {
   } as Context;
 
   describe('validateEvent', () => {
-    it('バッチモードの正常なイベントを検証できる', () => {
-      const event = {
-        execution_id: 'exec_123',
-        mode: 'batch' as const,
-      };
-
-      expect(() => validateEvent(event)).not.toThrow();
-    });
-
-    it('オンデマンドモードの正常なイベントを検証できる', () => {
+    it('正常なイベントを検証できる', () => {
       // 現在日付から7日前を使用（1年以内を保証）
       const today = new Date();
       const sevenDaysAgo = new Date(today);
@@ -36,7 +27,6 @@ describe('collector-init handler', () => {
 
       const event = {
         execution_id: 'exec_123',
-        mode: 'on-demand' as const,
         start_date: sevenDaysAgo.toISOString().split('T')[0],
         end_date: threeDaysAgo.toISOString().split('T')[0],
       };
@@ -45,29 +35,24 @@ describe('collector-init handler', () => {
     });
 
     it('execution_idが未設定の場合はエラー', () => {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
       const event = {
         execution_id: '',
-        mode: 'batch' as const,
+        start_date: yesterday.toISOString().split('T')[0],
+        end_date: yesterday.toISOString().split('T')[0],
       };
 
       expect(() => validateEvent(event)).toThrow(ValidationError);
     });
 
-    it('不正なモードの場合はエラー', () => {
+    it('start_dateが未設定の場合はエラー', () => {
       const event = {
         execution_id: 'exec_123',
-        mode: 'invalid' as any,
-      };
-
-      expect(() => validateEvent(event)).toThrow(ValidationError);
-    });
-
-    it('オンデマンドモードでstart_dateが未設定の場合はエラー', () => {
-      const event = {
-        execution_id: 'exec_123',
-        mode: 'on-demand' as const,
         end_date: '2024-01-20',
-      };
+      } as any;
 
       expect(() => validateEvent(event)).toThrow(ValidationError);
       expect(() => validateEvent(event)).toThrow('start_date and end_date are required');
@@ -76,7 +61,6 @@ describe('collector-init handler', () => {
     it('不正な日付フォーマットの場合はエラー', () => {
       const event = {
         execution_id: 'exec_123',
-        mode: 'on-demand' as const,
         start_date: '2024/01/15',
         end_date: '2024-01-20',
       };
@@ -86,12 +70,8 @@ describe('collector-init handler', () => {
     });
 
     it('存在しない日付の場合はエラー', () => {
-      // 2月30日は存在しないが、JavaScriptのDateは3月2日に自動変換される
-      // そのため、このテストは「1年以上前」エラーになる可能性がある
-      // 代わりに、明らかに不正な日付文字列を使用
       const event = {
         execution_id: 'exec_123',
-        mode: 'on-demand' as const,
         start_date: '2024-13-01', // 13月は存在しない
         end_date: '2024-03-01',
       };
@@ -103,7 +83,6 @@ describe('collector-init handler', () => {
     it('start_dateがend_dateより後の場合はエラー', () => {
       const event = {
         execution_id: 'exec_123',
-        mode: 'on-demand' as const,
         start_date: '2024-01-20',
         end_date: '2024-01-15',
       };
@@ -113,9 +92,14 @@ describe('collector-init handler', () => {
     });
 
     it('負のmax_itemsの場合はエラー', () => {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
       const event = {
         execution_id: 'exec_123',
-        mode: 'batch' as const,
+        start_date: yesterday.toISOString().split('T')[0],
+        end_date: yesterday.toISOString().split('T')[0],
         max_items: -1,
       };
 

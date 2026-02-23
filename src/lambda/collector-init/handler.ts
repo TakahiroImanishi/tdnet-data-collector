@@ -22,17 +22,14 @@ import { ValidationError } from '../../errors';
  * 初期化イベント
  */
 export interface InitEvent {
-  /** 実行ID（Collect関数から渡される） */
+  /** 実行ID（Step Functionsから渡される） */
   execution_id: string;
 
-  /** モード（batch: 日次バッチ、on-demand: オンデマンド） */
-  mode: 'batch' | 'on-demand';
+  /** 開始日（ISO 8601形式、YYYY-MM-DD） */
+  start_date: string;
 
-  /** 開始日（ISO 8601形式、YYYY-MM-DD）- on-demandモードで必須 */
-  start_date?: string;
-
-  /** 終了日（ISO 8601形式、YYYY-MM-DD）- on-demandモードで必須 */
-  end_date?: string;
+  /** 終了日（ISO 8601形式、YYYY-MM-DD） */
+  end_date: string;
 
   /** 最大収集件数（オプション、デフォルト: 制限なし） */
   max_items?: number;
@@ -51,11 +48,24 @@ export interface InitResponse {
   /** 総日数 */
   total_days: number;
 
+  /** 総件数（Step Functions用、total_daysと同じ値） */
+  total_count: number;
+
+  /** ページリスト（Step Functions Map用、datesと同じ値） */
+  pages: string[];
+
   /** 最大収集件数（オプション） */
   max_items?: number;
 
   /** 推定総件数 */
   estimated_total: number;
+
+  /** パラメータ（Step Functions用） */
+  parameters: {
+    start_date: string;
+    end_date: string;
+    max_items?: number;
+  };
 }
 
 /**
@@ -67,16 +77,9 @@ export interface InitResponse {
  *
  * @example
  * ```typescript
- * // バッチモード（前日のデータを収集）
+ * // Step Functionsから呼び出される場合
  * const response = await handler({
  *   execution_id: 'exec_1234567890_abc123_12345678',
- *   mode: 'batch'
- * }, context);
- *
- * // オンデマンドモード（指定期間のデータを収集）
- * const response = await handler({
- *   execution_id: 'exec_1234567890_abc123_12345678',
- *   mode: 'on-demand',
  *   start_date: '2024-01-15',
  *   end_date: '2024-01-20',
  *   max_items: 1000
@@ -100,29 +103,15 @@ export async function handler(
     // イベントのバリデーション
     validateEvent(event);
 
-    // モード別処理
-    let dates: string[];
-    if (event.mode === 'batch') {
-      // バッチモード: 前日の日付を取得
-      const yesterday = getYesterday();
-      const dateStr = formatDate(yesterday);
-      dates = [dateStr];
+    // 日付範囲を生成
+    const dates = generateDateRange(event.start_date, event.end_date);
 
-      logger.info('Batch mode: target date', {
-        execution_id: event.execution_id,
-        date: dateStr,
-      });
-    } else {
-      // オンデマンドモード: 日付範囲を生成
-      dates = generateDateRange(event.start_date!, event.end_date!);
-
-      logger.info('On-demand mode: date range', {
-        execution_id: event.execution_id,
-        start_date: event.start_date,
-        end_date: event.end_date,
-        total_days: dates.length,
-      });
-    }
+    logger.info('On-demand mode: date range', {
+      execution_id: event.execution_id,
+      start_date: event.start_date,
+      end_date: event.end_date,
+      total_days: dates.length,
+    });
 
     // 実行状態を初期化（pending）
     await updateExecutionStatus(event.execution_id, 'pending', 0);
@@ -138,8 +127,15 @@ export async function handler(
       execution_id: event.execution_id,
       dates,
       total_days: dates.length,
+      total_count: dates.length, // Step Functions用
+      pages: dates, // Step Functions Map用
       max_items: maxItems,
       estimated_total: estimatedTotal,
+      parameters: {
+        start_date: event.start_date,
+        end_date: event.end_date,
+        max_items: maxItems,
+      },
     };
 
     const duration = Date.now() - startTime;
@@ -169,7 +165,7 @@ export async function handler(
     await sendErrorMetric(
       error instanceof Error ? error.constructor.name : 'Unknown',
       'CollectorInit',
-      { Mode: event.mode }
+      { ExecutionId: event.execution_id }
     );
 
     // 実行状態を更新（failed）
@@ -200,73 +196,64 @@ export function validateEvent(event: InitEvent): void {
     );
   }
 
-  // モードのバリデーション
-  if (!event.mode || !['batch', 'on-demand'].includes(event.mode)) {
+  // 日付範囲が必須
+  if (!event.start_date || !event.end_date) {
     throw new ValidationError(
-      `Invalid mode: ${event.mode}. Expected 'batch' or 'on-demand'.`
+      'start_date and end_date are required'
     );
   }
 
-  // on-demandモードの場合、日付範囲が必須
-  if (event.mode === 'on-demand') {
-    if (!event.start_date || !event.end_date) {
-      throw new ValidationError(
-        'start_date and end_date are required for on-demand mode'
-      );
-    }
+  // 日付フォーマットのバリデーション（YYYY-MM-DD）
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(event.start_date)) {
+    throw new ValidationError(
+      `Invalid start_date format: ${event.start_date}. Expected YYYY-MM-DD format.`
+    );
+  }
+  if (!dateRegex.test(event.end_date)) {
+    throw new ValidationError(
+      `Invalid end_date format: ${event.end_date}. Expected YYYY-MM-DD format.`
+    );
+  }
 
-    // 日付フォーマットのバリデーション（YYYY-MM-DD）
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(event.start_date)) {
-      throw new ValidationError(
-        `Invalid start_date format: ${event.start_date}. Expected YYYY-MM-DD format.`
-      );
-    }
-    if (!dateRegex.test(event.end_date)) {
-      throw new ValidationError(
-        `Invalid end_date format: ${event.end_date}. Expected YYYY-MM-DD format.`
-      );
-    }
+  // 日付の有効性チェック
+  const startDate = new Date(event.start_date);
+  const endDate = new Date(event.end_date);
 
-    // 日付の有効性チェック
-    const startDate = new Date(event.start_date);
-    const endDate = new Date(event.end_date);
+  if (isNaN(startDate.getTime())) {
+    throw new ValidationError(
+      `Invalid start_date: ${event.start_date}. Date does not exist.`
+    );
+  }
+  if (isNaN(endDate.getTime())) {
+    throw new ValidationError(
+      `Invalid end_date: ${event.end_date}. Date does not exist.`
+    );
+  }
 
-    if (isNaN(startDate.getTime())) {
-      throw new ValidationError(
-        `Invalid start_date: ${event.start_date}. Date does not exist.`
-      );
-    }
-    if (isNaN(endDate.getTime())) {
-      throw new ValidationError(
-        `Invalid end_date: ${event.end_date}. Date does not exist.`
-      );
-    }
+  // 日付順序チェック
+  if (startDate > endDate) {
+    throw new ValidationError(
+      `start_date (${event.start_date}) must be before or equal to end_date (${event.end_date})`
+    );
+  }
 
-    // 日付順序チェック
-    if (startDate > endDate) {
-      throw new ValidationError(
-        `start_date (${event.start_date}) must be before or equal to end_date (${event.end_date})`
-      );
-    }
+  // 範囲チェック（過去1年以内）
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  if (startDate < oneYearAgo) {
+    throw new ValidationError(
+      `start_date (${event.start_date}) is too old. Maximum range is 1 year.`
+    );
+  }
 
-    // 範囲チェック（過去1年以内）
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    if (startDate < oneYearAgo) {
-      throw new ValidationError(
-        `start_date (${event.start_date}) is too old. Maximum range is 1 year.`
-      );
-    }
-
-    // 未来日チェック
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (endDate > tomorrow) {
-      throw new ValidationError(
-        `end_date (${event.end_date}) cannot be in the future.`
-      );
-    }
+  // 未来日チェック
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (endDate > tomorrow) {
+    throw new ValidationError(
+      `end_date (${event.end_date}) cannot be in the future.`
+    );
   }
 
   // max_itemsのバリデーション

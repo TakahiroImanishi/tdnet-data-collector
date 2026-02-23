@@ -57,7 +57,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -94,7 +94,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Assert
       expect(response).toEqual({
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         items: mockDisclosures,
         count: 2,
       });
@@ -115,9 +115,9 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_456',
-        page_number: 2,
+        page_number: '2024-01-16',
         start_date: '2024-01-15',
-        end_date: '2024-01-15',
+        end_date: '2024-01-16',
       };
 
       const mockDisclosures: DisclosureMetadata[] = [
@@ -142,10 +142,10 @@ describe('Lambda Collector-Fetch Handler', () => {
       const response: FetchResponse = await handler(event, mockContext);
 
       // Assert
-      expect(response.page_number).toBe(2);
+      expect(response.page_number).toBe('2024-01-16');
       expect(response.count).toBe(1);
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        'https://www.release.tdnet.info/inbs/I_list_002_20240115.html',
+        'https://www.release.tdnet.info/inbs/I_list_001_20240116.html',
         expect.any(Object)
       );
     });
@@ -154,7 +154,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_789',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -180,7 +180,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: '',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -190,11 +190,11 @@ describe('Lambda Collector-Fetch Handler', () => {
       await expect(handler(event, mockContext)).rejects.toThrow('Invalid execution_id');
     });
 
-    it('page_numberが0以下の場合はValidationErrorをスロー', async () => {
+    it('page_numberが不正な形式の場合はValidationErrorをスロー', async () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 0,
+        page_number: 'invalid',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -208,7 +208,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024/01/15', // スラッシュ区切り
         end_date: '2024-01-15',
       };
@@ -222,7 +222,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '20240115', // ハイフンなし
       };
@@ -236,7 +236,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-20',
         end_date: '2024-01-15',
       };
@@ -252,7 +252,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -270,7 +270,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -288,7 +288,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -310,7 +310,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -332,7 +332,7 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -356,16 +356,16 @@ describe('Lambda Collector-Fetch Handler', () => {
       // Arrange
       const event1: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
 
       const event2: FetchEvent = {
         execution_id: 'exec_123',
-        page_number: 2,
+        page_number: '2024-01-16',
         start_date: '2024-01-15',
-        end_date: '2024-01-15',
+        end_date: '2024-01-16',
       };
 
       mockedAxios.get.mockResolvedValue({
