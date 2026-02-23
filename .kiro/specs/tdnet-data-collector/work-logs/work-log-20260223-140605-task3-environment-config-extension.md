@@ -40,7 +40,7 @@ local環境と同じ値を設定。
 3. ✅ localConfig設定追加
 4. ✅ prodConfig設定追加
 5. ✅ TypeScriptコンパイル確認
-6. ⏳ 関連テスト実行
+6. ✅ 関連テスト実行
 
 ## 問題と解決策
 
@@ -64,8 +64,68 @@ local環境と同じ値を設定。
 
 ## 成果物
 
-- `cdk/lib/config/environment-config.ts` - Step Functions用Lambda設定追加
+### 変更ファイル
+
+1. **cdk/lib/config/environment-config.ts**
+   - `EnvironmentConfig`インターフェースに以下を追加:
+     - `collectorInit: LambdaEnvironmentConfig`
+     - `collectorFetch: LambdaEnvironmentConfig`
+     - `collectorSave: LambdaEnvironmentConfig`
+     - `collectorAggregate: LambdaEnvironmentConfig`
+     - `runtime: lambda.Runtime`
+   - `localConfig`と`prodConfig`に上記設定を追加
+   - runtime設定: `lambda.Runtime.NODEJS_20_X`
+
+2. **cdk/lib/config/__tests__/environment-config.test.ts**
+   - Step Functions用Lambda設定のテストを追加
+   - runtime設定のテストを追加
+   - local環境設定のテストを追加
+   - テスト結果: 11 passed
+
+3. **src/lambda/collect/handler.ts**
+   - 未使用変数`STATE_MACHINE_ARN`をコメントアウト
+
+4. **src/models/disclosure.ts**
+   - `MAX_FILE_SIZE`のインポートパスを修正
+
+### テスト結果
+
+```
+PASS  cdk/lib/config/__tests__/environment-config.test.ts
+Test Suites: 1 passed, 1 total
+Tests:       11 passed, 11 total
+```
+
+### TypeScriptコンパイル
+
+```
+npm run build
+✅ コンパイル成功（エラー0件）
+```
 
 ## 申し送り事項
 
-（完了時に記録）
+### 完了条件の確認
+
+- ✅ Step Functions用Lambda 4関数の設定が追加されている
+- ✅ runtime設定が追加されている
+- ✅ local/prod環境の設定値が定義されている
+- ✅ TypeScriptコンパイルが成功する
+- ✅ 関連テストが成功する
+
+### 次のタスクへの影響
+
+タスク4以降でこの設定を使用してStep Functions用Lambda関数を作成する際、以下のように参照できます:
+
+```typescript
+const config = getEnvironmentConfig(environment);
+
+new lambda.Function(this, 'CollectorInit', {
+  timeout: cdk.Duration.seconds(config.collectorInit.timeout),
+  memorySize: config.collectorInit.memorySize,
+  runtime: config.runtime,
+  environment: {
+    LOG_LEVEL: config.collectorInit.logLevel,
+  },
+});
+```

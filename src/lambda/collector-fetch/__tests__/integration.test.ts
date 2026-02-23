@@ -116,8 +116,8 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       const response2 = await handler(event2, mockContext);
 
       // Assert
-      expect(response1.page_number).toBe(1);
-      expect(response2.page_number).toBe(2);
+      expect(response1.page_number).toBe('2024-01-15');
+      expect(response2.page_number).toBe('2024-01-16');
       expect(mockedAxios.get).toHaveBeenCalledTimes(2);
     });
 
@@ -125,7 +125,7 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_integration_789',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
@@ -154,7 +154,7 @@ describe('Lambda Collector-Fetch Integration Tests', () => {
       // Arrange
       const event: FetchEvent = {
         execution_id: 'exec_integration_404',
-        page_number: 1,
+        page_number: '2024-01-15',
         start_date: '2024-01-15',
         end_date: '2024-01-15',
       };
