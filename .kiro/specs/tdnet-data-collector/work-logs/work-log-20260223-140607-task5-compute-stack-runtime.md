@@ -34,3 +34,66 @@ runtime: envConfig.runtime,
 
 ## 実行ログ
 
+
+
+### 修正完了
+
+全13関数のruntime設定を`envConfig.runtime`に統一しました。
+
+**修正対象関数**:
+
+既存Lambda（9関数）:
+1. CollectorFunction
+2. QueryFunction
+3. ExportFunction
+4. CollectFunction
+5. CollectStatusFunction
+6. ExportStatusFunction
+7. PdfDownloadFunction
+8. HealthFunction
+9. StatsFunction
+
+Step Functions Lambda（4関数）:
+10. CollectorInitFunction
+11. CollectorFetchFunction
+12. CollectorSaveFunction
+13. CollectorAggregateFunction
+
+**修正内容**:
+```typescript
+// 修正前
+runtime: lambda.Runtime.NODEJS_20_X,
+
+// 修正後
+runtime: envConfig.runtime,
+```
+
+### テスト結果
+
+#### ユニットテスト
+```
+npm test -- cdk/lib/stacks/__tests__/compute-stack.test.ts
+✅ Test Suites: 1 passed, 1 total
+✅ Tests: 36 passed, 36 total
+```
+
+#### CDK Synth
+```
+npx cdk synth --quiet
+✅ 成功（エラーなし）
+```
+
+## 成果物
+
+- `cdk/lib/stacks/compute-stack.ts`: 全13関数のruntime設定を`envConfig.runtime`に統一
+
+## 完了条件確認
+
+- [x] 全Lambda関数（13関数）のruntime設定が統一されている
+- [x] `lambda.Runtime.NODEJS_20_X`のハードコードが削除されている
+- [x] ユニットテストが成功する
+- [x] CDK synthが成功する
+
+## 申し送り事項
+
+なし。タスク5は正常に完了しました。
