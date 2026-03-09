@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "lighthouse": "^12.2.1",
+    "lighthouse": "^13.0.3",
     "playwright": "^1.58.2",
     "source-map-explorer": "^2.5.3"
   }
